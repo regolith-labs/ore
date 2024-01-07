@@ -1,0 +1,31 @@
+[package]
+name = "ore"
+version = "0.1.0"
+description = "Ore is a hard, fast, borderless, permissionless, auditable, digital currency"
+edition = "2021"
+license = "Apache 2.0"
+homepage = ""
+repository = ""
+documentation = ""
+readme = "./README.md"
+keywords = ["solana"]
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "ore"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl =  { version = "0.29.0", features = ["token"] }
+bnum = "0.10.0"
+sha256 = "1.1.3"
+
+[dev-dependencies]
+rand = "0.8.5"
