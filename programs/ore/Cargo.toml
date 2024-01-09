@@ -24,8 +24,6 @@ default = []
 [dependencies]
 anchor-lang = "0.29.0"
 anchor-spl =  { version = "0.29.0", features = ["token"] }
-bnum = "0.10.0"
-sha256 = "1.1.3"
 
 [dev-dependencies]
 rand = "0.8.5"

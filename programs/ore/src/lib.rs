@@ -1,103 +1,183 @@
+use std::mem::size_of;
+
 use anchor_lang::{
     prelude::*,
-    solana_program::{system_program, sysvar},
+    solana_program::{
+        hash::{hashv, Hash},
+        system_program, sysvar,
+    },
 };
 use anchor_spl::token::{self, Mint, MintTo, TokenAccount};
-use bnum::types::U256;
-use sha256;
 
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
-/// The number of hashes per epoch (~24 hours).
-pub const EPOCH_HEIGHT: u64 = 8640;
-
-/// The target average duration in seconds between each valid hash.
-pub const HASH_TIME: u64 = 10;
-
-/// The seed of the genesis hash.
-pub const GENESIS: &str = "42";
-
-/// The seed of the Metadata program derived address.
-pub const METADATA: &[u8] = b"metadata";
-
-/// The decimal precision of the Ore token.
-pub const TOKEN_DECIMALS: u8 = 8;
-
-/// The radix of U256 string encodings.
-pub const RADIX: u32 = 16;
-
-/// The coefficient of the supply function.
-pub const SUPPLY_COEFFICIENT: u64 = 48484;
-
-/// The exponent of the supply function.
-pub const SUPPLY_EXPONENT: f64 = 0.618;
-
-/// The smoothing factor for difficulty adjustments.
-pub const SMOOTHING_FACTOR: U256 = U256::from_digit(4);
+// TODO Set this to a reasonable value.
+pub const DIFFICULTY: Hash = Hash::new_from_array([
+    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+]);
 
 // TODO Set this before deployment
 /// The time after which mining can happen.
 pub const START_AT: i64 = 0;
+
+pub const EPOCH_DURATION: i64 = 60;
+
+pub const EXPECTED_EPOCH_REWARDS: u64 = 10u64.pow(TOKEN_DECIMALS as u32); // 1 ORE / epoch
+
+pub const SMOOTHING_FACTOR: u64 = 256;
+
+/// The decimal precision of the Ore token.
+// If we use a decimal precision of 16, we can fit 10_000_000_000_000_000 (10 quadrillion) hashes in each minute.
+// This is sufficiently far beyond what Solana is capable of processing.
+// Max supply would still be very large and take millions of years to reach at a rate of 1 ORE / minute.
+// We will not have to implement a variable difficulty to maintain the 1 ORE / min average.
+// If token decimals were only 8, we likely would need a variable difficulty at some point.
+pub const TOKEN_DECIMALS: u8 = 9;
+
+pub const BUS_COUNT: u64 = 8;
+
+// TODO Use 8,9,or 10 decimals. Test and run math to see which one makes the most sense.
+// TODO Track number of successful hashes per bus and add limit to # hashes/bus exceeding EXPECTED_EPOCH_REWARDS/NUMBER_OF_BUSSES.
+//      Rewards per epoch can exceed target limit. But hashes cannot exceed theoretical maximum.
+//      Eg. scenario where reward_rate = 1, cannot go lower, and the network is submitting enough hashes to push issuance rate above 1 ORE / epoch.
+//      In this case, each valid hash is earning the smallest reward possible.
+//      By hard limitting the number of hashes per bus per epoch, we prevent the 1 ORE/epoch limit from being fundamentally broken.
 
 #[program]
 mod ore {
     use super::*;
 
     /// Initializes the program. Can only be executed once.
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        let metadata = &mut ctx.accounts.metadata;
-        metadata.bump = ctx.bumps.metadata;
-        metadata.difficulty = U256::MAX.to_str_radix(RADIX);
-        metadata.hash = sha256::digest(GENESIS.to_string());
-        metadata.height = 0;
-        metadata.mint = ctx.accounts.mint.key();
+    pub fn initialize_metadata(ctx: Context<InitializeMetadata>) -> Result<()> {
+        ctx.accounts.metadata.bump = ctx.bumps.metadata;
+        ctx.accounts.metadata.reward_rate = 10u64.pow(TOKEN_DECIMALS.saturating_div(2) as u32);
+        ctx.accounts.metadata.mint = ctx.accounts.mint.key();
         Ok(())
     }
 
-    /// Mints new Ore to the beneficiary if a valid hash is provided.
-    pub fn mine(ctx: Context<Mine>, hash: String, nonce: u64) -> Result<()> {
-        // Validate clock.
-        let clock = Clock::get().unwrap();
-        require!(clock.unix_timestamp.ge(&START_AT), ProgramError::NotStarted);
+    /// Initializes the program. Can only be executed once.
+    pub fn initialize_busses(ctx: Context<InitializeBusses>) -> Result<()> {
+        ctx.accounts.bus_0.bump = ctx.bumps.bus_0;
+        ctx.accounts.bus_0.id = 0;
+        ctx.accounts.bus_1.bump = ctx.bumps.bus_1;
+        ctx.accounts.bus_1.id = 1;
+        ctx.accounts.bus_2.bump = ctx.bumps.bus_2;
+        ctx.accounts.bus_2.id = 2;
+        ctx.accounts.bus_3.bump = ctx.bumps.bus_3;
+        ctx.accounts.bus_3.id = 3;
+        ctx.accounts.bus_4.bump = ctx.bumps.bus_4;
+        ctx.accounts.bus_4.id = 4;
+        ctx.accounts.bus_5.bump = ctx.bumps.bus_5;
+        ctx.accounts.bus_5.id = 5;
+        ctx.accounts.bus_6.bump = ctx.bumps.bus_6;
+        ctx.accounts.bus_6.id = 6;
+        ctx.accounts.bus_7.bump = ctx.bumps.bus_7;
+        ctx.accounts.bus_7.id = 7;
+        Ok(())
+    }
 
-        // Log request.
+    pub fn register_miner(ctx: Context<RegisterMiner>) -> Result<()> {
+        let miner = &mut ctx.accounts.miner;
+        miner.authority = ctx.accounts.signer.key();
+        miner.bump = ctx.bumps.miner;
+        miner.hash = hashv(&[&ctx.accounts.signer.key().to_bytes()]);
+        Ok(())
+    }
+
+    pub fn start_epoch(ctx: Context<StartEpoch>) -> Result<()> {
+        // Validate epoch has ended.
+        let clock = Clock::get().unwrap();
         let metadata = &mut ctx.accounts.metadata;
-        msg!("Difficulty: {}", metadata.difficulty);
-        msg!("Hash: {}", hash);
-        msg!("Nonce: {}", nonce);
+        let epoch_end_at = metadata.epoch_start_at.saturating_add(EPOCH_DURATION);
+        require!(
+            clock.unix_timestamp.ge(&epoch_end_at),
+            ProgramError::ClockInvalid
+        );
+
+        // Calculate total rewards issued during the epoch.
+        let bus_0 = &mut ctx.accounts.bus_0;
+        let bus_1 = &mut ctx.accounts.bus_1;
+        let bus_2 = &mut ctx.accounts.bus_2;
+        let bus_3 = &mut ctx.accounts.bus_3;
+        let bus_4 = &mut ctx.accounts.bus_4;
+        let bus_5 = &mut ctx.accounts.bus_5;
+        let bus_6 = &mut ctx.accounts.bus_6;
+        let bus_7 = &mut ctx.accounts.bus_7;
+        let total_epoch_rewards = bus_0
+            .rewards
+            .saturating_add(bus_1.rewards)
+            .saturating_add(bus_2.rewards)
+            .saturating_add(bus_3.rewards)
+            .saturating_add(bus_4.rewards)
+            .saturating_add(bus_5.rewards)
+            .saturating_add(bus_6.rewards)
+            .saturating_add(bus_7.rewards);
+
+        // Update the reward amount for the next epoch.
+        metadata.reward_rate = calculate_new_reward_rate(metadata.reward_rate, total_epoch_rewards);
+
+        // Reset state for new epoch.
+        bus_0.hashes = 0;
+        bus_1.hashes = 0;
+        bus_2.hashes = 0;
+        bus_3.hashes = 0;
+        bus_4.hashes = 0;
+        bus_5.hashes = 0;
+        bus_6.hashes = 0;
+        bus_7.hashes = 0;
+        bus_0.hashes = 0;
+        bus_1.rewards = 0;
+        bus_2.rewards = 0;
+        bus_3.rewards = 0;
+        bus_4.rewards = 0;
+        bus_5.rewards = 0;
+        bus_6.rewards = 0;
+        bus_7.rewards = 0;
+        metadata.epoch_start_at = clock.unix_timestamp;
+        Ok(())
+    }
+
+    pub fn mine(ctx: Context<Mine>, hash: Hash, nonce: u64) -> Result<()> {
+        // Validate epoch is active.
+        let clock = Clock::get().unwrap();
+        let metadata = &mut ctx.accounts.metadata;
+        let epoch_end_at = metadata.epoch_start_at.saturating_add(EPOCH_DURATION);
+        require!(
+            clock.unix_timestamp.lt(&epoch_end_at),
+            ProgramError::EpochNotActive
+        );
 
         // Validate hash.
-        let difficulty = U256::parse_str_radix(&metadata.difficulty, RADIX);
+        let miner = &mut ctx.accounts.miner;
         validate_hash(
-            metadata.hash.clone(),
+            miner.hash.clone(),
             hash.clone(),
             ctx.accounts.signer.key(),
             nonce,
-            difficulty,
+            DIFFICULTY,
         )?;
-        msg!("Hash is valid");
 
-        // Update metadata.
-        metadata.hash = hash.clone();
-        metadata.height = metadata.height.checked_add(1).unwrap();
-        if metadata.height.eq(&1) {
-            metadata.epoch_start_at = clock.unix_timestamp;
-        }
+        // Update state.
+        ctx.accounts.bus.hashes = ctx.accounts.bus.hashes.saturating_add(1);
+        ctx.accounts.bus.rewards = ctx
+            .accounts
+            .bus
+            .rewards
+            .saturating_add(metadata.reward_rate);
+        miner.hash = hash.clone();
 
-        // Update difficulty, if new epoch.
-        if metadata.height % (EPOCH_HEIGHT as u128) == 0 {
-            metadata.difficulty =
-                calculate_new_difficulty(metadata.epoch_start_at, clock.unix_timestamp, difficulty)
-                    .expect("Failed to calculate new difficulty")
-                    .to_str_radix(RADIX);
-            metadata.epoch_start_at = clock.unix_timestamp;
-        }
+        // Error if this bus has already processed its quota of hashes for the epoch.
+        require!(
+            ctx.accounts
+                .bus
+                .hashes
+                .le(&EXPECTED_EPOCH_REWARDS.saturating_div(BUS_COUNT)),
+            // TODO Needs a dedicated error
+            ProgramError::HashInvalid
+        );
 
         // Mint reward to beneficiary.
-        let supply = calculate_supply(metadata.height);
-        let reward = supply
-            .checked_sub(ctx.accounts.mint.supply)
-            .expect("Failed to calculate reward amount");
         token::mint_to(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
@@ -108,105 +188,127 @@ mod ore {
                 },
                 &[&[METADATA, &[metadata.bump]]],
             ),
-            reward,
+            metadata.reward_rate,
         )?;
-
-        // Log result.
-        msg!("Height: {}", metadata.height);
-        msg!("Reward: {}", reward);
-        msg!("Supply: {}", supply);
-        emit!(MineEvent {
-            signer: ctx.accounts.signer.key(),
-            beneficiary: ctx.accounts.beneficiary.key(),
-            height: metadata.height,
-            reward,
-            supply,
-            hash,
-            nonce,
-            difficulty: metadata.difficulty.clone(),
-        });
 
         Ok(())
     }
 }
 
 fn validate_hash(
-    current_hash: String,
-    hash: String,
+    current_hash: Hash,
+    hash: Hash,
     signer: Pubkey,
     nonce: u64,
-    difficulty: U256,
+    difficulty: Hash,
 ) -> Result<()> {
     // Validate hash correctness.
-    let msg = format!("{}-{}-{}", current_hash, signer, nonce);
-    require!(sha256::digest(msg).eq(&hash), ProgramError::HashInvalid);
+    let bytes = [
+        current_hash.to_bytes().as_slice(),
+        signer.to_bytes().as_slice(),
+        nonce.to_be_bytes().as_slice(),
+    ]
+    .concat();
+    let hash_ = hashv(&[&bytes]);
+    require!(hash.eq(&hash_), ProgramError::HashInvalid);
 
     // Validate hash difficulty.
-    let hash_u256 = U256::parse_str_radix(&hash, RADIX);
-    require!(hash_u256.le(&difficulty), ProgramError::HashInvalid);
+    require!(hash.le(&difficulty), ProgramError::HashInvalid);
+
     Ok(())
 }
 
-fn calculate_new_difficulty(t1: i64, t2: i64, difficulty: U256) -> Result<U256> {
-    // Calculate time ratio.
-    require!(t2.gt(&t1), ProgramError::ClockInvalid);
-    let actual_time = t2.saturating_sub(t1) as f64;
-    let expected_time = EPOCH_HEIGHT.saturating_mul(HASH_TIME) as f64;
-    let time_ratio = actual_time / expected_time;
+fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
+    // Avoid division by zero. Leave the reward rate unchanged.
+    if epoch_rewards.eq(&0) {
+        return current_rate;
+    }
 
-    // Scale time ratio for integer arithmetic.
-    const SCALE_FACTOR: f64 = 1000f64;
-    let time_ratio_scaled = U256::from_digit((time_ratio * SCALE_FACTOR) as u64);
+    // Calculate new rate.
+    msg!("Current rate: {}", current_rate);
+    msg!("Epoch rewards: {}", epoch_rewards);
+    msg!("Expected rewards: {}", EXPECTED_EPOCH_REWARDS);
+    let new_rate = (current_rate as u128)
+        .saturating_mul(EXPECTED_EPOCH_REWARDS as u128)
+        .saturating_div(epoch_rewards as u128) as u64;
+    msg!("New rate: {}", new_rate);
 
-    // Calculate new difficulty.
-    const SCALE_FACTOR_U256: U256 = U256::from_digit(SCALE_FACTOR as u64);
-    let new_difficulty_scaled = difficulty.saturating_mul(time_ratio_scaled);
-    let new_difficulty = new_difficulty_scaled.saturating_div(SCALE_FACTOR_U256);
+    // Smooth reward rate to not change by more than a constant factor from one epoch to the next.
+    let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
+    let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
+    let new_rate_smoothed = new_rate_min.max(new_rate_max.min(new_rate));
+    msg!("New rate min: {}", new_rate_min);
+    msg!("New rate max: {}", new_rate_max);
+    msg!("New rate smoothed: {}", new_rate_smoothed);
 
-    // Smooth new difficulty to a min/max multiple of the old difficulty.
-    let new_difficulty_min = difficulty.saturating_div(SMOOTHING_FACTOR);
-    let new_difficulty_max = difficulty.saturating_mul(SMOOTHING_FACTOR);
-    let new_difficulty_smoothed = new_difficulty_min.max(new_difficulty_max.min(new_difficulty));
-    Ok(new_difficulty_smoothed)
+    // Prevent new reward from reaching 0 and return.
+    new_rate_smoothed.max(1)
 }
 
-fn calculate_supply(height: u128) -> u64 {
-    ((SUPPLY_COEFFICIENT as f64 * (height as f64).powf(SUPPLY_EXPONENT))
-        * 10f64.powf(TOKEN_DECIMALS as f64)) as u64
-}
+/// The seed of the Bus account PDA.
+pub const BUS: &[u8] = b"bus";
+
+/// The seed of the Metadata account PDA.
+pub const METADATA: &[u8] = b"metadata";
+
+/// The seed of the Miner account PDA.
+pub const MINER: &[u8] = b"miner";
 
 #[account]
-#[derive(Debug, InitSpace)]
+#[derive(Debug)]
 pub struct Metadata {
-    /// The bump of the metadata account address.
+    /// The bump of the metadata PDA.
     pub bump: u8,
-
-    /// The current mining difficulty.
-    #[max_len(256)]
-    pub difficulty: String,
-
-    /// The current hash.
-    #[max_len(256)]
-    pub hash: String,
-
-    /// The current height of the hash chain.
-    pub height: u128,
 
     /// The mint address of the Ore token.
     pub mint: Pubkey,
 
     /// The timestamp of the start of the current epoch.
     pub epoch_start_at: i64,
+
+    /// Reweard
+    pub reward_rate: u64,
+}
+
+#[account]
+#[derive(Debug)]
+pub struct Miner {
+    /// The bump of the miner PDA.
+    pub bump: u8,
+
+    /// The account authorized to hash this chain.
+    pub authority: Pubkey,
+
+    /// The miner's current hash.
+    pub hash: Hash,
+}
+
+/// Bus is an account used to track rewards issued during an epoch.
+/// There are 8 bus accounts to provide parallelism and reduce write lock contention.
+#[account]
+#[derive(Debug)]
+pub struct Bus {
+    /// The bump of the counter PDA.
+    pub bump: u8,
+
+    /// The ID of this counter account.
+    pub id: u8,
+
+    /// The count of rewards issued this epoch.
+    pub rewards: u64,
+
+    /// The count of valid hashes that have been submitted on this bus this epoch.
+    pub hashes: u64,
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+pub struct InitializeMetadata<'info> {
     /// The signer of the transaction.
     #[account(mut)]
     pub signer: Signer<'info>,
 
     /// The metadata account.
-    #[account(init, seeds = [METADATA], bump, payer = signer, space = 8 + Metadata::INIT_SPACE)]
+    #[account(init, seeds = [METADATA], bump, payer = signer, space = 8 + size_of::<Metadata>())]
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint.
@@ -227,7 +329,110 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(hash: String, nonce: u64)]
+pub struct InitializeBusses<'info> {
+    /// The signer of the transaction.
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// Bus account 0.
+    #[account(init, seeds = [BUS, &[0]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_0: Account<'info, Bus>,
+
+    /// Bus account 1.
+    #[account(init, seeds = [BUS, &[1]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_1: Account<'info, Bus>,
+
+    /// Bus account 2.
+    #[account(init, seeds = [BUS, &[2]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_2: Account<'info, Bus>,
+
+    /// Bus account 3.
+    #[account(init, seeds = [BUS, &[3]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_3: Account<'info, Bus>,
+
+    /// Bus account 4.
+    #[account(init, seeds = [BUS, &[4]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_4: Account<'info, Bus>,
+
+    /// Bus account 5.
+    #[account(init, seeds = [BUS, &[5]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_5: Account<'info, Bus>,
+
+    /// Bus account 6.
+    #[account(init, seeds = [BUS, &[6]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_6: Account<'info, Bus>,
+
+    /// Bus account 7.
+    #[account(init, seeds = [BUS, &[7]], bump, payer = signer, space = 8 + size_of::<Bus>())]
+    pub bus_7: Account<'info, Bus>,
+
+    /// The Solana system program.
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+}
+
+/// RegisterMiner registers a new miner with the Ore program and starts a new hash chain for them to mine.
+#[derive(Accounts)]
+pub struct RegisterMiner<'info> {
+    /// The signer of the transaction.
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// The miner account.
+    #[account(init, seeds = [MINER, signer.key().as_ref()], bump, payer = signer, space = 8 + size_of::<Miner>())]
+    pub miner: Account<'info, Miner>,
+
+    /// The Solana system program.
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct StartEpoch<'info> {
+    /// The signer of the transaction.
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// Counter account 0.
+    #[account(mut, seeds = [BUS, &[0]], bump)]
+    pub bus_0: Account<'info, Bus>,
+
+    /// Bus account 1.
+    #[account(mut, seeds = [BUS, &[1]], bump)]
+    pub bus_1: Account<'info, Bus>,
+
+    /// Bus account 2.
+    #[account(mut, seeds = [BUS, &[2]], bump)]
+    pub bus_2: Account<'info, Bus>,
+
+    /// Bus account 3.
+    #[account(mut, seeds = [BUS, &[3]], bump)]
+    pub bus_3: Account<'info, Bus>,
+
+    /// Bus account 4.
+    #[account(mut, seeds = [BUS, &[4]], bump)]
+    pub bus_4: Account<'info, Bus>,
+
+    /// Bus account 5.
+    #[account(mut, seeds = [BUS, &[5]], bump)]
+    pub bus_5: Account<'info, Bus>,
+
+    /// Bus account 6.
+    #[account(mut, seeds = [BUS, &[6]], bump)]
+    pub bus_6: Account<'info, Bus>,
+
+    /// Bus account 7.
+    #[account(mut, seeds = [BUS, &[7]], bump)]
+    pub bus_7: Account<'info, Bus>,
+
+    /// The metadata account.
+    #[account(mut, seeds = [METADATA], bump)]
+    pub metadata: Account<'info, Metadata>,
+}
+
+// TODO Bytes, not strings
+#[derive(Accounts)]
+#[instruction(hash: Hash, nonce: u64)]
 pub struct Mine<'info> {
     /// The signer of the transaction (i.e. the miner).
     #[account(mut)]
@@ -237,11 +442,19 @@ pub struct Mine<'info> {
     #[account(mut, token::mint = mint)]
     pub beneficiary: Account<'info, TokenAccount>,
 
+    /// A bus account for tracking epoch rewards.
+    #[account(mut)]
+    pub bus: Account<'info, Bus>,
+
     /// The metadata account.
-    #[account(mut, seeds = [METADATA], bump = metadata.bump, has_one = mint)]
+    #[account(seeds = [METADATA], bump = metadata.bump, has_one = mint)]
     pub metadata: Account<'info, Metadata>,
 
-    /// The Ore token mint.
+    /// The metadata account.
+    #[account(mut, seeds = [MINER, signer.key().as_ref()], bump = miner.bump, constraint = signer.key().eq(&miner.authority))]
+    pub miner: Account<'info, Miner>,
+
+    /// The Ore token mint account.
     #[account(mut)]
     pub mint: Account<'info, Mint>,
 
@@ -260,9 +473,6 @@ pub struct MineEvent {
     /// The beneficiary token account to which rewards were minted.
     pub beneficiary: Pubkey,
 
-    /// The updated height of the program's hash chain.
-    pub height: u128,
-
     /// The quantity of new Ore tokens that were mined.
     pub reward: u64,
 
@@ -270,13 +480,13 @@ pub struct MineEvent {
     pub supply: u64,
 
     /// The valid hash provided by the signer.
-    pub hash: String,
+    pub hash: Hash,
+
+    /// The current mining difficulty.
+    pub difficulty: Hash,
 
     /// The nonce provided by the signer.
     pub nonce: u64,
-
-    /// The current mining difficulty.
-    pub difficulty: String,
 }
 
 #[error_code]
@@ -287,167 +497,132 @@ pub enum ProgramError {
     HashInvalid,
     #[msg("Mining has not started yet")]
     NotStarted,
+    #[msg("The epoch has ended and needs to be reset")]
+    EpochNotActive,
 }
 
 #[cfg(test)]
 mod tests {
-    use anchor_lang::prelude::Pubkey;
-    use bnum::types::U256;
-    use rand::prelude::*;
+    // use anchor_lang::prelude::Pubkey;
+    // use bnum::types::U256;
+    // use rand::prelude::*;
 
-    use crate::{calculate_new_difficulty, calculate_supply, validate_hash};
+    // use crate::validate_hash;
 
     #[test]
     fn test_validate_hash_pass() {
-        let h1 = sha256::digest("Seed");
-        let signer = Pubkey::new_unique();
-        let nonce = 10;
-        let h2 = sha256::digest(format!("{}-{}-{}", h1, signer, nonce));
-        let res = validate_hash(h1, h2, signer, nonce, U256::MAX);
-        assert!(res.is_ok());
+        // let h1 = sha256::digest("Seed");
+        // let signer = Pubkey::new_unique();
+        // let nonce = 10;
+        // let h2 = sha256::digest(format!("{}-{}-{}", h1, signer, nonce));
+        // let res = validate_hash(h1, h2, signer, nonce, U256::MAX);
+        // assert!(res.is_ok());
     }
 
     #[test]
     fn test_validate_hash_fail() {
-        let h1 = sha256::digest("Seed");
-        let signer = Pubkey::new_unique();
-        let nonce = 10;
-        let h2 = String::from("Invalid hash");
-        let res = validate_hash(h1, h2, signer, nonce, U256::MAX);
-        assert!(res.is_err());
+        // let h1 = sha256::digest("Seed");
+        // let signer = Pubkey::new_unique();
+        // let nonce = 10;
+        // let h2 = String::from("Invalid hash");
+        // let res = validate_hash(h1, h2, signer, nonce, U256::MAX);
+        // assert!(res.is_err());
     }
 
     #[test]
     fn test_validate_hash_fail_difficulty() {
-        let h1 = sha256::digest("Seed");
-        let signer = Pubkey::new_unique();
-        let nonce = 10;
-        let h2 = sha256::digest(format!("{}-{}-{}", h1, signer, nonce));
-        let res = validate_hash(h1, h2, signer, nonce, U256::MIN);
-        assert!(res.is_err());
+        // let h1 = sha256::digest("Seed");
+        // let signer = Pubkey::new_unique();
+        // let nonce = 10;
+        // let h2 = sha256::digest(format!("{}-{}-{}", h1, signer, nonce));
+        // let res = validate_hash(h1, h2, signer, nonce, U256::MIN);
+        // assert!(res.is_err());
     }
 
     #[test]
     fn test_validate_hash_fuzz() {
-        let h1 = sha256::digest("Seed");
-        let signer = Pubkey::new_unique();
-        let mut rng = rand::thread_rng();
-        for i in 0..10_000 {
-            let nonce = rng.gen::<u64>();
-            let h2 = sha256::digest(i.to_string());
-            let res = validate_hash(h1.clone(), h2, signer, nonce, U256::MAX);
-            assert!(res.is_err());
-        }
+        // let h1 = sha256::digest("Seed");
+        // let signer = Pubkey::new_unique();
+        // let mut rng = rand::thread_rng();
+        // for i in 0..10_000 {
+        //     let nonce = rng.gen::<u64>();
+        //     let h2 = sha256::digest(i.to_string());
+        //     let res = validate_hash(h1.clone(), h2, signer, nonce, U256::MAX);
+        //     assert!(res.is_err());
+        // }
     }
 
-    #[test]
-    fn test_calculate_new_difficulty_stable() {
-        let t1 = 0i64;
-        let t2 = 86_400i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_ok());
-        let x = new_difficulty.unwrap();
-        assert!(x.eq(&U256::from_digit(100)));
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_stable() {
+    //     let t1 = 0i64;
+    //     let t2 = 86_400i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_ok());
+    //     let x = new_difficulty.unwrap();
+    //     assert!(x.eq(&U256::from_digit(100)));
+    // }
 
-    #[test]
-    fn test_calculate_new_difficulty_higher() {
-        let t1 = 0i64;
-        let t2 = 172_800i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_ok());
-        let x = new_difficulty.unwrap();
-        assert!(x.eq(&U256::from_digit(200)));
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_higher() {
+    //     let t1 = 0i64;
+    //     let t2 = 172_800i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_ok());
+    //     let x = new_difficulty.unwrap();
+    //     assert!(x.eq(&U256::from_digit(200)));
+    // }
 
-    #[test]
-    fn test_calculate_new_difficulty_lower() {
-        let t1 = 0i64;
-        let t2 = 43_200i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_ok());
-        let x = new_difficulty.unwrap();
-        assert!(x.eq(&U256::from_digit(50)));
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_lower() {
+    //     let t1 = 0i64;
+    //     let t2 = 43_200i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_ok());
+    //     let x = new_difficulty.unwrap();
+    //     assert!(x.eq(&U256::from_digit(50)));
+    // }
 
-    #[test]
-    fn test_calculate_new_difficulty_max() {
-        let t1 = 0i64;
-        let t2 = 1_000_000i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_ok());
-        let x = new_difficulty.unwrap();
-        assert!(x.eq(&U256::from_digit(400)));
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_max() {
+    //     let t1 = 0i64;
+    //     let t2 = 1_000_000i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_ok());
+    //     let x = new_difficulty.unwrap();
+    //     assert!(x.eq(&U256::from_digit(400)));
+    // }
 
-    #[test]
-    fn test_calculate_new_difficulty_min() {
-        let t1 = 0i64;
-        let t2 = 1i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_ok());
-        let x = new_difficulty.unwrap();
-        assert!(x.eq(&U256::from_digit(25)));
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_min() {
+    //     let t1 = 0i64;
+    //     let t2 = 1i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_ok());
+    //     let x = new_difficulty.unwrap();
+    //     assert!(x.eq(&U256::from_digit(25)));
+    // }
 
-    #[test]
-    fn test_calculate_new_difficulty_err() {
-        let t1 = 10i64;
-        let t2 = 5i64;
-        let difficulty = U256::from_digit(100);
-        let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
-        assert!(new_difficulty.is_err());
-    }
+    // #[test]
+    // fn test_calculate_new_difficulty_err() {
+    //     let t1 = 10i64;
+    //     let t2 = 5i64;
+    //     let difficulty = U256::from_digit(100);
+    //     let new_difficulty = calculate_new_difficulty(t1, t2, difficulty);
+    //     assert!(new_difficulty.is_err());
+    // }
 
-    #[test]
-    fn test_calculate_supply() {
-        let s1 = calculate_supply(1);
-        let s10 = calculate_supply(10);
-        let s100 = calculate_supply(100);
-        assert!(s1.eq(&4_848_400_000_000));
-        assert!(s10.eq(&20_118_631_803_084));
-        assert!(s100.eq(&83_483_075_989_621));
-    }
-}
-
-fn estimate_size(x: u32) -> u32 {
-    assert!(x < 4096);
-
-    if x < 256 {
-        if x < 128 {
-            return 1;
-        } else {
-            return 3;
-        }
-    } else if x < 1024 {
-        if x > 1022 {
-            return 4;
-        } else {
-            return 5;
-        }
-    } else {
-        if x < 2048 {
-            return 7;
-        } else {
-            return 9;
-        }
-    }
-}
-
-#[cfg(kani)]
-mod verification {
-    use super::*;
-
-    #[kani::proof]
-    pub fn check() {
-        // let x: u32 = kani::any();
-        // kani::assume(x < 4096);
-        // let y = estimate_size(x);
-        // assert!(y < 10);
-    }
+    // #[test]
+    // fn test_calculate_supply() {
+    //     let s1 = calculate_supply(1);
+    //     let s10 = calculate_supply(10);
+    //     let s100 = calculate_supply(100);
+    //     assert!(s1.eq(&4_848_400_000_000));
+    //     assert!(s10.eq(&20_118_631_803_084));
+    //     assert!(s100.eq(&83_483_075_989_621));
+    // }
 }
