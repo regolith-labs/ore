@@ -7,7 +7,10 @@ use anchor_lang::{
         system_program, sysvar,
     },
 };
-use anchor_spl::token::{self, Mint, MintTo, TokenAccount};
+use anchor_spl::{
+    associated_token,
+    token::{self, Mint, MintTo, TokenAccount},
+};
 
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
@@ -24,16 +27,19 @@ pub const START_AT: i64 = 0;
 /// The duration of an epoch, in units of seconds.
 pub const EPOCH_DURATION: i64 = 60;
 
-/// The quantity of ORE expected to be minted per epoch, in units of non-divisible nanoORE.
+/// One ORE token, denominated in indivisible units of nanoORE.
+pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
+
+/// The quantity of ORE expected to be minted per epoch, in units of indivisible nanoORE.
 /// Inflation rate = 1 ORE / epoch
-pub const EXPECTED_EPOCH_REWARDS: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
+pub const EXPECTED_EPOCH_REWARDS: u64 = ONE_ORE; // 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
 /// than factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 16;
+pub const SMOOTHING_FACTOR: u64 = 8;
 
 /// The decimal precision of the ORE token.
-/// Using SI prefixes, the smallest non-divisible unit of ORE is a nanoORE.
+/// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
 /// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
 pub const TOKEN_DECIMALS: u8 = 9;
 
@@ -70,6 +76,11 @@ mod ore {
         ctx.accounts.bus_6.id = 6;
         ctx.accounts.bus_7.bump = ctx.bumps.bus_7;
         ctx.accounts.bus_7.id = 7;
+        Ok(())
+    }
+
+    /// Initializes an associated token account for a bus. Can only be invoked once per bus.
+    pub fn initialize_bus_tokens(_ctx: Context<InitializeBusTokens>) -> Result<()> {
         Ok(())
     }
 
@@ -114,27 +125,68 @@ mod ore {
 
         // Update the reward amount for the next epoch.
         metadata.reward_rate = calculate_new_reward_rate(metadata.reward_rate, total_epoch_rewards);
+        metadata.epoch_start_at = clock.unix_timestamp;
 
         // Reset bus accounts.
-        bus_0.hashes = 0;
-        bus_1.hashes = 0;
-        bus_2.hashes = 0;
-        bus_3.hashes = 0;
-        bus_4.hashes = 0;
-        bus_5.hashes = 0;
-        bus_6.hashes = 0;
-        bus_7.hashes = 0;
-        bus_0.rewards = 0;
-        bus_1.rewards = 0;
-        bus_2.rewards = 0;
-        bus_3.rewards = 0;
-        bus_4.rewards = 0;
-        bus_5.rewards = 0;
-        bus_6.rewards = 0;
-        bus_7.rewards = 0;
-
-        // Record the new epoch start time.
-        metadata.epoch_start_at = clock.unix_timestamp;
+        let mint = &ctx.accounts.mint;
+        let metadata = &ctx.accounts.metadata;
+        let token_program = &ctx.accounts.token_program;
+        reset_bus(
+            bus_0,
+            &mut ctx.accounts.bus_0_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_1,
+            &mut ctx.accounts.bus_1_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_2,
+            &mut ctx.accounts.bus_2_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_3,
+            &mut ctx.accounts.bus_3_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_4,
+            &mut ctx.accounts.bus_4_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_5,
+            &mut ctx.accounts.bus_5_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_6,
+            &mut ctx.accounts.bus_6_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
+        reset_bus(
+            bus_7,
+            &mut ctx.accounts.bus_7_tokens,
+            mint,
+            metadata,
+            token_program,
+        )?;
 
         Ok(())
     }
@@ -183,23 +235,26 @@ mod ore {
         // That is, Solana should reach its network saturation point long before this quota
         // is enforced here.
         require!(
-            ctx.accounts
-                .bus
-                .hashes
+            bus.hashes
                 .le(&EXPECTED_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64)),
             ProgramError::BusQuotaFilled
         );
 
-        // Mint tokens to beneficiary.
-        token::mint_to(
+        // Issue tokens from bus to beneficiary.
+        let bus_tokens = &ctx.accounts.bus_tokens;
+        require!(
+            bus_tokens.amount.ge(&metadata.reward_rate),
+            ProgramError::BusInsufficientFunds
+        );
+        token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
-                MintTo {
-                    authority: metadata.to_account_info(),
-                    mint: ctx.accounts.mint.to_account_info(),
+                token::Transfer {
+                    from: bus_tokens.to_account_info(),
                     to: ctx.accounts.beneficiary.to_account_info(),
+                    authority: bus.to_account_info(),
                 },
-                &[&[METADATA, &[metadata.bump]]],
+                &[&[BUS, &[bus.id], &[bus.bump]]],
             ),
             metadata.reward_rate,
         )?;
@@ -249,6 +304,37 @@ fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
 
     // Prevent reward rate from reaching 0 and return.
     new_rate_smoothed.max(1)
+}
+
+fn reset_bus<'info>(
+    bus: &mut Account<Bus>,
+    bus_tokens: &mut Account<'info, TokenAccount>,
+    mint: &Account<'info, Mint>,
+    metadata: &Account<'info, Metadata>,
+    token_program: &Program<'info, token::Token>,
+) -> Result<()> {
+    // Reset bus state.
+    bus.hashes = 0;
+    bus.rewards = 0;
+
+    // Top up bus account with 1 ORE.
+    let amount = ONE_ORE.saturating_sub(bus_tokens.amount);
+    if amount.gt(&0) {
+        token::mint_to(
+            CpiContext::new_with_signer(
+                token_program.to_account_info(),
+                MintTo {
+                    authority: metadata.to_account_info(),
+                    mint: mint.to_account_info(),
+                    to: bus_tokens.to_account_info(),
+                },
+                &[&[METADATA, &[metadata.bump]]],
+            ),
+            amount,
+        )?;
+    }
+
+    Ok(())
 }
 
 /// The seed of the bus account PDA.
@@ -345,6 +431,14 @@ pub struct InitializeBusses<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
+    /// The metadata account.
+    #[account(has_one = mint)]
+    pub metadata: Account<'info, Metadata>,
+
+    /// The Ore token mint account.
+    #[account()]
+    pub mint: Account<'info, Mint>,
+
     /// Bus account 0.
     #[account(init, seeds = [BUS, &[0]], bump, payer = signer, space = 8 + size_of::<Bus>())]
     pub bus_0: Account<'info, Bus>,
@@ -382,6 +476,45 @@ pub struct InitializeBusses<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+pub struct InitializeBusTokens<'info> {
+    /// The signer of the transaction.
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// The metadata account.
+    #[account(has_one = mint)]
+    pub metadata: Account<'info, Metadata>,
+
+    /// The Ore token mint account.
+    #[account()]
+    pub mint: Account<'info, Mint>,
+
+    /// The bus account.
+    #[account()]
+    pub bus: Account<'info, Bus>,
+
+    /// The bus token account.
+    #[account(init, associated_token::mint = mint, associated_token::authority = bus, payer = signer)]
+    pub bus_tokens: Account<'info, TokenAccount>,
+
+    /// The rent sysvar account.
+    #[account(address = sysvar::rent::ID)]
+    pub rent: Sysvar<'info, Rent>,
+
+    /// The Solana system program.
+    #[account(address = system_program::ID)]
+    pub system_program: Program<'info, System>,
+
+    /// The SPL token program.
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, token::Token>,
+
+    /// The SPL associated token program.
+    #[account(address = anchor_spl::associated_token::ID)]
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+}
+
 /// Register registers a new miner and initialize a proof account for them.
 #[derive(Accounts)]
 pub struct Register<'info> {
@@ -406,40 +539,84 @@ pub struct ResetEpoch<'info> {
     pub signer: Signer<'info>,
 
     /// Bus account 0.
-    #[account(mut, seeds = [BUS, &[0]], bump)]
-    pub bus_0: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[0]], bump = bus_0.bump)]
+    pub bus_0: Box<Account<'info, Bus>>,
 
     /// Bus account 1.
-    #[account(mut, seeds = [BUS, &[1]], bump)]
-    pub bus_1: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[1]], bump = bus_1.bump)]
+    pub bus_1: Box<Account<'info, Bus>>,
 
     /// Bus account 2.
-    #[account(mut, seeds = [BUS, &[2]], bump)]
-    pub bus_2: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[2]], bump = bus_2.bump)]
+    pub bus_2: Box<Account<'info, Bus>>,
 
     /// Bus account 3.
-    #[account(mut, seeds = [BUS, &[3]], bump)]
-    pub bus_3: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[3]], bump = bus_3.bump)]
+    pub bus_3: Box<Account<'info, Bus>>,
 
     /// Bus account 4.
-    #[account(mut, seeds = [BUS, &[4]], bump)]
-    pub bus_4: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[4]], bump = bus_4.bump)]
+    pub bus_4: Box<Account<'info, Bus>>,
 
     /// Bus account 5.
-    #[account(mut, seeds = [BUS, &[5]], bump)]
-    pub bus_5: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[5]], bump = bus_5.bump)]
+    pub bus_5: Box<Account<'info, Bus>>,
 
     /// Bus account 6.
-    #[account(mut, seeds = [BUS, &[6]], bump)]
-    pub bus_6: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[6]], bump = bus_6.bump)]
+    pub bus_6: Box<Account<'info, Bus>>,
 
     /// Bus account 7.
-    #[account(mut, seeds = [BUS, &[7]], bump)]
-    pub bus_7: Account<'info, Bus>,
+    #[account(mut, seeds = [BUS, &[7]], bump = bus_7.bump)]
+    pub bus_7: Box<Account<'info, Bus>>,
+
+    /// Bus token account 0.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_0)]
+    pub bus_0_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 1.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_1)]
+    pub bus_1_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 2.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_2)]
+    pub bus_2_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 3.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_3)]
+    pub bus_3_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 4.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_4)]
+    pub bus_4_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 5.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_5)]
+    pub bus_5_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 6.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_6)]
+    pub bus_6_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// Bus token account 7.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_7)]
+    pub bus_7_tokens: Box<Account<'info, TokenAccount>>,
+
+    /// The Ore token mint account.
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
 
     /// The metadata account.
-    #[account(mut, seeds = [METADATA], bump)]
+    #[account(mut, seeds = [METADATA], bump = metadata.bump, has_one = mint)]
     pub metadata: Account<'info, Metadata>,
+
+    /// The SPL token program.
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, token::Token>,
+
+    /// The SPL associated token program.
+    #[account(address = anchor_spl::associated_token::ID)]
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
 #[derive(Accounts)]
@@ -453,9 +630,13 @@ pub struct Mine<'info> {
     #[account(mut, token::mint = mint)]
     pub beneficiary: Account<'info, TokenAccount>,
 
-    /// One of the bus accounts.
+    /// A bus account.
     #[account(mut)]
     pub bus: Account<'info, Bus>,
+
+    /// The bus' token account.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = bus)]
+    pub bus_tokens: Account<'info, TokenAccount>,
 
     /// The metadata account.
     #[account(seeds = [METADATA], bump = metadata.bump, has_one = mint)]
@@ -466,7 +647,7 @@ pub struct Mine<'info> {
     pub proof: Account<'info, Proof>,
 
     /// The Ore token mint account.
-    #[account(mut)]
+    #[account()]
     pub mint: Account<'info, Mint>,
 
     /// The SPL token program.
@@ -512,6 +693,8 @@ pub enum ProgramError {
     EpochNeedsReset,
     #[msg("This bus hash reached its hash quota for this epoch")]
     BusQuotaFilled,
+    #[msg("This bus does not have enough tokens to pay the reward")]
+    BusInsufficientFunds,
 }
 
 #[cfg(test)]
