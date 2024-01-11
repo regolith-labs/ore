@@ -15,7 +15,7 @@ use anchor_spl::{
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
 // TODO Set this to a reasonable value.
-pub const DIFFICULTY: Hash = Hash::new_from_array([
+pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
     0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 ]);
@@ -36,7 +36,7 @@ pub const EXPECTED_EPOCH_REWARDS: u64 = ONE_ORE; // 10u64.pow(TOKEN_DECIMALS as 
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
 /// than factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 8;
+pub const SMOOTHING_FACTOR: u64 = 2;
 
 /// The decimal precision of the ORE token.
 /// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
@@ -46,6 +46,9 @@ pub const TOKEN_DECIMALS: u8 = 9;
 /// The number of available bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: u8 = 8;
 
+// Assert ONE_ORE is evenly divisible by BUS_COUNT
+static_assertions::const_assert!((ONE_ORE / BUS_COUNT as u64) * BUS_COUNT as u64 == ONE_ORE);
+
 #[program]
 mod ore {
     use super::*;
@@ -53,8 +56,10 @@ mod ore {
     /// Initializes the metadata account. Can only be invoked once.
     pub fn initialize_metadata(ctx: Context<InitializeMetadata>) -> Result<()> {
         ctx.accounts.metadata.bump = ctx.bumps.metadata;
-        ctx.accounts.metadata.reward_rate = 10u64.pow(TOKEN_DECIMALS.saturating_div(2) as u32);
+        ctx.accounts.metadata.admin = ctx.accounts.signer.key();
+        ctx.accounts.metadata.difficulty = INITIAL_DIFFICULTY;
         ctx.accounts.metadata.mint = ctx.accounts.mint.key();
+        ctx.accounts.metadata.reward_rate = 10u64.pow(TOKEN_DECIMALS.saturating_div(2) as u32);
         Ok(())
     }
 
@@ -84,12 +89,19 @@ mod ore {
         Ok(())
     }
 
+    // TODO Rename to `initialize_proof`?
     /// Initializes a proof account for a new miner.
     pub fn register(ctx: Context<Register>) -> Result<()> {
         let proof = &mut ctx.accounts.proof;
         proof.authority = ctx.accounts.signer.key();
         proof.bump = ctx.bumps.proof;
         proof.hash = hashv(&[&ctx.accounts.signer.key().to_bytes()]);
+        Ok(())
+    }
+
+    /// Updates the difficulty to a new value. Can only be invoked by the admin authority.
+    pub fn update_difficulty(ctx: Context<UpdateDifficulty>, new_difficulty: Hash) -> Result<()> {
+        ctx.accounts.metadata.difficulty = new_difficulty;
         Ok(())
     }
 
@@ -191,7 +203,7 @@ mod ore {
         Ok(())
     }
 
-    /// Mints new Ore tokens to miners who submit valid hashes.
+    /// Distributes Ore tokens to signers who submit a valid hash.
     pub fn mine(ctx: Context<Mine>, hash: Hash, nonce: u64) -> Result<()> {
         // Validate epoch is active.
         let clock = Clock::get().unwrap();
@@ -209,15 +221,24 @@ mod ore {
             hash.clone(),
             ctx.accounts.signer.key(),
             nonce,
-            DIFFICULTY,
+            metadata.difficulty,
         )?;
 
-        // Update state.
+        // Update bus.
         let bus = &mut ctx.accounts.bus;
         bus.hashes = bus.hashes.saturating_add(1);
         bus.rewards = bus.rewards.saturating_add(metadata.reward_rate);
-        proof.hash = hash.clone();
 
+        // Hash a recent slot hash into the next hash to prevent pre-mining attacks.
+        // TODO is this the right bit slice to use?
+        let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..(64 + 256)];
+        proof.hash = hashv(&[hash.as_ref(), slot_hash_bytes]);
+
+        // TODO Give an admin authority can update the difficulty, can this check be removed?
+        //      As long as difficulty is high enough, this should never happen. Even if this does
+        //      happen, with the check removed, the most that can be distributed in an epoch is what's
+        //      in the busses.
+        //
         // Error if this bus has reached its hash quota for the epoch.
         //
         // This constraint places an upper bound on the total number of hashes that can be
@@ -240,7 +261,7 @@ mod ore {
             ProgramError::BusQuotaFilled
         );
 
-        // Issue tokens from bus to beneficiary.
+        // Distribute tokens from bus to beneficiary.
         let bus_tokens = &ctx.accounts.bus_tokens;
         require!(
             bus_tokens.amount.ge(&metadata.reward_rate),
@@ -271,13 +292,11 @@ fn validate_hash(
     difficulty: Hash,
 ) -> Result<()> {
     // Validate hash correctness.
-    let bytes = [
-        current_hash.to_bytes().as_slice(),
-        signer.to_bytes().as_slice(),
+    let hash_ = hashv(&[
+        current_hash.as_ref(),
+        signer.as_ref(),
         nonce.to_be_bytes().as_slice(),
-    ]
-    .concat();
-    let hash_ = hashv(&[&bytes]);
+    ]);
     require!(hash.eq(&hash_), ProgramError::HashInvalid);
 
     // Validate hash difficulty.
@@ -372,6 +391,12 @@ pub struct Metadata {
     /// The bump of the metadata account PDA.
     pub bump: u8,
 
+    /// The admin authority with permission to update the difficulty.
+    pub admin: Pubkey,
+
+    /// The hash difficulty.
+    pub difficulty: Hash,
+
     /// The mint address of the ORE token.
     pub mint: Pubkey,
 
@@ -436,7 +461,7 @@ pub struct InitializeBusses<'info> {
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint account.
-    #[account()]
+    #[account(address = metadata.mint)]
     pub mint: Account<'info, Mint>,
 
     /// Bus account 0.
@@ -487,7 +512,7 @@ pub struct InitializeBusTokens<'info> {
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint account.
-    #[account()]
+    #[account(address = metadata.mint)]
     pub mint: Account<'info, Mint>,
 
     /// The bus account.
@@ -495,7 +520,7 @@ pub struct InitializeBusTokens<'info> {
     pub bus: Account<'info, Bus>,
 
     /// The bus token account.
-    #[account(init, associated_token::mint = mint, associated_token::authority = bus, payer = signer)]
+    #[account(init, associated_token::mint = mint, associated_token::authority = bus, payer = signer, constraint = bus.id.lt(&BUS_COUNT))]
     pub bus_tokens: Account<'info, TokenAccount>,
 
     /// The rent sysvar account.
@@ -529,6 +554,18 @@ pub struct Register<'info> {
     /// The Solana system program.
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(new_difficulty: Hash)]
+pub struct UpdateDifficulty<'info> {
+    /// The signer of the transaction (i.e. the miner).
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// The metadata account.
+    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    pub metadata: Account<'info, Metadata>,
 }
 
 // ResetEpoch adjusts the reward rate based on global hashpower and begins the new epoch.
@@ -603,7 +640,7 @@ pub struct ResetEpoch<'info> {
     pub bus_7_tokens: Box<Account<'info, TokenAccount>>,
 
     /// The Ore token mint account.
-    #[account(mut)]
+    #[account(mut, address = metadata.mint)]
     pub mint: Account<'info, Mint>,
 
     /// The metadata account.
@@ -647,12 +684,17 @@ pub struct Mine<'info> {
     pub proof: Account<'info, Proof>,
 
     /// The Ore token mint account.
-    #[account()]
+    #[account(address = metadata.mint)]
     pub mint: Account<'info, Mint>,
 
     /// The SPL token program.
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, token::Token>,
+
+    /// The slot hashes sysvar account.
+    /// CHECK: SlotHashes sysvar cannot deserialize from an account info. Instead we manually verify the sysvar address and use only the slice we need.
+    #[account(address = sysvar::slot_hashes::ID)]
+    pub slot_hashes: AccountInfo<'info>,
 }
 
 /// MineEvent logs revelant data about a successful Ore mining transaction.
@@ -691,10 +733,14 @@ pub enum ProgramError {
     NotStarted,
     #[msg("The epoch has ended and needs to be reset")]
     EpochNeedsReset,
+    #[msg("An invalid bus account was provided")]
+    BusInvalid,
     #[msg("This bus hash reached its hash quota for this epoch")]
     BusQuotaFilled,
     #[msg("This bus does not have enough tokens to pay the reward")]
     BusInsufficientFunds,
+    #[msg("The signer is not authorized to perform this action")]
+    NotAuthorized,
 }
 
 #[cfg(test)]
