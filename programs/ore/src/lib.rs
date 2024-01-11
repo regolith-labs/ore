@@ -4,6 +4,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         hash::{hashv, Hash},
+        slot_hashes::SlotHash,
         system_program, sysvar,
     },
 };
@@ -12,39 +13,48 @@ use anchor_spl::{
     token::{self, Mint, MintTo, TokenAccount},
 };
 
+// TODO Upgrade to token22
+// TODO Use the confidential transfers extension.
+// TODO Use the memo extension?
+
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
-
-// TODO Set this to a reasonable value.
-pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
-    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-]);
-
-// TODO Set this before deployment
-/// The start time for which mining can begin.
-pub const START_AT: i64 = 0;
-
-/// The duration of an epoch, in units of seconds.
-pub const EPOCH_DURATION: i64 = 60;
-
-/// One ORE token, denominated in indivisible units of nanoORE.
-pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
-
-/// The quantity of ORE expected to be minted per epoch, in units of indivisible nanoORE.
-/// Inflation rate = 1 ORE / epoch
-pub const EXPECTED_EPOCH_REWARDS: u64 = ONE_ORE; // 10u64.pow(TOKEN_DECIMALS as u32);
-
-/// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
-/// than factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 2;
 
 /// The decimal precision of the ORE token.
 /// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
 /// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
 pub const TOKEN_DECIMALS: u8 = 9;
 
-/// The number of available bus accounts, for parallelizing mine operations.
+/// One ORE token, denominated in units of nanoORE.
+pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
+
+/// The duration of an epoch, in units of seconds.
+pub const EPOCH_DURATION: i64 = 60;
+
+/// The target quantity of ORE to be mined per epoch, in units of nanoORE.
+/// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE;
+
+/// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
+/// than factor of this constant from one epoch to the next.
+pub const SMOOTHING_FACTOR: u64 = 2;
+
+/// The number of bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: u8 = 8;
+
+/// The quantity of ORE each bus will be topped up with at the beginning of each epoch.
+pub const BUS_BALANCE: u64 = TARGET_EPOCH_REWARDS
+    .saturating_mul(SMOOTHING_FACTOR)
+    .saturating_div(BUS_COUNT as u64);
+
+/// The initial hashing difficulty. The admin authority can update this in the future, if needed.
+pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
+    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+]);
+
+// TODO Set this before deployment
+/// The unix timestamp after which mining is allowed.
+pub const START_AT: i64 = 0;
 
 // Assert ONE_ORE is evenly divisible by BUS_COUNT
 static_assertions::const_assert!((ONE_ORE / BUS_COUNT as u64) * BUS_COUNT as u64 == ONE_ORE);
@@ -89,19 +99,13 @@ mod ore {
         Ok(())
     }
 
-    // TODO Rename to `initialize_proof`?
+    // TODO Rename to `initialize_proof` for naming consistency?
     /// Initializes a proof account for a new miner.
     pub fn register(ctx: Context<Register>) -> Result<()> {
         let proof = &mut ctx.accounts.proof;
         proof.authority = ctx.accounts.signer.key();
         proof.bump = ctx.bumps.proof;
         proof.hash = hashv(&[&ctx.accounts.signer.key().to_bytes()]);
-        Ok(())
-    }
-
-    /// Updates the difficulty to a new value. Can only be invoked by the admin authority.
-    pub fn update_difficulty(ctx: Context<UpdateDifficulty>, new_difficulty: Hash) -> Result<()> {
-        ctx.accounts.metadata.difficulty = new_difficulty;
         Ok(())
     }
 
@@ -203,7 +207,7 @@ mod ore {
         Ok(())
     }
 
-    /// Distributes Ore tokens to signers who submit a valid hash.
+    /// Distributes Ore tokens to the signer if a valid hash is provided.
     pub fn mine(ctx: Context<Mine>, hash: Hash, nonce: u64) -> Result<()> {
         // Validate epoch is active.
         let clock = Clock::get().unwrap();
@@ -229,37 +233,14 @@ mod ore {
         bus.hashes = bus.hashes.saturating_add(1);
         bus.rewards = bus.rewards.saturating_add(metadata.reward_rate);
 
-        // Hash a recent slot hash into the next hash to prevent pre-mining attacks.
         // TODO is this the right bit slice to use?
-        let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..(64 + 256)];
+        // Hash a recent slot hash into the next hash to prevent pre-mining attacks.
+        // let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..(64 + 256)];
+        let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..size_of::<SlotHash>()];
+        let x: SlotHash =
+            bincode::deserialize(slot_hash_bytes).expect("Failed to deserialize slot hash");
+        msg!("Slot hash: {:?}", x);
         proof.hash = hashv(&[hash.as_ref(), slot_hash_bytes]);
-
-        // TODO Give an admin authority can update the difficulty, can this check be removed?
-        //      As long as difficulty is high enough, this should never happen. Even if this does
-        //      happen, with the check removed, the most that can be distributed in an epoch is what's
-        //      in the busses.
-        //
-        // Error if this bus has reached its hash quota for the epoch.
-        //
-        // This constraint places an upper bound on the total number of hashes that can be
-        // processed during any given epoch. This limit is necessary to maintain a constant
-        // 1 ORE/epoch inflation rate in the potential future scenario where global hashpower
-        // is so great that the reward rate is pushed to its minimum non-divisible value
-        // of 1 (one nanoORE) and miners are submitting >10^9 mine ops per epoch.
-        //
-        // In this extreme scenario, we err to the side of hardcapping inflation at 1 ORE/epoch.
-        // Even if all busses are saturated, miners can still avoid starvation by waiting until
-        // the next epoch and submitting transactions with a market rate priority fee.
-        //
-        // Even if Solana achieves 1M real TPS and all transactions are mine ops, the network
-        // would still only be able to process (60 * 1,000,000) = 60,000,000 hashes per epoch.
-        // That is, Solana should reach its network saturation point long before this quota
-        // is enforced here.
-        require!(
-            bus.hashes
-                .le(&EXPECTED_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64)),
-            ProgramError::BusQuotaFilled
-        );
 
         // Distribute tokens from bus to beneficiary.
         let bus_tokens = &ctx.accounts.bus_tokens;
@@ -280,6 +261,30 @@ mod ore {
             metadata.reward_rate,
         )?;
 
+        Ok(())
+    }
+
+    /// Updates the admin to a new value. Can only be invoked by the admin authority.
+    pub fn update_admin(ctx: Context<UpdateDifficulty>, new_admin: Pubkey) -> Result<()> {
+        ctx.accounts.metadata.admin = new_admin;
+        Ok(())
+    }
+
+    /// Updates the difficulty to a new value. Can only be invoked by the admin authority.
+    ///
+    /// Ore subdivides into 1B units of indivisible nanoORE. If global hashpower increases to the
+    /// point where >1B valid hashes are being submitted per epoch, the Ore inflation rate could
+    /// be pushed steadily above 1 ORE/epoch. The protocol guarantees inflation can never exceed
+    /// 2 ORE/epoch, but it is the responsibility of the admin to adjust the mining difficulty
+    /// as needed to maintain the 1 ORE/epoch average.
+    ///
+    /// It is worth noting that Solana today processes well below 1M real TPS or
+    /// (60 * 1,000,000) = 60,000,000 hashes per epoch. Even if every transaction on the network
+    /// were mine operation, this is still two orders of magnitude below the threshold where the
+    /// Ore inflation rate would be challenged. So in practice, Solana is likely to reach its
+    /// network saturation point long before the Ore inflation hits its boundary condition.
+    pub fn update_difficulty(ctx: Context<UpdateDifficulty>, new_difficulty: Hash) -> Result<()> {
+        ctx.accounts.metadata.difficulty = new_difficulty;
         Ok(())
     }
 }
@@ -313,7 +318,7 @@ fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
 
     // Calculate new reward rate.
     let new_rate = (current_rate as u128)
-        .saturating_mul(EXPECTED_EPOCH_REWARDS as u128)
+        .saturating_mul(TARGET_EPOCH_REWARDS as u128)
         .saturating_div(epoch_rewards as u128) as u64;
 
     // Smooth reward rate to not change by more than a constant factor from one epoch to the next.
@@ -336,8 +341,8 @@ fn reset_bus<'info>(
     bus.hashes = 0;
     bus.rewards = 0;
 
-    // Top up bus account with 1 ORE.
-    let amount = ONE_ORE.saturating_sub(bus_tokens.amount);
+    // Top up bus account.
+    let amount = BUS_BALANCE.saturating_sub(bus_tokens.amount);
     if amount.gt(&0) {
         token::mint_to(
             CpiContext::new_with_signer(
@@ -516,7 +521,7 @@ pub struct InitializeBusTokens<'info> {
     pub mint: Account<'info, Mint>,
 
     /// The bus account.
-    #[account()]
+    #[account(constraint = bus.id.lt(&BUS_COUNT) @ ProgramError::BusInvalid)]
     pub bus: Account<'info, Bus>,
 
     /// The bus token account.
@@ -554,18 +559,6 @@ pub struct Register<'info> {
     /// The Solana system program.
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(new_difficulty: Hash)]
-pub struct UpdateDifficulty<'info> {
-    /// The signer of the transaction (i.e. the miner).
-    #[account(mut)]
-    pub signer: Signer<'info>,
-
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
-    pub metadata: Account<'info, Metadata>,
 }
 
 // ResetEpoch adjusts the reward rate based on global hashpower and begins the new epoch.
@@ -656,6 +649,7 @@ pub struct ResetEpoch<'info> {
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
+/// Mine distributes Ore to the beneficiary if the signer provides a valid hash.
 #[derive(Accounts)]
 #[instruction(hash: Hash, nonce: u64)]
 pub struct Mine<'info> {
@@ -668,7 +662,7 @@ pub struct Mine<'info> {
     pub beneficiary: Account<'info, TokenAccount>,
 
     /// A bus account.
-    #[account(mut)]
+    #[account(mut, constraint = bus.id.lt(&BUS_COUNT) @ ProgramError::BusInvalid)]
     pub bus: Account<'info, Bus>,
 
     /// The bus' token account.
@@ -695,6 +689,32 @@ pub struct Mine<'info> {
     /// CHECK: SlotHashes sysvar cannot deserialize from an account info. Instead we manually verify the sysvar address and use only the slice we need.
     #[account(address = sysvar::slot_hashes::ID)]
     pub slot_hashes: AccountInfo<'info>,
+}
+
+/// UpdateAdmin allows the admin to reassign the admin authority.
+#[derive(Accounts)]
+#[instruction(new_admin: Pubkey)]
+pub struct UpdateAdmin<'info> {
+    /// The signer of the transaction (i.e. the admin).
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// The metadata account.
+    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    pub metadata: Account<'info, Metadata>,
+}
+
+/// UpdateDifficulty allows the admin to update the mining difficulty.
+#[derive(Accounts)]
+#[instruction(new_difficulty: Hash)]
+pub struct UpdateDifficulty<'info> {
+    /// The signer of the transaction (i.e. the admin).
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    /// The metadata account.
+    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    pub metadata: Account<'info, Metadata>,
 }
 
 /// MineEvent logs revelant data about a successful Ore mining transaction.
@@ -750,9 +770,7 @@ mod tests {
         solana_program::hash::{hashv, Hash},
     };
 
-    use crate::{
-        calculate_new_reward_rate, validate_hash, EXPECTED_EPOCH_REWARDS, SMOOTHING_FACTOR,
-    };
+    use crate::{calculate_new_reward_rate, validate_hash, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS};
 
     #[test]
     fn test_validate_hash_pass() {
@@ -798,7 +816,7 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_stable() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, EXPECTED_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }
 
@@ -812,20 +830,16 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_lower() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(
-            current_rate,
-            EXPECTED_EPOCH_REWARDS.saturating_add(1_000_000),
-        );
+        let new_rate =
+            calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_add(1_000_000));
         assert!(new_rate.lt(&current_rate));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_higher() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(
-            current_rate,
-            EXPECTED_EPOCH_REWARDS.saturating_sub(1_000_000),
-        );
+        let new_rate =
+            calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_sub(1_000_000));
         assert!(new_rate.gt(&current_rate));
     }
 
