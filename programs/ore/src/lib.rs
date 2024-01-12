@@ -52,12 +52,17 @@ pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 ]);
 
+/// The initial reward rate to payout in the first epoch.
+pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
+
 // TODO Set this before deployment
 /// The unix timestamp after which mining is allowed.
 pub const START_AT: i64 = 0;
 
-// Assert ONE_ORE is evenly divisible by BUS_COUNT
-static_assertions::const_assert!((ONE_ORE / BUS_COUNT as u64) * BUS_COUNT as u64 == ONE_ORE);
+// Assert TARGET_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
+static_assertions::const_assert!(
+    (TARGET_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == TARGET_EPOCH_REWARDS
+);
 
 #[program]
 mod ore {
@@ -67,9 +72,9 @@ mod ore {
     pub fn initialize_metadata(ctx: Context<InitializeMetadata>) -> Result<()> {
         ctx.accounts.metadata.bump = ctx.bumps.metadata;
         ctx.accounts.metadata.admin = ctx.accounts.signer.key();
-        ctx.accounts.metadata.difficulty = INITIAL_DIFFICULTY;
         ctx.accounts.metadata.mint = ctx.accounts.mint.key();
-        ctx.accounts.metadata.reward_rate = 10u64.pow(TOKEN_DECIMALS.saturating_div(2) as u32);
+        ctx.accounts.metadata.difficulty = INITIAL_DIFFICULTY;
+        ctx.accounts.metadata.reward_rate = INITIAL_REWARD_RATE;
         Ok(())
     }
 
@@ -99,13 +104,11 @@ mod ore {
         Ok(())
     }
 
-    // TODO Rename to `initialize_proof` for naming consistency?
-    /// Initializes a proof account for a new miner.
-    pub fn register(ctx: Context<Register>) -> Result<()> {
-        let proof = &mut ctx.accounts.proof;
-        proof.authority = ctx.accounts.signer.key();
-        proof.bump = ctx.bumps.proof;
-        proof.hash = hashv(&[&ctx.accounts.signer.key().to_bytes()]);
+    /// Initializes a proof account for a new miner. Can only invoked once per signer.
+    pub fn initialize_proof(ctx: Context<InitializeProof>) -> Result<()> {
+        ctx.accounts.proof.authority = ctx.accounts.signer.key();
+        ctx.accounts.proof.bump = ctx.bumps.proof;
+        ctx.accounts.proof.hash = hashv(&[&ctx.accounts.signer.key().to_bytes()]);
         Ok(())
     }
 
@@ -130,14 +133,14 @@ mod ore {
         let bus_6 = &mut ctx.accounts.bus_6;
         let bus_7 = &mut ctx.accounts.bus_7;
         let total_epoch_rewards = bus_0
-            .rewards
-            .saturating_add(bus_1.rewards)
-            .saturating_add(bus_2.rewards)
-            .saturating_add(bus_3.rewards)
-            .saturating_add(bus_4.rewards)
-            .saturating_add(bus_5.rewards)
-            .saturating_add(bus_6.rewards)
-            .saturating_add(bus_7.rewards);
+            .epoch_rewards
+            .saturating_add(bus_1.epoch_rewards)
+            .saturating_add(bus_2.epoch_rewards)
+            .saturating_add(bus_3.epoch_rewards)
+            .saturating_add(bus_4.epoch_rewards)
+            .saturating_add(bus_5.epoch_rewards)
+            .saturating_add(bus_6.epoch_rewards)
+            .saturating_add(bus_7.epoch_rewards);
 
         // Update the reward amount for the next epoch.
         metadata.reward_rate = calculate_new_reward_rate(metadata.reward_rate, total_epoch_rewards);
@@ -228,19 +231,19 @@ mod ore {
             metadata.difficulty,
         )?;
 
-        // Update bus.
+        // Update bus stats.
         let bus = &mut ctx.accounts.bus;
-        bus.hashes = bus.hashes.saturating_add(1);
-        bus.rewards = bus.rewards.saturating_add(metadata.reward_rate);
+        bus.epoch_rewards = bus.epoch_rewards.saturating_add(metadata.reward_rate);
 
-        // TODO is this the right bit slice to use?
+        // Update miner stats.
+        proof.total_hashes = proof.total_hashes.saturating_add(1);
+        proof.total_rewards = proof.total_rewards.saturating_add(1);
+
         // Hash a recent slot hash into the next hash to prevent pre-mining attacks.
-        // let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..(64 + 256)];
         let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..size_of::<SlotHash>()];
-        let x: SlotHash =
+        let slot_hash: SlotHash =
             bincode::deserialize(slot_hash_bytes).expect("Failed to deserialize slot hash");
-        msg!("Slot hash: {:?}", x);
-        proof.hash = hashv(&[hash.as_ref(), slot_hash_bytes]);
+        proof.hash = hashv(&[hash.as_ref(), slot_hash.1.as_ref()]);
 
         // Distribute tokens from bus to beneficiary.
         let bus_tokens = &ctx.accounts.bus_tokens;
@@ -338,8 +341,7 @@ fn reset_bus<'info>(
     token_program: &Program<'info, token::Token>,
 ) -> Result<()> {
     // Reset bus state.
-    bus.hashes = 0;
-    bus.rewards = 0;
+    bus.epoch_rewards = 0;
 
     // Top up bus account.
     let amount = BUS_BALANCE.saturating_sub(bus_tokens.amount);
@@ -382,11 +384,8 @@ pub struct Bus {
     /// The ID of the bus account.
     pub id: u8,
 
-    /// The count of valid hashes submited to this bus in the current epoch.
-    pub hashes: u64,
-
     /// The count of rewards issued by this bus in the current epoch.
-    pub rewards: u64,
+    pub epoch_rewards: u64,
 }
 
 /// Metadata is an account type used to track global program variables.
@@ -412,8 +411,6 @@ pub struct Metadata {
     pub reward_rate: u64,
 }
 
-// TODO Track lifetime rewards?
-// TODO Track lifetime hashes?
 /// Proof is an account type used to track a miner's hash chain.
 #[account]
 #[derive(Debug)]
@@ -426,6 +423,12 @@ pub struct Proof {
 
     /// The proof's current hash.
     pub hash: Hash,
+
+    /// The total lifetime hashes provided by this miner.
+    pub total_hashes: u64,
+
+    /// The total lifetime rewards distributed to this miner.
+    pub total_rewards: u64,
 }
 
 #[derive(Accounts)]
@@ -545,9 +548,9 @@ pub struct InitializeBusTokens<'info> {
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
-/// Register registers a new miner and initialize a proof account for them.
+/// InitializeProof initializes a new proof account for a miner.
 #[derive(Accounts)]
-pub struct Register<'info> {
+pub struct InitializeProof<'info> {
     /// The signer of the transaction.
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -654,7 +657,7 @@ pub struct ResetEpoch<'info> {
 #[instruction(hash: Hash, nonce: u64)]
 pub struct Mine<'info> {
     /// The signer of the transaction (i.e. the miner).
-    #[account(mut)]
+    #[account(mut, address = proof.authority)]
     pub signer: Signer<'info>,
 
     /// The beneficiary token account to mint rewards to.
@@ -674,7 +677,7 @@ pub struct Mine<'info> {
     pub metadata: Account<'info, Metadata>,
 
     /// The proof account.
-    #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump, constraint = signer.key().eq(&proof.authority))]
+    #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
     pub proof: Account<'info, Proof>,
 
     /// The Ore token mint account.
@@ -686,7 +689,7 @@ pub struct Mine<'info> {
     pub token_program: Program<'info, token::Token>,
 
     /// The slot hashes sysvar account.
-    /// CHECK: SlotHashes sysvar cannot deserialize from an account info. Instead we manually verify the sysvar address and use only the slice we need.
+    /// CHECK: SlotHashes is too large to deserialize. Instead we manually verify the sysvar address and deserialize only the slice we need.
     #[account(address = sysvar::slot_hashes::ID)]
     pub slot_hashes: AccountInfo<'info>,
 }
@@ -721,7 +724,7 @@ pub struct UpdateDifficulty<'info> {
 #[event]
 #[derive(Debug)]
 pub struct MineEvent {
-    /// The signer of the transaction (i.e. the proof).
+    /// The signer of the transaction (i.e. the miner).
     pub signer: Pubkey,
 
     /// The beneficiary token account to which rewards were minted.
@@ -730,14 +733,14 @@ pub struct MineEvent {
     /// The quantity of new Ore tokens that were mined.
     pub reward: u64,
 
-    /// The updated Ore token supply.
+    /// The current Ore token supply.
     pub supply: u64,
-
-    /// The valid hash provided by the signer.
-    pub hash: Hash,
 
     /// The current mining difficulty.
     pub difficulty: Hash,
+
+    /// The valid hash provided by the signer.
+    pub hash: Hash,
 
     /// The nonce provided by the signer.
     pub nonce: u64,
@@ -755,8 +758,6 @@ pub enum ProgramError {
     EpochNeedsReset,
     #[msg("An invalid bus account was provided")]
     BusInvalid,
-    #[msg("This bus hash reached its hash quota for this epoch")]
-    BusQuotaFilled,
     #[msg("This bus does not have enough tokens to pay the reward")]
     BusInsufficientFunds,
     #[msg("The signer is not authorized to perform this action")]
