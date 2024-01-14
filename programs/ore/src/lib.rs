@@ -13,6 +13,8 @@ use anchor_spl::{
     token::{self, Mint, MintTo, TokenAccount},
 };
 
+// TODO Rename Metadata to Config?
+
 // TODO Upgrade to token22
 // TODO Use the confidential transfers extension.
 // TODO Use the memo extension?
@@ -23,6 +25,12 @@ declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 /// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
 /// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
 pub const TOKEN_DECIMALS: u8 = 9;
+
+/// The mint address of the ORE token.
+pub const TOKEN_MINT_ADDRESS: Pubkey = Pubkey::new_from_array([
+    104, 116, 55, 208, 161, 233, 115, 227, 49, 65, 34, 153, 138, 61, 159, 228, 16, 158, 53, 8, 4,
+    132, 86, 10, 198, 221, 80, 15, 115, 222, 47, 191,
+]);
 
 /// One ORE token, denominated in units of nanoORE.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
@@ -72,7 +80,6 @@ mod ore {
     pub fn initialize_metadata(ctx: Context<InitializeMetadata>) -> Result<()> {
         ctx.accounts.metadata.bump = ctx.bumps.metadata;
         ctx.accounts.metadata.admin = ctx.accounts.signer.key();
-        ctx.accounts.metadata.mint = ctx.accounts.mint.key();
         ctx.accounts.metadata.difficulty = INITIAL_DIFFICULTY;
         ctx.accounts.metadata.reward_rate = INITIAL_REWARD_RATE;
         Ok(())
@@ -401,9 +408,6 @@ pub struct Metadata {
     /// The hash difficulty.
     pub difficulty: Hash,
 
-    /// The mint address of the ORE token.
-    pub mint: Pubkey,
-
     /// The timestamp of the start of the current epoch.
     pub epoch_start_at: i64,
 
@@ -442,7 +446,7 @@ pub struct InitializeMetadata<'info> {
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint.
-    #[account(init, payer = signer, mint::decimals = TOKEN_DECIMALS, mint::authority = metadata)]
+    #[account(init, address = TOKEN_MINT_ADDRESS, payer = signer, mint::decimals = TOKEN_DECIMALS, mint::authority = metadata)]
     pub mint: Account<'info, Mint>,
 
     /// The rent sysvar account.
@@ -465,11 +469,11 @@ pub struct InitializeBusses<'info> {
     pub signer: Signer<'info>,
 
     /// The metadata account.
-    #[account(has_one = mint)]
+    #[account(seeds = [METADATA], bump = metadata.bump)]
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint account.
-    #[account(address = metadata.mint)]
+    #[account(address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
 
     /// Bus account 0.
@@ -516,11 +520,11 @@ pub struct InitializeBusTokens<'info> {
     pub signer: Signer<'info>,
 
     /// The metadata account.
-    #[account(has_one = mint)]
+    #[account(seeds = [METADATA], bump = metadata.bump)]
     pub metadata: Account<'info, Metadata>,
 
     /// The Ore token mint account.
-    #[account(address = metadata.mint)]
+    #[account(address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
 
     /// The bus account.
@@ -636,11 +640,11 @@ pub struct ResetEpoch<'info> {
     pub bus_7_tokens: Box<Account<'info, TokenAccount>>,
 
     /// The Ore token mint account.
-    #[account(mut, address = metadata.mint)]
+    #[account(mut, address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
 
     /// The metadata account.
-    #[account(mut, seeds = [METADATA], bump = metadata.bump, has_one = mint)]
+    #[account(mut, seeds = [METADATA], bump = metadata.bump)]
     pub metadata: Account<'info, Metadata>,
 
     /// The SPL token program.
@@ -673,7 +677,7 @@ pub struct Mine<'info> {
     pub bus_tokens: Account<'info, TokenAccount>,
 
     /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump, has_one = mint)]
+    #[account(seeds = [METADATA], bump = metadata.bump)]
     pub metadata: Account<'info, Metadata>,
 
     /// The proof account.
@@ -681,7 +685,7 @@ pub struct Mine<'info> {
     pub proof: Account<'info, Proof>,
 
     /// The Ore token mint account.
-    #[account(address = metadata.mint)]
+    #[account(address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
 
     /// The SPL token program.
