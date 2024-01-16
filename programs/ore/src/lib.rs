@@ -56,9 +56,13 @@ pub const BUS_BALANCE: u64 = TARGET_EPOCH_REWARDS
 
 /// The initial hashing difficulty. The admin authority can update this in the future, if needed.
 pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
-    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 ]);
+// pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
+//     0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+//     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+// ]);
 
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
