@@ -13,24 +13,31 @@ use anchor_spl::{
     token::{self, Mint, MintTo, TokenAccount},
 };
 
-// TODO Rename Metadata to Config?
-
-// TODO Upgrade to token22
-// TODO Use the confidential transfers extension.
-// TODO Use the memo extension?
-
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
-/// The decimal precision of the ORE token.
-/// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
-/// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
-pub const TOKEN_DECIMALS: u8 = 9;
+// TODO Set this before deployment
+/// The unix timestamp after which mining is allowed.
+pub const START_AT: i64 = 0;
+
+/// The initial reward rate to payout in the first epoch.
+pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
+
+/// The initial hashing difficulty. The admin authority can update this in the future, if needed.
+pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
+    0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+]);
 
 /// The mint address of the ORE token.
 pub const TOKEN_MINT_ADDRESS: Pubkey = Pubkey::new_from_array([
     104, 116, 55, 208, 161, 233, 115, 227, 49, 65, 34, 153, 138, 61, 159, 228, 16, 158, 53, 8, 4,
     132, 86, 10, 198, 221, 80, 15, 115, 222, 47, 191,
 ]);
+
+/// The decimal precision of the ORE token.
+/// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
+/// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
+pub const TOKEN_DECIMALS: u8 = 9;
 
 /// One ORE token, denominated in units of nanoORE.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
@@ -42,46 +49,34 @@ pub const EPOCH_DURATION: i64 = 60;
 /// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE;
 
-/// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
-/// than factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 2;
+/// The maximum quantity of ORE that can be mined per epoch, in units of nanoORE.
+pub const MAX_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(2);
+
+/// The quantity of ORE each bus is allowed to issue per epoch.
+pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64);
 
 /// The number of bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: u8 = 8;
 
-/// The quantity of ORE each bus will be topped up with at the beginning of each epoch.
-pub const BUS_BALANCE: u64 = TARGET_EPOCH_REWARDS
-    .saturating_mul(SMOOTHING_FACTOR)
-    .saturating_div(BUS_COUNT as u64);
+/// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
+/// than factor of this constant from one epoch to the next.
+pub const SMOOTHING_FACTOR: u64 = 2;
 
-/// The initial hashing difficulty. The admin authority can update this in the future, if needed.
-pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
-    0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-]);
-
-/// The initial reward rate to payout in the first epoch.
-pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
-
-// TODO Set this before deployment
-/// The unix timestamp after which mining is allowed.
-pub const START_AT: i64 = 0;
-
-// Assert TARGET_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
+// Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
-    (TARGET_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == TARGET_EPOCH_REWARDS
+    (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
 );
 
 #[program]
 mod ore {
     use super::*;
 
-    /// Initializes the metadata account. Can only be invoked once.
-    pub fn initialize_metadata(ctx: Context<InitializeMetadata>) -> Result<()> {
-        ctx.accounts.metadata.bump = ctx.bumps.metadata;
-        ctx.accounts.metadata.admin = ctx.accounts.signer.key();
-        ctx.accounts.metadata.difficulty = INITIAL_DIFFICULTY;
-        ctx.accounts.metadata.reward_rate = INITIAL_REWARD_RATE;
+    /// Initializes the treasury account. Can only be invoked once.
+    pub fn initialize_treasury(ctx: Context<InitializeTreasury>) -> Result<()> {
+        ctx.accounts.treasury.bump = ctx.bumps.treasury;
+        ctx.accounts.treasury.admin = ctx.accounts.signer.key();
+        ctx.accounts.treasury.difficulty = INITIAL_DIFFICULTY;
+        ctx.accounts.treasury.reward_rate = INITIAL_REWARD_RATE;
         Ok(())
     }
 
@@ -106,11 +101,6 @@ mod ore {
         Ok(())
     }
 
-    /// Initializes an associated token account for a bus. Can only be invoked once per bus.
-    pub fn initialize_bus_tokens(_ctx: Context<InitializeBusTokens>) -> Result<()> {
-        Ok(())
-    }
-
     /// Initializes a proof account for a new miner. Can only invoked once per signer.
     pub fn initialize_proof(ctx: Context<InitializeProof>) -> Result<()> {
         ctx.accounts.proof.authority = ctx.accounts.signer.key();
@@ -123,14 +113,15 @@ mod ore {
     pub fn reset_epoch(ctx: Context<ResetEpoch>) -> Result<()> {
         // Validate epoch has ended.
         let clock = Clock::get().unwrap();
-        let metadata = &mut ctx.accounts.metadata;
-        let epoch_end_at = metadata.epoch_start_at.saturating_add(EPOCH_DURATION);
+        let treasury = &mut ctx.accounts.treasury;
+        let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
         require!(
             clock.unix_timestamp.ge(&epoch_end_at),
             ProgramError::ClockInvalid
         );
 
         // Calculate total rewards issued during the epoch.
+        // TODO Require MAX_EPOCH_REWARDS >= remaining_available_rewards, else invalid math (fatal)...
         let bus_0 = &mut ctx.accounts.bus_0;
         let bus_1 = &mut ctx.accounts.bus_1;
         let bus_2 = &mut ctx.accounts.bus_2;
@@ -139,79 +130,43 @@ mod ore {
         let bus_5 = &mut ctx.accounts.bus_5;
         let bus_6 = &mut ctx.accounts.bus_6;
         let bus_7 = &mut ctx.accounts.bus_7;
-        let total_epoch_rewards = bus_0
-            .epoch_rewards
-            .saturating_add(bus_1.epoch_rewards)
-            .saturating_add(bus_2.epoch_rewards)
-            .saturating_add(bus_3.epoch_rewards)
-            .saturating_add(bus_4.epoch_rewards)
-            .saturating_add(bus_5.epoch_rewards)
-            .saturating_add(bus_6.epoch_rewards)
-            .saturating_add(bus_7.epoch_rewards);
+        let total_available_rewards = bus_0
+            .available_rewards
+            .saturating_add(bus_1.available_rewards)
+            .saturating_add(bus_2.available_rewards)
+            .saturating_add(bus_3.available_rewards)
+            .saturating_add(bus_4.available_rewards)
+            .saturating_add(bus_5.available_rewards)
+            .saturating_add(bus_6.available_rewards)
+            .saturating_add(bus_7.available_rewards);
+        let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_available_rewards);
 
         // Update the reward amount for the next epoch.
-        metadata.reward_rate = calculate_new_reward_rate(metadata.reward_rate, total_epoch_rewards);
-        metadata.epoch_start_at = clock.unix_timestamp;
+        treasury.reward_rate = calculate_new_reward_rate(treasury.reward_rate, total_epoch_rewards);
+        treasury.epoch_start_at = clock.unix_timestamp;
 
         // Reset bus accounts.
-        let mint = &ctx.accounts.mint;
-        let metadata = &ctx.accounts.metadata;
-        let token_program = &ctx.accounts.token_program;
-        reset_bus(
-            bus_0,
-            &mut ctx.accounts.bus_0_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_1,
-            &mut ctx.accounts.bus_1_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_2,
-            &mut ctx.accounts.bus_2_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_3,
-            &mut ctx.accounts.bus_3_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_4,
-            &mut ctx.accounts.bus_4_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_5,
-            &mut ctx.accounts.bus_5_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_6,
-            &mut ctx.accounts.bus_6_tokens,
-            mint,
-            metadata,
-            token_program,
-        )?;
-        reset_bus(
-            bus_7,
-            &mut ctx.accounts.bus_7_tokens,
-            mint,
-            metadata,
-            token_program,
+        bus_0.available_rewards = BUS_EPOCH_REWARDS;
+        bus_1.available_rewards = BUS_EPOCH_REWARDS;
+        bus_2.available_rewards = BUS_EPOCH_REWARDS;
+        bus_3.available_rewards = BUS_EPOCH_REWARDS;
+        bus_4.available_rewards = BUS_EPOCH_REWARDS;
+        bus_5.available_rewards = BUS_EPOCH_REWARDS;
+        bus_6.available_rewards = BUS_EPOCH_REWARDS;
+        bus_7.available_rewards = BUS_EPOCH_REWARDS;
+
+        // Top up treasury token account.
+        token::mint_to(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                MintTo {
+                    authority: treasury.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: ctx.accounts.treasury_tokens.to_account_info(),
+                },
+                &[&[TREASURY, &[treasury.bump]]],
+            ),
+            total_epoch_rewards,
         )?;
 
         Ok(())
@@ -221,54 +176,77 @@ mod ore {
     pub fn mine(ctx: Context<Mine>, hash: Hash, nonce: u64) -> Result<()> {
         // Validate epoch is active.
         let clock = Clock::get().unwrap();
-        let metadata = &mut ctx.accounts.metadata;
-        let epoch_end_at = metadata.epoch_start_at.saturating_add(EPOCH_DURATION);
+        let treasury = &mut ctx.accounts.treasury;
+        let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
         require!(
             clock.unix_timestamp.lt(&epoch_end_at),
             ProgramError::EpochNeedsReset
         );
 
-        // Validate hash.
+        // Validate provided hash.
         let proof = &mut ctx.accounts.proof;
         validate_hash(
             proof.hash.clone(),
             hash.clone(),
             ctx.accounts.signer.key(),
             nonce,
-            metadata.difficulty,
+            treasury.difficulty,
         )?;
 
-        // Update bus stats.
+        // Update claimable rewards.
         let bus = &mut ctx.accounts.bus;
-        bus.epoch_rewards = bus.epoch_rewards.saturating_add(metadata.reward_rate);
+        require!(
+            bus.available_rewards.ge(&treasury.reward_rate),
+            ProgramError::BusInsufficientFunds
+        );
+        bus.available_rewards = bus.available_rewards.saturating_sub(treasury.reward_rate);
+        proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
-        // Update miner stats.
-        proof.total_hashes = proof.total_hashes.saturating_add(1);
-        proof.total_rewards = proof.total_rewards.saturating_add(1);
-
-        // Hash a recent slot hash into the next hash to prevent pre-mining attacks.
+        // Hash most recent slot hash into the next challenge to prevent pre-mining attacks.
         let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..size_of::<SlotHash>()];
         let slot_hash: SlotHash =
             bincode::deserialize(slot_hash_bytes).expect("Failed to deserialize slot hash");
         proof.hash = hashv(&[hash.as_ref(), slot_hash.1.as_ref()]);
 
-        // Distribute tokens from bus to beneficiary.
-        let bus_tokens = &ctx.accounts.bus_tokens;
+        // Update lifetime stats.
+        proof.total_hashes = proof.total_hashes.saturating_add(1);
+        proof.total_rewards = proof.total_rewards.saturating_add(1);
+
+        Ok(())
+    }
+
+    pub fn claim(ctx: Context<Claim>, amount: u64) -> Result<()> {
+        // Validate claim is for an appropriate quantity of tokens.
+        let proof = &mut ctx.accounts.proof;
         require!(
-            bus_tokens.amount.ge(&metadata.reward_rate),
-            ProgramError::BusInsufficientFunds
+            amount.ge(&proof.claimable_rewards),
+            ProgramError::ClaimTooLarge
+        );
+
+        // Update claimable amount.
+        proof.claimable_rewards = proof.claimable_rewards.saturating_sub(amount);
+
+        // Update lifetime status.
+        let treasury = &mut ctx.accounts.treasury;
+        treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_sub(amount);
+
+        // Distribute tokens from treasury to beneficiary.
+        let treasury_tokens = &ctx.accounts.treasury_tokens;
+        require!(
+            treasury_tokens.amount.ge(&amount),
+            ProgramError::TreasuryInsufficientFunds
         );
         token::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
-                    from: bus_tokens.to_account_info(),
+                    from: treasury_tokens.to_account_info(),
                     to: ctx.accounts.beneficiary.to_account_info(),
-                    authority: bus.to_account_info(),
+                    authority: treasury.to_account_info(),
                 },
-                &[&[BUS, &[bus.id], &[bus.bump]]],
+                &[&[TREASURY, &[treasury.bump]]],
             ),
-            metadata.reward_rate,
+            amount,
         )?;
 
         Ok(())
@@ -276,7 +254,7 @@ mod ore {
 
     /// Updates the admin to a new value. Can only be invoked by the admin authority.
     pub fn update_admin(ctx: Context<UpdateDifficulty>, new_admin: Pubkey) -> Result<()> {
-        ctx.accounts.metadata.admin = new_admin;
+        ctx.accounts.treasury.admin = new_admin;
         Ok(())
     }
 
@@ -294,7 +272,7 @@ mod ore {
     /// Ore inflation rate would be challenged. So in practice, Solana is likely to reach its
     /// network saturation point long before the Ore inflation hits its boundary condition.
     pub fn update_difficulty(ctx: Context<UpdateDifficulty>, new_difficulty: Hash) -> Result<()> {
-        ctx.accounts.metadata.difficulty = new_difficulty;
+        ctx.accounts.treasury.difficulty = new_difficulty;
         Ok(())
     }
 }
@@ -336,48 +314,18 @@ fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
     let new_rate_smoothed = new_rate_min.max(new_rate_max.min(new_rate));
 
-    // Prevent reward rate from dropping below 1 or exceeding BUS_BALANCE and return.
-    new_rate_smoothed.max(1).min(BUS_BALANCE)
-}
-
-fn reset_bus<'info>(
-    bus: &mut Account<Bus>,
-    bus_tokens: &mut Account<'info, TokenAccount>,
-    mint: &Account<'info, Mint>,
-    metadata: &Account<'info, Metadata>,
-    token_program: &Program<'info, token::Token>,
-) -> Result<()> {
-    // Reset bus state.
-    bus.epoch_rewards = 0;
-
-    // Top up bus account.
-    let amount = BUS_BALANCE.saturating_sub(bus_tokens.amount);
-    if amount.gt(&0) {
-        token::mint_to(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                MintTo {
-                    authority: metadata.to_account_info(),
-                    mint: mint.to_account_info(),
-                    to: bus_tokens.to_account_info(),
-                },
-                &[&[METADATA, &[metadata.bump]]],
-            ),
-            amount,
-        )?;
-    }
-
-    Ok(())
+    // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
+    new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
 }
 
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
 
-/// The seed of the metadata account PDA.
-pub const METADATA: &[u8] = b"metadata";
-
 /// The seed of the proof account PDA.
 pub const PROOF: &[u8] = b"proof";
+
+/// The seed of the treasury account PDA.
+pub const TREASURY: &[u8] = b"treasury";
 
 /// Bus is an account type used to track the number of processed hashes and issued rewards
 /// during an epoch. There are 8 bus accounts to provide sufficient parallelism for mine ops
@@ -391,15 +339,38 @@ pub struct Bus {
     /// The ID of the bus account.
     pub id: u8,
 
-    /// The count of rewards issued by this bus in the current epoch.
-    pub epoch_rewards: u64,
+    /// The quantity of rewards this bus can issue in the current epoch epoch.
+    pub available_rewards: u64,
 }
 
-/// Metadata is an account type used to track global program variables.
+/// Proof is an account type used to track a miner's hash chain.
 #[account]
 #[derive(Debug, PartialEq)]
-pub struct Metadata {
-    /// The bump of the metadata account PDA.
+pub struct Proof {
+    /// The bump of the proof account PDA.
+    pub bump: u8,
+
+    /// The account (i.e. miner) authorized to use this proof.
+    pub authority: Pubkey,
+
+    /// The quantity of tokens this miner may claim from the treasury.
+    pub claimable_rewards: u64,
+
+    /// The proof's current hash.
+    pub hash: Hash,
+
+    /// The total lifetime hashes provided by this miner.
+    pub total_hashes: u64,
+
+    /// The total lifetime rewards distributed to this miner.
+    pub total_rewards: u64,
+}
+
+/// Treasury is an account type used to track global program variables.
+#[account]
+#[derive(Debug, PartialEq)]
+pub struct Treasury {
+    /// The bump of the treasury account PDA.
     pub bump: u8,
 
     /// The admin authority with permission to update the difficulty.
@@ -413,45 +384,28 @@ pub struct Metadata {
 
     /// The reward rate to payout to miners for submiting valid hashes.
     pub reward_rate: u64,
-}
 
-/// Proof is an account type used to track a miner's hash chain.
-#[account]
-#[derive(Debug, PartialEq)]
-pub struct Proof {
-    /// The bump of the proof account PDA.
-    pub bump: u8,
-
-    /// The account (i.e. miner) authorized to use this proof.
-    pub authority: Pubkey,
-
-    /// The proof's current hash.
-    pub hash: Hash,
-
-    /// The total lifetime hashes provided by this miner.
-    pub total_hashes: u64,
-
-    /// The total lifetime rewards distributed to this miner.
-    pub total_rewards: u64,
+    /// The total lifetime claimed rewards.
+    pub total_claimed_rewards: u64,
 }
 
 #[derive(Accounts)]
-pub struct InitializeMetadata<'info> {
+pub struct InitializeTreasury<'info> {
     /// The signer of the transaction.
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// The metadata account.
-    #[account(init, seeds = [METADATA], bump, payer = signer, space = 8 + size_of::<Metadata>())]
-    pub metadata: Account<'info, Metadata>,
-
     /// The Ore token mint.
-    #[account(init, address = TOKEN_MINT_ADDRESS, payer = signer, mint::decimals = TOKEN_DECIMALS, mint::authority = metadata)]
+    #[account(init, address = TOKEN_MINT_ADDRESS, payer = signer, mint::decimals = TOKEN_DECIMALS, mint::authority = treasury)]
     pub mint: Account<'info, Mint>,
 
-    /// The rent sysvar account.
-    #[account(address = sysvar::rent::ID)]
-    pub rent: Sysvar<'info, Rent>,
+    /// The treasury account.
+    #[account(init, seeds = [TREASURY], bump, payer = signer, space = 8 + size_of::<Treasury>())]
+    pub treasury: Account<'info, Treasury>,
+
+    /// The treasury token account.
+    #[account(init, associated_token::mint = mint, associated_token::authority = treasury, payer = signer)]
+    pub treasury_tokens: Account<'info, TokenAccount>,
 
     /// The Solana system program.
     #[account(address = system_program::ID)]
@@ -460,6 +414,14 @@ pub struct InitializeMetadata<'info> {
     /// The SPL token program.
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, token::Token>,
+
+    /// The SPL associated token program.
+    #[account(address = anchor_spl::associated_token::ID)]
+    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+
+    /// The rent sysvar account.
+    #[account(address = sysvar::rent::ID)]
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -468,9 +430,9 @@ pub struct InitializeBusses<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump)]
-    pub metadata: Account<'info, Metadata>,
+    /// The treasury account.
+    #[account(seeds = [TREASURY], bump = treasury.bump)]
+    pub treasury: Account<'info, Treasury>,
 
     /// The Ore token mint account.
     #[account(address = TOKEN_MINT_ADDRESS)]
@@ -511,45 +473,6 @@ pub struct InitializeBusses<'info> {
     /// The Solana system program.
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-pub struct InitializeBusTokens<'info> {
-    /// The signer of the transaction.
-    #[account(mut)]
-    pub signer: Signer<'info>,
-
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump)]
-    pub metadata: Account<'info, Metadata>,
-
-    /// The Ore token mint account.
-    #[account(address = TOKEN_MINT_ADDRESS)]
-    pub mint: Account<'info, Mint>,
-
-    /// The bus account.
-    #[account(constraint = bus.id.lt(&BUS_COUNT) @ ProgramError::BusInvalid)]
-    pub bus: Account<'info, Bus>,
-
-    /// The bus token account.
-    #[account(init, associated_token::mint = mint, associated_token::authority = bus, payer = signer, constraint = bus.id.lt(&BUS_COUNT))]
-    pub bus_tokens: Account<'info, TokenAccount>,
-
-    /// The rent sysvar account.
-    #[account(address = sysvar::rent::ID)]
-    pub rent: Sysvar<'info, Rent>,
-
-    /// The Solana system program.
-    #[account(address = system_program::ID)]
-    pub system_program: Program<'info, System>,
-
-    /// The SPL token program.
-    #[account(address = anchor_spl::token::ID)]
-    pub token_program: Program<'info, token::Token>,
-
-    /// The SPL associated token program.
-    #[account(address = anchor_spl::associated_token::ID)]
-    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
 /// InitializeProof initializes a new proof account for a miner.
@@ -607,53 +530,21 @@ pub struct ResetEpoch<'info> {
     #[account(mut, seeds = [BUS, &[7]], bump = bus_7.bump)]
     pub bus_7: Box<Account<'info, Bus>>,
 
-    /// Bus token account 0.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_0)]
-    pub bus_0_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 1.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_1)]
-    pub bus_1_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 2.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_2)]
-    pub bus_2_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 3.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_3)]
-    pub bus_3_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 4.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_4)]
-    pub bus_4_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 5.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_5)]
-    pub bus_5_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 6.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_6)]
-    pub bus_6_tokens: Box<Account<'info, TokenAccount>>,
-
-    /// Bus token account 7.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus_7)]
-    pub bus_7_tokens: Box<Account<'info, TokenAccount>>,
-
     /// The Ore token mint account.
     #[account(mut, address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
 
-    /// The metadata account.
-    #[account(mut, seeds = [METADATA], bump = metadata.bump)]
-    pub metadata: Account<'info, Metadata>,
+    /// The treasury account.
+    #[account(mut, seeds = [TREASURY], bump = treasury.bump)]
+    pub treasury: Account<'info, Treasury>,
+
+    /// The treasury token account.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = treasury)]
+    pub treasury_tokens: Account<'info, TokenAccount>,
 
     /// The SPL token program.
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, token::Token>,
-
-    /// The SPL associated token program.
-    #[account(address = anchor_spl::associated_token::ID)]
-    pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
 }
 
 /// Mine distributes Ore to the beneficiary if the signer provides a valid hash.
@@ -664,21 +555,9 @@ pub struct Mine<'info> {
     #[account(mut, address = proof.authority)]
     pub signer: Signer<'info>,
 
-    /// The beneficiary token account to mint rewards to.
-    #[account(mut, token::mint = mint)]
-    pub beneficiary: Account<'info, TokenAccount>,
-
     /// A bus account.
     #[account(mut, constraint = bus.id.lt(&BUS_COUNT) @ ProgramError::BusInvalid)]
     pub bus: Account<'info, Bus>,
-
-    /// The bus' token account.
-    #[account(mut, associated_token::mint = mint, associated_token::authority = bus)]
-    pub bus_tokens: Account<'info, TokenAccount>,
-
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump)]
-    pub metadata: Account<'info, Metadata>,
 
     /// The proof account.
     #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
@@ -687,6 +566,10 @@ pub struct Mine<'info> {
     /// The Ore token mint account.
     #[account(address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
+
+    /// The treasury account.
+    #[account(seeds = [TREASURY], bump = treasury.bump)]
+    pub treasury: Account<'info, Treasury>,
 
     /// The SPL token program.
     #[account(address = anchor_spl::token::ID)]
@@ -698,6 +581,38 @@ pub struct Mine<'info> {
     pub slot_hashes: AccountInfo<'info>,
 }
 
+#[derive(Accounts)]
+#[instruction(amount: u64)]
+pub struct Claim<'info> {
+    /// The signer of the transaction (i.e. the miner).
+    #[account(mut, address = proof.authority)]
+    pub signer: Signer<'info>,
+
+    /// The beneficiary token account to distribute rewards to.
+    #[account(mut, token::mint = mint)]
+    pub beneficiary: Account<'info, TokenAccount>,
+
+    /// The proof account.
+    #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
+    pub proof: Account<'info, Proof>,
+
+    /// The Ore token mint account.
+    #[account(address = TOKEN_MINT_ADDRESS)]
+    pub mint: Account<'info, Mint>,
+
+    /// The treasury account.
+    #[account(seeds = [TREASURY], bump = treasury.bump)]
+    pub treasury: Account<'info, Treasury>,
+
+    /// The treasury token account.
+    #[account(mut, associated_token::mint = mint, associated_token::authority = treasury)]
+    pub treasury_tokens: Account<'info, TokenAccount>,
+
+    /// The SPL token program.
+    #[account(address = anchor_spl::token::ID)]
+    pub token_program: Program<'info, token::Token>,
+}
+
 /// UpdateAdmin allows the admin to reassign the admin authority.
 #[derive(Accounts)]
 #[instruction(new_admin: Pubkey)]
@@ -706,9 +621,9 @@ pub struct UpdateAdmin<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
-    pub metadata: Account<'info, Metadata>,
+    /// The treasury account.
+    #[account(seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    pub treasury: Account<'info, Treasury>,
 }
 
 /// UpdateDifficulty allows the admin to update the mining difficulty.
@@ -719,9 +634,9 @@ pub struct UpdateDifficulty<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
-    /// The metadata account.
-    #[account(seeds = [METADATA], bump = metadata.bump, constraint = metadata.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
-    pub metadata: Account<'info, Metadata>,
+    /// The treasury account.
+    #[account(seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    pub treasury: Account<'info, Treasury>,
 }
 
 /// MineEvent logs revelant data about a successful Ore mining transaction.
@@ -766,6 +681,10 @@ pub enum ProgramError {
     BusInsufficientFunds,
     #[msg("The signer is not authorized to perform this action")]
     NotAuthorized,
+    #[msg("You cannot claim more tokens than are available")]
+    ClaimTooLarge,
+    #[msg("The treasury does not have enough tokens to honor the claim")]
+    TreasuryInsufficientFunds,
 }
 
 #[cfg(test)]
