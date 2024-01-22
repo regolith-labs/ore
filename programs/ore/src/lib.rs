@@ -56,7 +56,7 @@ pub const BUS_BALANCE: u64 = TARGET_EPOCH_REWARDS
 
 /// The initial hashing difficulty. The admin authority can update this in the future, if needed.
 pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
-    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 ]);
 
@@ -336,8 +336,8 @@ fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
     let new_rate_smoothed = new_rate_min.max(new_rate_max.min(new_rate));
 
-    // Prevent reward rate from reaching 0 and return.
-    new_rate_smoothed.max(1)
+    // Prevent reward rate from dropping below 1 or exceeding BUS_BALANCE and return.
+    new_rate_smoothed.max(1).min(BUS_BALANCE)
 }
 
 fn reset_bus<'info>(
@@ -383,7 +383,7 @@ pub const PROOF: &[u8] = b"proof";
 /// during an epoch. There are 8 bus accounts to provide sufficient parallelism for mine ops
 /// and reduce write lock contention.
 #[account]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Bus {
     /// The bump of the bus account PDA.
     pub bump: u8,
@@ -397,7 +397,7 @@ pub struct Bus {
 
 /// Metadata is an account type used to track global program variables.
 #[account]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Metadata {
     /// The bump of the metadata account PDA.
     pub bump: u8,
@@ -417,7 +417,7 @@ pub struct Metadata {
 
 /// Proof is an account type used to track a miner's hash chain.
 #[account]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Proof {
     /// The bump of the proof account PDA.
     pub bump: u8,
