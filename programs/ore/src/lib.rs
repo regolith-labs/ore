@@ -13,6 +13,8 @@ use anchor_spl::{
     token::{self, Mint, MintTo, TokenAccount},
 };
 
+// TODO Test admin and difficulty adjustment functions!
+
 declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
 // TODO Set this before deployment
@@ -563,10 +565,6 @@ pub struct Mine<'info> {
     #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
     pub proof: Account<'info, Proof>,
 
-    /// The Ore token mint account.
-    #[account(address = TOKEN_MINT_ADDRESS)]
-    pub mint: Account<'info, Mint>,
-
     /// The treasury account.
     #[account(seeds = [TREASURY], bump = treasury.bump)]
     pub treasury: Account<'info, Treasury>,
@@ -601,7 +599,7 @@ pub struct Claim<'info> {
     pub proof: Account<'info, Proof>,
 
     /// The treasury account.
-    #[account(seeds = [TREASURY], bump = treasury.bump)]
+    #[account(mut, seeds = [TREASURY], bump = treasury.bump)]
     pub treasury: Account<'info, Treasury>,
 
     /// The treasury token account.
@@ -622,7 +620,7 @@ pub struct UpdateAdmin<'info> {
     pub signer: Signer<'info>,
 
     /// The treasury account.
-    #[account(seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    #[account(mut, seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
     pub treasury: Account<'info, Treasury>,
 }
 
@@ -635,7 +633,7 @@ pub struct UpdateDifficulty<'info> {
     pub signer: Signer<'info>,
 
     /// The treasury account.
-    #[account(seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
+    #[account(mut, seeds = [TREASURY], bump = treasury.bump, constraint = treasury.admin.eq(&signer.key()) @ ProgramError::NotAuthorized)]
     pub treasury: Account<'info, Treasury>,
 }
 
