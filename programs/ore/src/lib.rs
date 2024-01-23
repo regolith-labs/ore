@@ -228,7 +228,7 @@ mod ore {
 
         // Update lifetime status.
         let treasury = &mut ctx.accounts.treasury;
-        treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_sub(amount);
+        treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(amount);
 
         // Distribute tokens from treasury to beneficiary.
         let treasury_tokens = &ctx.accounts.treasury_tokens;
@@ -592,13 +592,13 @@ pub struct Claim<'info> {
     #[account(mut, token::mint = mint)]
     pub beneficiary: Account<'info, TokenAccount>,
 
-    /// The proof account.
-    #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
-    pub proof: Account<'info, Proof>,
-
     /// The Ore token mint account.
     #[account(address = TOKEN_MINT_ADDRESS)]
     pub mint: Account<'info, Mint>,
+
+    /// The proof account.
+    #[account(mut, seeds = [PROOF, signer.key().as_ref()], bump = proof.bump)]
+    pub proof: Account<'info, Proof>,
 
     /// The treasury account.
     #[account(seeds = [TREASURY], bump = treasury.bump)]
