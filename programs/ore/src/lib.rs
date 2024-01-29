@@ -221,7 +221,7 @@ mod ore {
         // Validate claim is for an appropriate quantity of tokens.
         let proof = &mut ctx.accounts.proof;
         require!(
-            amount.ge(&proof.claimable_rewards),
+            proof.claimable_rewards.ge(&amount),
             ProgramError::ClaimTooLarge
         );
 
