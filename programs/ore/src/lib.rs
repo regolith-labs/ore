@@ -3,7 +3,7 @@ use std::mem::size_of;
 use anchor_lang::{
     prelude::*,
     solana_program::{
-        hash::{hashv, Hash},
+        keccak::{hashv, Hash},
         slot_hashes::SlotHash,
         system_program, sysvar,
     },
@@ -32,8 +32,8 @@ pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
 
 /// The mint address of the ORE token.
 pub const TOKEN_MINT_ADDRESS: Pubkey = Pubkey::new_from_array([
-    104, 116, 55, 208, 161, 233, 115, 227, 49, 65, 34, 153, 138, 61, 159, 228, 16, 158, 53, 8, 4,
-    132, 86, 10, 198, 221, 80, 15, 115, 222, 47, 191,
+    31, 94, 128, 251, 8, 214, 16, 114, 78, 71, 1, 151, 221, 103, 239, 180, 136, 178, 202, 102, 159,
+    185, 95, 250, 9, 18, 207, 100, 215, 105, 39, 64,
 ]);
 
 /// The decimal precision of the ORE token.
@@ -689,7 +689,7 @@ pub enum ProgramError {
 mod tests {
     use anchor_lang::{
         prelude::Pubkey,
-        solana_program::hash::{hashv, Hash},
+        solana_program::keccak::{hashv, Hash},
     };
 
     use crate::{calculate_new_reward_rate, validate_hash, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS};
