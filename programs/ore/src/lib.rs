@@ -123,7 +123,6 @@ mod ore {
         );
 
         // Calculate total rewards issued during the epoch.
-        // TODO Require MAX_EPOCH_REWARDS >= remaining_available_rewards, else invalid math (fatal)...
         let bus_0 = &mut ctx.accounts.bus_0;
         let bus_1 = &mut ctx.accounts.bus_1;
         let bus_2 = &mut ctx.accounts.bus_2;
@@ -170,6 +169,10 @@ mod ore {
             ),
             total_epoch_rewards,
         )?;
+
+        msg!("Mined: {:?}", total_epoch_rewards);
+        msg!("New supply: {:?}", ctx.accounts.mint.supply);
+        msg!("New reward rate: {:?}", treasury.reward_rate);
 
         Ok(())
     }
