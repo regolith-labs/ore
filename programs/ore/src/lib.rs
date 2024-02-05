@@ -170,9 +170,10 @@ mod ore {
             total_epoch_rewards,
         )?;
 
-        msg!("Mined: {:?}", total_epoch_rewards);
-        msg!("New supply: {:?}", ctx.accounts.mint.supply);
-        msg!("New reward rate: {:?}", treasury.reward_rate);
+        // Log data.
+        msg!("Epoch rewards: {:?}", total_epoch_rewards);
+        msg!("Reward rate: {:?}", treasury.reward_rate);
+        msg!("Supply: {:?}", ctx.accounts.mint.supply);
 
         Ok(())
     }
@@ -209,13 +210,18 @@ mod ore {
 
         // Hash most recent slot hash into the next challenge to prevent pre-mining attacks.
         let slot_hash_bytes = &ctx.accounts.slot_hashes.data.borrow()[0..size_of::<SlotHash>()];
-        let slot_hash: SlotHash =
-            bincode::deserialize(slot_hash_bytes).expect("Failed to deserialize slot hash");
+        let slot_hash: SlotHash = bincode::deserialize(slot_hash_bytes).unwrap();
         proof.hash = hashv(&[hash.as_ref(), slot_hash.1.as_ref()]);
 
         // Update lifetime stats.
         proof.total_hashes = proof.total_hashes.saturating_add(1);
         proof.total_rewards = proof.total_rewards.saturating_add(1);
+
+        // Log data.
+        msg!("Reward rate: {:?}", treasury.reward_rate);
+        msg!("Claimable rewards: {:?}", proof.claimable_rewards);
+        msg!("Total hashes: {:?}", proof.total_hashes);
+        msg!("Total rewards: {:?}", proof.total_rewards);
 
         Ok(())
     }
@@ -253,6 +259,13 @@ mod ore {
             ),
             amount,
         )?;
+
+        // Log data.
+        msg!("Claimable rewards: {:?}", proof.claimable_rewards);
+        msg!(
+            "Total claimed rewards: {:?}",
+            treasury.total_claimed_rewards
+        );
 
         Ok(())
     }
