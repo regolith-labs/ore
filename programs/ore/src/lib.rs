@@ -4,6 +4,7 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         keccak::{hashv, Hash},
+        pubkey,
         slot_hashes::SlotHash,
         system_program, sysvar,
     },
@@ -31,10 +32,7 @@ pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
 ]);
 
 /// The mint address of the ORE token.
-pub const TOKEN_MINT_ADDRESS: Pubkey = Pubkey::new_from_array([
-    31, 94, 128, 251, 8, 214, 16, 114, 78, 71, 1, 151, 221, 103, 239, 180, 136, 178, 202, 102, 159,
-    185, 95, 250, 9, 18, 207, 100, 215, 105, 39, 64,
-]);
+pub const TOKEN_MINT_ADDRESS: Pubkey = pubkey!("37TDfMS8NHpyhyCXBrY9m7rRrtj1f7TrFzD1iXqmTeUX");
 
 /// The decimal precision of the ORE token.
 /// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.

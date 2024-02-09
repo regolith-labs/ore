@@ -2519,6 +2519,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bincode",
+ "solana-program",
  "solana-program-test",
  "static_assertions",
 ]
