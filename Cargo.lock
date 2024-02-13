@@ -618,6 +618,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
+name = "bs64"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8bebebdf2eda473523fed644eaedc4ffc43b6f35fdc6f001eb9f89dca4bd117"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2337,6 +2346,7 @@ dependencies = [
 name = "ore"
 version = "0.1.0"
 dependencies = [
+ "bs64",
  "bytemuck",
  "num_enum 0.7.2",
  "shank",
