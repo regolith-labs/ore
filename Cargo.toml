@@ -1,17 +1,33 @@
-[workspace]
-members = [
-    "programs/*"
-]
+[package]
+name = "ore"
+version = "0.1.0"
+description = "Ore is a cryptocurrency everyone can mine"
+edition = "2021"
+license = "Apache 2.0"
+homepage = ""
+repository = ""
+documentation = ""
+readme = "./README.md"
+keywords = ["solana"]
 
-# [package.metadata.kani.flags]
-# default-unwind = 1
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "ore"
 
-[profile.release]
-overflow-checks = true
-lto = "fat"
-codegen-units = 1
+[features]
+no-entrypoint = []
+default = []
 
-[profile.release.build-override]
-opt-level = 3
-incremental = false
-codegen-units = 1
+[dependencies]
+bytemuck = "1.14.3"
+num_enum = "0.7.2"
+shank = "0.3.0"
+solana-program = "^1.16"
+spl-token = { version = "^4", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
+static_assertions = "1.1.0"
+
+[dev-dependencies]
+solana-program-test = "^1.16"
+solana-sdk = "^1.16"
+tokio = { version = "1.35", features = ["full"] }
