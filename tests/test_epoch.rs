@@ -144,6 +144,8 @@ async fn test_epoch() {
         treasury_tokens_account,
         bs64::encode(&treasury_tokens_account.data)
     );
+
+    // assert!(false);
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {

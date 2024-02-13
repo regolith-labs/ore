@@ -1,12 +1,12 @@
 use solana_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    system_program,
+    syscalls, system_program,
 };
 use spl_token::state::Mint;
 
 use crate::{
-    state::{Bus, Treasury},
-    BUS, MINT_ADDRESS, TREASURY,
+    state::{Bus, Proof},
+    BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
 
 pub fn load_signer<'a, 'info>(
@@ -14,26 +14,6 @@ pub fn load_signer<'a, 'info>(
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
     if !info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
-    }
-    Ok(info)
-}
-
-pub fn load_pda<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    seeds: &[&[u8]],
-    writable: bool,
-) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    let key = Pubkey::create_program_address(seeds, &crate::id())?;
-    if !info.key.eq(&key) {
-        return Err(ProgramError::InvalidSeeds);
-    }
-    if !info.owner.eq(&crate::id()) {
-        return Err(ProgramError::InvalidAccountOwner);
-    }
-    if writable {
-        if !info.is_writable {
-            return Err(ProgramError::InvalidAccountData);
-        }
     }
     Ok(info)
 }
@@ -62,10 +42,29 @@ pub fn load_bus<'a, 'info>(
     let bus_data = info.data.borrow();
     let bus = bytemuck::try_from_bytes::<Bus>(&bus_data).unwrap();
 
-    let key =
-        Pubkey::create_program_address(&[BUS, &[bus.id as u8], &[bus.bump as u8]], &crate::id())?;
-    if !info.key.eq(&key) {
-        return Err(ProgramError::InvalidSeeds);
+    if !(0..BUS_COUNT).contains(&(bus.id as usize)) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(info)
+}
+
+pub fn load_proof<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    signer: &Pubkey,
+) -> Result<&'a AccountInfo<'info>, ProgramError> {
+    if !info.owner.eq(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let proof_data = info.data.borrow();
+    let proof = bytemuck::try_from_bytes::<Proof>(&proof_data).unwrap();
+
+    if !proof.authority.eq(&signer) {
+        return Err(ProgramError::InvalidAccountData);
     }
 
     Ok(info)
@@ -81,11 +80,7 @@ pub fn load_treasury<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    let treasury_data = info.data.borrow();
-    let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_data).unwrap();
-
-    let key = Pubkey::create_program_address(&[TREASURY, &[treasury.bump as u8]], &crate::id())?;
-    if !info.key.eq(&key) {
+    if !info.key.eq(&TREASURY_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
 

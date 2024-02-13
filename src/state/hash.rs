@@ -8,12 +8,14 @@ use solana_program::keccak::{Hash as KeccakHash, HASH_BYTES};
 pub struct Hash(pub [u8; HASH_BYTES]);
 
 impl From<KeccakHash> for Hash {
+    #[inline(always)]
     fn from(value: KeccakHash) -> Self {
         unsafe { transmute(value) }
     }
 }
 
 impl From<Hash> for KeccakHash {
+    #[inline(always)]
     fn from(value: Hash) -> Self {
         unsafe { transmute(value) }
     }

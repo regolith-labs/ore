@@ -19,6 +19,7 @@ no-entrypoint = []
 default = []
 
 [dependencies]
+bincode = "1.3.3"
 bytemuck = "1.14.3"
 num_enum = "0.7.2"
 shank = "0.3.0"

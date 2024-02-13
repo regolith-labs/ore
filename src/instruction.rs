@@ -2,6 +2,8 @@ use bytemuck::{Pod, Zeroable};
 use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
 
+use crate::state::Hash;
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
 #[rustfmt::skip]
@@ -33,8 +35,7 @@ pub enum OreInstruction {
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
     #[account(3, name = "proof", desc = "Ore miner proof account", writable)]
     #[account(4, name = "treasury", desc = "Ore treasury account")]
-    #[account(5, name = "token_program", desc = "SPL token program")]
-    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
+    #[account(5, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Mine = 2,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -97,6 +98,31 @@ pub struct InitializeArgs {
 }
 
 impl InitializeArgs {
+    pub fn to_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct ProofArgs {
+    pub bump: u8,
+}
+
+impl ProofArgs {
+    pub fn to_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MineArgs {
+    pub hash: Hash,
+    pub nonce: [u8; 8],
+}
+
+impl MineArgs {
     pub fn to_bytes(&self) -> &[u8] {
         bytemuck::bytes_of(self)
     }

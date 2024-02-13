@@ -82,6 +82,22 @@ pub const PROOF: &[u8] = b"proof";
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
 
+/// Treasury address
+pub const TREASURY_ADDRESS: Pubkey = pubkey!("67PLJej6iZm915WbEu6NLeZtRZtnHc5nSVQvkHRZyPiC");
+
+// SHA2 const stable
+/// Bus pubkeys
+pub const BUS_ADDRESSES: [Pubkey; 8] = [
+    pubkey!("2uwqyH2gKqstgAFCSniirx73X4iQek5ETc2vVJKUiNMg"),
+    pubkey!("FRMC6jVczm1cRaEs5EhDsfw7X8vsmSDpf3bJWVkawngu"),
+    pubkey!("9nWyycs4GHjnLujPR2sbA1A8K8CkiLc5VzxWUD4hg2uM"),
+    pubkey!("Kt7kqD3MyvxLbj4ek9urXUxkDoxaMuQn82K2VdYD1jM"),
+    pubkey!("8r9mXYnFQXhwrNfvatGUTxbbNSqxScuCwp4sBTSxDVTJ"),
+    pubkey!("D9cEH32k8p9uWc4w5RrStK9rWssU8NuX1Dg5YaUim4wL"),
+    pubkey!("H1RKMYADPzd4C1j1RZu51NvRSVktoTYEJyeVy98Kmdyu"),
+    pubkey!("3XbdZNbBjjp8qnDJjv1RxaKisyfx6ahznYkSigs6dayy"),
+];
+
 /// Processes the incoming instruction
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -93,13 +109,16 @@ pub fn process_instruction(
         .ok_or(ProgramError::InvalidInstructionData)?;
 
     let ix = OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))?;
-    match ix {
-        OreInstruction::Epoch => process_epoch(program_id, accounts, data)?,
-        OreInstruction::Proof => process_proof(program_id, accounts, data)?,
-        OreInstruction::Mine => process_mine(program_id, accounts, data)?,
-        OreInstruction::Claim => process_claim(program_id, accounts, data)?,
-        OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
-    }
+    // if ix.eq(&OreInstruction::Proof) {
+    //     process_proof(program_id, accounts, data)?
+    // }
+    // match ix {
+    //     OreInstruction::Epoch => process_epoch(program_id, accounts, data)?,
+    //     OreInstruction::Proof => process_proof(program_id, accounts, data)?,
+    //     OreInstruction::Mine => process_mine(program_id, accounts, data)?,
+    //     OreInstruction::Claim => process_claim(program_id, accounts, data)?,
+    //     OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
+    // }
 
     Ok(())
 }

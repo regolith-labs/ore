@@ -132,6 +132,15 @@ async fn test_initialize() {
     assert_eq!(treasury_tokens.is_native, COption::None);
     assert_eq!(treasury_tokens.delegated_amount, 0);
     assert_eq!(treasury_tokens.close_authority, COption::None);
+
+    // println!(
+    //     "Treasury {:?} {:?} {:?}",
+    //     treasury_pda.0,
+    //     treasury_account,
+    //     bs64::encode(&treasury_account.data)
+    // );
+
+    // assert!(false);
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {

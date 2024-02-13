@@ -11,7 +11,7 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-use crate::{instruction::*, BUS, INITIAL_DIFFICULTY, MINT_ADDRESS};
+use crate::{instruction::*, BUS, INITIAL_DIFFICULTY, MINT_ADDRESS, TREASURY_ADDRESS};
 use crate::{
     loaders::*,
     state::{Bus, Treasury},
@@ -77,10 +77,13 @@ pub fn process_initialize<'a, 'info>(
     }
 
     // Account 11: Treasury
-    let treasury_account_info = load_uninitialized_pda(
+    let treasury_info = load_uninitialized_pda(
         next_account_info(accounts_iter)?,
         &[TREASURY, &[args.treasury_bump]],
     )?;
+    if !treasury_info.key.eq(&TREASURY_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
 
     // Account 12: Treasury tokens
     let treasury_tokens = load_uninitialized_account(next_account_info(accounts_iter)?)?;
@@ -132,14 +135,14 @@ pub fn process_initialize<'a, 'info>(
 
     // Initialize treasury
     create_pda(
-        treasury_account_info,
+        treasury_info,
         &crate::id(),
         size_of::<Treasury>(),
         &[TREASURY, &[args.treasury_bump]],
         system_program,
         signer,
     )?;
-    let mut treasury_data = treasury_account_info.data.borrow_mut();
+    let mut treasury_data = treasury_info.data.borrow_mut();
     let mut treasury = bytemuck::try_from_bytes_mut::<Treasury>(&mut treasury_data).unwrap();
     treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;
@@ -162,14 +165,14 @@ pub fn process_initialize<'a, 'info>(
         &spl_token::instruction::initialize_mint(
             &spl_token::id(),
             mint.key,
-            treasury_account_info.key,
+            treasury_info.key,
             None,
             TOKEN_DECIMALS,
         )?,
         &[
             token_program.clone(),
             mint.clone(),
-            treasury_account_info.clone(),
+            treasury_info.clone(),
             rent_sysvar.clone(),
         ],
         &[&[MINT, &[args.mint_bump]]],
@@ -179,7 +182,7 @@ pub fn process_initialize<'a, 'info>(
     solana_program::program::invoke(
         &spl_associated_token_account::instruction::create_associated_token_account(
             signer.key,
-            treasury_account_info.key,
+            treasury_info.key,
             mint.key,
             &spl_token::id(),
         ),
@@ -187,7 +190,7 @@ pub fn process_initialize<'a, 'info>(
             associated_token_program.clone(),
             signer.clone(),
             treasury_tokens.clone(),
-            treasury_account_info.clone(),
+            treasury_info.clone(),
             mint.clone(),
             system_program.clone(),
             token_program.clone(),

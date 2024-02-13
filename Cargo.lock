@@ -2346,6 +2346,7 @@ dependencies = [
 name = "ore"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "bs64",
  "bytemuck",
  "num_enum 0.7.2",
