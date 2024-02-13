@@ -1,0 +1,20 @@
+use std::mem::transmute;
+
+use bytemuck::{Pod, Zeroable};
+use solana_program::keccak::{Hash as KeccakHash, HASH_BYTES};
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct Hash(pub [u8; HASH_BYTES]);
+
+impl From<KeccakHash> for Hash {
+    fn from(value: KeccakHash) -> Self {
+        unsafe { transmute(value) }
+    }
+}
+
+impl From<Hash> for KeccakHash {
+    fn from(value: Hash) -> Self {
+        unsafe { transmute(value) }
+    }
+}

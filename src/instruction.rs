@@ -62,9 +62,9 @@ pub enum OreInstruction {
     #[account(12, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(13, name = "system_program", desc = "Solana system program")]
     #[account(14, name = "token_program", desc = "SPL token program")]
-    #[account(15, name = "rent", desc = "Solana rent sysvar")]
+    #[account(15, name = "associated_token_program", desc = "SPL associated token program")]
+    #[account(16, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
-    // #[account(15, name = "associated_token_program", desc = "SPL associated token program")]
 
     // TODO
     // #[account(0, name = "ore_program", desc = "Ore program")]

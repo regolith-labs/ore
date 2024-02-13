@@ -1,6 +1,7 @@
 use ore::{
     instruction::{InitializeArgs, OreInstruction},
-    Bus, Treasury, BUS, BUS_COUNT, INITIAL_REWARD_RATE, MINT, TREASURY,
+    state::{Bus, Treasury},
+    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, TREASURY,
 };
 use solana_program::{
     hash::Hash,
@@ -15,7 +16,7 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
-use spl_token::state::Mint;
+use spl_token::state::{AccountState, Mint};
 
 #[tokio::test]
 async fn test_initialize() {
@@ -56,6 +57,7 @@ async fn test_initialize() {
             AccountMeta::new(treasury_tokens_address, false),
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [
@@ -99,6 +101,7 @@ async fn test_initialize() {
     let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_account.data).unwrap();
     assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(treasury.admin, payer.pubkey());
+    assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
     assert_eq!(treasury.epoch_start_at as u8, 0);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE);
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
@@ -112,6 +115,23 @@ async fn test_initialize() {
     assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
+
+    // Test treasury token state
+    let treasury_tokens_account = banks
+        .get_account(treasury_tokens_address)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(treasury_tokens_account.owner, spl_token::id());
+    let treasury_tokens = spl_token::state::Account::unpack(&treasury_tokens_account.data).unwrap();
+    assert_eq!(treasury_tokens.mint, mint_pda.0);
+    assert_eq!(treasury_tokens.owner, treasury_pda.0);
+    assert_eq!(treasury_tokens.amount, 0);
+    assert_eq!(treasury_tokens.delegate, COption::None);
+    assert_eq!(treasury_tokens.state, AccountState::Initialized);
+    assert_eq!(treasury_tokens.is_native, COption::None);
+    assert_eq!(treasury_tokens.delegated_amount, 0);
+    assert_eq!(treasury_tokens.close_authority, COption::None);
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
