@@ -109,16 +109,13 @@ pub fn process_instruction(
         .ok_or(ProgramError::InvalidInstructionData)?;
 
     let ix = OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))?;
-    // if ix.eq(&OreInstruction::Proof) {
-    //     process_proof(program_id, accounts, data)?
-    // }
-    // match ix {
-    //     OreInstruction::Epoch => process_epoch(program_id, accounts, data)?,
-    //     OreInstruction::Proof => process_proof(program_id, accounts, data)?,
-    //     OreInstruction::Mine => process_mine(program_id, accounts, data)?,
-    //     OreInstruction::Claim => process_claim(program_id, accounts, data)?,
-    //     OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
-    // }
+    match ix {
+        OreInstruction::Epoch => process_epoch(program_id, accounts, data)?,
+        OreInstruction::Proof => process_proof(program_id, accounts, data)?,
+        OreInstruction::Mine => process_mine(program_id, accounts, data)?,
+        OreInstruction::Claim => process_claim(program_id, accounts, data)?,
+        OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
+    }
 
     Ok(())
 }

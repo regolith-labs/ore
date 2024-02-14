@@ -1,6 +1,6 @@
 use solana_program::{
-    account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    syscalls, system_program,
+    account_info::AccountInfo, program_error::ProgramError, program_memory::sol_memcmp,
+    program_pack::Pack, pubkey::Pubkey, system_program,
 };
 use spl_token::state::Mint;
 
@@ -23,7 +23,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
     seeds: &[&[u8]],
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
     let key = Pubkey::create_program_address(seeds, &crate::id())?;
-    if !info.key.eq(&key) {
+    if sol_memcmp(info.key.as_ref(), key.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidSeeds);
     }
     load_uninitialized_account(info)
@@ -32,7 +32,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
 pub fn load_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+    if sol_memcmp(info.owner.as_ref(), crate::id().as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -53,7 +53,7 @@ pub fn load_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
     signer: &Pubkey,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+    if sol_memcmp(info.owner.as_ref(), crate::id().as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -63,7 +63,8 @@ pub fn load_proof<'a, 'info>(
     let proof_data = info.data.borrow();
     let proof = bytemuck::try_from_bytes::<Proof>(&proof_data).unwrap();
 
-    if !proof.authority.eq(&signer) {
+    // if !proof.authority.eq(&signer) {
+    if sol_memcmp(proof.authority.as_ref(), signer.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -73,14 +74,14 @@ pub fn load_proof<'a, 'info>(
 pub fn load_treasury<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+    if sol_memcmp(info.owner.as_ref(), crate::id().as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if !info.key.eq(&TREASURY_ADDRESS) {
+    if sol_memcmp(info.key.as_ref(), TREASURY_ADDRESS.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -90,7 +91,7 @@ pub fn load_treasury<'a, 'info>(
 pub fn load_mint<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.owner.eq(&spl_token::id()) {
+    if sol_memcmp(info.owner.as_ref(), spl_token::id().as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -102,7 +103,7 @@ pub fn load_mint<'a, 'info>(
         return Err(ProgramError::InvalidAccountData);
     }
 
-    if !info.key.eq(&MINT_ADDRESS) {
+    if sol_memcmp(info.key.as_ref(), MINT_ADDRESS.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -114,7 +115,7 @@ pub fn load_token_account<'a, 'info>(
     owner: &Pubkey,
     mint: &Pubkey,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.owner.eq(&spl_token::id()) {
+    if sol_memcmp(info.owner.as_ref(), spl_token::id().as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -125,10 +126,10 @@ pub fn load_token_account<'a, 'info>(
     let account = spl_token::state::Account::unpack_unchecked(&account_data)
         .or(Err(ProgramError::InvalidAccountData))?;
 
-    if !account.mint.eq(mint) {
+    if sol_memcmp(account.mint.as_ref(), mint.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
-    if !account.owner.eq(owner) {
+    if sol_memcmp(account.owner.as_ref(), owner.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -138,11 +139,14 @@ pub fn load_token_account<'a, 'info>(
 pub fn load_uninitialized_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
+    if sol_memcmp(info.owner.as_ref(), system_program::id().as_ref(), 32) != 0 {
+        return Err(ProgramError::AccountAlreadyInitialized);
+    }
+    if !info.data_is_empty() {
+        return Err(ProgramError::AccountAlreadyInitialized);
+    }
     if !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
-    }
-    if !info.data_is_empty() || !info.owner.eq(&system_program::id()) {
-        return Err(ProgramError::AccountAlreadyInitialized);
     }
     Ok(info)
 }
@@ -151,7 +155,7 @@ pub fn load_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,
 ) -> Result<&'a AccountInfo<'info>, ProgramError> {
-    if !info.key.eq(&key) {
+    if sol_memcmp(info.key.as_ref(), key.as_ref(), 32) != 0 {
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(info)

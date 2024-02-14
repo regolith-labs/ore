@@ -46,9 +46,9 @@ async fn test_mine() {
     assert!(res.is_ok());
 
     // Assert proof state
-    // let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
-    // assert_eq!(proof_account.owner, ore::id());
-    // let proof = bytemuck::try_from_bytes::<Proof>(&proof_account.data).unwrap();
+    let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
+    assert_eq!(proof_account.owner, ore::id());
+    let proof = bytemuck::try_from_bytes::<Proof>(&proof_account.data).unwrap();
 
     // Assert proof state
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
@@ -56,22 +56,11 @@ async fn test_mine() {
     let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_account.data).unwrap();
 
     // Find next hash
-    // let (next_hash, nonce) = find_next_hash(
-    //     proof.hash.into(),
-    //     treasury.difficulty.into(),
-    //     payer.pubkey(),
-    // );
-
-    // println!("Hash: {:?}", next_hash);
-    // println!("None: {:?}", nonce);
-    // let args = MineArgs {
-    //     hash: next_hash.into(),
-    //     nonce,
-    // };
-    // let bytes = args.to_bytes();
-    // let parsed_args = bytemuck::try_from_bytes::<MineArgs>(bytes);
-    // println!("Args: {:?}", args.to_bytes());
-    // assert!(parsed_args.is_ok());
+    let (next_hash, nonce) = find_next_hash(
+        proof.hash.into(),
+        treasury.difficulty.into(),
+        payer.pubkey(),
+    );
 
     // Build mine ix
     let bus_pda = Pubkey::find_program_address(&[BUS, &[0]], &ore::id());
@@ -88,10 +77,8 @@ async fn test_mine() {
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
-                // hash: next_hash.into(),
-                // nonce: nonce.to_le_bytes(),
-                hash: KeccakHash::new_unique().into(),
-                nonce: 42u64.to_le_bytes(),
+                hash: next_hash.into(),
+                nonce: nonce.to_le_bytes(),
             }
             .to_bytes()
             .to_vec(),

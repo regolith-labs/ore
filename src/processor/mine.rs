@@ -23,71 +23,56 @@ pub fn process_mine<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
-    // let accounts_iter = &mut accounts.iter();
-    // let args =
-    //     bytemuck::try_from_bytes::<MineArgs>(data).or(Err(ProgramError::InvalidInstructionData))?;
+    // Parse args
+    let args =
+        bytemuck::try_from_bytes::<MineArgs>(data).or(Err(ProgramError::InvalidInstructionData))?;
 
-    // let [signer, bus_info, proof_info, treasury_info, slot_hashes_info] = accounts else {
-    //     return Err(ProgramError::NotEnoughAccountKeys);
-    // };
-    // let _ = load_signer(signer)?;
-    // let _ = load_bus(bus_info)?;
-    // let _ = load_proof(proof_info, signer.key)?;
-    // let _ = load_treasury(treasury_info)?;
-    // let _ = load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
-
-    // Account 1: Signer
-    // let signer = load_signer(next_account_info(accounts_iter)?)?;
-
-    // Account 2: Bus
-    // let bus_info = load_bus(next_account_info(accounts_iter)?)?;
-
-    // Account 3: Proof
-    // let proof_info = load_proof(next_account_info(accounts_iter)?, signer.key)?;
-
-    // Account 4: Treasury
-    // let treasury_info = load_treasury(next_account_info(accounts_iter)?)?;
-
-    // Account 5: Slot hashes svsvar
-    // let slot_hashes_info =
-    //     load_account(next_account_info(accounts_iter)?, sysvar::slot_hashes::id())?;
+    // Parse accounts
+    let [signer, bus_info, proof_info, treasury_info, slot_hashes_info] = accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    let _ = load_signer(signer)?;
+    let _ = load_bus(bus_info)?;
+    let _ = load_proof(proof_info, signer.key)?;
+    let _ = load_treasury(treasury_info)?;
+    let _ = load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
 
     // Validate epoch is active
-    // let clock = Clock::get().unwrap();
-    // let treasury_data = treasury_info.data.borrow();
-    // let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_data).unwrap();
-    // let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
-    // if !clock.unix_timestamp.lt(&epoch_end_at) {
-    //     return Err(ProgramError::Custom(1));
-    // }
+    let clock = Clock::get().unwrap();
+    let treasury_data = treasury_info.data.borrow();
+    let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_data).unwrap();
+    let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
+    if !clock.unix_timestamp.lt(&epoch_end_at) {
+        return Err(ProgramError::Custom(1));
+    }
 
     // Validate provided hash
-    // let mut proof_data = proof_info.data.borrow_mut();
-    // let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
-    // validate_hash(
-    //     proof.hash.into(),
-    //     args.hash.into(),
-    //     *signer.key,
-    //     u64::from_le_bytes(args.nonce),
-    //     treasury.difficulty.into(),
-    // )?;
+    let mut proof_data = proof_info.data.borrow_mut();
+    let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
+    validate_hash(
+        proof.hash.into(),
+        args.hash.into(),
+        *signer.key,
+        u64::from_le_bytes(args.nonce),
+        treasury.difficulty.into(),
+    )?;
 
     // Update claimable rewards
-    // let mut bus_data = bus_info.data.borrow_mut();
-    // let mut bus = bytemuck::try_from_bytes_mut::<Bus>(&mut bus_data).unwrap();
-    // if !bus.available_rewards.ge(&treasury.reward_rate) {
-    //     return Err(ProgramError::Custom(1));
-    // }
-    // bus.available_rewards = bus.available_rewards.saturating_sub(treasury.reward_rate);
-    // proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
+    let mut bus_data = bus_info.data.borrow_mut();
+    let mut bus = bytemuck::try_from_bytes_mut::<Bus>(&mut bus_data).unwrap();
+    if bus.available_rewards.lt(&treasury.reward_rate) {
+        return Err(ProgramError::Custom(1));
+    }
+    bus.available_rewards = bus.available_rewards.saturating_sub(treasury.reward_rate);
+    proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
     // Hash most recent slot hash into the next challenge to prevent pre-mining attacks
-    // let slot_hash_bytes = &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()];
-    // proof.hash = hashv(&[KeccakHash::from(args.hash).as_ref(), slot_hash_bytes]).into();
+    let slot_hash_bytes = &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()];
+    proof.hash = hashv(&[KeccakHash::from(args.hash).as_ref(), slot_hash_bytes]).into();
 
     // Update lifetime stats
-    // proof.total_hashes = proof.total_hashes.saturating_add(1);
-    // proof.total_rewards = proof.total_rewards.saturating_add(1);
+    proof.total_hashes = proof.total_hashes.saturating_add(1);
+    proof.total_rewards = proof.total_rewards.saturating_add(1);
 
     // TODO Log?
 
