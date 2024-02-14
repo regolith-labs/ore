@@ -89,7 +89,7 @@ async fn test_initialize() {
     for i in 0..BUS_COUNT {
         let bus_account = banks.get_account(bus_pdas[i].0).await.unwrap().unwrap();
         assert_eq!(bus_account.owner, ore::id());
-        let bus = bytemuck::try_from_bytes::<Bus>(&bus_account.data).unwrap();
+        let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
         assert_eq!(bus.bump as u8, bus_pdas[i].1);
         assert_eq!(bus.id as u8, i as u8);
         assert_eq!(bus.available_rewards, 0);
@@ -98,7 +98,7 @@ async fn test_initialize() {
     // Test treasury state
     let treasury_account = banks.get_account(treasury_pda.0).await.unwrap().unwrap();
     assert_eq!(treasury_account.owner, ore::id());
-    let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_account.data).unwrap();
+    let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
     assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(treasury.admin, payer.pubkey());
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());

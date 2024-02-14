@@ -17,10 +17,9 @@ pub fn process_claim<'a, 'info>(
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = bytemuck::try_from_bytes::<ClaimArgs>(data)
-        .or(Err(ProgramError::InvalidInstructionData))?;
+    let args = ClaimArgs::try_from_bytes(data)?;
 
-    // Validate accounts
+    // Load accounts
     let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -38,7 +37,7 @@ pub fn process_claim<'a, 'info>(
 
     // Validate claim amout
     let mut proof_data = proof_info.data.borrow_mut();
-    let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
+    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     if proof.claimable_rewards.lt(&args.amount) {
         return Err(OreError::InvalidClaimAmount.into());
     }
@@ -48,7 +47,7 @@ pub fn process_claim<'a, 'info>(
 
     // Update lifetime status
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = bytemuck::try_from_bytes_mut::<Treasury>(&mut treasury_data).unwrap();
+    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(args.amount);
 
     // Distribute tokens from treasury to beneficiary

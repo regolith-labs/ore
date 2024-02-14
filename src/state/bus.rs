@@ -1,6 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::impl_to_bytes;
+use crate::{impl_account_from_bytes, impl_to_bytes};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
@@ -16,3 +16,4 @@ pub struct Bus {
 }
 
 impl_to_bytes!(Bus);
+impl_account_from_bytes!(Bus);

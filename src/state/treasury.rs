@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use solana_program::pubkey::Pubkey;
 
-use crate::impl_to_bytes;
+use crate::{impl_account_from_bytes, impl_to_bytes};
 
 use super::Hash;
 
@@ -28,3 +28,4 @@ pub struct Treasury {
 }
 
 impl_to_bytes!(Treasury);
+impl_account_from_bytes!(Treasury);

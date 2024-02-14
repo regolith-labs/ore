@@ -13,6 +13,7 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
     if !info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
     }
+
     Ok(())
 }
 
@@ -23,12 +24,13 @@ pub fn load_bus<'a, 'info>(
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
 
     let bus_data = info.data.borrow();
-    let bus = bytemuck::try_from_bytes::<Bus>(&bus_data).unwrap();
+    let bus = Bus::try_from_bytes(&bus_data)?;
 
     if !(0..BUS_COUNT).contains(&(bus.id as usize)) {
         return Err(ProgramError::InvalidAccountData);
@@ -49,12 +51,13 @@ pub fn load_proof<'a, 'info>(
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
 
     let proof_data = info.data.borrow();
-    let proof = bytemuck::try_from_bytes::<Proof>(&proof_data).unwrap();
+    let proof = Proof::try_from_bytes(&proof_data)?;
 
     if proof.authority.ne(&authority) {
         return Err(ProgramError::InvalidAccountData);
@@ -74,6 +77,7 @@ pub fn load_treasury<'a, 'info>(
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
@@ -96,6 +100,7 @@ pub fn load_mint<'a, 'info>(
     if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
@@ -125,6 +130,7 @@ pub fn load_token_account<'a, 'info>(
     if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
@@ -136,6 +142,7 @@ pub fn load_token_account<'a, 'info>(
     if account.mint.ne(&mint) {
         return Err(ProgramError::InvalidAccountData);
     }
+
     if let Some(owner) = owner {
         if account.owner.ne(owner) {
             return Err(ProgramError::InvalidAccountData);
@@ -166,9 +173,11 @@ pub fn load_uninitialized_account<'a, 'info>(
     if info.owner.ne(&system_program::id()) {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
+
     if !info.data_is_empty() {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
+
     if !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -190,9 +199,11 @@ pub fn load_account<'a, 'info>(
     if info.key.ne(&key) {
         return Err(ProgramError::InvalidAccountData);
     }
+
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
+
     Ok(())
 }
 
@@ -203,8 +214,10 @@ pub fn load_program<'a, 'info>(
     if info.key.ne(&key) {
         return Err(ProgramError::InvalidAccountData);
     }
+
     if !info.executable {
         return Err(ProgramError::InvalidAccountData);
     }
+
     Ok(())
 }

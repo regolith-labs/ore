@@ -13,10 +13,9 @@ pub fn process_create_proof<'a, 'info>(
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = bytemuck::try_from_bytes::<CreateProofArgs>(data)
-        .or(Err(ProgramError::InvalidInstructionData))?;
+    let args = CreateProofArgs::try_from_bytes(data)?;
 
-    // Validate accounts
+    // Load accounts
     let [signer, proof_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -34,7 +33,7 @@ pub fn process_create_proof<'a, 'info>(
         signer,
     )?;
     let mut proof_data = proof_info.data.borrow_mut();
-    let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
+    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.bump = args.bump as u64;
     proof.authority = *signer.key;
     proof.claimable_rewards = 0;

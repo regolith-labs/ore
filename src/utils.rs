@@ -42,3 +42,40 @@ macro_rules! impl_to_bytes {
         }
     };
 }
+
+#[macro_export]
+macro_rules! impl_account_from_bytes {
+    ($struct_name:ident) => {
+        impl $struct_name {
+            pub fn try_from_bytes(
+                data: &[u8],
+            ) -> Result<&Self, solana_program::program_error::ProgramError> {
+                bytemuck::try_from_bytes::<Self>(data).or(Err(
+                    solana_program::program_error::ProgramError::InvalidAccountData,
+                ))
+            }
+            pub fn try_from_bytes_mut(
+                data: &mut [u8],
+            ) -> Result<&mut Self, solana_program::program_error::ProgramError> {
+                bytemuck::try_from_bytes_mut::<Self>(data).or(Err(
+                    solana_program::program_error::ProgramError::InvalidAccountData,
+                ))
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_instruction_from_bytes {
+    ($struct_name:ident) => {
+        impl $struct_name {
+            pub fn try_from_bytes(
+                data: &[u8],
+            ) -> Result<&Self, solana_program::program_error::ProgramError> {
+                bytemuck::try_from_bytes::<Self>(data).or(Err(
+                    solana_program::program_error::ProgramError::InvalidInstructionData,
+                ))
+            }
+        }
+    };
+}

@@ -2346,6 +2346,7 @@ dependencies = [
 name = "ore"
 version = "0.1.0"
 dependencies = [
+ "arrayvec",
  "bincode",
  "bs64",
  "bytemuck",

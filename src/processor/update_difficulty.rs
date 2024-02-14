@@ -11,10 +11,9 @@ pub fn process_update_difficulty<'a, 'info>(
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = bytemuck::try_from_bytes::<UpdateDifficultyArgs>(data)
-        .or(Err(ProgramError::InvalidInstructionData))?;
+    let args = UpdateDifficultyArgs::try_from_bytes(data)?;
 
-    // Validate accounts
+    // Load accounts
     let [signer, treasury_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -23,7 +22,7 @@ pub fn process_update_difficulty<'a, 'info>(
 
     // Validate admin signer
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = bytemuck::try_from_bytes_mut::<Treasury>(&mut treasury_data).unwrap();
+    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     if !treasury.admin.eq(&signer.key) {
         return Err(ProgramError::MissingRequiredSignature);
     }

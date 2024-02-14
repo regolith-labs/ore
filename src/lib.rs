@@ -1,3 +1,4 @@
+mod entrypoint_nostd;
 pub mod error;
 pub mod instruction;
 mod loaders;
@@ -20,6 +21,15 @@ declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
+// #[no_mangle]
+// pub unsafe extern "C" fn entrypoint(input: *mut u8) -> u64 {
+//     let (program_id, accounts, instruction_data) =
+//         unsafe { crate::entrypoint_nostd::deserialize_nostd::<32>(input) };
+//     match process_instruction(&program_id, &accounts, &instruction_data) {
+//         Ok(()) => solana_program::entrypoint::SUCCESS,
+//         Err(error) => error.into(),
+//     }
+// }
 
 // TODO Set this before deployment
 /// The unix timestamp after which mining is allowed.

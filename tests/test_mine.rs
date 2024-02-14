@@ -48,12 +48,12 @@ async fn test_mine() {
     // Assert proof state
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     assert_eq!(proof_account.owner, ore::id());
-    let proof = bytemuck::try_from_bytes::<Proof>(&proof_account.data).unwrap();
+    let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
 
     // Assert proof state
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
     let treasury_account = banks.get_account(treasury_pda.0).await.unwrap().unwrap();
-    let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_account.data).unwrap();
+    let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
 
     // Find next hash
     let (next_hash, nonce) = find_next_hash(
@@ -72,6 +72,9 @@ async fn test_mine() {
             AccountMeta::new(bus_pda.0, false),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(treasury_pda.0, false),
+            // AccountMeta::new(treasury_pda.0, false),
+            // AccountMeta::new(proof_pda.0, false),
+            // AccountMeta::new(bus_pda.0, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [

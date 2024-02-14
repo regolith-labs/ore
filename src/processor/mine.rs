@@ -26,10 +26,9 @@ pub fn process_mine<'a, 'info>(
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args =
-        bytemuck::try_from_bytes::<MineArgs>(data).or(Err(ProgramError::InvalidInstructionData))?;
+    let args = MineArgs::try_from_bytes(data)?;
 
-    // Validate accounts
+    // Load accounts
     let [signer, bus_info, proof_info, treasury_info, slot_hashes_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -40,9 +39,9 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
     // Validate epoch is active
-    let clock = Clock::get().unwrap();
+    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let treasury_data = treasury_info.data.borrow();
-    let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_data).unwrap();
+    let treasury = Treasury::try_from_bytes(&treasury_data)?;
     let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.ge(&epoch_end_at) {
         return Err(OreError::EpochExpired.into());
@@ -50,7 +49,7 @@ pub fn process_mine<'a, 'info>(
 
     // Validate provided hash
     let mut proof_data = proof_info.data.borrow_mut();
-    let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
+    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     validate_hash(
         proof.hash.into(),
         args.hash.into(),
@@ -61,7 +60,7 @@ pub fn process_mine<'a, 'info>(
 
     // Update claimable rewards
     let mut bus_data = bus_info.data.borrow_mut();
-    let mut bus = bytemuck::try_from_bytes_mut::<Bus>(&mut bus_data).unwrap();
+    let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if bus.available_rewards.lt(&treasury.reward_rate) {
         return Err(OreError::InsufficientBusRewards.into());
     }

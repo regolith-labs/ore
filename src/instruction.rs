@@ -3,7 +3,7 @@ use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
 use solana_program::pubkey::Pubkey;
 
-use crate::{impl_to_bytes, state::Hash};
+use crate::{impl_instruction_from_bytes, impl_to_bytes, state::Hash};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -135,3 +135,10 @@ impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(UpdateAdminArgs);
 impl_to_bytes!(UpdateDifficultyArgs);
+
+impl_instruction_from_bytes!(InitializeArgs);
+impl_instruction_from_bytes!(CreateProofArgs);
+impl_instruction_from_bytes!(MineArgs);
+impl_instruction_from_bytes!(ClaimArgs);
+impl_instruction_from_bytes!(UpdateAdminArgs);
+impl_instruction_from_bytes!(UpdateDifficultyArgs);

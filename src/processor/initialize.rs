@@ -22,10 +22,9 @@ pub fn process_initialize<'a, 'info>(
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = bytemuck::try_from_bytes::<InitializeArgs>(data)
-        .or(Err(ProgramError::InvalidInstructionData))?;
+    let args = InitializeArgs::try_from_bytes(data)?;
 
-    // Validate accounts
+    // Load accounts
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, rent_sysvar] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -96,7 +95,7 @@ pub fn process_initialize<'a, 'info>(
         signer,
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = bytemuck::try_from_bytes_mut::<Treasury>(&mut treasury_data).unwrap();
+    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;
     treasury.epoch_start_at = 0;
