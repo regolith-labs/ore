@@ -4,13 +4,14 @@ use solana_program::{
 };
 
 use crate::{
+    error::OreError,
     loaders::*,
     state::{Bus, Treasury},
     BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
     TARGET_EPOCH_REWARDS, TREASURY,
 };
 
-pub fn process_epoch<'a, 'info>(
+pub fn process_reset<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     _data: &[u8],
@@ -20,18 +21,23 @@ pub fn process_epoch<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_bus(bus_0_info)?;
-    load_bus(bus_1_info)?;
-    load_bus(bus_2_info)?;
-    load_bus(bus_3_info)?;
-    load_bus(bus_4_info)?;
-    load_bus(bus_5_info)?;
-    load_bus(bus_6_info)?;
-    load_bus(bus_7_info)?;
-    load_mint(mint_info)?;
-    load_treasury(treasury_info)?;
-    load_token_account(treasury_tokens_info, Some(treasury_info.key), mint_info.key)?;
-    load_account(token_program, spl_token::id())?;
+    load_bus(bus_0_info, true)?;
+    load_bus(bus_1_info, true)?;
+    load_bus(bus_2_info, true)?;
+    load_bus(bus_3_info, true)?;
+    load_bus(bus_4_info, true)?;
+    load_bus(bus_5_info, true)?;
+    load_bus(bus_6_info, true)?;
+    load_bus(bus_7_info, true)?;
+    load_mint(mint_info, true)?;
+    load_treasury(treasury_info, true)?;
+    load_token_account(
+        treasury_tokens_info,
+        Some(treasury_info.key),
+        mint_info.key,
+        true,
+    )?;
+    load_sysvar(token_program, spl_token::id())?;
     let busses: [&AccountInfo; 8] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
@@ -42,8 +48,8 @@ pub fn process_epoch<'a, 'info>(
     let mut treasury_data = treasury_info.data.borrow_mut();
     let mut treasury = bytemuck::try_from_bytes_mut::<Treasury>(&mut treasury_data).unwrap();
     let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
-    if !clock.unix_timestamp.ge(&epoch_end_at) {
-        return Err(ProgramError::Custom(1));
+    if clock.unix_timestamp.lt(&epoch_end_at) {
+        return Err(OreError::EpochActive.into());
     }
 
     // Reset busses

@@ -31,3 +31,14 @@ pub fn create_pda<'a, 'info>(
     )?;
     Ok(())
 }
+
+#[macro_export]
+macro_rules! impl_to_bytes {
+    ($struct_name:ident) => {
+        impl $struct_name {
+            pub fn to_bytes(&self) -> &[u8] {
+                bytemuck::bytes_of(self)
+            }
+        }
+    };
+}

@@ -24,7 +24,7 @@ use solana_sdk::{
 use spl_token::state::{AccountState, Mint};
 
 #[tokio::test]
-async fn test_epoch() {
+async fn test_reset() {
     // Setup
     let (mut banks, payer, hash) = setup_program_test_env().await;
 
@@ -62,7 +62,7 @@ async fn test_epoch() {
             AccountMeta::new(treasury_tokens_address, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: [OreInstruction::Epoch.to_vec()].concat(),
+        data: [OreInstruction::Reset.to_vec()].concat(),
     };
 
     // Submit tx

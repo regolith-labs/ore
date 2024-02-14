@@ -47,10 +47,10 @@ pub fn process_initialize<'a, 'info>(
         return Err(ProgramError::InvalidSeeds);
     }
     load_uninitialized_account(treasury_tokens_info)?;
-    load_account(system_program, system_program::id())?;
-    load_account(token_program, spl_token::id())?;
-    load_account(associated_token_program, spl_associated_token_account::id())?;
-    load_account(rent_sysvar, sysvar::rent::id())?;
+    load_program(system_program, system_program::id())?;
+    load_program(token_program, spl_token::id())?;
+    load_program(associated_token_program, spl_associated_token_account::id())?;
+    load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Initialize bus accounts
     let bus_infos = [

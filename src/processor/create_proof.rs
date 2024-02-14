@@ -5,15 +5,15 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 
-use crate::{instruction::ProofArgs, loaders::*, state::Proof, utils::create_pda, PROOF};
+use crate::{instruction::CreateProofArgs, loaders::*, state::Proof, utils::create_pda, PROOF};
 
-pub fn process_proof<'a, 'info>(
+pub fn process_create_proof<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = bytemuck::try_from_bytes::<ProofArgs>(data)
+    let args = bytemuck::try_from_bytes::<CreateProofArgs>(data)
         .or(Err(ProgramError::InvalidInstructionData))?;
 
     // Validate accounts
@@ -22,7 +22,7 @@ pub fn process_proof<'a, 'info>(
     };
     load_signer(signer)?;
     load_uninitialized_pda(proof_info, &[PROOF, signer.key.as_ref(), &[args.bump]])?;
-    load_account(system_program, system_program::id())?;
+    load_program(system_program, system_program::id())?;
 
     // Initialize proof
     create_pda(

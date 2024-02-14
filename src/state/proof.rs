@@ -1,6 +1,8 @@
 use bytemuck::{Pod, Zeroable};
 use solana_program::pubkey::Pubkey;
 
+use crate::impl_to_bytes;
+
 use super::Hash;
 
 #[repr(C)]
@@ -25,8 +27,4 @@ pub struct Proof {
     pub total_rewards: u64,
 }
 
-impl Proof {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
+impl_to_bytes!(Proof);

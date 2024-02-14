@@ -19,7 +19,7 @@ pub fn process_update_difficulty<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_treasury(treasury_info)?;
+    load_treasury(treasury_info, true)?;
 
     // Validate admin signer
     let mut treasury_data = treasury_info.data.borrow_mut();

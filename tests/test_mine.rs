@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use ore::{
-    instruction::{MineArgs, OreInstruction, ProofArgs},
+    instruction::{CreateProofArgs, MineArgs, OreInstruction},
     state::{Proof, Treasury},
     BUS, PROOF, TREASURY,
 };
@@ -34,8 +34,8 @@ async fn test_mine() {
             AccountMeta::new_readonly(system_program::id(), false),
         ],
         data: [
-            OreInstruction::Proof.to_vec(),
-            ProofArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+            OreInstruction::CreateProof.to_vec(),
+            CreateProofArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
         ]
         .concat(),
     };

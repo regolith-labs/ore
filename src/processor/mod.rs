@@ -1,15 +1,15 @@
 mod claim;
-mod epoch;
+mod create_proof;
 mod initialize;
 mod mine;
-mod proof;
+mod reset;
 mod update_admin;
 mod update_difficulty;
 
 pub use claim::*;
-pub use epoch::*;
+pub use create_proof::*;
 pub use initialize::*;
 pub use mine::*;
-pub use proof::*;
+pub use reset::*;
 pub use update_admin::*;
 pub use update_difficulty::*;

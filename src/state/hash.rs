@@ -3,6 +3,8 @@ use std::mem::transmute;
 use bytemuck::{Pod, Zeroable};
 use solana_program::keccak::{Hash as KeccakHash, HASH_BYTES};
 
+use crate::impl_to_bytes;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Hash(pub [u8; HASH_BYTES]);
@@ -20,3 +22,5 @@ impl From<Hash> for KeccakHash {
         unsafe { transmute(value) }
     }
 }
+
+impl_to_bytes!(Hash);

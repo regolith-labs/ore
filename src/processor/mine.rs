@@ -6,12 +6,14 @@ use solana_program::{
     entrypoint::ProgramResult,
     keccak::{hashv, Hash as KeccakHash},
     program_error::ProgramError,
+    program_memory::sol_memcmp,
     pubkey::Pubkey,
     slot_hashes::SlotHash,
     sysvar::{self, Sysvar},
 };
 
 use crate::{
+    error::OreError,
     instruction::MineArgs,
     loaders::*,
     state::{Bus, Proof, Treasury},
@@ -32,18 +34,18 @@ pub fn process_mine<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_bus(bus_info)?;
-    load_proof(proof_info, signer.key)?;
-    load_treasury(treasury_info)?;
-    load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
+    load_bus(bus_info, true)?;
+    load_proof(proof_info, signer.key, true)?;
+    load_treasury(treasury_info, false)?;
+    load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
     // Validate epoch is active
     let clock = Clock::get().unwrap();
     let treasury_data = treasury_info.data.borrow();
     let treasury = bytemuck::try_from_bytes::<Treasury>(&treasury_data).unwrap();
     let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
-    if !clock.unix_timestamp.lt(&epoch_end_at) {
-        return Err(ProgramError::Custom(1));
+    if clock.unix_timestamp.ge(&epoch_end_at) {
+        return Err(OreError::EpochExpired.into());
     }
 
     // Validate provided hash
@@ -61,7 +63,7 @@ pub fn process_mine<'a, 'info>(
     let mut bus_data = bus_info.data.borrow_mut();
     let mut bus = bytemuck::try_from_bytes_mut::<Bus>(&mut bus_data).unwrap();
     if bus.available_rewards.lt(&treasury.reward_rate) {
-        return Err(ProgramError::Custom(1));
+        return Err(OreError::InsufficientBusRewards.into());
     }
     bus.available_rewards = bus.available_rewards.saturating_sub(treasury.reward_rate);
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
@@ -86,19 +88,19 @@ pub(crate) fn validate_hash(
     nonce: u64,
     difficulty: KeccakHash,
 ) -> Result<(), ProgramError> {
-    // Validate hash correctness.
+    // Validate hash correctness
     let hash_ = hashv(&[
         current_hash.as_ref(),
         signer.as_ref(),
         nonce.to_be_bytes().as_slice(),
     ]);
-    if !hash.eq(&hash_) {
-        return Err(ProgramError::Custom(1));
+    if sol_memcmp(hash.as_ref(), hash_.as_ref(), 32) != 0 {
+        return Err(OreError::InvalidHash.into());
     }
 
-    // Validate hash difficulty.
-    if !hash.le(&difficulty) {
-        return Err(ProgramError::Custom(1));
+    // Validate hash difficulty
+    if hash.gt(&difficulty) {
+        return Err(OreError::InsufficientHashDifficulty.into());
     }
 
     Ok(())

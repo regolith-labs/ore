@@ -3,7 +3,7 @@ use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
 use solana_program::pubkey::Pubkey;
 
-use crate::state::Hash;
+use crate::{impl_to_bytes, state::Hash};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -23,13 +23,13 @@ pub enum OreInstruction {
     #[account(11, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(12, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(13, name = "token_program", desc = "SPL token program")]
-    Epoch = 0,
+    Reset = 0,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore miner proof account", writable)]
     #[account(3, name = "system_program", desc = "Solana system program")]
-    Proof = 1,
+    CreateProof = 1,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -98,22 +98,10 @@ pub struct InitializeArgs {
     pub treasury_bump: u8,
 }
 
-impl InitializeArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ProofArgs {
+pub struct CreateProofArgs {
     pub bump: u8,
-}
-
-impl ProofArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
 }
 
 #[repr(C)]
@@ -123,22 +111,10 @@ pub struct MineArgs {
     pub nonce: [u8; 8],
 }
 
-impl MineArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimArgs {
     pub amount: u64,
-}
-
-impl ClaimArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
 }
 
 #[repr(C)]
@@ -147,20 +123,15 @@ pub struct UpdateAdminArgs {
     pub new_admin: Pubkey,
 }
 
-impl UpdateAdminArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct UpdateDifficultyArgs {
     pub new_difficulty: Hash,
 }
 
-impl UpdateDifficultyArgs {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
+impl_to_bytes!(InitializeArgs);
+impl_to_bytes!(CreateProofArgs);
+impl_to_bytes!(MineArgs);
+impl_to_bytes!(ClaimArgs);
+impl_to_bytes!(UpdateAdminArgs);
+impl_to_bytes!(UpdateDifficultyArgs);

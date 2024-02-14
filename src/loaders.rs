@@ -1,6 +1,6 @@
 use solana_program::{
-    account_info::AccountInfo, program_error::ProgramError, program_memory::sol_memcmp,
-    program_pack::Pack, pubkey::Pubkey, system_program,
+    account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
+    system_program,
 };
 use spl_token::state::Mint;
 
@@ -16,8 +16,11 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
     Ok(())
 }
 
-pub fn load_bus<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+pub fn load_bus<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -31,14 +34,19 @@ pub fn load_bus<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramEr
         return Err(ProgramError::InvalidAccountData);
     }
 
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     Ok(())
 }
 
 pub fn load_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
-    signer: &Pubkey,
+    authority: &Pubkey,
+    is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -48,31 +56,44 @@ pub fn load_proof<'a, 'info>(
     let proof_data = info.data.borrow();
     let proof = bytemuck::try_from_bytes::<Proof>(&proof_data).unwrap();
 
-    // if !proof.authority.eq(&signer) {
-    if sol_memcmp(proof.authority.as_ref(), signer.as_ref(), 32) != 0 {
+    if proof.authority.ne(&authority) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
 
     Ok(())
 }
 
-pub fn load_treasury<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
-    if !info.owner.eq(&crate::id()) {
+pub fn load_treasury<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if sol_memcmp(info.key.as_ref(), TREASURY_ADDRESS.as_ref(), 32) != 0 {
+    if info.key.ne(&TREASURY_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
     }
 
     Ok(())
 }
 
-pub fn load_mint<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
-    if !info.owner.eq(&spl_token::id()) {
+pub fn load_mint<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -84,7 +105,11 @@ pub fn load_mint<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramE
         return Err(ProgramError::InvalidAccountData);
     }
 
-    if sol_memcmp(info.key.as_ref(), MINT_ADDRESS.as_ref(), 32) != 0 {
+    if info.key.ne(&MINT_ADDRESS) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -95,8 +120,9 @@ pub fn load_token_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
     owner: Option<&Pubkey>,
     mint: &Pubkey,
+    is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if !info.owner.eq(&spl_token::id()) {
+    if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
     if info.data_is_empty() {
@@ -107,13 +133,17 @@ pub fn load_token_account<'a, 'info>(
     let account = spl_token::state::Account::unpack_unchecked(&account_data)
         .or(Err(ProgramError::InvalidAccountData))?;
 
-    if !account.mint.eq(&mint) {
+    if account.mint.ne(&mint) {
         return Err(ProgramError::InvalidAccountData);
     }
     if let Some(owner) = owner {
-        if sol_memcmp(account.owner.as_ref(), owner.as_ref(), 32) != 0 {
+        if account.owner.ne(owner) {
             return Err(ProgramError::InvalidAccountData);
         }
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
     }
 
     Ok(())
@@ -124,7 +154,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
     seeds: &[&[u8]],
 ) -> Result<(), ProgramError> {
     let key = Pubkey::create_program_address(seeds, &crate::id())?;
-    if !info.key.eq(&key) {
+    if info.key.ne(&key) {
         return Err(ProgramError::InvalidSeeds);
     }
     load_uninitialized_account(info)
@@ -133,7 +163,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
 pub fn load_uninitialized_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<(), ProgramError> {
-    if !info.owner.eq(&system_program::id()) {
+    if info.owner.ne(&system_program::id()) {
         return Err(ProgramError::AccountAlreadyInitialized);
     }
     if !info.data_is_empty() {
@@ -145,11 +175,35 @@ pub fn load_uninitialized_account<'a, 'info>(
     Ok(())
 }
 
-pub fn load_account<'a, 'info>(
+pub fn load_sysvar<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,
 ) -> Result<(), ProgramError> {
-    if !info.key.eq(&key) {
+    load_account(info, key, false)
+}
+
+pub fn load_account<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    key: Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.key.ne(&key) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    Ok(())
+}
+
+pub fn load_program<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    key: Pubkey,
+) -> Result<(), ProgramError> {
+    if info.key.ne(&key) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+    if !info.executable {
         return Err(ProgramError::InvalidAccountData);
     }
     Ok(())

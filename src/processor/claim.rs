@@ -4,6 +4,7 @@ use solana_program::{
 };
 
 use crate::{
+    error::OreError,
     instruction::ClaimArgs,
     loaders::*,
     state::{Proof, Treasury},
@@ -24,17 +25,22 @@ pub fn process_claim<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_token_account(beneficiary_info, None, mint_info.key)?;
-    load_mint(mint_info)?;
-    load_treasury(treasury_info)?;
-    load_token_account(treasury_tokens_info, Some(treasury_info.key), mint_info.key)?;
-    load_account(token_program, spl_token::id())?;
+    load_token_account(beneficiary_info, None, mint_info.key, true)?;
+    load_mint(mint_info, true)?;
+    load_treasury(treasury_info, true)?;
+    load_token_account(
+        treasury_tokens_info,
+        Some(treasury_info.key),
+        mint_info.key,
+        true,
+    )?;
+    load_program(token_program, spl_token::id())?;
 
     // Validate claim amout
     let mut proof_data = proof_info.data.borrow_mut();
     let mut proof = bytemuck::try_from_bytes_mut::<Proof>(&mut proof_data).unwrap();
     if proof.claimable_rewards.lt(&args.amount) {
-        return Err(ProgramError::Custom(1));
+        return Err(OreError::InvalidClaimAmount.into());
     }
 
     // Update claimable amount

@@ -1,5 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 
+use crate::impl_to_bytes;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Bus {
@@ -13,8 +15,4 @@ pub struct Bus {
     pub available_rewards: u64,
 }
 
-impl Bus {
-    pub fn to_bytes(&self) -> &[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
+impl_to_bytes!(Bus);
