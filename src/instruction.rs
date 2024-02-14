@@ -1,6 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
+use solana_program::pubkey::Pubkey;
 
 use crate::state::Hash;
 
@@ -67,13 +68,13 @@ pub enum OreInstruction {
     #[account(16, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 
-    // TODO
-    // #[account(0, name = "ore_program", desc = "Ore program")]
-    // UpdateAdmin = 102,
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "treasury", desc = "Ore treasury account")]
+    UpdateAdmin = 102,
 
-    // TODO
-    // #[account(0, name = "ore_program", desc = "Ore program")]
-    // UpdateDifficulty = 103,
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "treasury", desc = "Ore treasury account")]
+    UpdateDifficulty = 103,
 }
 
 impl OreInstruction {
@@ -123,6 +124,42 @@ pub struct MineArgs {
 }
 
 impl MineArgs {
+    pub fn to_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct ClaimArgs {
+    pub amount: u64,
+}
+
+impl ClaimArgs {
+    pub fn to_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct UpdateAdminArgs {
+    pub new_admin: Pubkey,
+}
+
+impl UpdateAdminArgs {
+    pub fn to_bytes(&self) -> &[u8] {
+        bytemuck::bytes_of(self)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct UpdateDifficultyArgs {
+    pub new_difficulty: Hash,
+}
+
+impl UpdateDifficultyArgs {
     pub fn to_bytes(&self) -> &[u8] {
         bytemuck::bytes_of(self)
     }

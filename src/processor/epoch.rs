@@ -15,66 +15,27 @@ pub fn process_epoch<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     _data: &[u8],
 ) -> ProgramResult {
+    // Validate accounts
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    let _ = load_signer(signer)?;
-    let _ = load_bus(bus_0_info)?;
-    let _ = load_bus(bus_1_info)?;
-    let _ = load_bus(bus_2_info)?;
-    let _ = load_bus(bus_3_info)?;
-    let _ = load_bus(bus_4_info)?;
-    let _ = load_bus(bus_5_info)?;
-    let _ = load_bus(bus_6_info)?;
-    let _ = load_bus(bus_7_info)?;
-    let _ = load_mint(mint_info)?;
-    let _ = load_treasury(treasury_info)?;
-    let _ = load_token_account(treasury_tokens_info, treasury_info.key, mint_info.key)?;
-    let _ = load_account(token_program, spl_token::id())?;
-
+    load_signer(signer)?;
+    load_bus(bus_0_info)?;
+    load_bus(bus_1_info)?;
+    load_bus(bus_2_info)?;
+    load_bus(bus_3_info)?;
+    load_bus(bus_4_info)?;
+    load_bus(bus_5_info)?;
+    load_bus(bus_6_info)?;
+    load_bus(bus_7_info)?;
+    load_mint(mint_info)?;
+    load_treasury(treasury_info)?;
+    load_token_account(treasury_tokens_info, Some(treasury_info.key), mint_info.key)?;
+    load_account(token_program, spl_token::id())?;
     let busses: [&AccountInfo; 8] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
     ];
-
-    // let _ = load_signer(signer)?;
-    // let _ = load_bus(bus_info)?;
-    // let _ = load_proof(proof_info, signer.key)?;
-    // let _ = load_treasury(treasury_info)?;
-    // let _ = load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
-
-    // let accounts_iter = &mut accounts.iter();
-
-    // Account 1: Signer
-    // let _signer = load_signer(next_account_info(accounts_iter)?)?;
-
-    // Accounts 2-9: Busses
-    // let busses = vec![
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    //     load_bus(next_account_info(accounts_iter)?)?,
-    // ];
-
-    // Account 10: Mint
-    // let mint = load_mint(next_account_info(accounts_iter)?)?;
-
-    // Account 11: Treasury
-    // let treasury_info = load_treasury(next_account_info(accounts_iter)?)?;
-
-    // Account 12: Treasury tokens
-    // let treasury_tokens = load_token_account(
-    //     next_account_info(accounts_iter)?,
-    //     treasury_info.key,
-    //     mint.key,
-    // )?;
-
-    // Account 13: Token program
-    // let token_program = load_account(next_account_info(accounts_iter)?, spl_token::id())?;
 
     // Validate epoch has ended
     let clock = Clock::get().unwrap();

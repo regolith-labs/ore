@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 use solana_program::{
-    account_info::{next_account_info, AccountInfo},
+    account_info::AccountInfo,
     clock::Clock,
     entrypoint::ProgramResult,
     keccak::{hashv, Hash as KeccakHash},
@@ -27,15 +27,15 @@ pub fn process_mine<'a, 'info>(
     let args =
         bytemuck::try_from_bytes::<MineArgs>(data).or(Err(ProgramError::InvalidInstructionData))?;
 
-    // Parse accounts
+    // Validate accounts
     let [signer, bus_info, proof_info, treasury_info, slot_hashes_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    let _ = load_signer(signer)?;
-    let _ = load_bus(bus_info)?;
-    let _ = load_proof(proof_info, signer.key)?;
-    let _ = load_treasury(treasury_info)?;
-    let _ = load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
+    load_signer(signer)?;
+    load_bus(bus_info)?;
+    load_proof(proof_info, signer.key)?;
+    load_treasury(treasury_info)?;
+    load_account(slot_hashes_info, sysvar::slot_hashes::id())?;
 
     // Validate epoch is active
     let clock = Clock::get().unwrap();

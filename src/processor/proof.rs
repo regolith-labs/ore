@@ -1,12 +1,8 @@
 use std::mem::size_of;
 
 use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    keccak::hashv,
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    system_program,
+    account_info::AccountInfo, entrypoint::ProgramResult, keccak::hashv,
+    program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 
 use crate::{instruction::ProofArgs, loaders::*, state::Proof, utils::create_pda, PROOF};
@@ -16,21 +12,17 @@ pub fn process_proof<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
-    let accounts_iter = &mut accounts.iter();
+    // Parse args
     let args = bytemuck::try_from_bytes::<ProofArgs>(data)
         .or(Err(ProgramError::InvalidInstructionData))?;
 
-    // Account 1: Signer
-    let signer = load_signer(next_account_info(accounts_iter)?)?;
-
-    // Account 2: Proof
-    let proof_info = load_uninitialized_pda(
-        next_account_info(accounts_iter)?,
-        &[PROOF, signer.key.as_ref(), &[args.bump]],
-    )?;
-
-    // Account 3: System program
-    let system_program = load_account(next_account_info(accounts_iter)?, system_program::id())?;
+    // Validate accounts
+    let [signer, proof_info, system_program] = accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    load_signer(signer)?;
+    load_uninitialized_pda(proof_info, &[PROOF, signer.key.as_ref(), &[args.bump]])?;
+    load_account(system_program, system_program::id())?;
 
     // Initialize proof
     create_pda(

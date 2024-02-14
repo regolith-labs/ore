@@ -34,7 +34,6 @@ pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
 ]);
 
 /// The mint address of the ORE token.
-// pub const MINT_ADDRESS: Pubkey = pubkey!("37TDfMS8NHpyhyCXBrY9m7rRrtj1f7TrFzD1iXqmTeUX");
 pub const MINT_ADDRESS: Pubkey = pubkey!("DY4JVebraRXg9BGt4MRU4mvqHGDzmi2Ay1HGjDU5YeNf");
 
 /// The decimal precision of the ORE token.
@@ -115,6 +114,8 @@ pub fn process_instruction(
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
+        OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
+        OreInstruction::UpdateDifficulty => process_update_difficulty(program_id, accounts, data)?,
     }
 
     Ok(())
