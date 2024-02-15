@@ -6,7 +6,7 @@ use solana_program::{
 };
 
 use crate::{
-    instruction::CreateProofArgs,
+    instruction::RegisterArgs,
     loaders::*,
     state::Proof,
     utils::AccountDeserialize,
@@ -14,13 +14,13 @@ use crate::{
     PROOF,
 };
 
-pub fn process_create_proof<'a, 'info>(
+pub fn process_register<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = CreateProofArgs::try_from_bytes(data)?;
+    let args = RegisterArgs::try_from_bytes(data)?;
 
     // Load accounts
     let [signer, proof_info, system_program] = accounts else {

@@ -36,7 +36,7 @@ pub enum OreInstruction {
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore miner proof account", writable)]
     #[account(3, name = "system_program", desc = "Solana system program")]
-    CreateProof = 1,
+    Register = 1,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -107,7 +107,7 @@ pub struct InitializeArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct CreateProofArgs {
+pub struct RegisterArgs {
     pub bump: u8,
 }
 
@@ -137,14 +137,14 @@ pub struct UpdateDifficultyArgs {
 }
 
 impl_to_bytes!(InitializeArgs);
-impl_to_bytes!(CreateProofArgs);
+impl_to_bytes!(RegisterArgs);
 impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(UpdateAdminArgs);
 impl_to_bytes!(UpdateDifficultyArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
-impl_instruction_from_bytes!(CreateProofArgs);
+impl_instruction_from_bytes!(RegisterArgs);
 impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
@@ -199,16 +199,20 @@ pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction 
     }
 }
 
-pub fn create_proof(signer: Pubkey) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+pub fn register(signer: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(proof, false),
+            AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
-        data: OreInstruction::CreateProof.to_vec(),
+        data: [
+            OreInstruction::Register.to_vec(),
+            RegisterArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+        ]
+        .concat(),
     }
 }
 

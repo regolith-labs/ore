@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use ore::{
-    instruction::{CreateProofArgs, MineArgs, OreInstruction},
     state::{Proof, Treasury},
     utils::AccountDeserialize,
     BUS, PROOF, TREASURY,
@@ -9,10 +8,9 @@ use ore::{
 use solana_program::{
     clock::Clock,
     epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
-    instruction::{AccountMeta, Instruction},
     keccak::{hashv, Hash as KeccakHash},
     pubkey::Pubkey,
-    system_program, sysvar,
+    sysvar,
 };
 use solana_program_test::{processor, BanksClient, ProgramTest};
 use solana_sdk::{
@@ -25,21 +23,9 @@ async fn test_mine() {
     // Setup
     let (mut banks, payer, hash) = setup_program_test_env().await;
 
-    // Build proof ix
+    // Build register ix
     let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
-    let ix_0 = Instruction {
-        program_id: ore::id(),
-        accounts: vec![
-            AccountMeta::new(payer.pubkey(), true),
-            AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(system_program::id(), false),
-        ],
-        data: [
-            OreInstruction::CreateProof.to_vec(),
-            CreateProofArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
-        ]
-        .concat(),
-    };
+    let ix_0 = ore::instruction::register(payer.pubkey());
 
     // Submit tx
     let tx = Transaction::new_signed_with_payer(&[ix_0], Some(&payer.pubkey()), &[&payer], hash);
@@ -65,29 +51,7 @@ async fn test_mine() {
 
     // Build mine ix
     let bus_pda = Pubkey::find_program_address(&[BUS, &[0]], &ore::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let ix_1 = Instruction {
-        program_id: ore::id(),
-        accounts: vec![
-            AccountMeta::new(payer.pubkey(), true),
-            AccountMeta::new(bus_pda.0, false),
-            AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(treasury_pda.0, false),
-            // AccountMeta::new(treasury_pda.0, false),
-            // AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
-        ],
-        data: [
-            OreInstruction::Mine.to_vec(),
-            MineArgs {
-                hash: next_hash.into(),
-                nonce: nonce.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
-    };
+    let ix_1 = ore::instruction::mine(payer.pubkey(), bus_pda.0, next_hash.into(), nonce);
 
     // Submit tx
     let tx = Transaction::new_signed_with_payer(&[ix_1], Some(&payer.pubkey()), &[&payer], hash);

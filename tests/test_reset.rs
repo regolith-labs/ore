@@ -1,21 +1,14 @@
 use std::str::FromStr;
 
 use ore::{
-    instruction::OreInstruction,
     state::{Bus, Treasury},
     utils::AccountDeserialize,
     BUS, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MAX_EPOCH_REWARDS,
     MINT, TREASURY,
 };
 use solana_program::{
-    clock::Clock,
-    epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
-    hash::Hash,
-    instruction::{AccountMeta, Instruction},
-    program_option::COption,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    sysvar,
+    clock::Clock, epoch_schedule::DEFAULT_SLOTS_PER_EPOCH, hash::Hash, program_option::COption,
+    program_pack::Pack, pubkey::Pubkey, sysvar,
 };
 use solana_program_test::{processor, BanksClient, ProgramTest};
 use solana_sdk::{
@@ -45,28 +38,8 @@ async fn test_reset() {
     let treasury_tokens_address =
         spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
 
-    // Build ix
-    let ix = Instruction {
-        program_id: ore::ID,
-        accounts: vec![
-            AccountMeta::new(payer.pubkey(), true),
-            AccountMeta::new(bus_pdas[0].0, false),
-            AccountMeta::new(bus_pdas[1].0, false),
-            AccountMeta::new(bus_pdas[2].0, false),
-            AccountMeta::new(bus_pdas[3].0, false),
-            AccountMeta::new(bus_pdas[4].0, false),
-            AccountMeta::new(bus_pdas[5].0, false),
-            AccountMeta::new(bus_pdas[6].0, false),
-            AccountMeta::new(bus_pdas[7].0, false),
-            AccountMeta::new(mint_pda.0, false),
-            AccountMeta::new(treasury_pda.0, false),
-            AccountMeta::new(treasury_tokens_address, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-        ],
-        data: [OreInstruction::Reset.to_vec()].concat(),
-    };
-
     // Submit tx
+    let ix = ore::instruction::reset(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
