@@ -1,14 +1,17 @@
 use std::str::FromStr;
 
 use ore::{
-    state::{Proof, Treasury},
-    utils::AccountDeserialize,
-    BUS, PROOF, TREASURY,
+    state::{Bus, Proof, Treasury},
+    utils::{AccountDeserialize, Discriminator},
+    BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
+    TREASURY_ADDRESS,
 };
 use solana_program::{
     clock::Clock,
     epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
     keccak::{hashv, Hash as KeccakHash},
+    program_option::COption,
+    program_pack::Pack,
     pubkey::Pubkey,
     sysvar,
 };
@@ -17,6 +20,7 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+use spl_token::state::{AccountState, Mint};
 
 #[tokio::test]
 async fn test_mine() {
@@ -49,11 +53,8 @@ async fn test_mine() {
         payer.pubkey(),
     );
 
-    // Build mine ix
-    let bus_pda = Pubkey::find_program_address(&[BUS, &[0]], &ore::id());
-    let ix_1 = ore::instruction::mine(payer.pubkey(), bus_pda.0, next_hash.into(), nonce);
-
-    // Submit tx
+    // Submit mine tx
+    let ix_1 = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
     let tx = Transaction::new_signed_with_payer(&[ix_1], Some(&payer.pubkey()), &[&payer], hash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -86,77 +87,90 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
     program_test.prefer_bpf(true);
 
     // Busses
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("2uwqyH2gKqstgAFCSniirx73X4iQek5ETc2vVJKUiNMg").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD/AAAAAAAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("FRMC6jVczm1cRaEs5EhDsfw7X8vsmSDpf3bJWVkawngu").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD+AAAAAQAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("9nWyycs4GHjnLujPR2sbA1A8K8CkiLc5VzxWUD4hg2uM").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD/AAAAAgAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("Kt7kqD3MyvxLbj4ek9urXUxkDoxaMuQn82K2VdYD1jM").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD6AAAAAwAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("8r9mXYnFQXhwrNfvatGUTxbbNSqxScuCwp4sBTSxDVTJ").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD9AAAABAAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("D9cEH32k8p9uWc4w5RrStK9rWssU8NuX1Dg5YaUim4wL").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD/AAAABQAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("H1RKMYADPzd4C1j1RZu51NvRSVktoTYEJyeVy98Kmdyu").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD/AAAABgAAAICy5g4AAAAA",
-    );
-    program_test.add_account_with_base64_data(
-        Pubkey::from_str("3XbdZNbBjjp8qnDJjv1RxaKisyfx6ahznYkSigs6dayy").unwrap(),
-        1002240,
-        ore::id(),
-        "ZAAAAAAAAAD5AAAABwAAAICy5g4AAAAA",
-    );
+    for i in 0..BUS_COUNT {
+        program_test.add_account_with_base64_data(
+            BUS_ADDRESSES[i],
+            1057920,
+            ore::id(),
+            bs64::encode(
+                &[
+                    &(Bus::discriminator() as u64).to_le_bytes(),
+                    Bus {
+                        id: i as u64,
+                        available_rewards: 250_000_000,
+                    }
+                    .to_bytes(),
+                ]
+                .concat(),
+            )
+            .as_str(),
+        );
+    }
 
-    // Treasury (difficulty = MAX)
+    // Treasury
+    let admin_address = Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap();
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
     program_test.add_account_with_base64_data(
-        Pubkey::from_str("67PLJej6iZm915WbEu6NLeZtRZtnHc5nSVQvkHRZyPiC").unwrap(),
-        1559040,
+        treasury_pda.0,
+        1614720,
         ore::id(),
-        "ZgAAAAAAAAD/AAAAAAAAAI9MXkItHZzhz/U8d4MsXPzDSQZSRgZsJnNpvgvcborr//////////////////////////////////////////9kAAAAAAAAAPQBAAAAAAAAAAAAAAAAAAA=",
+        bs64::encode(
+            &[
+                &(Treasury::discriminator() as u64).to_le_bytes(),
+                Treasury {
+                    bump: treasury_pda.1 as u64,
+                    admin: admin_address,
+                    difficulty: KeccakHash::new_from_array([u8::MAX; 32]).into(),
+                    epoch_start_at: 100,
+                    reward_rate: INITIAL_REWARD_RATE,
+                    total_claimed_rewards: 0,
+                }
+                .to_bytes(),
+            ]
+            .concat(),
+        )
+        .as_str(),
     );
 
     // Mint
+    let mut mint_src: [u8; Mint::LEN] = [0; Mint::LEN];
+    Mint {
+        mint_authority: COption::Some(TREASURY_ADDRESS),
+        supply: 2_000_000_000,
+        decimals: TOKEN_DECIMALS,
+        is_initialized: true,
+        freeze_authority: COption::None,
+    }
+    .pack_into_slice(&mut mint_src);
     program_test.add_account_with_base64_data(
-        Pubkey::from_str("DY4JVebraRXg9BGt4MRU4mvqHGDzmi2Ay1HGjDU5YeNf").unwrap(),
+        MINT_ADDRESS,
         1461600,
         spl_token::id(),
-        "AQAAAEvtK9pjA/sPMEl3rhUgX8iz4/q0A5icrVGp0GdL3satAJQ1dwAAAAAJAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        bs64::encode(&mint_src).as_str(),
     );
 
     // Treasury tokens
+    let tokens_address = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    let mut tokens_src: [u8; spl_token::state::Account::LEN] = [0; spl_token::state::Account::LEN];
+    spl_token::state::Account {
+        mint: MINT_ADDRESS,
+        owner: TREASURY_ADDRESS,
+        amount: 2_000_000_000,
+        delegate: COption::None,
+        state: AccountState::Initialized,
+        is_native: COption::None,
+        delegated_amount: 0,
+        close_authority: COption::None,
+    }
+    .pack_into_slice(&mut tokens_src);
     program_test.add_account_with_base64_data(
-        Pubkey::from_str("EH4tskvkeNqX5ce3FBr4oJob3FKSns9th7NvP28ZHsNL").unwrap(),
+        tokens_address,
         2039280,
         spl_token::id(),
-        "ukD7Oc0QjzbigRIB1x9/XLzAT3w7X0UTZ1NVeB85lRRL7SvaYwP7DzBJd64VIF/Is+P6tAOYnK1RqdBnS97GrQCUNXcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        bs64::encode(&tokens_src).as_str(),
     );
 
     // Set sysvar

@@ -42,7 +42,7 @@ pub fn process_register<'a, 'info>(
     let mut proof_data = proof_info.data.borrow_mut();
     proof_data[0] = Proof::discriminator() as u8;
     let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.bump = args.bump as u64;
+    // proof.bump = args.bump as u64;
     proof.authority = *signer.key;
     proof.claimable_rewards = 0;
     proof.hash = hashv(&[&signer.key.to_bytes()]).into();

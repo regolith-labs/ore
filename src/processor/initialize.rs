@@ -83,8 +83,8 @@ pub fn process_initialize<'a, 'info>(
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
         bus_data[0] = Bus::discriminator() as u8;
         let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-        bus.bump = bus_bumps[i] as u32;
-        bus.id = i as u32;
+        // bus.bump = bus_bumps[i] as u32;
+        bus.id = i as u64;
         bus.available_rewards = 0;
     }
 

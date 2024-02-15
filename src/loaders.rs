@@ -7,7 +7,7 @@ use spl_token::state::Mint;
 use crate::{
     state::{Bus, Proof},
     utils::AccountDeserialize,
-    BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
+    BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
 
 pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
@@ -33,8 +33,12 @@ pub fn load_bus<'a, 'info>(
     let bus_data = info.data.borrow();
     let bus = Bus::try_from_bytes(&bus_data)?;
 
-    if !(0..BUS_COUNT).contains(&(bus.id as usize)) {
+    if bus.id.ge(&(BUS_COUNT as u64)) {
         return Err(ProgramError::InvalidAccountData);
+    }
+
+    if info.key.ne(&BUS_ADDRESSES[bus.id as usize]) {
+        return Err(ProgramError::InvalidSeeds);
     }
 
     if is_writable && !info.is_writable {

@@ -10,9 +10,6 @@ use crate::{
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Proof {
-    /// The bump of the proof account PDA.
-    pub bump: u64,
-
     /// The account (i.e. miner) authorized to use this proof.
     pub authority: Pubkey,
 

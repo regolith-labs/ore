@@ -39,7 +39,7 @@ pub fn process_reset<'a, 'info>(
         true,
     )?;
     load_sysvar(token_program, spl_token::id())?;
-    let busses: [&AccountInfo; 8] = [
+    let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
     ];

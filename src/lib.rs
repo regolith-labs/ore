@@ -17,7 +17,7 @@ use solana_program::{
 // TODO Test admin and difficulty adjustment functions
 // TODO Increase decimals?
 
-declare_id!("CeJShZEAzBLwtcLQvbZc7UT38e4nUTn63Za5UFyYYDTS");
+declare_id!("ore2mSzJwAZhxLyCLbNEnFvYq9U8jvCMvUBrVvbmqDF");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
@@ -28,12 +28,15 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     data: &[u8],
 ) -> ProgramResult {
+    if program_id.ne(&crate::id()) {
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
     let (tag, data) = data
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
 
-    let ix = OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))?;
-    match ix {
+    match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
         OreInstruction::Reset => process_reset(program_id, accounts, data)?,
         OreInstruction::Register => process_register(program_id, accounts, data)?,
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
