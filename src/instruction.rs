@@ -199,6 +199,19 @@ pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction 
     }
 }
 
+pub fn create_proof(signer: Pubkey) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        ],
+        data: OreInstruction::CreateProof.to_vec(),
+    }
+}
+
 pub fn reset(signer: Pubkey) -> Instruction {
     let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
     let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
