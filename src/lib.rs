@@ -10,7 +10,7 @@ pub use consts::*;
 use instruction::*;
 use processor::*;
 use solana_program::{
-    self, account_info::AccountInfo, declare_id, entrypoint::ProgramResult, log::sol_log,
+    self, account_info::AccountInfo, declare_id, entrypoint::ProgramResult,
     program_error::ProgramError, pubkey::Pubkey,
 };
 
@@ -28,14 +28,11 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     data: &[u8],
 ) -> ProgramResult {
-    sol_log("1");
     let (tag, data) = data
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
-    sol_log(format!("2: {:?}", tag).as_str());
 
     let ix = OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))?;
-    sol_log(format!("3: {:?}", ix).as_str());
     match ix {
         OreInstruction::Reset => process_reset(program_id, accounts, data)?,
         OreInstruction::Register => process_register(program_id, accounts, data)?,
