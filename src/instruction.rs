@@ -1,9 +1,16 @@
 use bytemuck::{Pod, Zeroable};
 use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
-use solana_program::pubkey::Pubkey;
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    sysvar,
+};
 
-use crate::{impl_instruction_from_bytes, impl_to_bytes, state::Hash};
+use crate::{
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, MINT_ADDRESS, PROOF,
+    TREASURY_ADDRESS,
+};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -142,3 +149,86 @@ impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
 impl_instruction_from_bytes!(UpdateDifficultyArgs);
+
+pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(beneficiary, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Claim.to_vec(),
+            ClaimArgs { amount }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Mine.to_vec(),
+            MineArgs {
+                hash,
+                nonce: nonce.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+pub fn reset(signer: Pubkey) -> Instruction {
+    let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
+    let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
+    let bus_2 = Pubkey::find_program_address(&[BUS, &[2]], &crate::id()).0;
+    let bus_3 = Pubkey::find_program_address(&[BUS, &[3]], &crate::id()).0;
+    let bus_4 = Pubkey::find_program_address(&[BUS, &[4]], &crate::id()).0;
+    let bus_5 = Pubkey::find_program_address(&[BUS, &[5]], &crate::id()).0;
+    let bus_6 = Pubkey::find_program_address(&[BUS, &[6]], &crate::id()).0;
+    let bus_7 = Pubkey::find_program_address(&[BUS, &[7]], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_0, false),
+            AccountMeta::new(bus_1, false),
+            AccountMeta::new(bus_2, false),
+            AccountMeta::new(bus_3, false),
+            AccountMeta::new(bus_4, false),
+            AccountMeta::new(bus_5, false),
+            AccountMeta::new(bus_6, false),
+            AccountMeta::new(bus_7, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: OreInstruction::Reset.to_vec(),
+    }
+}
