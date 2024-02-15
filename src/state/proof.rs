@@ -3,7 +3,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::{impl_account_from_bytes, impl_to_bytes};
 
-use super::Hash;
+use super::{AccountDiscriminator, Discriminator, Hash};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
@@ -25,6 +25,12 @@ pub struct Proof {
 
     /// The total lifetime rewards distributed to this miner.
     pub total_rewards: u64,
+}
+
+impl Discriminator for Proof {
+    fn discriminator() -> super::AccountDiscriminator {
+        AccountDiscriminator::Proof
+    }
 }
 
 impl_to_bytes!(Proof);

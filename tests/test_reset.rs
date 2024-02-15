@@ -93,7 +93,7 @@ async fn test_reset() {
     assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(
         treasury.admin,
-        Pubkey::from_str("EQn4AkZ9UvLcwRgyx1B8Y9sRM3KjfKyti8mjUJW1kL6B").unwrap()
+        Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap()
     );
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
     assert_eq!(treasury.epoch_start_at as u8, 100);
@@ -115,12 +115,12 @@ async fn test_reset() {
     assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
-    println!(
-        "Mint {:?} {:?} {:?}",
-        mint_pda.0,
-        mint_account,
-        bs64::encode(&mint_account.data)
-    );
+    // println!(
+    //     "Mint {:?} {:?} {:?}",
+    //     mint_pda.0,
+    //     mint_account,
+    //     bs64::encode(&mint_account.data)
+    // );
 
     // Test treasury token state
     let treasury_tokens_account = banks
@@ -138,12 +138,12 @@ async fn test_reset() {
     assert_eq!(treasury_tokens.is_native, COption::None);
     assert_eq!(treasury_tokens.delegated_amount, 0);
     assert_eq!(treasury_tokens.close_authority, COption::None);
-    println!(
-        "Treasury tokens {:?} {:?} {:?}",
-        treasury_tokens_address,
-        treasury_tokens_account,
-        bs64::encode(&treasury_tokens_account.data)
-    );
+    // println!(
+    //     "Treasury tokens {:?} {:?} {:?}",
+    //     treasury_tokens_address,
+    //     treasury_tokens_account,
+    //     bs64::encode(&treasury_tokens_account.data)
+    // );
 
     // assert!(false);
 }
@@ -157,49 +157,49 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
         Pubkey::from_str("2uwqyH2gKqstgAFCSniirx73X4iQek5ETc2vVJKUiNMg").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAAAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD/AAAAAAAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("FRMC6jVczm1cRaEs5EhDsfw7X8vsmSDpf3bJWVkawngu").unwrap(),
         1002240,
         ore::id(),
-        "/gAAAAEAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD+AAAAAQAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("9nWyycs4GHjnLujPR2sbA1A8K8CkiLc5VzxWUD4hg2uM").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAIAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD/AAAAAgAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("Kt7kqD3MyvxLbj4ek9urXUxkDoxaMuQn82K2VdYD1jM").unwrap(),
         1002240,
         ore::id(),
-        "+gAAAAMAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD6AAAAAwAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("8r9mXYnFQXhwrNfvatGUTxbbNSqxScuCwp4sBTSxDVTJ").unwrap(),
         1002240,
         ore::id(),
-        "/QAAAAQAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD9AAAABAAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("D9cEH32k8p9uWc4w5RrStK9rWssU8NuX1Dg5YaUim4wL").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAUAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD/AAAABQAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("H1RKMYADPzd4C1j1RZu51NvRSVktoTYEJyeVy98Kmdyu").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAYAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD/AAAABgAAAAAAAAAAAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("3XbdZNbBjjp8qnDJjv1RxaKisyfx6ahznYkSigs6dayy").unwrap(),
         1002240,
         ore::id(),
-        "+QAAAAcAAAAAAAAAAAAAAA==",
+        "ZAAAAAAAAAD5AAAABwAAAAAAAAAAAAAA",
     );
 
     // Treasury
@@ -207,7 +207,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
         Pubkey::from_str("67PLJej6iZm915WbEu6NLeZtRZtnHc5nSVQvkHRZyPiC").unwrap(),
         1559040,
         ore::id(),
-        "/wAAAAAAAADHPztpT4Jpqy1n9x6y1psKOUdDt07/OgR6noRFAOuOcAAA////////////////////////////////////////AAAAAAAAAADoAwAAAAAAAAAAAAAAAAAA",
+        "ZgAAAAAAAAD/AAAAAAAAAI9MXkItHZzhz/U8d4MsXPzDSQZSRgZsJnNpvgvcborrAAD///////////////////////////////////////8AAAAAAAAAAOgDAAAAAAAAAAAAAAAAAAA=",
     );
 
     // Mint

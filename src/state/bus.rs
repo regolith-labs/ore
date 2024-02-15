@@ -2,6 +2,8 @@ use bytemuck::{Pod, Zeroable};
 
 use crate::{impl_account_from_bytes, impl_to_bytes};
 
+use super::{AccountDiscriminator, Discriminator};
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Bus {
@@ -13,6 +15,12 @@ pub struct Bus {
 
     /// The quantity of rewards this bus can issue in the current epoch epoch.
     pub available_rewards: u64,
+}
+
+impl Discriminator for Bus {
+    fn discriminator() -> super::AccountDiscriminator {
+        AccountDiscriminator::Bus
+    }
 }
 
 impl_to_bytes!(Bus);

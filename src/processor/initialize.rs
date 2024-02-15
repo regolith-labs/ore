@@ -8,6 +8,7 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
+use crate::state::Discriminator;
 use crate::{instruction::*, BUS, INITIAL_DIFFICULTY, MINT_ADDRESS, TREASURY_ADDRESS};
 use crate::{
     loaders::*,
@@ -70,31 +71,30 @@ pub fn process_initialize<'a, 'info>(
         create_pda(
             bus_infos[i],
             &crate::id(),
-            size_of::<Bus>(),
+            8 + size_of::<Bus>(),
             &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer,
         )?;
-        bus_infos[i].try_borrow_mut_data()?.copy_from_slice(
-            Bus {
-                bump: bus_bumps[i] as u32,
-                id: i as u32,
-                available_rewards: 0,
-            }
-            .to_bytes(),
-        );
+        let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
+        bus_data[0] = Bus::discriminator() as u8;
+        let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        bus.bump = bus_bumps[i] as u32;
+        bus.id = i as u32;
+        bus.available_rewards = 0;
     }
 
     // Initialize treasury
     create_pda(
         treasury_info,
         &crate::id(),
-        size_of::<Treasury>(),
+        8 + size_of::<Treasury>(),
         &[TREASURY, &[args.treasury_bump]],
         system_program,
         signer,
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
+    treasury_data[0] = Treasury::discriminator() as u8;
     let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;

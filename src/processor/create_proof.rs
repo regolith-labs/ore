@@ -5,7 +5,13 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey, system_program,
 };
 
-use crate::{instruction::CreateProofArgs, loaders::*, state::Proof, utils::create_pda, PROOF};
+use crate::{
+    instruction::CreateProofArgs,
+    loaders::*,
+    state::{Discriminator, Proof},
+    utils::create_pda,
+    PROOF,
+};
 
 pub fn process_create_proof<'a, 'info>(
     _program_id: &Pubkey,
@@ -27,12 +33,13 @@ pub fn process_create_proof<'a, 'info>(
     create_pda(
         proof_info,
         &crate::id(),
-        size_of::<Proof>(),
+        8 + size_of::<Proof>(),
         &[PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,
         signer,
     )?;
     let mut proof_data = proof_info.data.borrow_mut();
+    proof_data[0] = Proof::discriminator() as u8;
     let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.bump = args.bump as u64;
     proof.authority = *signer.key;

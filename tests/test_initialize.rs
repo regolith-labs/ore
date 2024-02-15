@@ -93,6 +93,12 @@ async fn test_initialize() {
         assert_eq!(bus.bump as u8, bus_pdas[i].1);
         assert_eq!(bus.id as u8, i as u8);
         assert_eq!(bus.available_rewards, 0);
+        println!(
+            "Bus {:?} {:?} {:?}",
+            bus_pdas[i].0,
+            bus_account,
+            bs64::encode(&bus_account.data)
+        );
     }
 
     // Test treasury state
@@ -105,6 +111,12 @@ async fn test_initialize() {
     assert_eq!(treasury.epoch_start_at as u8, 0);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE);
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
+    println!(
+        "Treasury {:?} {:?} {:?}",
+        treasury_pda.0,
+        treasury_account,
+        bs64::encode(&treasury_account.data)
+    );
 
     // Test mint state
     let mint_account = banks.get_account(mint_pda.0).await.unwrap().unwrap();
@@ -132,13 +144,6 @@ async fn test_initialize() {
     assert_eq!(treasury_tokens.is_native, COption::None);
     assert_eq!(treasury_tokens.delegated_amount, 0);
     assert_eq!(treasury_tokens.close_authority, COption::None);
-
-    // println!(
-    //     "Treasury {:?} {:?} {:?}",
-    //     treasury_pda.0,
-    //     treasury_account,
-    //     bs64::encode(&treasury_account.data)
-    // );
 
     // assert!(false);
 }

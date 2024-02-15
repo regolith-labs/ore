@@ -74,7 +74,6 @@ async fn test_mine() {
             AccountMeta::new_readonly(treasury_pda.0, false),
             // AccountMeta::new(treasury_pda.0, false),
             // AccountMeta::new(proof_pda.0, false),
-            // AccountMeta::new(bus_pda.0, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
@@ -126,49 +125,49 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
         Pubkey::from_str("2uwqyH2gKqstgAFCSniirx73X4iQek5ETc2vVJKUiNMg").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAAAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD/AAAAAAAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("FRMC6jVczm1cRaEs5EhDsfw7X8vsmSDpf3bJWVkawngu").unwrap(),
         1002240,
         ore::id(),
-        "/gAAAAEAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD+AAAAAQAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("9nWyycs4GHjnLujPR2sbA1A8K8CkiLc5VzxWUD4hg2uM").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAIAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD/AAAAAgAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("Kt7kqD3MyvxLbj4ek9urXUxkDoxaMuQn82K2VdYD1jM").unwrap(),
         1002240,
         ore::id(),
-        "+gAAAAMAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD6AAAAAwAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("8r9mXYnFQXhwrNfvatGUTxbbNSqxScuCwp4sBTSxDVTJ").unwrap(),
         1002240,
         ore::id(),
-        "/QAAAAQAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD9AAAABAAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("D9cEH32k8p9uWc4w5RrStK9rWssU8NuX1Dg5YaUim4wL").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAUAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD/AAAABQAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("H1RKMYADPzd4C1j1RZu51NvRSVktoTYEJyeVy98Kmdyu").unwrap(),
         1002240,
         ore::id(),
-        "/wAAAAYAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD/AAAABgAAAICy5g4AAAAA",
     );
     program_test.add_account_with_base64_data(
         Pubkey::from_str("3XbdZNbBjjp8qnDJjv1RxaKisyfx6ahznYkSigs6dayy").unwrap(),
         1002240,
         ore::id(),
-        "+QAAAAcAAACAsuYOAAAAAA==",
+        "ZAAAAAAAAAD5AAAABwAAAICy5g4AAAAA",
     );
 
     // Treasury (difficulty = MAX)
@@ -176,8 +175,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
         Pubkey::from_str("67PLJej6iZm915WbEu6NLeZtRZtnHc5nSVQvkHRZyPiC").unwrap(),
         1559040,
         ore::id(),
-        "/wAAAAAAAADHPztpT4Jpqy1n9x6y1psKOUdDt07/OgR6noRFAOuOcP//////////////////////////////////////////ZAAAAAAAAAD0AQAAAAAAAAAAAAAAAAAA"
-        // "/wAAAAAAAACO+OozfX3xTr9I8U/aRel4qp0ixaw9/PjyseBa6CcLyv//////////////////////////////////////////AAAAAAAAAADoAwAAAAAAAAAAAAAAAAAA"
+        "ZgAAAAAAAAD/AAAAAAAAAI9MXkItHZzhz/U8d4MsXPzDSQZSRgZsJnNpvgvcborr//////////////////////////////////////////9kAAAAAAAAAPQBAAAAAAAAAAAAAAAAAAA=",
     );
 
     // Mint
