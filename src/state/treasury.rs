@@ -1,9 +1,11 @@
 use bytemuck::{Pod, Zeroable};
 use solana_program::pubkey::Pubkey;
 
-use crate::{impl_account_from_bytes, impl_to_bytes};
-
-use super::{AccountDiscriminator, Discriminator, Hash};
+use crate::{
+    impl_account_from_bytes, impl_to_bytes,
+    state::Hash,
+    utils::{AccountDiscriminator, Discriminator},
+};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
@@ -28,7 +30,7 @@ pub struct Treasury {
 }
 
 impl Discriminator for Treasury {
-    fn discriminator() -> super::AccountDiscriminator {
+    fn discriminator() -> AccountDiscriminator {
         AccountDiscriminator::Treasury
     }
 }

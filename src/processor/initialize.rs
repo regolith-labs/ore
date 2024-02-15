@@ -1,20 +1,23 @@
 use std::mem::size_of;
 
-use solana_program::program_pack::Pack;
-use solana_program::{self, sysvar};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey, system_program,
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    program_error::ProgramError,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    system_program, {self, sysvar},
 };
 use spl_token::state::Mint;
 
-use crate::state::Discriminator;
-use crate::{instruction::*, BUS, INITIAL_DIFFICULTY, MINT_ADDRESS, TREASURY_ADDRESS};
 use crate::{
+    instruction::*,
     loaders::*,
     state::{Bus, Treasury},
     utils::create_pda,
-    BUS_COUNT, INITIAL_REWARD_RATE, MINT, TOKEN_DECIMALS, TREASURY,
+    utils::Discriminator,
+    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, MINT_ADDRESS, TOKEN_DECIMALS,
+    TREASURY, TREASURY_ADDRESS,
 };
 
 pub fn process_initialize<'a, 'info>(

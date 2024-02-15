@@ -24,4 +24,3 @@ impl From<Hash> for KeccakHash {
 }
 
 impl_to_bytes!(Hash);
-// impl_account_from_bytes!(Hash);

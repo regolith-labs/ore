@@ -1,3 +1,4 @@
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey, rent::Rent,
     sysvar::Sysvar,
@@ -30,6 +31,18 @@ pub fn create_pda<'a, 'info>(
         &[pda_seeds],
     )?;
     Ok(())
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
+pub enum AccountDiscriminator {
+    Bus = 100,
+    Proof = 101,
+    Treasury = 102,
+}
+
+pub trait Discriminator {
+    fn discriminator() -> AccountDiscriminator;
 }
 
 #[macro_export]

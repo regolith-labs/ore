@@ -1,8 +1,9 @@
 use bytemuck::{Pod, Zeroable};
 
-use crate::{impl_account_from_bytes, impl_to_bytes};
-
-use super::{AccountDiscriminator, Discriminator};
+use crate::{
+    impl_account_from_bytes, impl_to_bytes,
+    utils::{AccountDiscriminator, Discriminator},
+};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
@@ -18,7 +19,7 @@ pub struct Bus {
 }
 
 impl Discriminator for Bus {
-    fn discriminator() -> super::AccountDiscriminator {
+    fn discriminator() -> AccountDiscriminator {
         AccountDiscriminator::Bus
     }
 }

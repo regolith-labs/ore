@@ -8,8 +8,8 @@ use solana_program::{
 use crate::{
     instruction::CreateProofArgs,
     loaders::*,
-    state::{Discriminator, Proof},
-    utils::create_pda,
+    state::Proof,
+    utils::{create_pda, Discriminator},
     PROOF,
 };
 
