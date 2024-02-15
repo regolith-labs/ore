@@ -6,6 +6,7 @@ use spl_token::state::Mint;
 
 use crate::{
     state::{Bus, Proof},
+    utils::AccountDeserialize,
     BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
 

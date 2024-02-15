@@ -3,7 +3,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury};
+use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::AccountDeserialize};
 
 pub fn process_update_admin<'a, 'info>(
     _program_id: &Pubkey,

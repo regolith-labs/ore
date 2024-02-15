@@ -1,6 +1,7 @@
 use ore::{
     instruction::{InitializeArgs, OreInstruction},
     state::{Bus, Treasury},
+    utils::AccountDeserialize,
     BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, TREASURY,
 };
 use solana_program::{

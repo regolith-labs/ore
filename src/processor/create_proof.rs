@@ -9,6 +9,7 @@ use crate::{
     instruction::CreateProofArgs,
     loaders::*,
     state::Proof,
+    utils::AccountDeserialize,
     utils::{create_pda, Discriminator},
     PROOF,
 };

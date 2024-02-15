@@ -3,7 +3,9 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{instruction::UpdateDifficultyArgs, loaders::*, state::Treasury};
+use crate::{
+    instruction::UpdateDifficultyArgs, loaders::*, state::Treasury, utils::AccountDeserialize,
+};
 
 pub fn process_update_difficulty<'a, 'info>(
     _program_id: &Pubkey,

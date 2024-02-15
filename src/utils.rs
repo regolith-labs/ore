@@ -1,12 +1,12 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey, rent::Rent,
-    sysvar::Sysvar,
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey, rent::Rent, sysvar::Sysvar,
 };
 
 /// Creates a new pda
 #[inline(always)]
-pub fn create_pda<'a, 'info>(
+pub(crate) fn create_pda<'a, 'info>(
     target_account: &'a AccountInfo<'info>,
     owner: &Pubkey,
     space: usize,
@@ -56,11 +56,16 @@ macro_rules! impl_to_bytes {
     };
 }
 
+pub trait AccountDeserialize {
+    fn try_from_bytes(data: &[u8]) -> Result<&Self, ProgramError>;
+    fn try_from_bytes_mut(data: &mut [u8]) -> Result<&mut Self, ProgramError>;
+}
+
 #[macro_export]
 macro_rules! impl_account_from_bytes {
     ($struct_name:ident) => {
-        impl $struct_name {
-            pub fn try_from_bytes(
+        impl crate::utils::AccountDeserialize for $struct_name {
+            fn try_from_bytes(
                 data: &[u8],
             ) -> Result<&Self, solana_program::program_error::ProgramError> {
                 if (Self::discriminator() as u8).ne(&data[0]) {
@@ -70,7 +75,7 @@ macro_rules! impl_account_from_bytes {
                     solana_program::program_error::ProgramError::InvalidAccountData,
                 ))
             }
-            pub fn try_from_bytes_mut(
+            fn try_from_bytes_mut(
                 data: &mut [u8],
             ) -> Result<&mut Self, solana_program::program_error::ProgramError> {
                 if (Self::discriminator() as u8).ne(&data[0]) {

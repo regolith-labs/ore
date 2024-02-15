@@ -3,7 +3,7 @@ pub mod instruction;
 mod loaders;
 mod processor;
 pub mod state;
-mod utils;
+pub mod utils;
 
 use processor::*;
 use solana_program::{

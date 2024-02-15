@@ -17,6 +17,7 @@ use crate::{
     instruction::MineArgs,
     loaders::*,
     state::{Bus, Proof, Treasury},
+    utils::AccountDeserialize,
     EPOCH_DURATION,
 };
 

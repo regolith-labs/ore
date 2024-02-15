@@ -3,6 +3,7 @@ use std::str::FromStr;
 use ore::{
     instruction::OreInstruction,
     state::{Bus, Treasury},
+    utils::AccountDeserialize,
     BUS, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MAX_EPOCH_REWARDS,
     MINT, TREASURY,
 };

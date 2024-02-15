@@ -3,6 +3,7 @@ use std::str::FromStr;
 use ore::{
     instruction::{CreateProofArgs, MineArgs, OreInstruction},
     state::{Proof, Treasury},
+    utils::AccountDeserialize,
     BUS, PROOF, TREASURY,
 };
 use solana_program::{

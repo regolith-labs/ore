@@ -8,6 +8,7 @@ use crate::{
     instruction::ClaimArgs,
     loaders::*,
     state::{Proof, Treasury},
+    utils::AccountDeserialize,
     TREASURY,
 };
 
