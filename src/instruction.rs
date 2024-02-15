@@ -4,12 +4,12 @@ use shank::ShankInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    sysvar,
+    system_program, sysvar,
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, MINT_ADDRESS, PROOF,
-    TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, BUS_ADDRESSES, MINT_ADDRESS,
+    PROOF, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -149,6 +149,35 @@ impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
 impl_instruction_from_bytes!(UpdateDifficultyArgs);
+
+pub fn initialize(signer: Pubkey) -> Instruction {
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(BUS_ADDRESSES[0], false),
+            AccountMeta::new(BUS_ADDRESSES[1], false),
+            AccountMeta::new(BUS_ADDRESSES[2], false),
+            AccountMeta::new(BUS_ADDRESSES[3], false),
+            AccountMeta::new(BUS_ADDRESSES[4], false),
+            AccountMeta::new(BUS_ADDRESSES[5], false),
+            AccountMeta::new(BUS_ADDRESSES[6], false),
+            AccountMeta::new(BUS_ADDRESSES[7], false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: OreInstruction::Initialize.to_vec(),
+    }
+}
 
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
