@@ -618,6 +618,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
+name = "bs58"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f5353f36341f7451062466f0b755b96ac3a9547e4d7f6b70d603fc721a7d7896"
+dependencies = [
+ "tinyvec",
+]
+
+[[package]]
 name = "bs64"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2346,8 +2355,7 @@ dependencies = [
 name = "ore"
 version = "0.1.0"
 dependencies = [
- "arrayvec",
- "bincode",
+ "bs58 0.5.0",
  "bs64",
  "bytemuck",
  "num_enum 0.7.2",
@@ -3366,7 +3374,7 @@ dependencies = [
  "Inflector",
  "base64 0.21.5",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "lazy_static",
  "serde",
@@ -3676,7 +3684,7 @@ dependencies = [
  "ahash 0.8.6",
  "blake3",
  "block-buffer 0.10.4",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "byteorder",
  "cc",
@@ -3825,7 +3833,7 @@ dependencies = [
  "blake3",
  "borsh 0.10.3",
  "borsh 0.9.3",
- "bs58",
+ "bs58 0.4.0",
  "bv",
  "bytemuck",
  "cc",
@@ -4011,7 +4019,7 @@ dependencies = [
  "async-trait",
  "base64 0.21.5",
  "bincode",
- "bs58",
+ "bs58 0.4.0",
  "indicatif",
  "log",
  "reqwest",
@@ -4035,7 +4043,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "131662e5eea4fa5fc88b01f07d9e430315c0976be848ba3994244249c5fb033a"
 dependencies = [
  "base64 0.21.5",
- "bs58",
+ "bs58 0.4.0",
  "jsonrpc-core",
  "reqwest",
  "semver",
@@ -4151,7 +4159,7 @@ dependencies = [
  "bincode",
  "bitflags 2.4.1",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -4200,7 +4208,7 @@ version = "1.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60f58786e949f43b8c9b826fdfa5ad8586634b077ab04f989fb8e30535786712"
 dependencies = [
- "bs58",
+ "bs58 0.4.0",
  "proc-macro2",
  "quote",
  "rustversion",
@@ -4339,7 +4347,7 @@ dependencies = [
  "base64 0.21.5",
  "bincode",
  "borsh 0.10.3",
- "bs58",
+ "bs58 0.4.0",
  "lazy_static",
  "log",
  "serde",

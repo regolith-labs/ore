@@ -1,4 +1,4 @@
-use std::mem::transmute;
+use std::{fmt, mem::transmute};
 
 use bytemuck::{Pod, Zeroable};
 use solana_program::keccak::{Hash as KeccakHash, HASH_BYTES};
@@ -20,6 +20,12 @@ impl From<Hash> for KeccakHash {
     #[inline(always)]
     fn from(value: Hash) -> Self {
         unsafe { transmute(value) }
+    }
+}
+
+impl fmt::Display for Hash {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", bs58::encode(self.0).into_string())
     }
 }
 
