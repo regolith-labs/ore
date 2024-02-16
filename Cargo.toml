@@ -4,9 +4,9 @@ version = "0.0.1"
 description = "Ore is a cryptocurrency everyone can mine"
 edition = "2021"
 license = "Apache-2.0"
-homepage = ""
-repository = ""
-documentation = ""
+homepage = "https://ore.supply"
+repository = "https://github.com/hardhatchad/ore"
+documentation = "https://github.com/hardhatchad/ore"
 readme = "./README.md"
 keywords = ["solana"]
 
