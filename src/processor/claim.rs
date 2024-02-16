@@ -19,6 +19,7 @@ pub fn process_claim<'a, 'info>(
 ) -> ProgramResult {
     // Parse args
     let args = ClaimArgs::try_from_bytes(data)?;
+    let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
     let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
@@ -39,19 +40,21 @@ pub fn process_claim<'a, 'info>(
     // Validate claim amout
     let mut proof_data = proof_info.data.borrow_mut();
     let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    if proof.claimable_rewards.lt(&args.amount) {
+    if proof.claimable_rewards.lt(&amount) {
         return Err(OreError::InvalidClaimAmount.into());
     }
 
     // Update claimable amount
-    proof.claimable_rewards = proof.claimable_rewards.saturating_sub(args.amount);
+    proof.claimable_rewards = proof.claimable_rewards.saturating_sub(amount);
 
     // Update lifetime status
     let mut treasury_data = treasury_info.data.borrow_mut();
     let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(args.amount);
+    treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(amount);
 
     // Distribute tokens from treasury to beneficiary
+    let treasury_bump = treasury.bump;
+    drop(treasury_data);
     solana_program::program::invoke_signed(
         &spl_token::instruction::transfer(
             &spl_token::id(),
@@ -59,7 +62,7 @@ pub fn process_claim<'a, 'info>(
             beneficiary_info.key,
             treasury_info.key,
             &[treasury_info.key],
-            args.amount,
+            amount,
         )?,
         &[
             token_program.clone(),
@@ -67,7 +70,7 @@ pub fn process_claim<'a, 'info>(
             beneficiary_info.clone(),
             treasury_info.clone(),
         ],
-        &[&[TREASURY, &[treasury.bump as u8]]],
+        &[&[TREASURY, &[treasury_bump as u8]]],
     )?;
 
     Ok(())

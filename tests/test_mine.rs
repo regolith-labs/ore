@@ -21,6 +21,9 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 use spl_token::state::{AccountState, Mint};
 
 #[tokio::test]
@@ -45,15 +48,10 @@ async fn test_mine() {
     assert_eq!(proof.total_hashes, 0);
     assert_eq!(proof.total_rewards, 0);
 
-    // Assert proof state
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let treasury_account = banks.get_account(treasury_pda.0).await.unwrap().unwrap();
-    let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
-
     // Find next hash
     let (next_hash, nonce) = find_next_hash(
         proof.hash.into(),
-        treasury.difficulty.into(),
+        KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
     );
 
@@ -81,6 +79,47 @@ async fn test_mine() {
     );
     assert_eq!(proof.total_hashes, 1);
     assert_eq!(proof.total_rewards, INITIAL_REWARD_RATE);
+
+    // Submit claim tx
+    let amount = proof.claimable_rewards;
+    let beneficiary_address = get_associated_token_address(&payer.pubkey(), &ore::MINT_ADDRESS);
+    let token_ix = create_associated_token_account(
+        &payer.pubkey(),
+        &payer.pubkey(),
+        &ore::MINT_ADDRESS,
+        &spl_token::id(),
+    );
+    let ix = ore::instruction::claim(payer.pubkey(), beneficiary_address, amount);
+    let tx =
+        Transaction::new_signed_with_payer(&[token_ix, ix], Some(&payer.pubkey()), &[&payer], hash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Assert proof state
+    let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
+    let proof_ = Proof::try_from_bytes(&proof_account.data).unwrap();
+    assert_eq!(proof_.authority, proof.authority);
+    assert_eq!(proof_.claimable_rewards, 0);
+    assert_eq!(proof_.hash, proof.hash);
+    assert_eq!(proof_.total_hashes, proof.total_hashes);
+    assert_eq!(proof_.total_rewards, proof.total_rewards);
+
+    // Assert beneficiary state
+    let beneficiary_account = banks
+        .get_account(beneficiary_address)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(beneficiary_account.owner, spl_token::id());
+    let beneficiary = spl_token::state::Account::unpack(&beneficiary_account.data).unwrap();
+    assert_eq!(beneficiary.mint, ore::MINT_ADDRESS);
+    assert_eq!(beneficiary.owner, payer.pubkey());
+    assert_eq!(beneficiary.amount, amount);
+    assert_eq!(beneficiary.delegate, COption::None);
+    assert_eq!(beneficiary.state, AccountState::Initialized);
+    assert_eq!(beneficiary.is_native, COption::None);
+    assert_eq!(beneficiary.delegated_amount, 0);
+    assert_eq!(beneficiary.close_authority, COption::None);
 }
 
 fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (KeccakHash, u64) {

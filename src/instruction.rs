@@ -121,7 +121,7 @@ pub struct MineArgs {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimArgs {
-    pub amount: u64,
+    pub amount: [u8; 8],
 }
 
 #[repr(C)]
@@ -209,11 +209,11 @@ pub fn initialize(signer: Pubkey) -> Instruction {
 }
 
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
     );
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -227,7 +227,11 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
         ],
         data: [
             OreInstruction::Claim.to_vec(),
-            ClaimArgs { amount }.to_bytes().to_vec(),
+            ClaimArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
         ]
         .concat(),
     }
