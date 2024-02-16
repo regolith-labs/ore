@@ -40,6 +40,12 @@ async fn test_update_admin() {
         treasury_.total_claimed_rewards,
         treasury.total_claimed_rewards
     );
+
+    // Submit another update admin ix
+    let ix = ore::instruction::update_admin(payer.pubkey(), payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
