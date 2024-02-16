@@ -1,0 +1,536 @@
+{
+  "version": "0.0.1",
+  "name": "ore",
+  "instructions": [
+    {
+      "name": "Reset",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
+        },
+        {
+          "name": "bus0",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 0"
+          ]
+        },
+        {
+          "name": "bus1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 1"
+          ]
+        },
+        {
+          "name": "bus2",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 2"
+          ]
+        },
+        {
+          "name": "bus3",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 3"
+          ]
+        },
+        {
+          "name": "bus4",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 4"
+          ]
+        },
+        {
+          "name": "bus5",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 5"
+          ]
+        },
+        {
+          "name": "bus6",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 6"
+          ]
+        },
+        {
+          "name": "bus7",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 7"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore token mint account"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury token account"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "SPL token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "Register",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore miner proof account"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "Mine",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
+        },
+        {
+          "name": "bus",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore miner proof account"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        },
+        {
+          "name": "slotHashes",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Solana slot hashes sysvar"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "Claim",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Signer"
+          ]
+        },
+        {
+          "name": "beneficiary",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Beneficiary token account"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore token mint account"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore miner proof account"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury token account"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "SPL token program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "Initialize",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Admin signer"
+          ]
+        },
+        {
+          "name": "bus0",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 0"
+          ]
+        },
+        {
+          "name": "bus1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 1"
+          ]
+        },
+        {
+          "name": "bus2",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 2"
+          ]
+        },
+        {
+          "name": "bus3",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 3"
+          ]
+        },
+        {
+          "name": "bus4",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 4"
+          ]
+        },
+        {
+          "name": "bus5",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 5"
+          ]
+        },
+        {
+          "name": "bus6",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 6"
+          ]
+        },
+        {
+          "name": "bus7",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore bus account 7"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore token mint account"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury token account"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Solana system program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "SPL token program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "SPL associated token program"
+          ]
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Solana rent sysvar"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 100
+      }
+    },
+    {
+      "name": "UpdateAdmin",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 102
+      }
+    },
+    {
+      "name": "UpdateDifficulty",
+      "accounts": [
+        {
+          "name": "oreProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore program"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Ore treasury account"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 103
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "EpochActive",
+      "msg": "The epoch is still active and cannot be reset"
+    },
+    {
+      "code": 1,
+      "name": "EpochExpired",
+      "msg": "The epoch has expired and needs reset"
+    },
+    {
+      "code": 2,
+      "name": "InvalidHash",
+      "msg": "The provided hash was invalid"
+    },
+    {
+      "code": 3,
+      "name": "InsufficientHashDifficulty",
+      "msg": "The provided hash does not satisfy the difficulty requirement"
+    },
+    {
+      "code": 4,
+      "name": "InsufficientBusRewards",
+      "msg": "The bus has insufficient rewards to mine at this time"
+    },
+    {
+      "code": 5,
+      "name": "InvalidClaimAmount",
+      "msg": "The claim amount cannot be larger than the claimable rewards"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "ore2mSzJwAZhxLyCLbNEnFvYq9U8jvCMvUBrVvbmqDF"
+  }
+}
