@@ -150,6 +150,7 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
 impl_instruction_from_bytes!(UpdateDifficultyArgs);
 
+/// Builds an initialize instruction.
 pub fn initialize(signer: Pubkey) -> Instruction {
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
@@ -208,6 +209,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
@@ -237,6 +239,7 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     }
 }
 
+/// Builds a mine instruction.
 pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
@@ -261,6 +264,7 @@ pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction 
     }
 }
 
+/// Builds a register instruction.
 pub fn register(signer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
     Instruction {
@@ -278,6 +282,7 @@ pub fn register(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
     let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
     let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
@@ -312,6 +317,7 @@ pub fn reset(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds an update_admin instruction.
 pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
     Instruction {
         program_id: crate::id(),
@@ -327,6 +333,7 @@ pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
     }
 }
 
+/// Builds an update_difficulty instruction.
 pub fn update_difficulty(signer: Pubkey, new_difficulty: Hash) -> Instruction {
     Instruction {
         program_id: crate::id(),

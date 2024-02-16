@@ -14,7 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Test admin and difficulty adjustment functions
 // TODO Increase decimals?
 
 declare_id!("ore2mSzJwAZhxLyCLbNEnFvYq9U8jvCMvUBrVvbmqDF");
@@ -22,7 +21,6 @@ declare_id!("ore2mSzJwAZhxLyCLbNEnFvYq9U8jvCMvUBrVvbmqDF");
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
 
-/// Processes the incoming instruction
 pub fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],

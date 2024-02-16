@@ -69,7 +69,7 @@ pub fn process_mine<'a, 'info>(
     bus.rewards = bus.rewards.saturating_sub(treasury.reward_rate);
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
-    // Hash most recent slot hash into the next challenge to prevent pre-mining attacks
+    // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.hash = hashv(&[
         KeccakHash::from(args.hash).as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],

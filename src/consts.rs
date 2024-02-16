@@ -4,7 +4,6 @@ use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 /// The unix timestamp after which mining is allowed.
 pub const START_AT: i64 = 0;
 
-// SHA2 const stable
 /// Bus pubkeys
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
     pubkey!("E2EJ9xxK78b5XJu9cBnYf6fDbJuLqXuLN5fhaUtEuPPf"),
