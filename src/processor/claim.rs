@@ -1,0 +1,77 @@
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    pubkey::Pubkey,
+};
+
+use crate::{
+    error::OreError,
+    instruction::ClaimArgs,
+    loaders::*,
+    state::{Proof, Treasury},
+    utils::AccountDeserialize,
+    TREASURY,
+};
+
+pub fn process_claim<'a, 'info>(
+    _program_id: &Pubkey,
+    accounts: &'a [AccountInfo<'info>],
+    data: &[u8],
+) -> ProgramResult {
+    // Parse args
+    let args = ClaimArgs::try_from_bytes(data)?;
+    let amount = u64::from_le_bytes(args.amount);
+
+    // Load accounts
+    let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    load_signer(signer)?;
+    load_token_account(beneficiary_info, None, mint_info.key, true)?;
+    load_mint(mint_info, true)?;
+    load_treasury(treasury_info, true)?;
+    load_token_account(
+        treasury_tokens_info,
+        Some(treasury_info.key),
+        mint_info.key,
+        true,
+    )?;
+    load_program(token_program, spl_token::id())?;
+
+    // Validate claim amout
+    let mut proof_data = proof_info.data.borrow_mut();
+    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    if proof.claimable_rewards.lt(&amount) {
+        return Err(OreError::InvalidClaimAmount.into());
+    }
+
+    // Update claimable amount
+    proof.claimable_rewards = proof.claimable_rewards.saturating_sub(amount);
+
+    // Update lifetime status
+    let mut treasury_data = treasury_info.data.borrow_mut();
+    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
+    treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(amount);
+
+    // Distribute tokens from treasury to beneficiary
+    let treasury_bump = treasury.bump;
+    drop(treasury_data);
+    solana_program::program::invoke_signed(
+        &spl_token::instruction::transfer(
+            &spl_token::id(),
+            treasury_tokens_info.key,
+            beneficiary_info.key,
+            treasury_info.key,
+            &[treasury_info.key],
+            amount,
+        )?,
+        &[
+            token_program.clone(),
+            treasury_tokens_info.clone(),
+            beneficiary_info.clone(),
+            treasury_info.clone(),
+        ],
+        &[&[TREASURY, &[treasury_bump as u8]]],
+    )?;
+
+    Ok(())
+}
