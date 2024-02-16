@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{mem::size_of, str::FromStr};
 
 use ore::{
     state::{Bus, Proof, Treasury},
@@ -13,6 +13,7 @@ use solana_program::{
     program_option::COption,
     program_pack::Pack,
     pubkey::Pubkey,
+    slot_hashes::SlotHash,
     sysvar,
 };
 use solana_program_test::{processor, BanksClient, ProgramTest};
@@ -27,12 +28,10 @@ async fn test_mine() {
     // Setup
     let (mut banks, payer, hash) = setup_program_test_env().await;
 
-    // Build register ix
+    // Submit register tx
     let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
-    let ix_0 = ore::instruction::register(payer.pubkey());
-
-    // Submit tx
-    let tx = Transaction::new_signed_with_payer(&[ix_0], Some(&payer.pubkey()), &[&payer], hash);
+    let ix = ore::instruction::register(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
@@ -40,6 +39,11 @@ async fn test_mine() {
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     assert_eq!(proof_account.owner, ore::id());
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
+    assert_eq!(proof.authority, payer.pubkey());
+    assert_eq!(proof.claimable_rewards, 0);
+    assert_eq!(proof.hash, hashv(&[payer.pubkey().as_ref()]).into());
+    assert_eq!(proof.total_hashes, 0);
+    assert_eq!(proof.total_rewards, 0);
 
     // Assert proof state
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
@@ -54,13 +58,29 @@ async fn test_mine() {
     );
 
     // Submit mine tx
-    let ix_1 = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
-    let tx = Transaction::new_signed_with_payer(&[ix_1], Some(&payer.pubkey()), &[&payer], hash);
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
-    // TODO Assert proof state
-    // TODO Assert bus state
+    // Assert proof state
+    let slot_hashes_account = banks
+        .get_account(sysvar::slot_hashes::id())
+        .await
+        .unwrap()
+        .unwrap();
+    let slot_hash_bytes = &slot_hashes_account.data[0..size_of::<SlotHash>()];
+    let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
+    assert_eq!(proof_account.owner, ore::id());
+    let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
+    assert_eq!(proof.authority, payer.pubkey());
+    assert_eq!(proof.claimable_rewards, INITIAL_REWARD_RATE);
+    assert_eq!(
+        proof.hash,
+        hashv(&[&next_hash.as_ref(), slot_hash_bytes,]).into()
+    );
+    assert_eq!(proof.total_hashes, 1);
+    assert_eq!(proof.total_rewards, INITIAL_REWARD_RATE);
 }
 
 fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (KeccakHash, u64) {

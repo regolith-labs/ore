@@ -49,12 +49,6 @@ async fn test_reset() {
         let bus_account = banks.get_account(bus_pdas[i].0).await.unwrap().unwrap();
         assert_eq!(bus_account.owner, ore::id());
         let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
-        println!(
-            "Bus {:?} {:?} {:?}",
-            bus_pdas[i].0,
-            bus_account,
-            bs64::encode(&bus_account.data)
-        );
         assert_eq!(bus.id as u8, i as u8);
         assert_eq!(bus.rewards, BUS_EPOCH_REWARDS);
     }
@@ -72,12 +66,6 @@ async fn test_reset() {
     assert_eq!(treasury.epoch_start_at as u8, 100);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE.saturating_div(2));
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
-    println!(
-        "Treasury {:?} {:?} {:?}",
-        treasury_pda.0,
-        treasury_account,
-        bs64::encode(&treasury_account.data)
-    );
 
     // Test mint state
     let mint_account = banks.get_account(mint_pda.0).await.unwrap().unwrap();
@@ -88,12 +76,6 @@ async fn test_reset() {
     assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
-    println!(
-        "Mint {:?} {:?} {:?}",
-        mint_pda.0,
-        mint_account,
-        bs64::encode(&mint_account.data)
-    );
 
     // Test treasury token state
     let treasury_tokens_account = banks
@@ -111,14 +93,6 @@ async fn test_reset() {
     assert_eq!(treasury_tokens.is_native, COption::None);
     assert_eq!(treasury_tokens.delegated_amount, 0);
     assert_eq!(treasury_tokens.close_authority, COption::None);
-    println!(
-        "Treasury tokens {:?} {:?} {:?}",
-        treasury_tokens_address,
-        treasury_tokens_account,
-        bs64::encode(&treasury_tokens_account.data)
-    );
-
-    // assert!(false);
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {

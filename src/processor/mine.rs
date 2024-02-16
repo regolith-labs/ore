@@ -70,12 +70,15 @@ pub fn process_mine<'a, 'info>(
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
     // Hash most recent slot hash into the next challenge to prevent pre-mining attacks
-    let slot_hash_bytes = &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()];
-    proof.hash = hashv(&[KeccakHash::from(args.hash).as_ref(), slot_hash_bytes]).into();
+    proof.hash = hashv(&[
+        KeccakHash::from(args.hash).as_ref(),
+        &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
+    ])
+    .into();
 
     // Update lifetime stats
     proof.total_hashes = proof.total_hashes.saturating_add(1);
-    proof.total_rewards = proof.total_rewards.saturating_add(1);
+    proof.total_rewards = proof.total_rewards.saturating_add(treasury.reward_rate);
 
     // Log the mined rewards
     set_return_data(treasury.reward_rate.to_le_bytes().as_slice());
