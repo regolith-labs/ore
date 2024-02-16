@@ -8,8 +8,8 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, BUS_ADDRESSES, MINT,
-    MINT_ADDRESS, PROOF, TREASURY, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, MINT, MINT_ADDRESS, PROOF,
+    TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]

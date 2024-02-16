@@ -5,6 +5,7 @@ use solana_program::{
     clock::Clock,
     entrypoint::ProgramResult,
     keccak::{hashv, Hash as KeccakHash},
+    program::set_return_data,
     program_error::ProgramError,
     program_memory::sol_memcmp,
     pubkey::Pubkey,
@@ -76,7 +77,8 @@ pub fn process_mine<'a, 'info>(
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(1);
 
-    // TODO Log?
+    // Set return data
+    set_return_data(treasury.reward_rate.to_le_bytes().as_slice());
 
     Ok(())
 }
