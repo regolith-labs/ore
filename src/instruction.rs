@@ -8,8 +8,8 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, BUS_ADDRESSES, MINT_ADDRESS,
-    PROOF, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, BUS_ADDRESSES, MINT,
+    MINT_ADDRESS, PROOF, TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -155,27 +155,56 @@ pub fn initialize(signer: Pubkey) -> Instruction {
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
     );
+    let bus_pdas = [
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+    ];
+    let mint_pda = Pubkey::find_program_address(&[MINT], &crate::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(BUS_ADDRESSES[0], false),
-            AccountMeta::new(BUS_ADDRESSES[1], false),
-            AccountMeta::new(BUS_ADDRESSES[2], false),
-            AccountMeta::new(BUS_ADDRESSES[3], false),
-            AccountMeta::new(BUS_ADDRESSES[4], false),
-            AccountMeta::new(BUS_ADDRESSES[5], false),
-            AccountMeta::new(BUS_ADDRESSES[6], false),
-            AccountMeta::new(BUS_ADDRESSES[7], false),
-            AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(bus_pdas[0].0, false),
+            AccountMeta::new(bus_pdas[1].0, false),
+            AccountMeta::new(bus_pdas[2].0, false),
+            AccountMeta::new(bus_pdas[3].0, false),
+            AccountMeta::new(bus_pdas[4].0, false),
+            AccountMeta::new(bus_pdas[5].0, false),
+            AccountMeta::new(bus_pdas[6].0, false),
+            AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(mint_pda.0, false),
+            AccountMeta::new(treasury_pda.0, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(spl_associated_token_account::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
-        data: OreInstruction::Initialize.to_vec(),
+        data: [
+            OreInstruction::Initialize.to_vec(),
+            InitializeArgs {
+                bus_0_bump: bus_pdas[0].1,
+                bus_1_bump: bus_pdas[1].1,
+                bus_2_bump: bus_pdas[2].1,
+                bus_3_bump: bus_pdas[3].1,
+                bus_4_bump: bus_pdas[4].1,
+                bus_5_bump: bus_pdas[5].1,
+                bus_6_bump: bus_pdas[6].1,
+                bus_7_bump: bus_pdas[7].1,
+                mint_bump: mint_pda.1,
+                treasury_bump: treasury_pda.1,
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
     }
 }
 

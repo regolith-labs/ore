@@ -43,6 +43,7 @@ pub fn process_initialize<'a, 'info>(
     load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
     load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
     load_uninitialized_pda(mint_info, &[MINT, &[args.mint_bump]])?;
+    // TODO Verify keys
     if !mint_info.key.eq(&MINT_ADDRESS) {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -83,7 +84,6 @@ pub fn process_initialize<'a, 'info>(
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
         bus_data[0] = Bus::discriminator() as u8;
         let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-        // bus.bump = bus_bumps[i] as u32;
         bus.id = i as u64;
         bus.available_rewards = 0;
     }
