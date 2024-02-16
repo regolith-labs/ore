@@ -157,13 +157,13 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     );
     let bus_pdas = [
         Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[1]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[2]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[3]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[4]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[5]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[6]], &crate::id()),
+        Pubkey::find_program_address(&[BUS, &[7]], &crate::id()),
     ];
     let mint_pda = Pubkey::find_program_address(&[MINT], &crate::id());
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
