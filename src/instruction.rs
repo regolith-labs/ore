@@ -311,3 +311,33 @@ pub fn reset(signer: Pubkey) -> Instruction {
         data: OreInstruction::Reset.to_vec(),
     }
 }
+
+pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+        ],
+        data: [
+            OreInstruction::UpdateAdmin.to_vec(),
+            UpdateAdminArgs { new_admin }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+pub fn update_difficulty(signer: Pubkey, new_difficulty: Hash) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+        ],
+        data: [
+            OreInstruction::UpdateDifficulty.to_vec(),
+            UpdateDifficultyArgs { new_difficulty }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}

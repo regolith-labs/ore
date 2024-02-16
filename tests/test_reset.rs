@@ -20,7 +20,7 @@ use spl_token::state::{AccountState, Mint};
 #[tokio::test]
 async fn test_reset() {
     // Setup
-    let (mut banks, payer, hash) = setup_program_test_env().await;
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Pdas
     let bus_pdas = vec![
@@ -40,7 +40,7 @@ async fn test_reset() {
 
     // Submit tx
     let ix = ore::instruction::reset(payer.pubkey());
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 

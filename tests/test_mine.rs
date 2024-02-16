@@ -29,12 +29,12 @@ use spl_token::state::{AccountState, Mint};
 #[tokio::test]
 async fn test_mine() {
     // Setup
-    let (mut banks, payer, hash) = setup_program_test_env().await;
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Submit register tx
     let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
     let ix = ore::instruction::register(payer.pubkey());
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
@@ -57,7 +57,7 @@ async fn test_mine() {
 
     // Submit mine tx
     let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], hash);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
@@ -90,8 +90,12 @@ async fn test_mine() {
         &spl_token::id(),
     );
     let ix = ore::instruction::claim(payer.pubkey(), beneficiary_address, amount);
-    let tx =
-        Transaction::new_signed_with_payer(&[token_ix, ix], Some(&payer.pubkey()), &[&payer], hash);
+    let tx = Transaction::new_signed_with_payer(
+        &[token_ix, ix],
+        Some(&payer.pubkey()),
+        &[&payer],
+        blockhash,
+    );
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
