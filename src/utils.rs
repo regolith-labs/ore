@@ -36,13 +36,18 @@ pub(crate) fn create_pda<'a, 'info>(
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum AccountDiscriminator {
-    Bus = 100,
-    Proof = 101,
-    Treasury = 102,
+    Bus = 0,
+    Proof = 1,
+    Treasury = 2,
 }
 
 pub trait Discriminator {
     fn discriminator() -> AccountDiscriminator;
+}
+
+pub trait AccountDeserialize {
+    fn try_from_bytes(data: &[u8]) -> Result<&Self, ProgramError>;
+    fn try_from_bytes_mut(data: &mut [u8]) -> Result<&mut Self, ProgramError>;
 }
 
 #[macro_export]
@@ -54,11 +59,6 @@ macro_rules! impl_to_bytes {
             }
         }
     };
-}
-
-pub trait AccountDeserialize {
-    fn try_from_bytes(data: &[u8]) -> Result<&Self, ProgramError>;
-    fn try_from_bytes_mut(data: &mut [u8]) -> Result<&mut Self, ProgramError>;
 }
 
 #[macro_export]

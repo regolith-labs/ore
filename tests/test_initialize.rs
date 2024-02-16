@@ -91,9 +91,8 @@ async fn test_initialize() {
         let bus_account = banks.get_account(bus_pdas[i].0).await.unwrap().unwrap();
         assert_eq!(bus_account.owner, ore::id());
         let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
-        // assert_eq!(bus.bump as u8, bus_pdas[i].1);
         assert_eq!(bus.id as u8, i as u8);
-        assert_eq!(bus.available_rewards, 0);
+        assert_eq!(bus.rewards, 0);
         println!(
             "Bus {:?} {:?} {:?}",
             bus_pdas[i].0,

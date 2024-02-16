@@ -63,10 +63,10 @@ pub fn process_mine<'a, 'info>(
     // Update claimable rewards
     let mut bus_data = bus_info.data.borrow_mut();
     let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    if bus.available_rewards.lt(&treasury.reward_rate) {
+    if bus.rewards.lt(&treasury.reward_rate) {
         return Err(OreError::InsufficientBusRewards.into());
     }
-    bus.available_rewards = bus.available_rewards.saturating_sub(treasury.reward_rate);
+    bus.rewards = bus.rewards.saturating_sub(treasury.reward_rate);
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
     // Hash most recent slot hash into the next challenge to prevent pre-mining attacks

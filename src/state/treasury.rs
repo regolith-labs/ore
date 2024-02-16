@@ -10,11 +10,11 @@ use crate::{
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Treasury {
-    /// The bump of the treasury account PDA.
-    pub bump: u64,
-
     /// The admin authority with permission to update the difficulty.
     pub admin: Pubkey,
+
+    /// The bump of the treasury account PDA.
+    pub bump: u64,
 
     /// The hash difficulty.
     pub difficulty: Hash,

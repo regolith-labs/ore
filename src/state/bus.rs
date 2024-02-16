@@ -12,7 +12,7 @@ pub struct Bus {
     pub id: u64,
 
     /// The quantity of rewards this bus can issue in the current epoch epoch.
-    pub available_rewards: u64,
+    pub rewards: u64,
 }
 
 impl Discriminator for Bus {

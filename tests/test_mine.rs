@@ -97,7 +97,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
                     &(Bus::discriminator() as u64).to_le_bytes(),
                     Bus {
                         id: i as u64,
-                        available_rewards: 250_000_000,
+                        rewards: 250_000_000,
                     }
                     .to_bytes(),
                 ]

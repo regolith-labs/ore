@@ -1,6 +1,5 @@
-use bytemuck::{Pod, Zeroable};
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::set_return_data,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
     program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
 };
 
@@ -55,16 +54,16 @@ pub fn process_reset<'a, 'info>(
     }
 
     // Reset busses
-    let mut total_available_rewards = 0u64;
+    let mut total_bus_rewards = 0u64;
     for i in 0..BUS_COUNT {
         let mut bus_data = busses[i].data.borrow_mut();
         let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-        total_available_rewards = total_available_rewards.saturating_add(bus.available_rewards);
-        bus.available_rewards = BUS_EPOCH_REWARDS;
+        total_bus_rewards = total_bus_rewards.saturating_add(bus.rewards);
+        bus.rewards = BUS_EPOCH_REWARDS;
     }
 
     // Update the reward rate for the next epoch
-    let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_available_rewards);
+    let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_bus_rewards);
     treasury.reward_rate = calculate_new_reward_rate(treasury.reward_rate, total_epoch_rewards);
     treasury.epoch_start_at = clock.unix_timestamp;
 
@@ -103,20 +102,13 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
         .saturating_mul(TARGET_EPOCH_REWARDS as u128)
         .saturating_div(epoch_rewards as u128) as u64;
 
-    // Smooth reward rate to not change by more than a constant factor from one epoch to the next.
+    // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
     let new_rate_smoothed = new_rate_min.max(new_rate_max.min(new_rate));
 
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
     new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct ResetResponse {
-    pub new_reward_rate: u64,
-    pub new_supply: u64,
 }
 
 #[cfg(test)]

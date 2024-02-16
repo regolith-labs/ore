@@ -17,8 +17,8 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, MINT_ADDRESS, TOKEN_DECIMALS,
-    TREASURY, TREASURY_ADDRESS,
+    BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, MINT_ADDRESS,
+    TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
 pub fn process_initialize<'a, 'info>(
@@ -34,28 +34,29 @@ pub fn process_initialize<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    // TODO Verify bus keys
     load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
+    load_uninitialized_pda(bus_1_info, &[BUS, &[1], &[args.bus_1_bump]])?;
+    load_uninitialized_pda(bus_2_info, &[BUS, &[2], &[args.bus_2_bump]])?;
+    load_uninitialized_pda(bus_3_info, &[BUS, &[3], &[args.bus_3_bump]])?;
+    load_uninitialized_pda(bus_4_info, &[BUS, &[4], &[args.bus_4_bump]])?;
+    load_uninitialized_pda(bus_5_info, &[BUS, &[5], &[args.bus_5_bump]])?;
+    load_uninitialized_pda(bus_6_info, &[BUS, &[6], &[args.bus_6_bump]])?;
+    load_uninitialized_pda(bus_7_info, &[BUS, &[7], &[args.bus_7_bump]])?;
     load_uninitialized_pda(mint_info, &[MINT, &[args.mint_bump]])?;
-    if !mint_info.key.eq(&MINT_ADDRESS) {
-        return Err(ProgramError::InvalidAccountData);
-    }
     load_uninitialized_pda(treasury_info, &[TREASURY, &[args.treasury_bump]])?;
-    if !treasury_info.key.eq(&TREASURY_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
     load_uninitialized_account(treasury_tokens_info)?;
     load_program(system_program, system_program::id())?;
     load_program(token_program, spl_token::id())?;
     load_program(associated_token_program, spl_associated_token_account::id())?;
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
+
+    // Verify keys
+    if mint_info.key.ne(&MINT_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+    if treasury_info.key.ne(&TREASURY_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
 
     // Initialize bus accounts
     let bus_infos = [
@@ -73,6 +74,9 @@ pub fn process_initialize<'a, 'info>(
         args.bus_7_bump,
     ];
     for i in 0..BUS_COUNT {
+        if bus_infos[i].key.ne(&BUS_ADDRESSES[i]) {
+            return Err(ProgramError::InvalidSeeds);
+        }
         create_pda(
             bus_infos[i],
             &crate::id(),
@@ -85,7 +89,7 @@ pub fn process_initialize<'a, 'info>(
         bus_data[0] = Bus::discriminator() as u8;
         let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
-        bus.available_rewards = 0;
+        bus.rewards = 0;
     }
 
     // Initialize treasury

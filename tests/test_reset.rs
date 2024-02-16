@@ -56,7 +56,7 @@ async fn test_reset() {
             bs64::encode(&bus_account.data)
         );
         assert_eq!(bus.id as u8, i as u8);
-        assert_eq!(bus.available_rewards, BUS_EPOCH_REWARDS);
+        assert_eq!(bus.rewards, BUS_EPOCH_REWARDS);
     }
 
     // Test treasury state
@@ -136,7 +136,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
                     &(Bus::discriminator() as u64).to_le_bytes(),
                     Bus {
                         id: i as u64,
-                        available_rewards: 0,
+                        rewards: 0,
                     }
                     .to_bytes(),
                 ]
