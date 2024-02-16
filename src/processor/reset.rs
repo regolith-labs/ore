@@ -1,5 +1,6 @@
+use bytemuck::{Pod, Zeroable};
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program::set_return_data,
     program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
 };
 
@@ -88,8 +89,6 @@ pub fn process_reset<'a, 'info>(
         &[&[TREASURY, &[treasury_bump]]],
     )?;
 
-    // TODO Logs?
-
     Ok(())
 }
 
@@ -111,6 +110,13 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
     new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct ResetResponse {
+    pub new_reward_rate: u64,
+    pub new_supply: u64,
 }
 
 #[cfg(test)]
