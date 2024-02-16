@@ -30,7 +30,9 @@ pub fn process_initialize<'a, 'info>(
     let args = InitializeArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, rent_sysvar] = accounts else {
+    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, rent_sysvar] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
@@ -87,7 +89,7 @@ pub fn process_initialize<'a, 'info>(
         )?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
         bus_data[0] = Bus::discriminator() as u8;
-        let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
         bus.rewards = 0;
     }
@@ -103,7 +105,7 @@ pub fn process_initialize<'a, 'info>(
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
     treasury_data[0] = Treasury::discriminator() as u8;
-    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
+    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;
     treasury.epoch_start_at = 0;

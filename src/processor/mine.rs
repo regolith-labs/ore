@@ -51,7 +51,7 @@ pub fn process_mine<'a, 'info>(
 
     // Validate provided hash
     let mut proof_data = proof_info.data.borrow_mut();
-    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     validate_hash(
         proof.hash.into(),
         args.hash.into(),
@@ -62,7 +62,7 @@ pub fn process_mine<'a, 'info>(
 
     // Update claimable rewards
     let mut bus_data = bus_info.data.borrow_mut();
-    let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if bus.rewards.lt(&treasury.reward_rate) {
         return Err(OreError::InsufficientBusRewards.into());
     }

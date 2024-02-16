@@ -24,7 +24,7 @@ pub fn process_update_difficulty<'a, 'info>(
 
     // Validate admin signer
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
+    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     if treasury.admin.ne(&signer.key) {
         return Err(ProgramError::MissingRequiredSignature);
     }

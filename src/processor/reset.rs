@@ -18,7 +18,9 @@ pub fn process_reset<'a, 'info>(
     _data: &[u8],
 ) -> ProgramResult {
     // Load accounts
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
+    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
@@ -47,7 +49,7 @@ pub fn process_reset<'a, 'info>(
     // Validate epoch has ended
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
+    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.lt(&epoch_end_at) {
         return Err(OreError::EpochActive.into());
@@ -57,7 +59,7 @@ pub fn process_reset<'a, 'info>(
     let mut total_bus_rewards = 0u64;
     for i in 0..BUS_COUNT {
         let mut bus_data = busses[i].data.borrow_mut();
-        let mut bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         total_bus_rewards = total_bus_rewards.saturating_add(bus.rewards);
         bus.rewards = BUS_EPOCH_REWARDS;
     }

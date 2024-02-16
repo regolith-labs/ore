@@ -22,7 +22,9 @@ pub fn process_claim<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] = accounts else {
+    let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
@@ -39,7 +41,7 @@ pub fn process_claim<'a, 'info>(
 
     // Validate claim amout
     let mut proof_data = proof_info.data.borrow_mut();
-    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     if proof.claimable_rewards.lt(&amount) {
         return Err(OreError::InvalidClaimAmount.into());
     }
@@ -49,7 +51,7 @@ pub fn process_claim<'a, 'info>(
 
     // Update lifetime status
     let mut treasury_data = treasury_info.data.borrow_mut();
-    let mut treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
+    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(amount);
 
     // Distribute tokens from treasury to beneficiary

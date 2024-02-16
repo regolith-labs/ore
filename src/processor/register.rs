@@ -41,7 +41,7 @@ pub fn process_register<'a, 'info>(
     )?;
     let mut proof_data = proof_info.data.borrow_mut();
     proof_data[0] = Proof::discriminator() as u8;
-    let mut proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
     proof.claimable_rewards = 0;
     proof.hash = hashv(&[signer.key.as_ref()]).into();
