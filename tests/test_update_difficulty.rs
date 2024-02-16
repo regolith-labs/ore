@@ -21,7 +21,7 @@ async fn test_update_difficulty() {
     let treasury_account = banks.get_account(TREASURY_ADDRESS).await.unwrap().unwrap();
     let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
 
-    // Submit update admin ix
+    // Submit update difficulty ix
     let new_difficulty = KeccakHash::new_unique();
     let ix = ore::instruction::update_difficulty(payer.pubkey(), new_difficulty.into());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
