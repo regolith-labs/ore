@@ -1,6 +1,6 @@
 [package]
 name = "ore"
-version = "0.1.0"
+version = "0.0.1"
 description = "Ore is a cryptocurrency everyone can mine"
 edition = "2021"
 license = "Apache 2.0"
