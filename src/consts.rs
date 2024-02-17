@@ -6,21 +6,21 @@ pub const START_AT: i64 = 0;
 
 /// Bus pubkeys
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
-    pubkey!("E2EJ9xxK78b5XJu9cBnYf6fDbJuLqXuLN5fhaUtEuPPf"),
-    pubkey!("4J3EHs3tMuW46iNAQEEkZESYTeaPcRxYarH2pheRM9ET"),
-    pubkey!("6CNKKLPgC7pouftqXP43yaCBssmDRXD7ww7jGxNLgz6n"),
-    pubkey!("94vZ1ErDFmUJqQkMBLNQQaczSU981g3U884WXgns1rxQ"),
-    pubkey!("6srtSHdy3GncfFPFyoa6gw3iY2mzp6aMS3naje2wLsd"),
-    pubkey!("4w2BYLwDu1EV3HiZnWsdNYfEwLwkkNZZbWyarSe2AnQ5"),
-    pubkey!("CtLrZCzr1BPDB75LTh381z9NtyTYzKEnupYUt37L8Jvu"),
-    pubkey!("EaACXDgdd6RKw4Wr4t2o9qFodFTH5m8cbuW3G4xmyUMw"),
+    pubkey!("85JC7qU7pkjYdvvXewfzgjCBZvugtrnPKYE9mzPD2ajJ"),
+    pubkey!("FXCPt8PPwNQF8NVFDvdnHRENpkWexGMr5t8EnSoBsbns"),
+    pubkey!("HbbFBD9y6mqhwsgu3hDEtFwJAtUtCFrRPRP8MNJoFkpV"),
+    pubkey!("D65o7LLrZ8YoE7r7TaUSN434ZctNhYc7dEsfQrMXD7DS"),
+    pubkey!("EJBBRJih5WFsZPwhmWTHrxSbBRhqtXjMJfMtjgtYGpzA"),
+    pubkey!("BbecQomM3tCYHHDjKXybK8McthdyuuNJkmVaVXWyayyZ"),
+    pubkey!("7RyV6ZZmkadFjT8rMmZXsbEzHFbHe2ZHcJqUuk7H5ibP"),
+    pubkey!("72GSzz967ePb6mDrZYzmwyFFrfNUgH2PUwwocfeyjxLB"),
 ];
 
 /// The mint address of the ORE token.
-pub const MINT_ADDRESS: Pubkey = pubkey!("3jXYL3mCgf3Dh69NpG4adNX3jogjmFbz3RoqiuBmkrYN");
+pub const MINT_ADDRESS: Pubkey = pubkey!("tmResQt9qPVRhAh74fMxginQqHBG74Ls3Nou1rkvCg7");
 
 /// Treasury address
-pub const TREASURY_ADDRESS: Pubkey = pubkey!("2kdcgA7hmKbGvKHZpLFJD9rgSD1Bgggc8UUeJWGMWSRo");
+pub const TREASURY_ADDRESS: Pubkey = pubkey!("nLCGcWmqqLC2UVBb3neVQWhzzJd8GAJshvasczmVm94");
 
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);

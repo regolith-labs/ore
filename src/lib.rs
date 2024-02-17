@@ -16,7 +16,7 @@ use solana_program::{
 
 // TODO Increase decimals?
 
-declare_id!("ore2mSzJwAZhxLyCLbNEnFvYq9U8jvCMvUBrVvbmqDF");
+declare_id!("oreoDL2qcXyBdaYTEfd7F5MFLY5PAqqDooPLZv1XdBP");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);

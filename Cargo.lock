@@ -2353,7 +2353,7 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "0.0.1"
+version = "0.0.3"
 dependencies = [
  "bs58 0.5.0",
  "bs64",
