@@ -497,6 +497,88 @@
       }
     }
   ],
+  "accounts": [
+    {
+      "name": "Bus",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "rewards",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimableRewards",
+            "type": "u64"
+          },
+          {
+            "name": "hash",
+            "type": {
+              "defined": "Hash"
+            }
+          },
+          {
+            "name": "totalHashes",
+            "type": "u64"
+          },
+          {
+            "name": "totalRewards",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Treasury",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u64"
+          },
+          {
+            "name": "difficulty",
+            "type": {
+              "defined": "Hash"
+            }
+          },
+          {
+            "name": "epochStartAt",
+            "type": "i64"
+          },
+          {
+            "name": "rewardRate",
+            "type": "u64"
+          },
+          {
+            "name": "totalClaimedRewards",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
   "errors": [
     {
       "code": 0,

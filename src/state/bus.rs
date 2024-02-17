@@ -1,4 +1,5 @@
 use bytemuck::{Pod, Zeroable};
+use shank::ShankAccount;
 
 use crate::{
     impl_account_from_bytes, impl_to_bytes,
@@ -6,7 +7,7 @@ use crate::{
 };
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,

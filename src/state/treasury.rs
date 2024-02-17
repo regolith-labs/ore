@@ -1,4 +1,5 @@
 use bytemuck::{Pod, Zeroable};
+use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
 use crate::{
@@ -8,7 +9,7 @@ use crate::{
 };
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Treasury {
     /// The admin authority with permission to update the difficulty.
     pub admin: Pubkey,
