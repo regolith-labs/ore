@@ -97,7 +97,7 @@ pub(crate) fn validate_hash(
     let hash_ = hashv(&[
         current_hash.as_ref(),
         signer.as_ref(),
-        nonce.to_be_bytes().as_slice(),
+        nonce.to_le_bytes().as_slice(),
     ]);
     if sol_memcmp(hash.as_ref(), hash_.as_ref(), 32) != 0 {
         return Err(OreError::InvalidHash.into());
@@ -129,7 +129,7 @@ mod tests {
         let h2 = hashv(&[
             h1.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),
-            nonce.to_be_bytes().as_slice(),
+            nonce.to_le_bytes().as_slice(),
         ]);
         let res = validate_hash(h1, h2, signer, nonce, difficulty);
         assert!(res.is_ok());
@@ -155,7 +155,7 @@ mod tests {
         let h2 = hashv(&[
             h1.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),
-            nonce.to_be_bytes().as_slice(),
+            nonce.to_le_bytes().as_slice(),
         ]);
         let res = validate_hash(h1, h2, signer, nonce, difficulty);
         assert!(res.is_err());

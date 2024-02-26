@@ -133,7 +133,7 @@ fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (
         next_hash = hashv(&[
             hash.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),
-            nonce.to_be_bytes().as_slice(),
+            nonce.to_le_bytes().as_slice(),
         ]);
         if next_hash.le(&difficulty) {
             break;
