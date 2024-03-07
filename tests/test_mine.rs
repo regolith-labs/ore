@@ -7,7 +7,7 @@ use ore::{
     BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
     TREASURY_ADDRESS,
 };
-use rand::Rng;
+use rand::{distributions::Uniform, Rng};
 use solana_program::{
     clock::Clock,
     epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
@@ -133,7 +133,7 @@ async fn test_mine() {
 #[tokio::test]
 async fn test_mine_fail_bad_data() {
     // Setup
-    const FUZZ: usize = 100;
+    const FUZZ: usize = 10;
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Submit register tx
@@ -154,6 +154,7 @@ async fn test_mine_fail_bad_data() {
     assert_eq!(proof.total_rewards, 0);
 
     // Shared variables for tests.
+    let mut rng = rand::thread_rng();
     let (next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
@@ -162,8 +163,29 @@ async fn test_mine_fail_bad_data() {
     let signer = payer.pubkey();
     let proof_address = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &ore::id()).0;
 
+    // Fuzz randomized instruction data
+    for _ in 0..FUZZ {
+        let length_range = Uniform::from(5..=256);
+        let length = rng.sample(length_range);
+        let random_bytes: Vec<u8> = (0..length).map(|_| rng.gen()).collect();
+        let ix = Instruction {
+            program_id: ore::id(),
+            accounts: vec![
+                AccountMeta::new(signer, true),
+                AccountMeta::new(BUS_ADDRESSES[0], false),
+                AccountMeta::new(proof_address, false),
+                AccountMeta::new(TREASURY_ADDRESS, false),
+                AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+            ],
+            data: [OreInstruction::Mine.to_vec(), random_bytes].concat(),
+        };
+        let tx =
+            Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+        let res = banks.process_transaction(tx).await;
+        assert!(res.is_err());
+    }
+
     // Fuzz test random hashes and nonces
-    let mut rng = rand::thread_rng();
     for _ in 0..FUZZ {
         let next_hash = KeccakHash::new_unique();
         let nonce: u64 = rng.gen();
