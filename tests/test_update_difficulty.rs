@@ -42,6 +42,27 @@ async fn test_update_difficulty() {
     );
 }
 
+#[tokio::test]
+async fn test_update_difficulty_bad_signer() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Submit tx
+    let ix = ore::instruction::initialize(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Submit update difficulty ix
+    let signer = Keypair::new();
+    let new_difficulty = KeccakHash::new_unique();
+    let ix = ore::instruction::update_difficulty(signer.pubkey(), new_difficulty.into());
+    let tx =
+        Transaction::new_signed_with_payer(&[ix], Some(&signer.pubkey()), &[&signer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);

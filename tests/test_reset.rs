@@ -1,14 +1,22 @@
 use std::str::FromStr;
 
 use ore::{
+    instruction::OreInstruction,
     state::{Bus, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS, BUS_ADDRESSES, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE,
     MAX_EPOCH_REWARDS, MINT, MINT_ADDRESS, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
+use rand::seq::SliceRandom;
 use solana_program::{
-    clock::Clock, epoch_schedule::DEFAULT_SLOTS_PER_EPOCH, hash::Hash, program_option::COption,
-    program_pack::Pack, pubkey::Pubkey, sysvar,
+    clock::Clock,
+    epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
+    hash::Hash,
+    instruction::{AccountMeta, Instruction},
+    program_option::COption,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    sysvar,
 };
 use solana_program_test::{processor, BanksClient, ProgramTest};
 use solana_sdk::{
@@ -93,6 +101,116 @@ async fn test_reset() {
     assert_eq!(treasury_tokens.is_native, COption::None);
     assert_eq!(treasury_tokens.delegated_amount, 0);
     assert_eq!(treasury_tokens.close_authority, COption::None);
+}
+
+#[tokio::test]
+async fn test_reset_busses_out_of_order() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Pdas
+    let signer = payer.pubkey();
+    let bus_pdas = vec![
+        Pubkey::find_program_address(&[BUS, &[5]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[6]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[2]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[3]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[7]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[1]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[4]], &ore::id()),
+    ];
+    let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
+    let treasury_tokens =
+        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+
+    // Submit tx
+    let ix = Instruction {
+        program_id: ore::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_pdas[0].0, false),
+            AccountMeta::new(bus_pdas[1].0, false),
+            AccountMeta::new(bus_pdas[2].0, false),
+            AccountMeta::new(bus_pdas[3].0, false),
+            AccountMeta::new(bus_pdas[4].0, false),
+            AccountMeta::new(bus_pdas[5].0, false),
+            AccountMeta::new(bus_pdas[6].0, false),
+            AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: OreInstruction::Reset.to_vec(),
+    };
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Test bus state
+    for i in 0..BUS_COUNT {
+        let bus_account = banks.get_account(bus_pdas[i].0).await.unwrap().unwrap();
+        assert_eq!(bus_account.owner, ore::id());
+        let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
+        assert_eq!(bus.rewards, BUS_EPOCH_REWARDS);
+    }
+}
+
+#[tokio::test]
+async fn test_reset_shuffle_error() {
+    // Setup
+    const FUZZ: u64 = 100;
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Pdas
+    let signer = payer.pubkey();
+    let bus_pdas = vec![
+        Pubkey::find_program_address(&[BUS, &[5]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[0]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[6]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[2]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[3]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[7]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[1]], &ore::id()),
+        Pubkey::find_program_address(&[BUS, &[4]], &ore::id()),
+    ];
+    let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
+    let treasury_tokens =
+        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+
+    // Fuzz test shuffled accounts.
+    // Note some shuffles may still be valid if signer and non-bus accounts are all in correct positions.
+    let mut rng = rand::thread_rng();
+    for _ in 0..FUZZ {
+        let mut accounts = vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_pdas[0].0, false),
+            AccountMeta::new(bus_pdas[1].0, false),
+            AccountMeta::new(bus_pdas[2].0, false),
+            AccountMeta::new(bus_pdas[3].0, false),
+            AccountMeta::new(bus_pdas[4].0, false),
+            AccountMeta::new(bus_pdas[5].0, false),
+            AccountMeta::new(bus_pdas[6].0, false),
+            AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ];
+        accounts.shuffle(&mut rng);
+        let ix = Instruction {
+            program_id: ore::id(),
+            accounts,
+            data: OreInstruction::Reset.to_vec(),
+        };
+        let tx =
+            Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+        let res = banks.process_transaction(tx).await;
+        assert!(res.is_err());
+    }
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
