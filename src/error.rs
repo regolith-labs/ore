@@ -7,8 +7,8 @@ use thiserror::Error;
 pub enum OreError {
     #[error("The epoch is still active and cannot be reset")]
     EpochActive = 0,
-    #[error("The epoch has expired and needs reset")]
-    EpochExpired = 1,
+    #[error("The epoch has ended and needs reset")]
+    EpochEnded = 1,
     #[error("The provided hash was invalid")]
     InvalidHash = 2,
     #[error("The provided hash does not satisfy the difficulty requirement")]

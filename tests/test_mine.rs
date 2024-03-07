@@ -184,7 +184,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
                     bump: treasury_pda.1 as u64,
                     admin: admin_address,
                     difficulty: KeccakHash::new_from_array([u8::MAX; 32]).into(),
-                    epoch_start_at: 100,
+                    last_reset_at: 100,
                     reward_rate: INITIAL_REWARD_RATE,
                     total_claimed_rewards: 0,
                 }

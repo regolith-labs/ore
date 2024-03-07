@@ -10,6 +10,8 @@ use crate::{
     BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
 
+/// Errors if:
+/// - Account is not a signer.
 pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
     if !info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
@@ -18,6 +20,13 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
     Ok(())
 }
 
+/// Errors if:
+/// - Account is not owned by Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a bus account.
+/// - Bus ID is not in 0-7 range.
+/// - Address is not in set of valid bus address.
+/// - Expected to be writable, but is not.
 pub fn load_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
@@ -48,6 +57,12 @@ pub fn load_bus<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Account is not owned by Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a proof account.
+/// - Proof authority does not match the expected address.
+/// - Expected to be writable, but is not.
 pub fn load_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
     authority: &Pubkey,
@@ -75,6 +90,12 @@ pub fn load_proof<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Account is not owned by Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a treasury account.
+/// - Address does not match the expected address.
+/// - Expected to be writable, but is not.
 pub fn load_treasury<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
@@ -98,6 +119,12 @@ pub fn load_treasury<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Account is not owned by SPL token program.
+/// - Data is empty.
+/// - Data cannot deserialize into a mint account.
+/// - Address does not match the expected mint address.
+/// - Expected to be writable, but is not.
 pub fn load_mint<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
@@ -126,6 +153,13 @@ pub fn load_mint<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Account is not owned by SPL token program.
+/// - Data is empty.
+/// - Data cannot deserialize into a token account.
+/// - Token account owner does not match the expected owner address.
+/// - Token account mint does not match the expected mint address.
+/// - Expected to be writable, but is not.
 pub fn load_token_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
     owner: Option<&Pubkey>,
@@ -161,6 +195,9 @@ pub fn load_token_account<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Address does not match PDA derived from provided seeds.
+/// - Cannot load as an uninitialized account.
 pub fn load_uninitialized_pda<'a, 'info>(
     info: &'a AccountInfo<'info>,
     seeds: &[&[u8]],
@@ -172,6 +209,10 @@ pub fn load_uninitialized_pda<'a, 'info>(
     load_uninitialized_account(info)
 }
 
+/// Errors if:
+/// - Account is not owned by the system program.
+/// - Data is not empty.
+/// - Account is not writable.
 pub fn load_uninitialized_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<(), ProgramError> {
@@ -189,6 +230,8 @@ pub fn load_uninitialized_account<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Account cannot load with the expected address.
 pub fn load_sysvar<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,
@@ -196,6 +239,9 @@ pub fn load_sysvar<'a, 'info>(
     load_account(info, key, false)
 }
 
+/// Errors if:
+/// - Account does not match the expected value.
+/// - Expected to be writable, but is not.
 pub fn load_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,
@@ -212,6 +258,9 @@ pub fn load_account<'a, 'info>(
     Ok(())
 }
 
+/// Errors if:
+/// - Address does not match the expected value.
+/// - Account is not executable.
 pub fn load_program<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,

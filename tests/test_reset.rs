@@ -63,7 +63,7 @@ async fn test_reset() {
         Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap()
     );
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
-    assert_eq!(treasury.epoch_start_at as u8, 100);
+    assert_eq!(treasury.last_reset_at as u8, 100);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE.saturating_div(2));
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
 
@@ -134,7 +134,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
                     bump: treasury_pda.1 as u64,
                     admin: admin_address,
                     difficulty: INITIAL_DIFFICULTY.into(),
-                    epoch_start_at: 0,
+                    last_reset_at: 0,
                     reward_rate: INITIAL_REWARD_RATE,
                     total_claimed_rewards: 0,
                 }

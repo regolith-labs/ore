@@ -21,6 +21,21 @@ use crate::{
     TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
+/// Initialize sets up the Ore program state. Has 4 responisbilities:
+/// 1. Initializes the 8 bus accounts.
+/// 2. Initializes the treasury account.
+/// 3. Initializes the Ore mint account.
+/// 4. Initializes the treasury token account.
+/// 5. Sets the admin address as the signer.
+///
+/// Safety requirements:
+/// - Initialize is a permissionless instruction and can be called by anyone.
+/// - Can only succeed once for the entire lifetime of the program.
+/// - Can only succeed if all provided PDAs match their expected values.
+/// - Can only succeed if provided system program, token program, associated token program, and rent sysvar are valid.
+///
+/// Discussion
+/// - The caller of this instruction is set as the admin of the program.
 pub fn process_initialize<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
@@ -108,7 +123,7 @@ pub fn process_initialize<'a, 'info>(
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;
-    treasury.epoch_start_at = 0;
+    treasury.last_reset_at = 0;
     treasury.difficulty = INITIAL_DIFFICULTY.into();
     treasury.reward_rate = INITIAL_REWARD_RATE;
     treasury.total_claimed_rewards = 0;

@@ -14,6 +14,15 @@ use crate::{
     PROOF,
 };
 
+/// Register generates a new hash chain for a prospective miner. It has 2 responsibilities:
+/// 1. Initializes a new proof account.
+/// 2. Generates an initial hash for the miner from the signer's key.
+///
+/// Safety requirements:
+/// - Register is a permissionless instruction and can be called by anyone.
+/// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
+/// - Can only succeed once per signer.
+/// - The provided system program must be valid.
 pub fn process_register<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

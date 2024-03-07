@@ -5,6 +5,12 @@ use solana_program::{
 
 use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::AccountDeserialize};
 
+/// UpdateAdmin updates the program's admin account. It has 1 responsibility:
+/// 1. Update the treasury admin address.
+///
+/// Safety requirements:
+/// - Can only succeed if the signer is the current program admin.
+/// - Can only succeed if the provided treasury is valid.
 pub fn process_update_admin<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

@@ -8,6 +8,8 @@ use crate::{
     utils::{AccountDiscriminator, Discriminator},
 };
 
+/// Proof accounts track a miner's current hash, claimable rewards, and lifetime stats.
+/// Every miner is allowed one proof account which is required by the program to mine or claim rewards.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Proof {

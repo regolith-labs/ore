@@ -34,7 +34,7 @@ async fn test_update_difficulty() {
     assert_eq!(treasury_.bump, treasury.bump);
     assert_eq!(treasury_.admin, treasury.admin);
     assert_eq!(treasury_.difficulty, new_difficulty.into());
-    assert_eq!(treasury_.epoch_start_at, treasury.epoch_start_at);
+    assert_eq!(treasury_.last_reset_at, treasury.last_reset_at);
     assert_eq!(treasury_.reward_rate, treasury.reward_rate);
     assert_eq!(
         treasury_.total_claimed_rewards,

@@ -1,6 +1,5 @@
 use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 
-// TODO Set this before deployment
 /// The unix timestamp after which mining is allowed.
 pub const START_AT: i64 = 0;
 

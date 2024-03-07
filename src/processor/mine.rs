@@ -22,6 +22,18 @@ use crate::{
     EPOCH_DURATION,
 };
 
+/// Mine is the primary workhorse instruction of the Ore program. It has 4 responsibilities including:
+/// 1. Verify the provided hash is valid.
+/// 2. Increment the user's claimable rewards counter.
+/// 3. Generate a new challenge for the miner.
+/// 4. Update the miner's lifetime stats.
+///
+/// Safety requirements:
+/// - Mine is a permissionless instruction and can be called by any miner.
+/// - Can only succeed if the last reset was less than 60 seconds ago.
+/// - Can only succeed if the provided SHA3 hash and nonce are valid and satisfy the difficulty.
+/// - The the provided proof account must be associated with the signer.
+/// - The provided bus, treasury, and slot hash sysvar must be valid.
 pub fn process_mine<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
@@ -44,9 +56,9 @@ pub fn process_mine<'a, 'info>(
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let treasury_data = treasury_info.data.borrow();
     let treasury = Treasury::try_from_bytes(&treasury_data)?;
-    let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
-    if clock.unix_timestamp.ge(&epoch_end_at) {
-        return Err(OreError::EpochExpired.into());
+    let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
+    if clock.unix_timestamp.ge(&threshold) {
+        return Err(OreError::EpochEnded.into());
     }
 
     // Validate provided hash

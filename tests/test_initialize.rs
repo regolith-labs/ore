@@ -43,7 +43,7 @@ async fn test_initialize() {
     assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(treasury.admin, payer.pubkey());
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
-    assert_eq!(treasury.epoch_start_at as u8, 0);
+    assert_eq!(treasury.last_reset_at as u8, 0);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE);
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
 

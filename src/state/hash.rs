@@ -5,6 +5,7 @@ use solana_program::keccak::{Hash as KeccakHash, HASH_BYTES};
 
 use crate::impl_to_bytes;
 
+/// Hash is an equivalent type to solana_program::keccak::Hash which supports bytemuck serialization.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Hash(pub [u8; HASH_BYTES]);

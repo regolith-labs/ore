@@ -8,6 +8,8 @@ use crate::{
     utils::{AccountDiscriminator, Discriminator},
 };
 
+/// Treasury is a singleton account which manages all program wide variables.
+/// It is the mint authority for the Ore token and also the authority of the program-owned token account.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Treasury {
@@ -20,8 +22,8 @@ pub struct Treasury {
     /// The hash difficulty.
     pub difficulty: Hash,
 
-    /// The timestamp of the start of the current epoch.
-    pub epoch_start_at: i64,
+    /// The timestamp of the reset invocation.
+    pub last_reset_at: i64,
 
     /// The reward rate to payout to miners for submiting valid hashes.
     pub reward_rate: u64,

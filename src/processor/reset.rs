@@ -12,6 +12,22 @@ use crate::{
     TARGET_EPOCH_REWARDS, TREASURY,
 };
 
+/// Reset transitions the Ore program from one epoch to the next. It is the most complex instruction in the
+/// Ore program and has three primary responsibilities including:
+/// 1. Reset bus account rewards counters.
+/// 2. Adjust the reward rate to stabilize inflation.
+/// 3. Top up the treasury token account to backup claims.
+///
+/// Safety requirements:
+/// - Reset is a permissionless crank function and can be invoked by anyone.
+/// - Can only succeed if more 60 seconds or more have passed since the last successful reset.
+/// - The busses, mint, treasury, treasury token account, and token program must all be valid.
+///
+/// Discussion:
+/// - It is critical that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
+///   stays within the guaranteed bounds of 0 ≤ R ≤ 2 ORE/min.
+/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (measured hashpower) to
+///   target an average supply growth rate of 1 ORE/min.
 pub fn process_reset<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
@@ -46,30 +62,32 @@ pub fn process_reset<'a, 'info>(
         bus_7_info,
     ];
 
-    // Validate epoch has ended
+    // Validate at least 60 seconds have passed since last reset
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut treasury_data = treasury_info.data.borrow_mut();
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    let epoch_end_at = treasury.epoch_start_at.saturating_add(EPOCH_DURATION);
-    if clock.unix_timestamp.lt(&epoch_end_at) {
+    let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
+    if clock.unix_timestamp.lt(&threshold) {
         return Err(OreError::EpochActive.into());
     }
 
-    // Reset busses
-    let mut total_bus_rewards = 0u64;
+    // Record current timestamp
+    treasury.last_reset_at = clock.unix_timestamp;
+
+    // Reset bus accounts and calculate actual rewards mined since last reset
+    let mut total_remaining_rewards = 0u64;
     for i in 0..BUS_COUNT {
         let mut bus_data = busses[i].data.borrow_mut();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-        total_bus_rewards = total_bus_rewards.saturating_add(bus.rewards);
+        total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
         bus.rewards = BUS_EPOCH_REWARDS;
     }
+    let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
 
-    // Update the reward rate for the next epoch
-    let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_bus_rewards);
+    // Update reward rate for next epoch
     treasury.reward_rate = calculate_new_reward_rate(treasury.reward_rate, total_epoch_rewards);
-    treasury.epoch_start_at = clock.unix_timestamp;
 
-    // Top up treasury token account
+    // Fund treasury token account
     let treasury_bump = treasury.bump as u8;
     drop(treasury_data);
     solana_program::program::invoke_signed(
@@ -93,8 +111,13 @@ pub fn process_reset<'a, 'info>(
     Ok(())
 }
 
+/// This function calculates what the new reward rate should be based on how many total rewards were mined in the prior epoch.
+/// The math is largely identitical to that used by the Bitcoin network for updating the difficulty between each epoch.
+/// new_rate = current_rate * (target_rewards / actual_rewards)
+/// The new rate is then smoothed by a constant factor to avoid unexpectedly large fluctuations.
+/// In Ore's case, the epochs are so short (60 seconds) that the smoothing factor of 2 has been chosen.
 pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
-    // Avoid division by zero. Leave the reward rate unchanged.
+    // Avoid division by zero. Leave the reward rate unchanged, if detected.
     if epoch_rewards.eq(&0) {
         return current_rate;
     }

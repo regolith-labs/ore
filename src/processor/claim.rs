@@ -12,6 +12,15 @@ use crate::{
     TREASURY,
 };
 
+/// Claim distributes owed token rewards from the treasury to the miner. It has 4 responsibilies:
+/// 1. Transfer tokens from the treasury to the miner.
+/// 2. Decrement the miner's claimable rewards counter by an appropriate amount.
+/// 3. Update the program's lifetime stats.
+///
+/// Safety requirements:
+/// - Claim is a permissionless instruction and can be called by any miner.
+/// - Can only succeed if the claimed amount is less than or equal to the miner's claimable rewards.
+/// - The provided beneficiary token account, mint, treasury, treasury token account, and token program must be valid.
 pub fn process_claim<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

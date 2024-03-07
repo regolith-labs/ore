@@ -14,7 +14,9 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Increase decimals?
+// TODO Increase TOKEN_DECIMALS to 12?
+// TODO Set START_AT before launch.
+// TODO Set pubkey consts for derived mainnet pdas before lanch.
 
 declare_id!("oreoDL2qcXyBdaYTEfd7F5MFLY5PAqqDooPLZv1XdBP");
 
