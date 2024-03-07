@@ -1,14 +1,18 @@
 use std::{mem::size_of, str::FromStr};
 
 use ore::{
+    instruction::{MineArgs, OreInstruction},
     state::{Bus, Proof, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
     TREASURY_ADDRESS,
 };
+use rand::Rng;
 use solana_program::{
     clock::Clock,
     epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
+    hash::Hash,
+    instruction::{AccountMeta, Instruction},
     keccak::{hashv, Hash as KeccakHash},
     program_option::COption,
     program_pack::Pack,
@@ -124,6 +128,160 @@ async fn test_mine() {
     assert_eq!(beneficiary.is_native, COption::None);
     assert_eq!(beneficiary.delegated_amount, 0);
     assert_eq!(beneficiary.close_authority, COption::None);
+}
+
+#[tokio::test]
+async fn test_mine_fail_bad_data() {
+    // Setup
+    const FUZZ: usize = 100;
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Submit register tx
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let ix = ore::instruction::register(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Assert proof state
+    let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
+    assert_eq!(proof_account.owner, ore::id());
+    let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
+    assert_eq!(proof.authority, payer.pubkey());
+    assert_eq!(proof.claimable_rewards, 0);
+    assert_eq!(proof.hash, hashv(&[payer.pubkey().as_ref()]).into());
+    assert_eq!(proof.total_hashes, 0);
+    assert_eq!(proof.total_rewards, 0);
+
+    // Shared variables for tests.
+    let (next_hash, nonce) = find_next_hash(
+        proof.hash.into(),
+        KeccakHash::new_from_array([u8::MAX; 32]),
+        payer.pubkey(),
+    );
+    let signer = payer.pubkey();
+    let proof_address = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &ore::id()).0;
+
+    // Fuzz test random hashes and nonces
+    let mut rng = rand::thread_rng();
+    for _ in 0..FUZZ {
+        let next_hash = KeccakHash::new_unique();
+        let nonce: u64 = rng.gen();
+        assert_mine_tx_err(
+            &mut banks,
+            &payer,
+            blockhash,
+            payer.pubkey(),
+            BUS_ADDRESSES[0],
+            proof_address,
+            TREASURY_ADDRESS,
+            sysvar::slot_hashes::id(),
+            next_hash,
+            nonce,
+        )
+        .await;
+    }
+
+    // Fuzz test random bus addresses
+    for _ in 0..FUZZ {
+        assert_mine_tx_err(
+            &mut banks,
+            &payer,
+            blockhash,
+            payer.pubkey(),
+            Pubkey::new_unique(),
+            proof_address,
+            TREASURY_ADDRESS,
+            sysvar::slot_hashes::id(),
+            next_hash,
+            nonce,
+        )
+        .await;
+    }
+
+    // Fuzz test random proof addresses
+    for _ in 0..FUZZ {
+        assert_mine_tx_err(
+            &mut banks,
+            &payer,
+            blockhash,
+            payer.pubkey(),
+            BUS_ADDRESSES[0],
+            Pubkey::new_unique(),
+            TREASURY_ADDRESS,
+            sysvar::slot_hashes::id(),
+            next_hash,
+            nonce,
+        )
+        .await;
+    }
+
+    // Mix up the proof and treasury addresses
+    assert_mine_tx_err(
+        &mut banks,
+        &payer,
+        blockhash,
+        payer.pubkey(),
+        BUS_ADDRESSES[0],
+        TREASURY_ADDRESS,
+        proof_address,
+        sysvar::slot_hashes::id(),
+        next_hash,
+        nonce,
+    )
+    .await;
+
+    // Pass an invalid sysvar
+    assert_mine_tx_err(
+        &mut banks,
+        &payer,
+        blockhash,
+        payer.pubkey(),
+        BUS_ADDRESSES[0],
+        proof_address,
+        TREASURY_ADDRESS,
+        sysvar::clock::id(),
+        next_hash,
+        nonce,
+    )
+    .await;
+}
+
+async fn assert_mine_tx_err(
+    banks: &mut BanksClient,
+    payer: &Keypair,
+    blockhash: Hash,
+    signer: Pubkey,
+    bus: Pubkey,
+    proof: Pubkey,
+    treasury: Pubkey,
+    slot_hash: Pubkey,
+    next_hash: KeccakHash,
+    nonce: u64,
+) {
+    let ix = Instruction {
+        program_id: ore::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(treasury, false),
+            AccountMeta::new_readonly(slot_hash, false),
+        ],
+        data: [
+            OreInstruction::Mine.to_vec(),
+            MineArgs {
+                hash: next_hash.into(),
+                nonce: nonce.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    };
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
 }
 
 fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (KeccakHash, u64) {

@@ -2359,6 +2359,7 @@ dependencies = [
  "bs64",
  "bytemuck",
  "num_enum 0.7.2",
+ "rand 0.8.5",
  "shank",
  "solana-program",
  "solana-program-test",
