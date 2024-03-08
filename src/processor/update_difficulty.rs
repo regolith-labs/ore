@@ -13,6 +13,19 @@ use crate::{
 /// Safety requirements:
 /// - Can only succeed if the signer is the current program admin.
 /// - Can only succeed if the provided treasury is valid.
+///
+/// Discussion:
+/// - Ore subdivides into 1 billion indivisible atomic units. Therefore if global hashpower
+///   were to increase to the point where >1B valid hashes were submitted to the protocol for
+///   validation per epoch, the Ore inflation rate could be pushed above the 1 ORE / min target.
+/// - The strict limits on bus reward counters guarantee inflation can never exceed 2 ORE / min, 
+///   but it is the responsibility of the admin to adjust mining difficulty if needed to maintain
+///   the 1 ORE / min target average.
+/// - It is worth noting that Solana processes well below 1 million real TPS or 
+///   (60 * 1,000,000) = 60,000,000 hash validations per epoch. Even if ever transaction on Solana
+///   were a mine operation, this would still be two orders of magnitude below the boundary 
+///   condition where Ore inflation targets would be challenged. So in practice, Solana is likely 
+///   to reach its network saturation point long before Ore ever hits theoretical limits. 
 pub fn process_update_difficulty<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
