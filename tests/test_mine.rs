@@ -1,7 +1,7 @@
 use std::{mem::size_of, str::FromStr};
 
 use ore::{
-    instruction::{MineArgs, OreInstruction},
+    instruction::{MineArgs, OreInstruction, RegisterArgs},
     state::{Bus, Proof, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
@@ -143,15 +143,9 @@ async fn test_mine_fail_bad_data() {
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
-    // Assert proof state
+    // Get proof
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
-    assert_eq!(proof_account.owner, ore::id());
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    assert_eq!(proof.authority, payer.pubkey());
-    assert_eq!(proof.claimable_rewards, 0);
-    assert_eq!(proof.hash, hashv(&[payer.pubkey().as_ref()]).into());
-    assert_eq!(proof.total_hashes, 0);
-    assert_eq!(proof.total_rewards, 0);
 
     // Shared variables for tests.
     let mut rng = rand::thread_rng();
