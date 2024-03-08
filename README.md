@@ -38,5 +38,5 @@ A linear supply growth was chosen for its simplicity and straightforward predict
 ## State
  - [`Bus`](src/state/bus.rs) - An account (8 total) which tracks and limits the amount mined rewards each epoch.
  - [`Proof`](src/state/proof.rs) - An account (1 per miner) which tracks a miner's current hash, claimable rewards, and lifetime stats.
- - [`Treasury`](src/state/treasury.rs) – A singleton account which manages program-wide variables and is the mint authority over the Ore token. 
+ - [`Treasury`](src/state/treasury.rs) – A singleton account which manages program-wide variables and is the mint authority for the Ore token.
 
