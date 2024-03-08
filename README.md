@@ -5,7 +5,7 @@
 
 ## How it works
 
-The primary innovation of Ore is to offer mining rewards that are non-exclusive. In traditional proof-of-work systems such as Bitcoin, mining rewards are exclusive. That is, only one miner can win every ~10 minutes, and that miner takes home all the tokens for the round. This has had the longterm effect of starving out casual miners who are simply unable to keep up in the arms race against much larger and well-resourced professional mining firms.
+The primary innovation of Ore is to offer mining rewards which are non-exclusive. In traditional proof-of-work systems such as Bitcoin, mining rewards are exclusive. That is, only one miner can win every ~10 minutes, and that miner takes home all the tokens for the round. This has had the longterm effect of starving out casual miners who are simply unable to keep up in the arms race against much larger and well-resourced professional mining firms.
 
 The primary reason Bitcoin is designed this way is that its proof-of-work system serves two roles. It's responsible not only for distributing tokens, but also for coordinating network consensus. This makes sense as the tokens are intended to be rewards for those who dedicate resources to securing the Bitcoin network. However due starvation problems outlined above, it has had the unintended consequence of excluding major portions of the global population (>99%) from ever being able to mine. This ultimately limits the number of people who can reasonably acquire the token, and thus contributes to further consolidating the supply. Ore takes a different approach.
 
