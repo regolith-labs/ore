@@ -13,7 +13,7 @@ use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::Ac
 /// - Can only succeed if the provided treasury is valid.
 ///
 /// Discussion:
-/// - The admin authority only has one lever of power: the ability to adjust the global 
+/// - The admin authority has one lever of power: the ability to adjust the global 
 ///   mining difficulty. If the difficulty is too easy, miners will find hashes very quickly
 ///   and the bottleneck for throughput shifts from local compute to Solana bandwidth. In essence,
 ///   if the Ore token has value and difficulty is low, mining becomes an incentivized stress
