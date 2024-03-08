@@ -28,7 +28,7 @@ A linear supply growth was chosen for its simplicity and straightforward predict
 
 ## Instructions
 - [`Initialize`](src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
-- [`Reset`](src/processor/reset.rs) – Resets the program for a new epoch, resetting the bus accounts and topping up the treasury.
+- [`Reset`](src/processor/reset.rs) – Prepares the program for a new epoch, updating the reward rate, resetting bus counters, and topping up the treasury.
 - [`Register`](src/processor/register.rs) – Creates a new proof account for a prospective miner.
 - [`Mine`](src/processor/mine.rs) – Verifies hashes provided by miners and issues claimable rewards.
 - [`Claim`](src/processor/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
