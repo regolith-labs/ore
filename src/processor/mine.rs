@@ -98,6 +98,8 @@ pub fn process_mine<'a, 'info>(
     Ok(())
 }
 
+/// Validates the provided hash, ensursing it is equal to SHA3(current_hash, singer, nonce).
+/// Fails if the provided hash is valid but does not satisfy the required difficulty.
 pub(crate) fn validate_hash(
     current_hash: KeccakHash,
     hash: KeccakHash,
