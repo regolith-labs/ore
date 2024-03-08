@@ -14,7 +14,7 @@ Ore builds upon the consensus layer provided by Solana and uses it to reimagine 
 
 ## Supply
 
-Ore provides strong guarantees and protection against runaway supply inflation. The supply growth rate is strictly bounded to a range of 0 ≤ R ≤ 2 ORE / min. In other words, linear. The reward rate – amount paid out to miners per valid hash – is dynamically adjusted every 60 seconds to maintain a target average supply growth rate of 1 ORE / min. This effectively means if the global hashpower dedicated to Ore mining increases, the reward rate paid out per hash will decrease, and vice versa. 
+Ore provides strong guarantees and protection against runaway supply inflation. The supply growth rate is strictly bounded to a range of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The reward rate – amount paid out to miners per valid hash – is dynamically adjusted every 60 seconds to maintain a target average supply growth rate of `1 ORE/min`. This effectively means if the global hashpower dedicated to Ore mining increases, the reward rate paid out per hash will decrease, and vice versa. 
 
 A linear supply growth was chosen for its simplicity and straightforward predictability. Ore aims to strike a balance between the unpredictable runaway inflation of fiat currencies on one hand and the feudal deflationary supply schedules of alternative cryptocurrencies on the other. Ore holders are simultaneously incentivized to loan and spend while also being protected against longterm exponential inflation.
 
