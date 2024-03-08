@@ -22,7 +22,7 @@ use crate::{
 ///   but it is the responsibility of the admin to adjust mining difficulty if needed to maintain
 ///   the 1 ORE / min target average.
 /// - It is worth noting that Solana processes well below 1 million real TPS or 
-///   (60 * 1,000,000) = 60,000,000 hash validations per epoch. Even if ever transaction on Solana
+///   (60 * 1,000,000) = 60,000,000 transactions per minute. Even if ever transaction on Solana
 ///   were a mine operation, this would still be two orders of magnitude below the boundary 
 ///   condition where Ore inflation targets would be challenged. So in practice, Solana is likely 
 ///   to reach its network saturation point long before Ore ever hits theoretical limits. 
