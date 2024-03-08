@@ -21,7 +21,7 @@ use crate::{
 /// - The strict limits on bus reward counters guarantee inflation can never exceed 2 ORE / min, 
 ///   but it is the responsibility of the admin to adjust mining difficulty if needed to maintain
 ///   the 1 ORE / min target average.
-/// - It is worth noting that Solana processes well below 1 million real TPS or 
+/// - It is worth noting that Solana today processes well below 1 million real TPS or 
 ///   (60 * 1,000,000) = 60,000,000 transactions per minute. Even if ever transaction on Solana
 ///   were a mine operation, this would still be two orders of magnitude below the boundary 
 ///   condition where Ore inflation targets would be challenged. So in practice, Solana is likely 
