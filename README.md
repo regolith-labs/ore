@@ -1,14 +1,42 @@
 # Ore
-### A cryptocurrency you can mine from anywhere, at home or on your phone.
 
-[Work in progress]
+**Ore is a cryptocurrency you can mine from anywhere, at home or on your phone.** It uses a novel proof-of-work algorithm to guarantee no miner can ever be starved out from earning rewards. 
 
-In its ideal form, mining is a fun, effective, and egalitarian way of distributing tokens. The promise of mining is that anyone with a computer can earn tokens by using it to solve mathematical puzzles. Unfortunately, mining today is _not_ ideal. Most people who try mine cryptocurrency find they are unable to win any rewards due to the prohibitively high level of competition. We call this the miner starvation problem.
 
-Starvation, in computer networking, refers to the failure mode that can happen when a process monopolizes a particular resource and prevents other processes from accessing it. This is exactly what happens in crypto mining today when rewards get dominated by a handful of professional mining firms and smaller players get pushed out of the game entirely. Ultimately, starvation prevents new users from being able to access the token via the same direct mechanisms that larger, more establish players have the privilege of using.
+## How it works
 
-Ore solves the miner starvation problem with a new mining protocol and non-exclusive rewards. Rather than positioning every miner in a competition against one another to solve the same puzzle, Ore gives each miner their own individual puzzle to work on. As long as a miner provides a valid solution to their own puzzle, the protocol guarantees they will earn a reward. Even if large miners come online and begin mining Ore, they may win a large portion of the new rewards, but they can't exclude other miners from winning as well.
+The primary innovation of Ore is to offer mining rewards that are non-exclusive. In traditional proof-of-work systems such as Bitcoin, mining rewards are exclusive. That is, only one miner can win every ~10 minutes, and that miner takes home all the tokens for the round. This has had the longterm effect of starving out casual miners who are simply unable to keep up in the arms race against much larger and well-resourced professional mining firms.
 
-The computational difficulty of the puzzles is constant and the same for everyone, everywhere. Therefore, to avoid the uncontrolled reward inflation that would occur as computers get more powerful and miners solve increasingly more puzzles, Ore periodically adjusts the reward rate paid out to miners per valid solution. This reward rate fluctuates to maintain an average of 1 ORE mined every 60 seconds, regardless of how many miners there are and how their powerful their computers are. 
+The primary reason Bitcoin is designed this way is that its proof-of-work system serves two roles. It's responsible not only for distributing tokens, but also for coordinating network consensus. This makes sense as the tokens are intended to be rewards for those who dedicate resources to securing the Bitcoin network. However due starvation problems outlined above, it has the unintended consequence of excluding major portions of the global population (>99%) from ever being able to mine. This ultimately limits the number of people who can reasonably acquire the token, and thus contributes to further consolidating the supply. Ore takes a different approach.
 
+Ore builds upon the consensus layer provided by Solana and uses it to reimagine proof-of-work purely as a token distribution mechanism. So rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner their own individual computational challenge. As long as a miner provides a valid solution to their personal challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
+
+
+## Supply
+
+Ore provides strong protection and guarantees against runaway supply inflation. The supply growth rate is bounded strictly to a range of 0 ≤ R ≤ 2 ORE / min. In other words, linear. The reward rate – amount paid out to miners per valid hash – is dynamically recalculated every epoch (60 seconds) to maintain a target average supply growth rate of 1 ORE / min. This effectively means if global hashpower dedicated to mining Ore is increasing, the reward rate paid out per hash will decrease, and vice versa. 
+
+A linear supply growth was chosen for its simplicity and straightforward predictability, a quality that can only be guaranteed by cryptocurrency. Ore aims to strike a balance between the unpredictable runaway inflation of fiat currencies on one hand and the feudal deflationary systems of alternative cryptocurrencies on the other. Ore holders simultaneously have incentive to loan and spend while also being protected against longterm exponential inflation.
+
+
+## Program
+- [`Entrypoint`](src/lib.rs) – The program entrypoint.
+- [`Consts`](src/consts.rs) – Program constants.
+- [`Errors`](src/error.rs) – Custom program errors.
+- [`Instruction`](src/instruction.rs) – Declared instructions and arguments.
+- [`Loaders`](src/loaders.rs) – Validation logic for loading Solana accounts.
+
+## Instructions
+- [`Initialize`](src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
+- [`Reset`](src/processor/reset.rs) – Resets the program for a new epoch, resetting the bus accounts and topping up the treasury.
+- [`Register`](src/processor/register.rs) – Creates a new proof account for a prospective miner.
+- [`Mine`](src/processor/mine.rs) – Verifies hashes provided by miners and issues claimable rewards.
+- [`Claim`](src/processor/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
+- [`UpdateAdmin`](src/processor/update_admin.rs) – Updates the admin authority.
+- [`UpdateDifficulty`](src/processor/update_difficulty.rs) - Updates the hashing difficulty.
+
+## State
+ - [`Bus`](src/state/bus.rs) - An account (8 total) which tracks and limits the amount mined rewards each epoch.
+ - [`Proof`](src/state/proof.rs) - An account (1 per miner) which tracks a miner's current hash, claimable rewards, and lifetime stats.
+ - [`Treasury`](src/state/treasury.rs) – A singleton account which manages all program-wide variables and is the mint authority over the Ore token. 
 
