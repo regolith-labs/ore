@@ -137,17 +137,24 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 
 #[cfg(test)]
 mod tests {
-    use crate::{calculate_new_reward_rate, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS};
+    use rand::{distributions::Uniform, Rng};
+
+    use crate::{
+        calculate_new_reward_rate, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        TARGET_EPOCH_REWARDS,
+    };
+
+    const FUZZ_SIZE: u64 = 10_000;
 
     #[test]
-    fn test_calculate_new_reward_rate_stable() {
+    fn test_calculate_new_reward_rate_target() {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }
 
     #[test]
-    fn test_calculate_new_reward_rate_no_chage() {
+    fn test_calculate_new_reward_rate_div_by_zero() {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(current_rate, 0);
         assert!(new_rate.eq(&current_rate));
@@ -162,12 +169,35 @@ mod tests {
     }
 
     #[test]
+    fn test_calculate_new_reward_rate_lower_fuzz() {
+        let mut rng = rand::thread_rng();
+        for _ in 0..FUZZ_SIZE {
+            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
+            let actual_rewards: u64 =
+                rng.sample(Uniform::new(TARGET_EPOCH_REWARDS, MAX_EPOCH_REWARDS));
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards);
+            assert!(new_rate.lt(&current_rate));
+        }
+    }
+
+    #[test]
     fn test_calculate_new_reward_rate_higher() {
         let current_rate = 1000;
         let new_rate =
             calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_sub(1_000_000));
         println!("{:?} {:?}", new_rate, current_rate);
         assert!(new_rate.gt(&current_rate));
+    }
+
+    #[test]
+    fn test_calculate_new_reward_rate_higher_fuzz() {
+        let mut rng = rand::thread_rng();
+        for _ in 0..FUZZ_SIZE {
+            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
+            let actual_rewards: u64 = rng.sample(Uniform::new(1, TARGET_EPOCH_REWARDS));
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards);
+            assert!(new_rate.gt(&current_rate));
+        }
     }
 
     #[test]
