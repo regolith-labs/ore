@@ -88,4 +88,4 @@ pub const METADATA_NAME: &str = "Ore";
 pub const METADATA_SYMBOL: &str = "ORE";
 
 /// The uri for token metdata.
-pub const METADATA_URI: &str = "https://ore.supply/public/metadata.json";
+pub const METADATA_URI: &str = "https://ore.supply/metadata.json";

@@ -22,21 +22,24 @@ use crate::{
     TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
-/// Initialize sets up the Ore program state. Has 4 responisbilities:
-/// 1. Initializes the 8 bus accounts.
-/// 2. Initializes the treasury account.
-/// 3. Initializes the Ore mint account.
-/// 4. Initializes the treasury token account.
-/// 5. Sets the admin address as the signer.
+/// Initialize sets up the Ore program state. Its responsibilities include:
+/// 1. Initialize the 8 bus accounts.
+/// 2. Initialize the treasury account.
+/// 3. Initialize the Ore mint account.
+/// 4. Initialize the mint metadata account.
+/// 5. Initialize the treasury token account.
+/// 6. Set the signer as the program admin.
 ///
 /// Safety requirements:
 /// - Initialize is a permissionless instruction and can be called by anyone.
 /// - Can only succeed once for the entire lifetime of the program.
 /// - Can only succeed if all provided PDAs match their expected values.
-/// - Can only succeed if provided system program, token program, associated token program, and rent sysvar are valid.
+/// - Can only succeed if provided system program, token program,
+///   associated token program, metadata program, and rent sysvar are valid.
 ///
 /// Discussion
-/// - The caller of this instruction is set as the admin of the program.
+/// - The signer of this instruction is set as the program admin authority and
+///   the upgrade authority of the mint metadata account.
 pub fn process_initialize<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
