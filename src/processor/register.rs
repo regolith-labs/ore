@@ -14,9 +14,9 @@ use crate::{
     PROOF,
 };
 
-/// Register generates a new hash chain for a prospective miner. It has 2 responsibilities:
-/// 1. Initializes a new proof account.
-/// 2. Generates an initial hash for the miner from the signer's key.
+/// Register generates a new hash chain for a prospective miner. Its responsibilities include:
+/// 1. Initialize a new proof account.
+/// 2. Generate an initial hash for the miner from the signer's key.
 ///
 /// Safety requirements:
 /// - Register is a permissionless instruction and can be called by anyone.

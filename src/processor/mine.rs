@@ -22,7 +22,7 @@ use crate::{
     EPOCH_DURATION,
 };
 
-/// Mine is the primary workhorse instruction of the Ore program. It has 4 responsibilities including:
+/// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Verify the provided hash is valid.
 /// 2. Increment the user's claimable rewards counter.
 /// 3. Generate a new challenge for the miner.

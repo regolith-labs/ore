@@ -1,7 +1,8 @@
 use ore::{state::Treasury, utils::AccountDeserialize, TREASURY_ADDRESS};
-use solana_program::{hash::Hash, pubkey::Pubkey};
-use solana_program_test::{processor, BanksClient, ProgramTest};
+use solana_program::{hash::Hash, pubkey::Pubkey, rent::Rent};
+use solana_program_test::{processor, read_file, BanksClient, ProgramTest};
 use solana_sdk::{
+    account::Account,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -71,5 +72,19 @@ async fn test_update_admin_bad_signer() {
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
+
+    // Setup metadata program
+    let data = read_file(&"tests/buffers/metadata_program.bpf");
+    program_test.add_account(
+        mpl_token_metadata::ID,
+        Account {
+            lamports: Rent::default().minimum_balance(data.len()).max(1),
+            data,
+            owner: solana_sdk::bpf_loader::id(),
+            executable: true,
+            rent_epoch: 0,
+        },
+    );
+
     program_test.start().await
 }

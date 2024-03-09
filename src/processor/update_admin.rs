@@ -5,7 +5,7 @@ use solana_program::{
 
 use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::AccountDeserialize};
 
-/// UpdateAdmin updates the program's admin account. It has 1 responsibility:
+/// UpdateAdmin updates the program's admin account. Its responsibilities include:
 /// 1. Update the treasury admin address.
 ///
 /// Safety requirements:
@@ -13,17 +13,17 @@ use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::Ac
 /// - Can only succeed if the provided treasury is valid.
 ///
 /// Discussion:
-/// - The admin authority has one lever of power: the ability to adjust the global 
+/// - The admin authority has one lever of power: the ability to adjust the global
 ///   mining difficulty. If the difficulty is too easy, miners will find hashes very quickly
 ///   and the bottleneck for mining will shift from local compute to Solana bandwidth. In essence,
 ///   if the Ore token has value and difficulty is low, mining becomes an incentivized stress
-///   test for the Solana network. 
+///   test for the Solana network.
 /// - At the same time, if difficulty is too hard, miners will have to wait a very long period
-///   of time between finding valid hashes. This will bias rewards to well-resourced miners 
-///   with large compute operations. Keeping a low difficulty ensures casual miners can 
+///   of time between finding valid hashes. This will bias rewards to well-resourced miners
+///   with large compute operations. Keeping a low difficulty ensures casual miners can
 ///   consistently earn rewards and undercuts some of the advantage of larger players.
-/// - Ultimately admin authority should be delegated to a governance mechanism – either 
-///   democratic or futarchic – to ensure difficulty is kept at a value that represents the 
+/// - Ultimately admin authority should be delegated to a governance mechanism – either
+///   democratic or futarchic – to ensure difficulty is kept at a value that represents the
 ///   values and interests of the whole ecosystem.
 pub fn process_update_admin<'a, 'info>(
     _program_id: &Pubkey,

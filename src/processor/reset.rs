@@ -12,8 +12,7 @@ use crate::{
     TARGET_EPOCH_REWARDS, TREASURY,
 };
 
-/// Reset transitions the Ore program from one epoch to the next. It is the most complex instruction in the
-/// Ore program and has three primary responsibilities including:
+/// Reset transitions the Ore program from one epoch to the next. Its responsibilities include:
 /// 1. Reset bus account rewards counters.
 /// 2. Adjust the reward rate to stabilize inflation.
 /// 3. Top up the treasury token account to backup claims.
@@ -167,6 +166,7 @@ mod tests {
         let current_rate = 1000;
         let new_rate =
             calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_sub(1_000_000));
+        println!("{:?} {:?}", new_rate, current_rate);
         assert!(new_rate.gt(&current_rate));
     }
 

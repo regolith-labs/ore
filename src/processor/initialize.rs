@@ -22,7 +22,7 @@ use crate::{
     TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
-/// Initialize sets up the Ore program state. Its responsibilities include:
+/// Initialize sets up the Ore program. Its responsibilities include:
 /// 1. Initialize the 8 bus accounts.
 /// 2. Initialize the treasury account.
 /// 3. Initialize the Ore mint account.

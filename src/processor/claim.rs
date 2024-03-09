@@ -12,7 +12,7 @@ use crate::{
     TREASURY,
 };
 
-/// Claim distributes owed token rewards from the treasury to the miner. It has 4 responsibilies:
+/// Claim distributes owed token rewards from the treasury to the miner. Its responsibilies include:
 /// 1. Transfer tokens from the treasury to the miner.
 /// 2. Decrement the miner's claimable rewards counter by an appropriate amount.
 /// 3. Update the program's lifetime stats.
