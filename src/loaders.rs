@@ -201,8 +201,9 @@ pub fn load_token_account<'a, 'info>(
 pub fn load_uninitialized_pda<'a, 'info>(
     info: &'a AccountInfo<'info>,
     seeds: &[&[u8]],
+    program_id: &Pubkey,
 ) -> Result<(), ProgramError> {
-    let key = Pubkey::create_program_address(seeds, &crate::id())?;
+    let key = Pubkey::create_program_address(seeds, program_id)?;
     if info.key.ne(&key) {
         return Err(ProgramError::InvalidSeeds);
     }

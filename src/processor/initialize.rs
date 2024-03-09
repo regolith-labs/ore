@@ -17,7 +17,8 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT, MINT_ADDRESS,
+    BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA,
+    METADATA_ADDRESS, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS,
     TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
@@ -45,29 +46,47 @@ pub fn process_initialize<'a, 'info>(
     let args = InitializeArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]])?;
-    load_uninitialized_pda(bus_1_info, &[BUS, &[1], &[args.bus_1_bump]])?;
-    load_uninitialized_pda(bus_2_info, &[BUS, &[2], &[args.bus_2_bump]])?;
-    load_uninitialized_pda(bus_3_info, &[BUS, &[3], &[args.bus_3_bump]])?;
-    load_uninitialized_pda(bus_4_info, &[BUS, &[4], &[args.bus_4_bump]])?;
-    load_uninitialized_pda(bus_5_info, &[BUS, &[5], &[args.bus_5_bump]])?;
-    load_uninitialized_pda(bus_6_info, &[BUS, &[6], &[args.bus_6_bump]])?;
-    load_uninitialized_pda(bus_7_info, &[BUS, &[7], &[args.bus_7_bump]])?;
-    load_uninitialized_pda(mint_info, &[MINT, &[args.mint_bump]])?;
-    load_uninitialized_pda(treasury_info, &[TREASURY, &[args.treasury_bump]])?;
+    load_uninitialized_pda(bus_0_info, &[BUS, &[0], &[args.bus_0_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_1_info, &[BUS, &[1], &[args.bus_1_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_2_info, &[BUS, &[2], &[args.bus_2_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_3_info, &[BUS, &[3], &[args.bus_3_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_4_info, &[BUS, &[4], &[args.bus_4_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_5_info, &[BUS, &[5], &[args.bus_5_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_6_info, &[BUS, &[6], &[args.bus_6_bump]], &crate::id())?;
+    load_uninitialized_pda(bus_7_info, &[BUS, &[7], &[args.bus_7_bump]], &crate::id())?;
+    load_uninitialized_pda(
+        metadata_info,
+        &[
+            METADATA,
+            mpl_token_metadata::ID.as_ref(),
+            MINT_ADDRESS.as_ref(),
+            &[args.metadata_bump],
+        ],
+        &mpl_token_metadata::ID,
+    )?;
+    load_uninitialized_pda(mint_info, &[MINT, &[args.mint_bump]], &crate::id())?;
+    load_uninitialized_pda(
+        treasury_info,
+        &[TREASURY, &[args.treasury_bump]],
+        &crate::id(),
+    )?;
     load_uninitialized_account(treasury_tokens_info)?;
     load_program(system_program, system_program::id())?;
     load_program(token_program, spl_token::id())?;
     load_program(associated_token_program, spl_associated_token_account::id())?;
+    load_program(metadata_program, mpl_token_metadata::ID)?;
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Verify keys
+    if metadata_info.key.ne(&METADATA_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
     if mint_info.key.ne(&MINT_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
@@ -154,6 +173,32 @@ pub fn process_initialize<'a, 'info>(
         ],
         &[&[MINT, &[args.mint_bump]]],
     )?;
+
+    // Initialize mint metadata
+    mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
+        __program: metadata_program,
+        metadata: metadata_info,
+        mint: mint_info,
+        mint_authority: treasury_info,
+        payer: signer,
+        update_authority: (signer, true),
+        system_program,
+        rent: Some(rent_sysvar),
+        __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
+            data: mpl_token_metadata::types::DataV2 {
+                name: METADATA_NAME.to_string(),
+                symbol: METADATA_SYMBOL.to_string(),
+                uri: METADATA_URI.to_string(),
+                seller_fee_basis_points: 0,
+                creators: None,
+                collection: None,
+                uses: None,
+            },
+            is_mutable: true,
+            collection_details: None,
+        },
+    }
+    .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
 
     // Initialize treasury token account
     solana_program::program::invoke(

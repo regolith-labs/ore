@@ -36,7 +36,11 @@ pub fn process_register<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_pda(proof_info, &[PROOF, signer.key.as_ref(), &[args.bump]])?;
+    load_uninitialized_pda(
+        proof_info,
+        &[PROOF, signer.key.as_ref(), &[args.bump]],
+        &crate::id(),
+    )?;
     load_program(system_program, system_program::id())?;
 
     // Initialize proof

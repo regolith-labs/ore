@@ -3,7 +3,7 @@ use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 /// The unix timestamp after which mining is allowed.
 pub const START_AT: i64 = 0;
 
-/// Bus pubkeys
+/// The addresses of the bus accounts.
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
     pubkey!("85JC7qU7pkjYdvvXewfzgjCBZvugtrnPKYE9mzPD2ajJ"),
     pubkey!("FXCPt8PPwNQF8NVFDvdnHRENpkWexGMr5t8EnSoBsbns"),
@@ -15,10 +15,13 @@ pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
     pubkey!("72GSzz967ePb6mDrZYzmwyFFrfNUgH2PUwwocfeyjxLB"),
 ];
 
-/// The mint address of the ORE token.
+/// The address of the Ore mint metadata account.
+pub const METADATA_ADDRESS: Pubkey = pubkey!("4nbf4yufkBjJbZjZrz5D6L4nRyRbiw9rvKLTesCVpqnB");
+
+/// The address of the Ore mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("tmResQt9qPVRhAh74fMxginQqHBG74Ls3Nou1rkvCg7");
 
-/// Treasury address
+/// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey = pubkey!("nLCGcWmqqLC2UVBb3neVQWhzzJd8GAJshvasczmVm94");
 
 /// The initial reward rate to payout in the first epoch.
@@ -67,6 +70,9 @@ static_assertions::const_assert!(
 pub const BUS: &[u8] = b"bus";
 
 /// The seed of the mint account PDA.
+pub const METADATA: &[u8] = b"metadata";
+
+/// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
 
 /// The seed of the proof account PDA.
@@ -74,3 +80,12 @@ pub const PROOF: &[u8] = b"proof";
 
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
+
+/// The name for token metadata.
+pub const METADATA_NAME: &str = "Ore";
+
+/// The ticker symbol for token metadata.
+pub const METADATA_SYMBOL: &str = "ORE";
+
+/// The uri for token metdata.
+pub const METADATA_URI: &str = "https://ore.supply/public/metadata.json";

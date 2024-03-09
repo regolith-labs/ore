@@ -8,8 +8,8 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, MINT, MINT_ADDRESS, PROOF,
-    TREASURY, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, METADATA, MINT, MINT_ADDRESS,
+    PROOF, TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -66,13 +66,15 @@ pub enum OreInstruction {
     #[account(7, name = "bus_5", desc = "Ore bus account 5", writable)]
     #[account(8, name = "bus_6", desc = "Ore bus account 6", writable)]
     #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
-    #[account(10, name = "mint", desc = "Ore token mint account")]
-    #[account(11, name = "treasury", desc = "Ore treasury account")]
-    #[account(12, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(13, name = "system_program", desc = "Solana system program")]
-    #[account(14, name = "token_program", desc = "SPL token program")]
-    #[account(15, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(16, name = "rent", desc = "Solana rent sysvar")]
+    #[account(10, name = "metadata", desc = "Ore mint metadata account", writable)]
+    #[account(11, name = "mint", desc = "Ore mint account", writable)]
+    #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(14, name = "system_program", desc = "Solana system program")]
+    #[account(15, name = "token_program", desc = "SPL token program")]
+    #[account(16, name = "associated_token_program", desc = "SPL associated token program")]
+    #[account(17, name = "mpl_token_metadata", desc = "MPL token metadata program")]
+    #[account(18, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -101,6 +103,7 @@ pub struct InitializeArgs {
     pub bus_5_bump: u8,
     pub bus_6_bump: u8,
     pub bus_7_bump: u8,
+    pub metadata_bump: u8,
     pub mint_bump: u8,
     pub treasury_bump: u8,
 }
@@ -168,6 +171,14 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     ];
     let mint_pda = Pubkey::find_program_address(&[MINT], &crate::id());
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
+    let metadata_pda = Pubkey::find_program_address(
+        &[
+            METADATA,
+            mpl_token_metadata::ID.as_ref(),
+            mint_pda.0.as_ref(),
+        ],
+        &mpl_token_metadata::ID,
+    );
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -180,12 +191,14 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new(bus_pdas[5].0, false),
             AccountMeta::new(bus_pdas[6].0, false),
             AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(metadata_pda.0, false),
             AccountMeta::new(mint_pda.0, false),
             AccountMeta::new(treasury_pda.0, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(mpl_token_metadata::ID, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [
@@ -199,6 +212,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
                 bus_5_bump: bus_pdas[5].1,
                 bus_6_bump: bus_pdas[6].1,
                 bus_7_bump: bus_pdas[7].1,
+                metadata_bump: metadata_pda.1,
                 mint_bump: mint_pda.1,
                 treasury_bump: treasury_pda.1,
             }

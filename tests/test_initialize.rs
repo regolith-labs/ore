@@ -1,11 +1,19 @@
+use mpl_token_metadata::{
+    accounts::Metadata,
+    types::{Key, TokenStandard},
+};
 use ore::{
     state::{Bus, Treasury},
     utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, MINT_ADDRESS, TREASURY,
+    BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA_ADDRESS,
+    METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT_ADDRESS, TREASURY,
 };
-use solana_program::{hash::Hash, program_option::COption, program_pack::Pack, pubkey::Pubkey};
-use solana_program_test::{processor, BanksClient, ProgramTest};
+use solana_program::{
+    hash::Hash, program_option::COption, program_pack::Pack, pubkey::Pubkey, rent::Rent,
+};
+use solana_program_test::{processor, read_file, BanksClient, ProgramTest};
 use solana_sdk::{
+    account::Account,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -57,6 +65,27 @@ async fn test_initialize() {
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
 
+    // Test metadata state
+    let metadata_account = banks.get_account(METADATA_ADDRESS).await.unwrap().unwrap();
+    assert_eq!(metadata_account.owner, mpl_token_metadata::ID);
+    let metadata = Metadata::from_bytes(&metadata_account.data).unwrap();
+    assert_eq!(metadata.key, Key::MetadataV1);
+    assert_eq!(metadata.update_authority, payer.pubkey());
+    assert_eq!(metadata.mint, MINT_ADDRESS);
+    assert_eq!(metadata.name.trim_end_matches('\0'), METADATA_NAME);
+    assert_eq!(metadata.symbol.trim_end_matches('\0'), METADATA_SYMBOL);
+    assert_eq!(metadata.uri.trim_end_matches('\0'), METADATA_URI);
+    assert_eq!(metadata.seller_fee_basis_points, 0);
+    assert_eq!(metadata.creators, None);
+    assert_eq!(metadata.primary_sale_happened, false);
+    assert_eq!(metadata.is_mutable, true);
+    assert_eq!(metadata.edition_nonce, Some(u8::MAX));
+    assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
+    assert_eq!(metadata.collection, None);
+    assert_eq!(metadata.uses, None);
+    assert_eq!(metadata.collection_details, None);
+    assert_eq!(metadata.programmable_config, None);
+
     // Test treasury token state
     let treasury_tokens_account = banks
         .get_account(treasury_tokens_address)
@@ -78,5 +107,19 @@ async fn test_initialize() {
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
+
+    // Setup metadata program
+    let data = read_file(&"tests/buffers/metadata_program.bpf");
+    program_test.add_account(
+        mpl_token_metadata::ID,
+        Account {
+            lamports: Rent::default().minimum_balance(data.len()).max(1),
+            data,
+            owner: solana_sdk::bpf_loader::id(),
+            executable: true,
+            rent_epoch: 0,
+        },
+    );
+
     program_test.start().await
 }

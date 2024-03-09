@@ -1,7 +1,7 @@
 use std::{mem::size_of, str::FromStr};
 
 use ore::{
-    instruction::{MineArgs, OreInstruction, RegisterArgs},
+    instruction::{MineArgs, OreInstruction},
     state::{Bus, Proof, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,

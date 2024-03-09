@@ -2106,6 +2106,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-metadata"
+version = "4.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caf0f61b553e424a6234af1268456972ee66c2222e1da89079242251fa7479e5"
+dependencies = [
+ "borsh 0.10.3",
+ "num-derive 0.3.3",
+ "num-traits",
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
 name = "nix"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2358,6 +2371,7 @@ dependencies = [
  "bs58 0.5.0",
  "bs64",
  "bytemuck",
+ "mpl-token-metadata",
  "num_enum 0.7.2",
  "rand 0.8.5",
  "shank",
