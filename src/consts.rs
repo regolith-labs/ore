@@ -5,24 +5,24 @@ pub const START_AT: i64 = 0;
 
 /// The addresses of the bus accounts.
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
-    pubkey!("85JC7qU7pkjYdvvXewfzgjCBZvugtrnPKYE9mzPD2ajJ"),
-    pubkey!("FXCPt8PPwNQF8NVFDvdnHRENpkWexGMr5t8EnSoBsbns"),
-    pubkey!("HbbFBD9y6mqhwsgu3hDEtFwJAtUtCFrRPRP8MNJoFkpV"),
-    pubkey!("D65o7LLrZ8YoE7r7TaUSN434ZctNhYc7dEsfQrMXD7DS"),
-    pubkey!("EJBBRJih5WFsZPwhmWTHrxSbBRhqtXjMJfMtjgtYGpzA"),
-    pubkey!("BbecQomM3tCYHHDjKXybK8McthdyuuNJkmVaVXWyayyZ"),
-    pubkey!("7RyV6ZZmkadFjT8rMmZXsbEzHFbHe2ZHcJqUuk7H5ibP"),
-    pubkey!("72GSzz967ePb6mDrZYzmwyFFrfNUgH2PUwwocfeyjxLB"),
+    pubkey!("BipsVd7bXrsWTD7MSR7vEE6wCi812xree9MdMQHNpGve"),
+    pubkey!("4UywqKWK1hFk2FVn2i8dHGRL28wTmwv2pveBV4QhApsy"),
+    pubkey!("6q971fxeEjwQWXL3PTEWBpSAs55HvKkb4yVeP85qrycY"),
+    pubkey!("BWa6yzTg3Mrs6tH2rstKQrobSVEBkfQUzE4iZUJz54AP"),
+    pubkey!("AXdpmjuVJYk7re8TcDX33ZoLyYpbBopesRWaNYnDHe8L"),
+    pubkey!("FXikoBAemf48cZswLnnUtXZhD7Pr6knYPNq6cjb76ubh"),
+    pubkey!("9BqvaWJ9bmkPYNqaZPaHoonAR5bh1dHRymZV4nrae3sC"),
+    pubkey!("8T4ngp27XKn3fAJnHgZ9pDXwzMbHnxhCPuvBWMa5m3ro"),
 ];
 
 /// The address of the Ore mint metadata account.
-pub const METADATA_ADDRESS: Pubkey = pubkey!("4nbf4yufkBjJbZjZrz5D6L4nRyRbiw9rvKLTesCVpqnB");
+pub const METADATA_ADDRESS: Pubkey = pubkey!("wyJ7XtZQDox5XoPG3uw7u7XnpNXaqTDeAwKpuJqHLi4");
 
 /// The address of the Ore mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("tmResQt9qPVRhAh74fMxginQqHBG74Ls3Nou1rkvCg7");
+pub const MINT_ADDRESS: Pubkey = pubkey!("oreoBXz6dRgETAVLre1Umgp6Hs4UdLRwJiYj5FkfzYh");
 
 /// The address of the treasury account.
-pub const TREASURY_ADDRESS: Pubkey = pubkey!("nLCGcWmqqLC2UVBb3neVQWhzzJd8GAJshvasczmVm94");
+pub const TREASURY_ADDRESS: Pubkey = pubkey!("CHTwJ2GLmz9KDEpPuLu5iYFF85pSzx4xzJSwm81ojN3Q");
 
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
@@ -65,6 +65,11 @@ pub const SMOOTHING_FACTOR: u64 = 2;
 static_assertions::const_assert!(
     (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
 );
+
+/// Noise for deriving the mint pda
+pub const MINT_NOISE: [u8; 16] = [
+    64, 193, 214, 243, 206, 254, 96, 138, 148, 27, 250, 15, 126, 55, 231, 93,
+];
 
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";

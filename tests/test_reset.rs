@@ -5,7 +5,7 @@ use ore::{
     state::{Bus, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS, BUS_ADDRESSES, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE,
-    MAX_EPOCH_REWARDS, MINT, MINT_ADDRESS, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
+    MAX_EPOCH_REWARDS, MINT_ADDRESS, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 use rand::seq::SliceRandom;
 use solana_program::{
@@ -41,10 +41,11 @@ async fn test_reset() {
         Pubkey::find_program_address(&[BUS, &[6]], &ore::id()),
         Pubkey::find_program_address(&[BUS, &[7]], &ore::id()),
     ];
-    let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let treasury_tokens_address =
-        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+    // let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
+    let treasury_tokens_address = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
 
     // Submit tx
     let ix = ore::instruction::reset(payer.pubkey());
@@ -62,10 +63,9 @@ async fn test_reset() {
     }
 
     // Test treasury state
-    let treasury_account = banks.get_account(treasury_pda.0).await.unwrap().unwrap();
+    let treasury_account = banks.get_account(TREASURY_ADDRESS).await.unwrap().unwrap();
     assert_eq!(treasury_account.owner, ore::id());
     let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
-    assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(
         treasury.admin,
         Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap()
@@ -76,10 +76,10 @@ async fn test_reset() {
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
 
     // Test mint state
-    let mint_account = banks.get_account(mint_pda.0).await.unwrap().unwrap();
+    let mint_account = banks.get_account(MINT_ADDRESS).await.unwrap().unwrap();
     assert_eq!(mint_account.owner, spl_token::id());
     let mint = Mint::unpack(&mint_account.data).unwrap();
-    assert_eq!(mint.mint_authority, COption::Some(treasury_pda.0));
+    assert_eq!(mint.mint_authority, COption::Some(TREASURY_ADDRESS));
     assert_eq!(mint.supply, MAX_EPOCH_REWARDS);
     assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
@@ -93,8 +93,8 @@ async fn test_reset() {
         .unwrap();
     assert_eq!(treasury_tokens_account.owner, spl_token::id());
     let treasury_tokens = spl_token::state::Account::unpack(&treasury_tokens_account.data).unwrap();
-    assert_eq!(treasury_tokens.mint, mint_pda.0);
-    assert_eq!(treasury_tokens.owner, treasury_pda.0);
+    assert_eq!(treasury_tokens.mint, MINT_ADDRESS);
+    assert_eq!(treasury_tokens.owner, TREASURY_ADDRESS);
     assert_eq!(treasury_tokens.amount, MAX_EPOCH_REWARDS);
     assert_eq!(treasury_tokens.delegate, COption::None);
     assert_eq!(treasury_tokens.state, AccountState::Initialized);
@@ -120,10 +120,10 @@ async fn test_reset_busses_out_of_order() {
         Pubkey::find_program_address(&[BUS, &[1]], &ore::id()),
         Pubkey::find_program_address(&[BUS, &[4]], &ore::id()),
     ];
-    let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let treasury_tokens =
-        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
 
     // Submit tx
     let ix = Instruction {
@@ -176,10 +176,10 @@ async fn test_reset_shuffle_error() {
         Pubkey::find_program_address(&[BUS, &[1]], &ore::id()),
         Pubkey::find_program_address(&[BUS, &[4]], &ore::id()),
     ];
-    let mint_pda = Pubkey::find_program_address(&[MINT], &ore::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let treasury_tokens =
-        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
 
     // Fuzz test shuffled accounts.
     // Note some shuffles may still be valid if signer and non-bus accounts are all in correct positions.

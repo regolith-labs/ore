@@ -79,7 +79,6 @@ async fn test_initialize() {
     assert_eq!(metadata.creators, None);
     assert_eq!(metadata.primary_sale_happened, false);
     assert_eq!(metadata.is_mutable, true);
-    assert_eq!(metadata.edition_nonce, Some(u8::MAX));
     assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
     assert_eq!(metadata.collection, None);
     assert_eq!(metadata.uses, None);

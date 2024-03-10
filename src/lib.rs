@@ -15,9 +15,8 @@ use solana_program::{
 };
 
 // TODO Set START_AT before launch.
-// TODO Set pubkey consts for derived mainnet pdas before lanch.
 
-declare_id!("oreoDL2qcXyBdaYTEfd7F5MFLY5PAqqDooPLZv1XdBP");
+declare_id!("mineS8xKxv3GurPq4RAssdZa6kNSXuuxJCEVtQwPZX4");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);

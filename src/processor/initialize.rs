@@ -18,7 +18,7 @@ use crate::{
     utils::AccountDeserialize,
     utils::Discriminator,
     BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA,
-    METADATA_ADDRESS, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS,
+    METADATA_ADDRESS, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE,
     TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 
@@ -73,7 +73,11 @@ pub fn process_initialize<'a, 'info>(
         ],
         &mpl_token_metadata::ID,
     )?;
-    load_uninitialized_pda(mint_info, &[MINT, &[args.mint_bump]], &crate::id())?;
+    load_uninitialized_pda(
+        mint_info,
+        &[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
+        &crate::id(),
+    )?;
     load_uninitialized_pda(
         treasury_info,
         &[TREASURY, &[args.treasury_bump]],
@@ -156,7 +160,7 @@ pub fn process_initialize<'a, 'info>(
         mint_info,
         &spl_token::id(),
         Mint::LEN,
-        &[MINT, &[args.mint_bump]],
+        &[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
         system_program,
         signer,
     )?;
@@ -174,7 +178,7 @@ pub fn process_initialize<'a, 'info>(
             treasury_info.clone(),
             rent_sysvar.clone(),
         ],
-        &[&[MINT, &[args.mint_bump]]],
+        &[&[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
     )?;
 
     // Initialize mint metadata

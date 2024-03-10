@@ -9,7 +9,7 @@ use solana_program::{
 
 use crate::{
     impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, METADATA, MINT, MINT_ADDRESS,
-    PROOF, TREASURY, TREASURY_ADDRESS,
+    MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -155,10 +155,6 @@ impl_instruction_from_bytes!(UpdateDifficultyArgs);
 
 /// Builds an initialize instruction.
 pub fn initialize(signer: Pubkey) -> Instruction {
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     let bus_pdas = [
         Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
         Pubkey::find_program_address(&[BUS, &[1]], &crate::id()),
@@ -169,8 +165,10 @@ pub fn initialize(signer: Pubkey) -> Instruction {
         Pubkey::find_program_address(&[BUS, &[6]], &crate::id()),
         Pubkey::find_program_address(&[BUS, &[7]], &crate::id()),
     ];
-    let mint_pda = Pubkey::find_program_address(&[MINT], &crate::id());
+    let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
+    let treasury_tokens =
+        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
     let metadata_pda = Pubkey::find_program_address(
         &[
             METADATA,
