@@ -1,14 +1,14 @@
 [package]
 name = "ore-program"
 version = "0.0.3"
-description = "Ore is a cryptocurrency everyone can mine"
+description = "Ore is a digital currency you can mine from anywhere, at home or on your phone."
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
+documentation = "https://ore.supply"
 repository = "https://github.com/hardhatchad/ore"
-documentation = "https://github.com/hardhatchad/ore"
 readme = "./README.md"
-keywords = ["solana"]
+keywords = ["solana", "crypto", "mining"]
 
 [lib]
 crate-type = ["cdylib", "lib"]
