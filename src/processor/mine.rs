@@ -19,7 +19,7 @@ use crate::{
     loaders::*,
     state::{Bus, Proof, Treasury},
     utils::AccountDeserialize,
-    EPOCH_DURATION,
+    EPOCH_DURATION, START_AT,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -52,13 +52,18 @@ pub fn process_mine<'a, 'info>(
     load_treasury(treasury_info, false)?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
-    // Validate epoch is active
+    // Validate mining has starting
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    if clock.unix_timestamp.lt(&START_AT) {
+        return Err(OreError::NotStarted.into());
+    }
+
+    // Validate epoch is active
     let treasury_data = treasury_info.data.borrow();
     let treasury = Treasury::try_from_bytes(&treasury_data)?;
     let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.ge(&threshold) {
-        return Err(OreError::EpochEnded.into());
+        return Err(OreError::NeedsReset.into());
     }
 
     // Validate provided hash

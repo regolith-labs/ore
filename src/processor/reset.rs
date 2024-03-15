@@ -8,7 +8,7 @@ use crate::{
     loaders::*,
     state::{Bus, Treasury},
     utils::AccountDeserialize,
-    BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
+    BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR, START_AT,
     TARGET_EPOCH_REWARDS, TREASURY,
 };
 
@@ -61,13 +61,18 @@ pub fn process_reset<'a, 'info>(
         bus_7_info,
     ];
 
-    // Validate at least 60 seconds have passed since last reset
+    // Validate mining has starting
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    if clock.unix_timestamp.lt(&START_AT) {
+        return Err(OreError::NotStarted.into());
+    }
+
+    // Validate at least 60 seconds have passed since last reset
     let mut treasury_data = treasury_info.data.borrow_mut();
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.lt(&threshold) {
-        return Err(OreError::EpochActive.into());
+        return Err(OreError::InvalidReset.into());
     }
 
     // Record current timestamp

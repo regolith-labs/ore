@@ -73,7 +73,7 @@ pub enum OreInstruction {
     #[account(14, name = "system_program", desc = "Solana system program")]
     #[account(15, name = "token_program", desc = "SPL token program")]
     #[account(16, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(17, name = "mpl_token_metadata", desc = "MPL token metadata program")]
+    #[account(17, name = "mpl_metadata_program", desc = "MPL token metadata program")]
     #[account(18, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 
