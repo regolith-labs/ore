@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.72.0"
+channel = "1.74.0"
 components = [ "rustfmt", "rust-analyzer" ]
 targets = [ "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin"]
 profile = "minimal"
