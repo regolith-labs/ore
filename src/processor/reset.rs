@@ -72,7 +72,7 @@ pub fn process_reset<'a, 'info>(
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.lt(&threshold) {
-        return Err(OreError::InvalidReset.into());
+        return Err(OreError::ResetTooEarly.into());
     }
 
     // Record current timestamp

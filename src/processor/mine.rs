@@ -4,7 +4,7 @@ use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
     entrypoint::ProgramResult,
-    keccak::{hashv, Hash as KeccakHash},
+    keccak::{hashv, Hash as KeccakHash, HASH_BYTES},
     program::set_return_data,
     program_error::ProgramError,
     program_memory::sol_memcmp,
@@ -81,7 +81,7 @@ pub fn process_mine<'a, 'info>(
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if bus.rewards.lt(&treasury.reward_rate) {
-        return Err(OreError::InsufficientBusRewards.into());
+        return Err(OreError::BusRewardsInsufficient.into());
     }
     bus.rewards = bus.rewards.saturating_sub(treasury.reward_rate);
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
@@ -118,13 +118,13 @@ pub(crate) fn validate_hash(
         signer.as_ref(),
         nonce.to_le_bytes().as_slice(),
     ]);
-    if sol_memcmp(hash.as_ref(), hash_.as_ref(), 32) != 0 {
-        return Err(OreError::InvalidHash.into());
+    if sol_memcmp(hash.as_ref(), hash_.as_ref(), HASH_BYTES) != 0 {
+        return Err(OreError::HashInvalid.into());
     }
 
     // Validate hash difficulty
     if hash.gt(&difficulty) {
-        return Err(OreError::InsufficientHashDifficulty.into());
+        return Err(OreError::DifficultyNotSatisfied.into());
     }
 
     Ok(())
@@ -133,7 +133,7 @@ pub(crate) fn validate_hash(
 #[cfg(test)]
 mod tests {
     use solana_program::{
-        keccak::{hashv, Hash},
+        keccak::{hashv, Hash, HASH_BYTES},
         pubkey::Pubkey,
     };
 
@@ -141,10 +141,10 @@ mod tests {
 
     #[test]
     fn test_validate_hash_pass() {
-        let h1 = Hash::new_from_array([1; 32]);
+        let h1 = Hash::new_from_array([1; HASH_BYTES]);
         let signer = Pubkey::new_unique();
         let nonce = 10u64;
-        let difficulty = Hash::new_from_array([255; 32]);
+        let difficulty = Hash::new_from_array([255; HASH_BYTES]);
         let h2 = hashv(&[
             h1.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),
@@ -156,21 +156,21 @@ mod tests {
 
     #[test]
     fn test_validate_hash_fail() {
-        let h1 = Hash::new_from_array([1; 32]);
+        let h1 = Hash::new_from_array([1; HASH_BYTES]);
         let signer = Pubkey::new_unique();
         let nonce = 10u64;
-        let difficulty = Hash::new_from_array([255; 32]);
-        let h2 = Hash::new_from_array([2; 32]);
+        let difficulty = Hash::new_from_array([255; HASH_BYTES]);
+        let h2 = Hash::new_from_array([2; HASH_BYTES]);
         let res = validate_hash(h1, h2, signer, nonce, difficulty);
         assert!(res.is_err());
     }
 
     #[test]
     fn test_validate_hash_fail_difficulty() {
-        let h1 = Hash::new_from_array([1; 32]);
+        let h1 = Hash::new_from_array([1; HASH_BYTES]);
         let signer = Pubkey::new_unique();
         let nonce = 10u64;
-        let difficulty = Hash::new_from_array([0; 32]);
+        let difficulty = Hash::new_from_array([0; HASH_BYTES]);
         let h2 = hashv(&[
             h1.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),

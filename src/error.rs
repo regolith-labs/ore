@@ -10,15 +10,15 @@ pub enum OreError {
     #[error("The epoch has ended and needs reset")]
     NeedsReset = 1,
     #[error("The epoch is active and cannot be reset at this time")]
-    InvalidReset = 2,
+    ResetTooEarly = 2,
     #[error("The provided hash was invalid")]
-    InvalidHash = 3,
+    HashInvalid = 3,
     #[error("The provided hash does not satisfy the difficulty requirement")]
-    InsufficientHashDifficulty = 4,
-    #[error("The bus has insufficient rewards to mine at this time")]
-    InsufficientBusRewards = 5,
+    DifficultyNotSatisfied = 4,
+    #[error("The bus has insufficient rewards to issue at this time")]
+    BusRewardsInsufficient = 5,
     #[error("The claim amount cannot be larger than the claimable rewards")]
-    InvalidClaimAmount = 6,
+    ClaimTooLarge = 6,
 }
 
 impl From<OreError> for ProgramError {

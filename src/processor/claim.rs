@@ -52,7 +52,7 @@ pub fn process_claim<'a, 'info>(
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     if proof.claimable_rewards.lt(&amount) {
-        return Err(OreError::InvalidClaimAmount.into());
+        return Err(OreError::ClaimTooLarge.into());
     }
 
     // Update claimable amount
