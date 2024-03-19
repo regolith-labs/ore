@@ -29,7 +29,8 @@ use crate::{
 /// 4. Update the miner's lifetime stats.
 ///
 /// Safety requirements:
-/// - Mine is a permissionless instruction and can be called by any miner.
+/// - Mine is a permissionless instruction and can be called by any signer.
+/// - Can only succeed if START_AT has passed.
 /// - Can only succeed if the last reset was less than 60 seconds ago.
 /// - Can only succeed if the provided SHA3 hash and nonce are valid and satisfy the difficulty.
 /// - The the provided proof account must be associated with the signer.
@@ -70,8 +71,8 @@ pub fn process_mine<'a, 'info>(
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     validate_hash(
-        proof.hash.into(),
         args.hash.into(),
+        proof.hash.into(),
         *signer.key,
         u64::from_le_bytes(args.nonce),
         treasury.difficulty.into(),
@@ -106,8 +107,8 @@ pub fn process_mine<'a, 'info>(
 /// Validates the provided hash, ensursing it is equal to SHA3(current_hash, singer, nonce).
 /// Fails if the provided hash is valid but does not satisfy the required difficulty.
 pub(crate) fn validate_hash(
-    current_hash: KeccakHash,
     hash: KeccakHash,
+    current_hash: KeccakHash,
     signer: Pubkey,
     nonce: u64,
     difficulty: KeccakHash,
@@ -150,7 +151,7 @@ mod tests {
             signer.to_bytes().as_slice(),
             nonce.to_le_bytes().as_slice(),
         ]);
-        let res = validate_hash(h1, h2, signer, nonce, difficulty);
+        let res = validate_hash(h2, h1, signer, nonce, difficulty);
         assert!(res.is_ok());
     }
 
@@ -161,7 +162,7 @@ mod tests {
         let nonce = 10u64;
         let difficulty = Hash::new_from_array([255; HASH_BYTES]);
         let h2 = Hash::new_from_array([2; HASH_BYTES]);
-        let res = validate_hash(h1, h2, signer, nonce, difficulty);
+        let res = validate_hash(h2, h1, signer, nonce, difficulty);
         assert!(res.is_err());
     }
 
@@ -176,7 +177,7 @@ mod tests {
             signer.to_bytes().as_slice(),
             nonce.to_le_bytes().as_slice(),
         ]);
-        let res = validate_hash(h1, h2, signer, nonce, difficulty);
+        let res = validate_hash(h2, h1, signer, nonce, difficulty);
         assert!(res.is_err());
     }
 }

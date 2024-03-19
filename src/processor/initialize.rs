@@ -136,10 +136,10 @@ pub fn process_initialize<'a, 'info>(
     let mut treasury_data = treasury_info.data.borrow_mut();
     treasury_data[0] = Treasury::discriminator() as u8;
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    treasury.bump = args.treasury_bump as u64;
     treasury.admin = *signer.key;
-    treasury.last_reset_at = 0;
+    treasury.bump = args.treasury_bump as u64;
     treasury.difficulty = INITIAL_DIFFICULTY.into();
+    treasury.last_reset_at = 0;
     treasury.reward_rate = INITIAL_REWARD_RATE;
     treasury.total_claimed_rewards = 0;
     drop(treasury_data);

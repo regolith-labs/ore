@@ -5,7 +5,7 @@ use solana_program::{
 use spl_token::state::Mint;
 
 use crate::{
-    state::{Bus, Proof},
+    state::{Bus, Proof, Treasury},
     utils::AccountDeserialize,
     BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
@@ -21,11 +21,11 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 }
 
 /// Errors if:
-/// - Account is not owned by Ore program.
+/// - Owner is not Ore program.
+/// - Address does not match the expected bus address.
 /// - Data is empty.
 /// - Data cannot deserialize into a bus account.
 /// - Bus ID does not match the expected ID.
-/// - Address does not match the expected bus address.
 /// - Expected to be writable, but is not.
 pub fn load_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
@@ -34,6 +34,10 @@ pub fn load_bus<'a, 'info>(
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&BUS_ADDRESSES[id as usize]) {
+        return Err(ProgramError::InvalidSeeds);
     }
 
     if info.data_is_empty() {
@@ -47,10 +51,6 @@ pub fn load_bus<'a, 'info>(
         return Err(ProgramError::InvalidAccountData);
     }
 
-    if info.key.ne(&BUS_ADDRESSES[id as usize]) {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -59,7 +59,7 @@ pub fn load_bus<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by Ore program.
+/// - Owner is not Ore program.
 /// - Data is empty.
 /// - Data cannot deserialize into a bus account.
 /// - Bus ID is not in the expected range.
@@ -96,7 +96,7 @@ pub fn load_any_bus<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by Ore program.
+/// - Owner is not Ore program.
 /// - Data is empty.
 /// - Data cannot deserialize into a proof account.
 /// - Proof authority does not match the expected address.
@@ -129,10 +129,10 @@ pub fn load_proof<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by Ore program.
+/// - Owner is not Ore program.
+/// - Address does not match the expected address.
 /// - Data is empty.
 /// - Data cannot deserialize into a treasury account.
-/// - Address does not match the expected address.
 /// - Expected to be writable, but is not.
 pub fn load_treasury<'a, 'info>(
     info: &'a AccountInfo<'info>,
@@ -142,13 +142,16 @@ pub fn load_treasury<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
+    if info.key.ne(&TREASURY_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     if info.data_is_empty() {
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.key.ne(&TREASURY_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
+    let treasury_data = info.data.borrow();
+    let _ = Treasury::try_from_bytes(&treasury_data)?;
 
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
@@ -158,10 +161,10 @@ pub fn load_treasury<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by SPL token program.
+/// - Owner is not SPL token program.
+/// - Address does not match the expected mint address.
 /// - Data is empty.
 /// - Data cannot deserialize into a mint account.
-/// - Address does not match the expected mint address.
 /// - Expected to be writable, but is not.
 pub fn load_mint<'a, 'info>(
     info: &'a AccountInfo<'info>,
@@ -169,6 +172,10 @@ pub fn load_mint<'a, 'info>(
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&MINT_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
     }
 
     if info.data_is_empty() {
@@ -180,10 +187,6 @@ pub fn load_mint<'a, 'info>(
         return Err(ProgramError::InvalidAccountData);
     }
 
-    if info.key.ne(&MINT_ADDRESS) {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -192,7 +195,7 @@ pub fn load_mint<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by SPL token program.
+/// - Owner is not SPL token program.
 /// - Data is empty.
 /// - Data cannot deserialize into a token account.
 /// - Token account owner does not match the expected owner address.
@@ -256,7 +259,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account is not owned by the system program.
+/// - Owner is not the system program.
 /// - Data is not empty.
 /// - Account is not writable.
 pub fn load_uninitialized_account<'a, 'info>(
@@ -277,6 +280,7 @@ pub fn load_uninitialized_account<'a, 'info>(
 }
 
 /// Errors if:
+/// - Owner is not the sysvar address.
 /// - Account cannot load with the expected address.
 pub fn load_sysvar<'a, 'info>(
     info: &'a AccountInfo<'info>,
@@ -290,7 +294,7 @@ pub fn load_sysvar<'a, 'info>(
 }
 
 /// Errors if:
-/// - Account does not match the expected value.
+/// - Address does not match the expected value.
 /// - Expected to be writable, but is not.
 pub fn load_account<'a, 'info>(
     info: &'a AccountInfo<'info>,

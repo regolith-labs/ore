@@ -13,13 +13,15 @@ use solana_program::{
     epoch_schedule::DEFAULT_SLOTS_PER_EPOCH,
     hash::Hash,
     instruction::{AccountMeta, Instruction},
+    native_token::LAMPORTS_PER_SOL,
     program_option::COption,
     program_pack::Pack,
     pubkey::Pubkey,
-    sysvar,
+    system_program, sysvar,
 };
 use solana_program_test::{processor, BanksClient, ProgramTest};
 use solana_sdk::{
+    account::Account,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
@@ -28,7 +30,7 @@ use spl_token::state::{AccountState, Mint};
 #[tokio::test]
 async fn test_reset() {
     // Setup
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Pdas
     let bus_pdas = vec![
@@ -106,7 +108,7 @@ async fn test_reset() {
 #[tokio::test]
 async fn test_reset_busses_out_of_order_fail() {
     // Setup
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -151,9 +153,32 @@ async fn test_reset_busses_out_of_order_fail() {
 }
 
 #[tokio::test]
+async fn test_reset_early() {
+    // Setup
+    let (mut banks, payer, payer_alt, blockhash) = setup_program_test_env().await;
+
+    // Reset one passes
+    let ix = ore::instruction::reset(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Reset two fails
+    let ix = ore::instruction::reset(payer_alt.pubkey());
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&payer_alt.pubkey()),
+        &[&payer_alt],
+        blockhash,
+    );
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
 async fn test_reset_busses_duplicate_fail() {
     // Setup
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -192,7 +217,7 @@ async fn test_reset_busses_duplicate_fail() {
 async fn test_reset_shuffle_error() {
     // Setup
     const FUZZ: u64 = 100;
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -243,7 +268,7 @@ async fn test_reset_shuffle_error() {
     }
 }
 
-async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
+async fn setup_program_test_env() -> (BanksClient, Keypair, Keypair, Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
@@ -346,5 +371,19 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
         },
     );
 
-    program_test.start().await
+    // Setup alt payer
+    let payer_alt = Keypair::new();
+    program_test.add_account(
+        payer_alt.pubkey(),
+        Account {
+            lamports: LAMPORTS_PER_SOL,
+            data: vec![],
+            owner: system_program::id(),
+            executable: false,
+            rent_epoch: 0,
+        },
+    );
+
+    let (banks, payer, blockhash) = program_test.start().await;
+    (banks, payer, payer_alt, blockhash)
 }

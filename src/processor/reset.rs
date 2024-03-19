@@ -18,14 +18,15 @@ use crate::{
 /// 3. Top up the treasury token account to backup claims.
 ///
 /// Safety requirements:
-/// - Reset is a permissionless crank function and can be invoked by anyone.
+/// - Reset is a permissionless crank function and can be invoked by any signer.
+/// - Can only succeed if START_AT has passed.
 /// - Can only succeed if more 60 seconds or more have passed since the last successful reset.
 /// - The busses, mint, treasury, treasury token account, and token program must all be valid.
 ///
 /// Discussion:
-/// - It is critical that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
+/// - It is important that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
 ///   stays within the guaranteed bounds of 0 ≤ R ≤ 2 ORE/min.
-/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (measured hashpower) to
+/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (proxy hashpower) to
 ///   target an average supply growth rate of 1 ORE/min.
 pub fn process_reset<'a, 'info>(
     _program_id: &Pubkey,
