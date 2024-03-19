@@ -4,8 +4,8 @@ use ore::{
     instruction::{MineArgs, OreInstruction},
     state::{Bus, Proof, Treasury},
     utils::{AccountDeserialize, Discriminator},
-    BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
-    TREASURY_ADDRESS,
+    BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, START_AT, TOKEN_DECIMALS,
+    TREASURY, TREASURY_ADDRESS,
 };
 use rand::{distributions::Uniform, Rng};
 use solana_program::{
@@ -33,7 +33,7 @@ use spl_token::state::{AccountState, Mint};
 #[tokio::test]
 async fn test_mine() {
     // Setup
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, blockhash) = setup_program_test_env(true).await;
 
     // Submit register tx
     let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
@@ -131,10 +131,68 @@ async fn test_mine() {
 }
 
 #[tokio::test]
+async fn test_mine_unfunded_bus() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env(false).await;
+
+    // Submit register tx
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let ix = ore::instruction::register(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Find next hash
+    let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
+    let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
+    let (next_hash, nonce) = find_next_hash(
+        proof.hash.into(),
+        KeccakHash::new_from_array([u8::MAX; 32]),
+        payer.pubkey(),
+    );
+
+    // Submit mine tx
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
+async fn test_exceptional_claim() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env(false).await;
+
+    // Submit register tx
+    let ix = ore::instruction::register(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Submit mine tx
+    let beneficiary = get_associated_token_address(&payer.pubkey(), &ore::MINT_ADDRESS);
+    let token_ix = create_associated_token_account(
+        &payer.pubkey(),
+        &payer.pubkey(),
+        &ore::MINT_ADDRESS,
+        &spl_token::id(),
+    );
+    let ix = ore::instruction::claim(payer.pubkey(), beneficiary, 1);
+    let tx = Transaction::new_signed_with_payer(
+        &[token_ix, ix],
+        Some(&payer.pubkey()),
+        &[&payer],
+        blockhash,
+    );
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
 async fn test_mine_fail_bad_data() {
     // Setup
     const FUZZ: usize = 10;
-    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, blockhash) = setup_program_test_env(true).await;
 
     // Submit register tx
     let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
@@ -319,7 +377,9 @@ fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (
     (next_hash, nonce)
 }
 
-async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash::Hash) {
+async fn setup_program_test_env(
+    funded_busses: bool,
+) -> (BanksClient, Keypair, solana_program::hash::Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
@@ -334,7 +394,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
                     &(Bus::discriminator() as u64).to_le_bytes(),
                     Bus {
                         id: i as u64,
-                        rewards: 250_000_000,
+                        rewards: if funded_busses { 250_000_000 } else { 0 },
                     }
                     .to_bytes(),
                 ]
@@ -358,7 +418,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
                     bump: treasury_pda.1 as u64,
                     admin: admin_address,
                     difficulty: KeccakHash::new_from_array([u8::MAX; 32]).into(),
-                    last_reset_at: 100,
+                    last_reset_at: START_AT,
                     reward_rate: INITIAL_REWARD_RATE,
                     total_claimed_rewards: 0,
                 }
@@ -414,11 +474,11 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
     program_test.add_sysvar_account(
         sysvar::clock::id(),
         &Clock {
-            slot: 10,
+            slot: 0,
             epoch_start_timestamp: 0,
             epoch: 0,
             leader_schedule_epoch: DEFAULT_SLOTS_PER_EPOCH,
-            unix_timestamp: 100,
+            unix_timestamp: START_AT + 1,
         },
     );
 

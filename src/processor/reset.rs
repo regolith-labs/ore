@@ -39,14 +39,14 @@ pub fn process_reset<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_bus(bus_0_info, true)?;
-    load_bus(bus_1_info, true)?;
-    load_bus(bus_2_info, true)?;
-    load_bus(bus_3_info, true)?;
-    load_bus(bus_4_info, true)?;
-    load_bus(bus_5_info, true)?;
-    load_bus(bus_6_info, true)?;
-    load_bus(bus_7_info, true)?;
+    load_bus(bus_0_info, 0, true)?;
+    load_bus(bus_1_info, 1, true)?;
+    load_bus(bus_2_info, 2, true)?;
+    load_bus(bus_3_info, 3, true)?;
+    load_bus(bus_4_info, 4, true)?;
+    load_bus(bus_5_info, 5, true)?;
+    load_bus(bus_6_info, 6, true)?;
+    load_bus(bus_7_info, 7, true)?;
     load_mint(mint_info, true)?;
     load_treasury(treasury_info, true)?;
     load_token_account(
@@ -55,7 +55,7 @@ pub fn process_reset<'a, 'info>(
         mint_info.key,
         true,
     )?;
-    load_sysvar(token_program, spl_token::id())?;
+    load_program(token_program, spl_token::id())?;
     let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
@@ -127,9 +127,9 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     }
 
     // Calculate new reward rate.
-    let new_rate = (current_rate as u128)
-        .saturating_mul(TARGET_EPOCH_REWARDS as u128)
-        .saturating_div(epoch_rewards as u128) as u64;
+    let new_rate = (current_rate)
+        .saturating_mul(TARGET_EPOCH_REWARDS)
+        .saturating_div(epoch_rewards) as u64;
 
     // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
@@ -217,5 +217,17 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(current_rate, u64::MAX);
         assert!(new_rate.eq(&current_rate.saturating_div(SMOOTHING_FACTOR)));
+    }
+
+    #[test]
+    fn test_calculate_new_reward_rate_max_inputs() {
+        let new_rate = calculate_new_reward_rate(BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS);
+        assert!(new_rate.eq(&BUS_EPOCH_REWARDS.saturating_div(SMOOTHING_FACTOR)));
+    }
+
+    #[test]
+    fn test_calculate_new_reward_rate_min_inputs() {
+        let new_rate = calculate_new_reward_rate(1, 1);
+        assert!(new_rate.eq(&1u64.saturating_mul(SMOOTHING_FACTOR)));
     }
 }

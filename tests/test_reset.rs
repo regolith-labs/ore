@@ -5,7 +5,7 @@ use ore::{
     state::{Bus, Treasury},
     utils::{AccountDeserialize, Discriminator},
     BUS, BUS_ADDRESSES, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE,
-    MAX_EPOCH_REWARDS, MINT_ADDRESS, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
+    MAX_EPOCH_REWARDS, MINT_ADDRESS, START_AT, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 use rand::seq::SliceRandom;
 use solana_program::{
@@ -71,7 +71,7 @@ async fn test_reset() {
         Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap()
     );
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
-    assert_eq!(treasury.last_reset_at as u8, 100);
+    assert_eq!(treasury.last_reset_at, START_AT);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE.saturating_div(2));
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
 
@@ -104,7 +104,7 @@ async fn test_reset() {
 }
 
 #[tokio::test]
-async fn test_reset_busses_out_of_order() {
+async fn test_reset_busses_out_of_order_fail() {
     // Setup
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
@@ -147,15 +147,45 @@ async fn test_reset_busses_out_of_order() {
     };
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
-    assert!(res.is_ok());
+    assert!(res.is_err());
+}
 
-    // Test bus state
-    for i in 0..BUS_COUNT {
-        let bus_account = banks.get_account(bus_pdas[i].0).await.unwrap().unwrap();
-        assert_eq!(bus_account.owner, ore::id());
-        let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
-        assert_eq!(bus.rewards, BUS_EPOCH_REWARDS);
-    }
+#[tokio::test]
+async fn test_reset_busses_duplicate_fail() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Pdas
+    let signer = payer.pubkey();
+    let bus_pda = Pubkey::find_program_address(&[BUS, &[0]], &ore::id());
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+
+    // Submit tx
+    let ix = Instruction {
+        program_id: ore::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(bus_pda.0, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: OreInstruction::Reset.to_vec(),
+    };
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
 }
 
 #[tokio::test]
@@ -308,11 +338,11 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
     program_test.add_sysvar_account(
         sysvar::clock::id(),
         &Clock {
-            slot: 10,
+            slot: 0,
             epoch_start_timestamp: 0,
             epoch: 0,
             leader_schedule_epoch: DEFAULT_SLOTS_PER_EPOCH,
-            unix_timestamp: 100,
+            unix_timestamp: START_AT,
         },
     );
 

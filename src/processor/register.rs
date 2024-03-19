@@ -38,7 +38,8 @@ pub fn process_register<'a, 'info>(
     load_signer(signer)?;
     load_uninitialized_pda(
         proof_info,
-        &[PROOF, signer.key.as_ref(), &[args.bump]],
+        &[PROOF, signer.key.as_ref()],
+        args.bump,
         &crate::id(),
     )?;
     load_program(system_program, system_program::id())?;

@@ -47,7 +47,7 @@ pub fn process_mine<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_bus(bus_info, true)?;
+    load_any_bus(bus_info, true)?;
     load_proof(proof_info, signer.key, true)?;
     load_treasury(treasury_info, false)?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
@@ -80,10 +80,10 @@ pub fn process_mine<'a, 'info>(
     // Update claimable rewards
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    if bus.rewards.lt(&treasury.reward_rate) {
-        return Err(OreError::BusRewardsInsufficient.into());
-    }
-    bus.rewards = bus.rewards.saturating_sub(treasury.reward_rate);
+    bus.rewards = bus
+        .rewards
+        .checked_sub(treasury.reward_rate)
+        .ok_or(OreError::BusRewardsInsufficient)?;
     proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks

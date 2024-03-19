@@ -40,7 +40,7 @@ pub fn process_update_admin<'a, 'info>(
     load_signer(signer)?;
     load_treasury(treasury_info, true)?;
 
-    // Validate admin signer
+    // Validate signer is admin
     let mut treasury_data = treasury_info.data.borrow_mut();
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     if treasury.admin.ne(&signer.key) {

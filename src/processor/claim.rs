@@ -39,6 +39,7 @@ pub fn process_claim<'a, 'info>(
     load_signer(signer)?;
     load_token_account(beneficiary_info, None, mint_info.key, true)?;
     load_mint(mint_info, true)?;
+    load_proof(proof_info, signer.key, true)?;
     load_treasury(treasury_info, true)?;
     load_token_account(
         treasury_tokens_info,
@@ -48,15 +49,13 @@ pub fn process_claim<'a, 'info>(
     )?;
     load_program(token_program, spl_token::id())?;
 
-    // Validate claim amout
+    // Update claimable amount
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    if proof.claimable_rewards.lt(&amount) {
-        return Err(OreError::ClaimTooLarge.into());
-    }
-
-    // Update claimable amount
-    proof.claimable_rewards = proof.claimable_rewards.saturating_sub(amount);
+    proof.claimable_rewards = proof
+        .claimable_rewards
+        .checked_sub(amount)
+        .ok_or(OreError::ClaimTooLarge)?;
 
     // Update lifetime status
     let mut treasury_data = treasury_info.data.borrow_mut();

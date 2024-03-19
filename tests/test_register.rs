@@ -164,11 +164,11 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
     program_test.add_sysvar_account(
         sysvar::clock::id(),
         &Clock {
-            slot: 10,
+            slot: 0,
             epoch_start_timestamp: 0,
             epoch: 0,
             leader_schedule_epoch: DEFAULT_SLOTS_PER_EPOCH,
-            unix_timestamp: 100,
+            unix_timestamp: 0,
         },
     );
 

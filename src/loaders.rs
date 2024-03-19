@@ -1,6 +1,6 @@
 use solana_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    system_program,
+    system_program, sysvar,
 };
 use spl_token::state::Mint;
 
@@ -24,10 +24,48 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 /// - Account is not owned by Ore program.
 /// - Data is empty.
 /// - Data cannot deserialize into a bus account.
-/// - Bus ID is not in 0-7 range.
-/// - Address is not in set of valid bus address.
+/// - Bus ID does not match the expected ID.
+/// - Address does not match the expected bus address.
 /// - Expected to be writable, but is not.
 pub fn load_bus<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    id: u64,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let bus_data = info.data.borrow();
+    let bus = Bus::try_from_bytes(&bus_data)?;
+
+    if bus.id.ne(&id) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if info.key.ne(&BUS_ADDRESSES[id as usize]) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Account is not owned by Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a bus account.
+/// - Bus ID is not in the expected range.
+/// - Address is not in set of valid bus address.
+/// - Expected to be writable, but is not.
+pub fn load_any_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -201,12 +239,19 @@ pub fn load_token_account<'a, 'info>(
 pub fn load_uninitialized_pda<'a, 'info>(
     info: &'a AccountInfo<'info>,
     seeds: &[&[u8]],
+    bump: u8,
     program_id: &Pubkey,
 ) -> Result<(), ProgramError> {
-    let key = Pubkey::create_program_address(seeds, program_id)?;
-    if info.key.ne(&key) {
+    let pda = Pubkey::find_program_address(seeds, program_id);
+
+    if info.key.ne(&pda.0) {
         return Err(ProgramError::InvalidSeeds);
     }
+
+    if bump.ne(&pda.1) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     load_uninitialized_account(info)
 }
 
@@ -218,7 +263,7 @@ pub fn load_uninitialized_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&system_program::id()) {
-        return Err(ProgramError::AccountAlreadyInitialized);
+        return Err(ProgramError::InvalidAccountOwner);
     }
 
     if !info.data_is_empty() {
@@ -237,6 +282,10 @@ pub fn load_sysvar<'a, 'info>(
     info: &'a AccountInfo<'info>,
     key: Pubkey,
 ) -> Result<(), ProgramError> {
+    if info.owner.ne(&sysvar::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
     load_account(info, key, false)
 }
 
@@ -267,7 +316,7 @@ pub fn load_program<'a, 'info>(
     key: Pubkey,
 ) -> Result<(), ProgramError> {
     if info.key.ne(&key) {
-        return Err(ProgramError::InvalidAccountData);
+        return Err(ProgramError::IncorrectProgramId);
     }
 
     if !info.executable {
