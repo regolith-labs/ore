@@ -3,27 +3,6 @@ use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 /// The unix timestamp after which mining is allowed.
 pub const START_AT: i64 = 1710471600;
 
-/// The addresses of the bus accounts.
-pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
-    pubkey!("BipsVd7bXrsWTD7MSR7vEE6wCi812xree9MdMQHNpGve"),
-    pubkey!("4UywqKWK1hFk2FVn2i8dHGRL28wTmwv2pveBV4QhApsy"),
-    pubkey!("6q971fxeEjwQWXL3PTEWBpSAs55HvKkb4yVeP85qrycY"),
-    pubkey!("BWa6yzTg3Mrs6tH2rstKQrobSVEBkfQUzE4iZUJz54AP"),
-    pubkey!("AXdpmjuVJYk7re8TcDX33ZoLyYpbBopesRWaNYnDHe8L"),
-    pubkey!("FXikoBAemf48cZswLnnUtXZhD7Pr6knYPNq6cjb76ubh"),
-    pubkey!("9BqvaWJ9bmkPYNqaZPaHoonAR5bh1dHRymZV4nrae3sC"),
-    pubkey!("8T4ngp27XKn3fAJnHgZ9pDXwzMbHnxhCPuvBWMa5m3ro"),
-];
-
-/// The address of the Ore mint metadata account.
-pub const METADATA_ADDRESS: Pubkey = pubkey!("wyJ7XtZQDox5XoPG3uw7u7XnpNXaqTDeAwKpuJqHLi4");
-
-/// The address of the Ore mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("oreoBXz6dRgETAVLre1Umgp6Hs4UdLRwJiYj5FkfzYh");
-
-/// The address of the treasury account.
-pub const TREASURY_ADDRESS: Pubkey = pubkey!("CHTwJ2GLmz9KDEpPuLu5iYFF85pSzx4xzJSwm81ojN3Q");
-
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
 
@@ -66,11 +45,6 @@ static_assertions::const_assert!(
     (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
 );
 
-/// Noise for deriving the mint pda
-pub const MINT_NOISE: [u8; 16] = [
-    64, 193, 214, 243, 206, 254, 96, 138, 148, 27, 250, 15, 126, 55, 231, 93,
-];
-
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
 
@@ -94,3 +68,29 @@ pub const METADATA_SYMBOL: &str = "ORE";
 
 /// The uri for token metdata.
 pub const METADATA_URI: &str = "https://ore.supply/metadata.json";
+
+/// Noise for deriving the mint pda
+pub const MINT_NOISE: [u8; 16] = [
+    166, 199, 85, 221, 225, 119, 21, 185, 160, 82, 242, 237, 194, 84, 250, 252,
+];
+
+/// The addresses of the bus accounts.
+pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
+    pubkey!("9ShaCzHhQNvH8PLfGyrJbB8MeKHrDnuPMLnUDLJ2yMvz"),
+    pubkey!("4Cq8685h9GwsaD5ppPsrtfcsk3fum8f9UP4SPpKSbj2B"),
+    pubkey!("8L1vdGdvU3cPj9tsjJrKVUoBeXYvAzJYhExjTYHZT7h7"),
+    pubkey!("JBdVURCrUiHp4kr7srYtXbB7B4CwurUt1Bfxrxw6EoRY"),
+    pubkey!("DkmVBWJ4CLKb3pPHoSwYC2wRZXKKXLD2Ued5cGNpkWmr"),
+    pubkey!("9uLpj2ZCMqN6Yo1vV6yTkP6dDiTTXmeM5K3915q5CHyh"),
+    pubkey!("EpcfjBs8eQ4unSMdowxyTE8K3vVJ3XUnEr5BEWvSX7RB"),
+    pubkey!("Ay5N9vKS2Tyo2M9u9TFt59N1XbxdW93C7UrFZW3h8sMC"),
+];
+
+/// The address of the Ore mint metadata account.
+pub const METADATA_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
+
+/// The address of the Ore mint account.
+pub const MINT_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
+
+/// The address of the treasury account.
+pub const TREASURY_ADDRESS: Pubkey = pubkey!("FTap9fv2GPpWGqrLj3o4c9nHH7p36ih7NbSWHnrkQYqa");

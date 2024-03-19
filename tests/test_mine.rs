@@ -593,6 +593,7 @@ async fn setup_program_test_env(
         },
     );
 
+    // Setup alt payer
     let payer_alt = Keypair::new();
     program_test.add_account(
         payer_alt.pubkey(),

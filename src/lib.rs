@@ -16,7 +16,7 @@ use solana_program::{
 
 // TODO Set START_AT before launch.
 
-declare_id!("mineS8xKxv3GurPq4RAssdZa6kNSXuuxJCEVtQwPZX4");
+declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
