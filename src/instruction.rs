@@ -34,14 +34,14 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore miner proof account", writable)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
     #[account(3, name = "system_program", desc = "Solana system program")]
     Register = 1,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
-    #[account(3, name = "proof", desc = "Ore miner proof account", writable)]
+    #[account(3, name = "proof", desc = "Ore proof account", writable)]
     #[account(4, name = "treasury", desc = "Ore treasury account")]
     #[account(5, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Mine = 2,
@@ -50,14 +50,14 @@ pub enum OreInstruction {
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
     #[account(3, name = "mint", desc = "Ore token mint account")]
-    #[account(4, name = "proof", desc = "Ore miner proof account", writable)]
+    #[account(4, name = "proof", desc = "Ore proof account", writable)]
     #[account(5, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(6, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
     Claim = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "admin", desc = "Admin signer", signer)]
+    #[account(1, name = "signer", desc = "Admin signer", signer)]
     #[account(2, name = "bus_0", desc = "Ore bus account 0", writable)]
     #[account(3, name = "bus_1", desc = "Ore bus account 1", writable)]
     #[account(4, name = "bus_2", desc = "Ore bus account 2", writable)]
@@ -73,17 +73,19 @@ pub enum OreInstruction {
     #[account(14, name = "system_program", desc = "Solana system program")]
     #[account(15, name = "token_program", desc = "SPL token program")]
     #[account(16, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(17, name = "mpl_metadata_program", desc = "MPL token metadata program")]
+    #[account(17, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
     #[account(18, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "treasury", desc = "Ore treasury account")]
-    UpdateAdmin = 102,
+    #[account(1, name = "signer", desc = "Admin signer", signer)]
+    #[account(2, name = "treasury", desc = "Ore treasury account")]
+    UpdateAdmin = 101,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "treasury", desc = "Ore treasury account")]
-    UpdateDifficulty = 103,
+    #[account(1, name = "signer", desc = "Admin signer", signer)]
+    #[account(2, name = "treasury", desc = "Ore treasury account")]
+    UpdateDifficulty = 102,
 }
 
 impl OreInstruction {

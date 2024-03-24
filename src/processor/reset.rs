@@ -12,21 +12,21 @@ use crate::{
     TARGET_EPOCH_REWARDS, TREASURY,
 };
 
-/// Reset transitions the Ore program from one epoch to the next. Its responsibilities include:
+/// Reset sets up the Ore program for the next epoch. Its responsibilities include:
 /// 1. Reset bus account rewards counters.
 /// 2. Adjust the reward rate to stabilize inflation.
 /// 3. Top up the treasury token account to backup claims.
 ///
 /// Safety requirements:
-/// - Reset is a permissionless crank function and can be invoked by any signer.
+/// - Reset is a permissionless instruction and can be invoked by any signer.
 /// - Can only succeed if START_AT has passed.
-/// - Can only succeed if more 60 seconds or more have passed since the last successful reset.
+/// - Can only succeed if more tha 60 seconds or more have passed since the last successful reset.
 /// - The busses, mint, treasury, treasury token account, and token program must all be valid.
 ///
 /// Discussion:
 /// - It is important that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
 ///   stays within the guaranteed bounds of 0 ≤ R ≤ 2 ORE/min.
-/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (proxy hashpower) to
+/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (proxy for hashpower) to
 ///   target an average supply growth rate of 1 ORE/min.
 pub fn process_reset<'a, 'info>(
     _program_id: &Pubkey,
@@ -116,11 +116,15 @@ pub fn process_reset<'a, 'info>(
     Ok(())
 }
 
-/// This function calculates what the new reward rate should be based on how many total rewards were mined in the prior epoch.
-/// The math is largely identitical to that used by the Bitcoin network for updating the difficulty between each epoch.
+/// This function calculates what the new reward rate should be based on how many total rewards
+/// were mined in the prior epoch. The math is largely identitical to function used by the Bitcoin
+/// network to update the difficulty between each epoch.
+///
 /// new_rate = current_rate * (target_rewards / actual_rewards)
-/// The new rate is then smoothed by a constant factor to avoid unexpectedly large fluctuations.
-/// In Ore's case, the epochs are so short (60 seconds) that the smoothing factor of 2 has been chosen.
+///
+/// The new rate is then smoothed by a constant factor to avoid large fluctuations. In Ore's case,
+/// the epochs are short (60 seconds) so a smoothing factor of 2 has been chosen. That is, the reward rate
+/// can at most double or halve from one epoch to the next.
 pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
     // Avoid division by zero. Leave the reward rate unchanged, if detected.
     if epoch_rewards.eq(&0) {

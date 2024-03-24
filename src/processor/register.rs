@@ -16,10 +16,10 @@ use crate::{
 
 /// Register generates a new hash chain for a prospective miner. Its responsibilities include:
 /// 1. Initialize a new proof account.
-/// 2. Generate an initial hash for the miner from the signer's key.
+/// 2. Generate an initial hash from the signer's key.
 ///
 /// Safety requirements:
-/// - Register is a permissionless instruction and can be called by anyone.
+/// - Register is a permissionless instruction and can be invoked by any singer.
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - Can only succeed once per signer.
 /// - The provided system program must be valid.
