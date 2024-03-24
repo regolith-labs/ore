@@ -6,7 +6,7 @@ pub const START_AT: i64 = 1712070900;
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
 
-/// The initial hashing difficulty. The admin authority can update this in the future, if needed.
+/// The mining difficulty to initialize the program with.
 pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
     0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
