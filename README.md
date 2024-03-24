@@ -5,18 +5,12 @@
 
 ## How it works
 
-The primary innovation of Ore is to offer non-exclusive mining rewards. This means if one miner wins rewards, it doesn't prevent another miner from also winning. In traditional proof-of-work systems such as Bitcoin, mining rewards are exclusive. That is, only one Bitcoin miner can win every ~10 minutes, and that miner takes home all the tokens for the round. This has had the longterm effect of starving out casual miners who are simply unable to keep up in the arms race against much larger and well-resourced professional mining firms.
-
-The main reason Bitcoin is designed this way is that its proof-of-work system serves two roles. It's responsible not only for distributing tokens, but also for coordinating network consensus. The tokens are intended to be a reward mechanism for those who dedicate resources to securing the network. However due starvation problems outlined above, this has also had the unintended consequence of excluding major portions of the global population (>99%) from ever being able to participate in mining. This ultimately limits the number of people who can reasonably acquire the token, and thus contributes to further consolidating the supply. 
-
-Ore takes a different approach. It builds upon the consensus layer provided by Solana and reimagine proof-of-work purely as a token distribution mechanism. Rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner their own individual computational challenge. As long as a miner provides a valid solution to their personal challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
+The primary innovation of Ore is to offer non-exclusive mining rewards. This means one miner winning rewards does not prevent another miner from winning also. Rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner their own individual computational challenge. As long as a miner provides a valid solution to their personal challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
 
 
 ## Supply
 
-Ore provides strong guarantees and protection against runaway supply inflation. The supply growth rate is strictly bounded to a range of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The reward rate – amount paid out to miners per valid hash – is dynamically adjusted every 60 seconds to maintain a target average supply growth rate of `1 ORE/min`. This effectively means if the global hashpower dedicated to Ore mining increases, the reward rate paid out per hash will decrease, and vice versa. 
-
-A linear supply growth was chosen for its simplicity and straightforward predictability. Ore aims to strike a balance between the unpredictable runaway inflation of fiat currencies on one hand and the stagnant deflationary supply schedules of traditional cryptocurrencies on the other. Ore holders are simultaneously incentivized to loan and spend while also being protected against longterm exponential inflation.
+Ore protects holders from runaway supply inflation. Regardless of how many miners are active, the supply growth rate is strictly bounded to a range of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The reward rate – amount paid out to miners per valid hash – dynamically adjusts every 60 seconds to maintain a target average supply growth rate of `1 ORE/min`. This growth rate was chosen for its straightforward simplicity and predictability.
 
 
 ## Program
