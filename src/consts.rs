@@ -1,7 +1,7 @@
 use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 
 /// The unix timestamp after which mining is allowed.
-pub const START_AT: i64 = 1710471600;
+pub const START_AT: i64 = 1712070900;
 
 /// The initial reward rate to payout in the first epoch.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
