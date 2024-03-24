@@ -1,6 +1,6 @@
 # Ore
 
-**Ore is a cryptocurrency you can mine from anywhere, at home or on your phone.** It uses a novel proof-of-work algorithm to guarantee no miner can ever be starved out from earning rewards. 
+**Ore is a digital currency you can mine from anywhere, at home or on your phone.** It uses a novel proof-of-work algorithm to guarantee no miner can ever be starved out from earning rewards. 
 
 
 ## How it works
