@@ -3,12 +3,10 @@ use mpl_token_metadata::{
     types::{Key, TokenStandard},
 };
 use ore::{
-    instruction::{InitializeArgs, OreInstruction},
     state::{Bus, Treasury},
     utils::AccountDeserialize,
-    BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA,
-    METADATA_ADDRESS, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE,
-    TREASURY,
+    BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA_ADDRESS,
+    METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT_ADDRESS, TREASURY,
 };
 use solana_program::{
     hash::Hash, program_option::COption, program_pack::Pack, pubkey::Pubkey, rent::Rent,
@@ -119,136 +117,36 @@ async fn test_initialize_not_enough_accounts() {
 }
 
 #[tokio::test]
-async fn test_initialize_bad_pda() {
+async fn test_initialize_bad_key() {
     // Setup
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
-    // Pdas
-    let bus_pdas = [
-        Pubkey::find_program_address(&[BUS, &[0]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[1]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[2]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[3]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[4]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[5]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[6]], &ore::id()),
-        Pubkey::find_program_address(&[BUS, &[7]], &ore::id()),
-    ];
-    let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &ore::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
-    let metadata_pda = Pubkey::find_program_address(
-        &[
-            METADATA,
-            mpl_token_metadata::ID.as_ref(),
-            mint_pda.0.as_ref(),
-        ],
-        &mpl_token_metadata::ID,
-    );
+    // Bad addresses
     let bad_pda = Pubkey::find_program_address(&[b"t"], &ore::id());
+    for i in 1..12 {
+        let mut ix = ore::instruction::initialize(payer.pubkey());
+        ix.accounts[i].pubkey = bad_pda.0;
+        let tx =
+            Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+        let res = banks.process_transaction(tx).await;
+        assert!(res.is_err());
+    }
+}
 
-    // Bad bus pda
-    let mut ix = ore::instruction::initialize(payer.pubkey());
-    ix.accounts[1].pubkey = bad_pda.0;
-    ix.data = [
-        OreInstruction::Initialize.to_vec(),
-        InitializeArgs {
-            bus_0_bump: bad_pda.1,
-            bus_1_bump: bus_pdas[1].1,
-            bus_2_bump: bus_pdas[2].1,
-            bus_3_bump: bus_pdas[3].1,
-            bus_4_bump: bus_pdas[4].1,
-            bus_5_bump: bus_pdas[5].1,
-            bus_6_bump: bus_pdas[6].1,
-            bus_7_bump: bus_pdas[7].1,
-            metadata_bump: metadata_pda.1,
-            mint_bump: mint_pda.1,
-            treasury_bump: treasury_pda.1,
-        }
-        .to_bytes()
-        .to_vec(),
-    ]
-    .concat();
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
-    let res = banks.process_transaction(tx).await;
-    assert!(res.is_err());
+#[tokio::test]
+async fn test_initialize_bad_programs() {
+    // Setup
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
-    // Bad metadata pda
-    let mut ix = ore::instruction::initialize(payer.pubkey());
-    ix.accounts[9].pubkey = bad_pda.0;
-    ix.data = [
-        OreInstruction::Initialize.to_vec(),
-        InitializeArgs {
-            bus_0_bump: bus_pdas[0].1,
-            bus_1_bump: bus_pdas[1].1,
-            bus_2_bump: bus_pdas[2].1,
-            bus_3_bump: bus_pdas[3].1,
-            bus_4_bump: bus_pdas[4].1,
-            bus_5_bump: bus_pdas[5].1,
-            bus_6_bump: bus_pdas[6].1,
-            bus_7_bump: bus_pdas[7].1,
-            metadata_bump: bad_pda.1,
-            mint_bump: mint_pda.1,
-            treasury_bump: treasury_pda.1,
-        }
-        .to_bytes()
-        .to_vec(),
-    ]
-    .concat();
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
-    let res = banks.process_transaction(tx).await;
-    assert!(res.is_err());
-
-    // Bad mint pda
-    let mut ix = ore::instruction::initialize(payer.pubkey());
-    ix.accounts[10].pubkey = bad_pda.0;
-    ix.data = [
-        OreInstruction::Initialize.to_vec(),
-        InitializeArgs {
-            bus_0_bump: bus_pdas[0].1,
-            bus_1_bump: bus_pdas[1].1,
-            bus_2_bump: bus_pdas[2].1,
-            bus_3_bump: bus_pdas[3].1,
-            bus_4_bump: bus_pdas[4].1,
-            bus_5_bump: bus_pdas[5].1,
-            bus_6_bump: bus_pdas[6].1,
-            bus_7_bump: bus_pdas[7].1,
-            metadata_bump: metadata_pda.1,
-            mint_bump: bad_pda.1,
-            treasury_bump: treasury_pda.1,
-        }
-        .to_bytes()
-        .to_vec(),
-    ]
-    .concat();
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
-    let res = banks.process_transaction(tx).await;
-    assert!(res.is_err());
-
-    // Bad treasury pda
-    let mut ix = ore::instruction::initialize(payer.pubkey());
-    ix.accounts[11].pubkey = bad_pda.0;
-    ix.data = [
-        OreInstruction::Initialize.to_vec(),
-        InitializeArgs {
-            bus_0_bump: bus_pdas[0].1,
-            bus_1_bump: bus_pdas[1].1,
-            bus_2_bump: bus_pdas[2].1,
-            bus_3_bump: bus_pdas[3].1,
-            bus_4_bump: bus_pdas[4].1,
-            bus_5_bump: bus_pdas[5].1,
-            bus_6_bump: bus_pdas[6].1,
-            bus_7_bump: bus_pdas[7].1,
-            metadata_bump: metadata_pda.1,
-            mint_bump: mint_pda.1,
-            treasury_bump: bad_pda.1,
-        }
-        .to_bytes()
-        .to_vec(),
-    ]
-    .concat();
-    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
-    let res = banks.process_transaction(tx).await;
-    assert!(res.is_err());
+    // Bad addresses
+    for i in 13..18 {
+        let mut ix = ore::instruction::initialize(payer.pubkey());
+        ix.accounts[i].pubkey = Pubkey::new_unique();
+        let tx =
+            Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+        let res = banks.process_transaction(tx).await;
+        assert!(res.is_err());
+    }
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {

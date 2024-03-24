@@ -106,6 +106,23 @@ async fn test_reset() {
 }
 
 #[tokio::test]
+async fn test_reset_bad_key() {
+    // Setup
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
+
+    // Bad addresses
+    let bad_pda = Pubkey::find_program_address(&[b"t"], &ore::id());
+    for i in 1..13 {
+        let mut ix = ore::instruction::reset(payer.pubkey());
+        ix.accounts[i].pubkey = bad_pda.0;
+        let tx =
+            Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+        let res = banks.process_transaction(tx).await;
+        assert!(res.is_err());
+    }
+}
+
+#[tokio::test]
 async fn test_reset_busses_out_of_order_fail() {
     // Setup
     let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
