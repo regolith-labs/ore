@@ -14,8 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Set START_AT before launch.
-
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
 
 #[cfg(not(feature = "no-entrypoint"))]

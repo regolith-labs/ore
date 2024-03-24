@@ -153,6 +153,114 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
 impl_instruction_from_bytes!(UpdateDifficultyArgs);
 
+/// Builds a reset instruction.
+pub fn reset(signer: Pubkey) -> Instruction {
+    let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
+    let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
+    let bus_2 = Pubkey::find_program_address(&[BUS, &[2]], &crate::id()).0;
+    let bus_3 = Pubkey::find_program_address(&[BUS, &[3]], &crate::id()).0;
+    let bus_4 = Pubkey::find_program_address(&[BUS, &[4]], &crate::id()).0;
+    let bus_5 = Pubkey::find_program_address(&[BUS, &[5]], &crate::id()).0;
+    let bus_6 = Pubkey::find_program_address(&[BUS, &[6]], &crate::id()).0;
+    let bus_7 = Pubkey::find_program_address(&[BUS, &[7]], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_0, false),
+            AccountMeta::new(bus_1, false),
+            AccountMeta::new(bus_2, false),
+            AccountMeta::new(bus_3, false),
+            AccountMeta::new(bus_4, false),
+            AccountMeta::new(bus_5, false),
+            AccountMeta::new(bus_6, false),
+            AccountMeta::new(bus_7, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: OreInstruction::Reset.to_vec(),
+    }
+}
+
+/// Builds a register instruction.
+pub fn register(signer: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        ],
+        data: [
+            OreInstruction::Register.to_vec(),
+            RegisterArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Builds a mine instruction.
+pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Mine.to_vec(),
+            MineArgs {
+                hash,
+                nonce: nonce.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Builds a claim instruction.
+pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(beneficiary, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Claim.to_vec(),
+            ClaimArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
 /// Builds an initialize instruction.
 pub fn initialize(signer: Pubkey) -> Instruction {
     let bus_pdas = [
@@ -218,114 +326,6 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             .to_vec(),
         ]
         .concat(),
-    }
-}
-
-/// Builds a claim instruction.
-pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(beneficiary, false),
-            AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(proof, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-        ],
-        data: [
-            OreInstruction::Claim.to_vec(),
-            ClaimArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Builds a mine instruction.
-pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(bus, false),
-            AccountMeta::new(proof, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
-        ],
-        data: [
-            OreInstruction::Mine.to_vec(),
-            MineArgs {
-                hash,
-                nonce: nonce.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Builds a register instruction.
-pub fn register(signer: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        ],
-        data: [
-            OreInstruction::Register.to_vec(),
-            RegisterArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Builds a reset instruction.
-pub fn reset(signer: Pubkey) -> Instruction {
-    let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
-    let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
-    let bus_2 = Pubkey::find_program_address(&[BUS, &[2]], &crate::id()).0;
-    let bus_3 = Pubkey::find_program_address(&[BUS, &[3]], &crate::id()).0;
-    let bus_4 = Pubkey::find_program_address(&[BUS, &[4]], &crate::id()).0;
-    let bus_5 = Pubkey::find_program_address(&[BUS, &[5]], &crate::id()).0;
-    let bus_6 = Pubkey::find_program_address(&[BUS, &[6]], &crate::id()).0;
-    let bus_7 = Pubkey::find_program_address(&[BUS, &[7]], &crate::id()).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(bus_0, false),
-            AccountMeta::new(bus_1, false),
-            AccountMeta::new(bus_2, false),
-            AccountMeta::new(bus_3, false),
-            AccountMeta::new(bus_4, false),
-            AccountMeta::new(bus_5, false),
-            AccountMeta::new(bus_6, false),
-            AccountMeta::new(bus_7, false),
-            AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-        ],
-        data: OreInstruction::Reset.to_vec(),
     }
 }
 
