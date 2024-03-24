@@ -10,7 +10,7 @@ The primary innovation of Ore is to offer non-exclusive mining rewards. This mea
 
 ## Supply
 
-Ore protects holders from runaway supply inflation. Regardless of how many miners are active, the supply growth rate is strictly bounded to a range of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The reward rate – amount paid out to miners per valid hash – dynamically adjusts every 60 seconds to maintain a target average supply growth rate of `1 ORE/min`. This growth rate was chosen for its straightforward simplicity and predictability.
+Ore is designed to protect holders from runaway supply inflation, regardless of how many miners are active. Supply growth is strictly bounded to a rate of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The mining reward – amount paid out to miners per valid hash – dynamically adjusts every 60 seconds to maintain a target rate of `1 ORE/min`. This level was chosen for its simplicity and predictability.
 
 
 ## Program
