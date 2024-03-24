@@ -9,7 +9,7 @@ use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::Ac
 /// 1. Update the treasury admin address.
 ///
 /// Safety requirements:
-/// - Can only succeed if the signer is the current program admin.
+/// - Can only succeed if the signer is the program admin.
 /// - Can only succeed if the provided treasury is valid.
 ///
 /// Discussion:
@@ -24,7 +24,7 @@ use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::Ac
 ///   consistently earn rewards and undercuts some of the advantage of larger players.
 /// - Ultimately admin authority should be delegated to a governance mechanism – either
 ///   democratic or futarchic – to ensure difficulty is kept at a value that represents the
-///   values and interests of the whole ecosystem.
+///   values and interests of the ecosystem.
 pub fn process_update_admin<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

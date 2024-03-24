@@ -16,7 +16,7 @@ pub struct Treasury {
     /// The admin authority with permission to update the difficulty.
     pub admin: Pubkey,
 
-    /// The bump of the treasury account PDA.
+    /// The bump of the treasury account PDA, for signing CPIs.
     pub bump: u64,
 
     /// The hash difficulty.

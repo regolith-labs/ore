@@ -38,8 +38,8 @@ use crate::{
 ///   associated token program, metadata program, and rent sysvar are valid.
 ///
 /// Discussion
-/// - The signer of this instruction is set as the program admin authority and
-///   the upgrade authority of the mint metadata account.
+/// - The signer of this instruction is set as the program admin and the
+///   upgrade authority of the mint metadata account.
 pub fn process_initialize<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

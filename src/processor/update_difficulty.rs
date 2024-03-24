@@ -8,10 +8,10 @@ use crate::{
 };
 
 /// UpdateDifficulty updates the program's global difficulty value. Its responsibilities include:
-/// 1. Update the difficulty.
+/// 1. Update the mining difficulty.
 ///
 /// Safety requirements:
-/// - Can only succeed if the signer is the current program admin.
+/// - Can only succeed if the signer is the program admin.
 /// - Can only succeed if the provided treasury is valid.
 ///
 /// Discussion:
