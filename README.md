@@ -5,12 +5,12 @@
 
 ## How it works
 
-The primary innovation of Ore is to offer non-exclusive mining rewards. This means one miner winning rewards does not prevent another miner from winning also. Rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner their own individual computational challenge. As long as a miner provides a valid solution to their personal challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
+The primary innovation of Ore is to offer non-exclusive mining rewards. This means one miner finding a valid solution does not prevent another miner from also finding a valid solution. Rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner their own individual computational challenge. As long as a miner provides a valid solution to their personal challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
 
 
 ## Supply
 
-Ore is designed to protect holders from runaway supply inflation, regardless of how many miners are active. Supply growth is strictly bounded to a rate of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The mining reward – amount paid out to miners per valid hash – dynamically adjusts every 60 seconds to maintain a target rate of `1 ORE/min`. This level was chosen for its simplicity and predictability.
+Ore is designed to protect holders from runaway supply inflation. Regardless of how many miners are active in the world, supply growth is strictly bounded to a rate of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The mining reward rate – amount paid out to miners per valid solution – is dynamically adjusted every 60 seconds to maintain an average supply growth of `1 ORE/min`. This level was chosen for its straightforward simplicity, scale agnosticism, and for striking a balance between the extremes of exponential inflation and stagnant deflation.
 
 
 ## Program
