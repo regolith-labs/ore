@@ -37,7 +37,7 @@ pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as
 pub const BUS_COUNT: usize = 8;
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
-/// than factor of this constant from one epoch to the next.
+/// than a factor of this constant from one epoch to the next.
 pub const SMOOTHING_FACTOR: u64 = 2;
 
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
@@ -48,13 +48,13 @@ static_assertions::const_assert!(
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
 
-/// The seed of the mint account PDA.
+/// The seed of the metadata account PDA.
 pub const METADATA: &[u8] = b"metadata";
 
 /// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
 
-/// The seed of the proof account PDA.
+/// The seed of proof account PDAs.
 pub const PROOF: &[u8] = b"proof";
 
 /// The seed of the treasury account PDA.
@@ -69,7 +69,7 @@ pub const METADATA_SYMBOL: &str = "ORE";
 /// The uri for token metdata.
 pub const METADATA_URI: &str = "https://ore.supply/metadata.json";
 
-/// Noise for deriving the mint pda
+/// Noise for deriving the mint PDA.
 pub const MINT_NOISE: [u8; 16] = [
     166, 199, 85, 221, 225, 119, 21, 185, 160, 82, 242, 237, 194, 84, 250, 252,
 ];
@@ -86,10 +86,10 @@ pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
     pubkey!("Ay5N9vKS2Tyo2M9u9TFt59N1XbxdW93C7UrFZW3h8sMC"),
 ];
 
-/// The address of the Ore mint metadata account.
+/// The address of the mint metadata account.
 pub const METADATA_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
 
-/// The address of the Ore mint account.
+/// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
 
 /// The address of the treasury account.
