@@ -30,7 +30,7 @@ use spl_token::state::{AccountState, Mint};
 #[tokio::test]
 async fn test_reset() {
     // Setup
-    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Pdas
     let bus_pdas = vec![
@@ -73,7 +73,7 @@ async fn test_reset() {
         Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap()
     );
     assert_eq!(treasury.difficulty, INITIAL_DIFFICULTY.into());
-    assert_eq!(treasury.last_reset_at, START_AT);
+    assert_eq!(treasury.last_reset_at, START_AT + 1);
     assert_eq!(treasury.reward_rate, INITIAL_REWARD_RATE.saturating_div(2));
     assert_eq!(treasury.total_claimed_rewards as u8, 0);
 
@@ -108,7 +108,7 @@ async fn test_reset() {
 #[tokio::test]
 async fn test_reset_busses_out_of_order_fail() {
     // Setup
-    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -153,9 +153,9 @@ async fn test_reset_busses_out_of_order_fail() {
 }
 
 #[tokio::test]
-async fn test_reset_early() {
+async fn test_reset_race() {
     // Setup
-    let (mut banks, payer, payer_alt, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, payer_alt, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Reset one passes
     let ix = ore::instruction::reset(payer.pubkey());
@@ -176,9 +176,34 @@ async fn test_reset_early() {
 }
 
 #[tokio::test]
+async fn test_reset_too_early() {
+    // Setup
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::TooEarly).await;
+
+    // Reset one passes
+    let ix = ore::instruction::reset(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
+async fn test_reset_not_enough_keys() {
+    // Setup
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
+
+    // Reset with missing account
+    let mut ix = ore::instruction::reset(payer.pubkey());
+    ix.accounts.remove(1);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
 async fn test_reset_busses_duplicate_fail() {
     // Setup
-    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -217,7 +242,7 @@ async fn test_reset_busses_duplicate_fail() {
 async fn test_reset_shuffle_error() {
     // Setup
     const FUZZ: u64 = 100;
-    let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
+    let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Pdas
     let signer = payer.pubkey();
@@ -268,7 +293,12 @@ async fn test_reset_shuffle_error() {
     }
 }
 
-async fn setup_program_test_env() -> (BanksClient, Keypair, Keypair, Hash) {
+enum ClockState {
+    Normal,
+    TooEarly,
+}
+
+async fn setup_program_test_env(clock_state: ClockState) -> (BanksClient, Keypair, Keypair, Hash) {
     let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
@@ -360,6 +390,10 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Keypair, Hash) {
     );
 
     // Set sysvar
+    let ts = match clock_state {
+        ClockState::Normal => START_AT + 1,
+        ClockState::TooEarly => START_AT - 1,
+    };
     program_test.add_sysvar_account(
         sysvar::clock::id(),
         &Clock {
@@ -367,7 +401,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, Keypair, Hash) {
             epoch_start_timestamp: 0,
             epoch: 0,
             leader_schedule_epoch: DEFAULT_SLOTS_PER_EPOCH,
-            unix_timestamp: START_AT,
+            unix_timestamp: ts,
         },
     );
 

@@ -17,9 +17,8 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA,
-    METADATA_ADDRESS, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE,
-    TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
+    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
+    METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:
@@ -103,9 +102,6 @@ pub fn process_initialize<'a, 'info>(
         args.bus_7_bump,
     ];
     for i in 0..BUS_COUNT {
-        if bus_infos[i].key.ne(&BUS_ADDRESSES[i]) {
-            return Err(ProgramError::InvalidSeeds);
-        }
         create_pda(
             bus_infos[i],
             &crate::id(),
@@ -122,9 +118,6 @@ pub fn process_initialize<'a, 'info>(
     }
 
     // Initialize treasury
-    if treasury_info.key.ne(&TREASURY_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
     create_pda(
         treasury_info,
         &crate::id(),
@@ -145,9 +138,6 @@ pub fn process_initialize<'a, 'info>(
     drop(treasury_data);
 
     // Initialize mint
-    if mint_info.key.ne(&MINT_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
     create_pda(
         mint_info,
         &spl_token::id(),
@@ -174,9 +164,6 @@ pub fn process_initialize<'a, 'info>(
     )?;
 
     // Initialize mint metadata
-    if metadata_info.key.ne(&METADATA_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
     mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
         __program: metadata_program,
         metadata: metadata_info,

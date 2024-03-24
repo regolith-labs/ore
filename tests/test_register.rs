@@ -45,6 +45,18 @@ async fn test_register_account_with_lamports() {
 }
 
 #[tokio::test]
+async fn test_register_not_enough_accounts() {
+    let (mut banks, payer, blockhash) = setup_program_test_env().await;
+
+    // Assert register fails
+    let mut ix = register(payer.pubkey());
+    ix.accounts.remove(1);
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
 async fn test_register_fail_other() {
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
