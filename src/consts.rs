@@ -1,7 +1,7 @@
 use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 
 /// The unix timestamp after which mining can begin.
-pub const START_AT: i64 = 1712070900;
+pub const START_AT: i64 = 1712070600;
 
 /// The reward rate to intialize the program with.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
