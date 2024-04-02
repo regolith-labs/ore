@@ -1,6 +1,6 @@
 [package]
 name = "ore-program"
-version = "1.0.0"
+version = "1.1.0"
 description = "Ore is a digital currency you can mine from anywhere, at home or on your phone."
 edition = "2021"
 license = "Apache-2.0"
