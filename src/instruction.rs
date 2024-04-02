@@ -49,11 +49,10 @@ pub enum OreInstruction {
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
-    #[account(3, name = "mint", desc = "Ore token mint account")]
-    #[account(4, name = "proof", desc = "Ore proof account", writable)]
-    #[account(5, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(6, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(7, name = "token_program", desc = "SPL token program")]
+    #[account(3, name = "proof", desc = "Ore proof account", writable)]
+    #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(5, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(6, name = "token_program", desc = "SPL token program")]
     Claim = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -245,7 +244,6 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(beneficiary, false),
-            AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(proof, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),

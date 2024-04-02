@@ -302,6 +302,38 @@ async fn test_claim_too_large() {
 }
 
 #[tokio::test]
+async fn test_claim_other_proof() {
+    // Setup
+    let (mut banks, payer, alt_payer, blockhash) =
+        setup_program_test_env(true, ClockState::Normal).await;
+
+    // Submit register tx
+    let ix = ore::instruction::register(payer.pubkey());
+    let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_ok());
+
+    // Submit claim tx
+    let beneficiary = get_associated_token_address(&alt_payer.pubkey(), &ore::MINT_ADDRESS);
+    let token_ix = create_associated_token_account(
+        &alt_payer.pubkey(),
+        &alt_payer.pubkey(),
+        &ore::MINT_ADDRESS,
+        &spl_token::id(),
+    );
+    let mut ix = ore::instruction::claim(payer.pubkey(), beneficiary, 0);
+    ix.accounts[0].pubkey = alt_payer.pubkey();
+    let tx = Transaction::new_signed_with_payer(
+        &[token_ix, ix],
+        Some(&alt_payer.pubkey()),
+        &[&alt_payer],
+        blockhash,
+    );
+    let res = banks.process_transaction(tx).await;
+    assert!(res.is_err());
+}
+
+#[tokio::test]
 async fn test_mine_not_enough_accounts() {
     // Setup
     let (mut banks, payer, _, blockhash) = setup_program_test_env(true, ClockState::Normal).await;

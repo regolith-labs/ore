@@ -9,7 +9,7 @@ use crate::{
     loaders::*,
     state::{Proof, Treasury},
     utils::AccountDeserialize,
-    TREASURY,
+    MINT_ADDRESS, TREASURY,
 };
 
 /// Claim distributes owed token rewards from the treasury to the miner. Its responsibilies include:
@@ -31,20 +31,19 @@ pub fn process_claim<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer, beneficiary_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
+    let [signer, beneficiary_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_token_account(beneficiary_info, None, mint_info.key, true)?;
-    load_mint(mint_info, true)?;
+    load_token_account(beneficiary_info, None, &MINT_ADDRESS, true)?;
     load_proof(proof_info, signer.key, true)?;
     load_treasury(treasury_info, true)?;
     load_token_account(
         treasury_tokens_info,
         Some(treasury_info.key),
-        mint_info.key,
+        &MINT_ADDRESS,
         true,
     )?;
     load_program(token_program, spl_token::id())?;
