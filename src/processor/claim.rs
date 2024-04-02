@@ -20,7 +20,7 @@ use crate::{
 /// Safety requirements:
 /// - Claim is a permissionless instruction and can be called by any miner.
 /// - Can only succeed if the claimed amount is less than or equal to the miner's claimable rewards.
-/// - The provided beneficiary token account, mint, treasury, treasury token account, and token program must be valid.
+/// - The provided beneficiary token account, treasury, treasury token account, and token program must be valid.
 pub fn process_claim<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
