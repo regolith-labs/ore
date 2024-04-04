@@ -33,7 +33,7 @@ use crate::{
 /// - Can only succeed if START_AT has passed.
 /// - Can only succeed if the last reset was less than 60 seconds ago.
 /// - Can only succeed if the provided SHA3 hash and nonce are valid and satisfy the difficulty.
-/// - The the provided proof account must be associated with the signer.
+/// - The provided proof account must be associated with the signer.
 /// - The provided bus, treasury, and slot hash sysvar must be valid.
 pub fn process_mine<'a, 'info>(
     _program_id: &Pubkey,
