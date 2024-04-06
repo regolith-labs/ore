@@ -26,6 +26,11 @@ use solana_sdk::{
 };
 use spl_token::state::{AccountState, Mint};
 
+use base64::{
+    Engine,
+    prelude::BASE64_STANDARD as bs64,
+};
+
 #[tokio::test]
 async fn test_register_account_with_lamports() {
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
@@ -91,7 +96,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
             BUS_ADDRESSES[i],
             1057920,
             ore::id(),
-            bs64::encode(
+            bs64.encode(
                 &[
                     &(Bus::discriminator() as u64).to_le_bytes(),
                     Bus {
@@ -113,7 +118,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
         treasury_pda.0,
         1614720,
         ore::id(),
-        bs64::encode(
+        bs64.encode(
             &[
                 &(Treasury::discriminator() as u64).to_le_bytes(),
                 Treasury {
@@ -145,7 +150,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
         MINT_ADDRESS,
         1461600,
         spl_token::id(),
-        bs64::encode(&mint_src).as_str(),
+        bs64.encode(&mint_src).as_str(),
     );
 
     // Treasury tokens
@@ -169,7 +174,7 @@ async fn setup_program_test_env() -> (BanksClient, Keypair, solana_program::hash
         tokens_address,
         2039280,
         spl_token::id(),
-        bs64::encode(&tokens_src).as_str(),
+        bs64.encode(&tokens_src).as_str(),
     );
 
     // Set sysvar

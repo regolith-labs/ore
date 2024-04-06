@@ -27,6 +27,11 @@ use solana_sdk::{
 };
 use spl_token::state::{AccountState, Mint};
 
+use base64::{
+    Engine,
+    prelude::BASE64_STANDARD as bs64,
+};
+
 #[tokio::test]
 async fn test_reset() {
     // Setup
@@ -325,7 +330,7 @@ async fn setup_program_test_env(clock_state: ClockState) -> (BanksClient, Keypai
             BUS_ADDRESSES[i],
             1057920,
             ore::id(),
-            bs64::encode(
+            bs64.encode(
                 &[
                     &(Bus::discriminator() as u64).to_le_bytes(),
                     Bus {
@@ -347,7 +352,7 @@ async fn setup_program_test_env(clock_state: ClockState) -> (BanksClient, Keypai
         treasury_pda.0,
         1614720,
         ore::id(),
-        bs64::encode(
+        bs64.encode(
             &[
                 &(Treasury::discriminator() as u64).to_le_bytes(),
                 Treasury {
@@ -379,7 +384,7 @@ async fn setup_program_test_env(clock_state: ClockState) -> (BanksClient, Keypai
         MINT_ADDRESS,
         1461600,
         spl_token::id(),
-        bs64::encode(&mint_src).as_str(),
+        bs64.encode(&mint_src).as_str(),
     );
 
     // Treasury tokens
@@ -403,7 +408,7 @@ async fn setup_program_test_env(clock_state: ClockState) -> (BanksClient, Keypai
         tokens_address,
         2039280,
         spl_token::id(),
-        bs64::encode(&tokens_src).as_str(),
+        bs64.encode(&tokens_src).as_str(),
     );
 
     // Set sysvar
