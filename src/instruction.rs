@@ -216,7 +216,7 @@ pub fn mine(signer: Pubkey, bus: Pubkey, hash: Hash, nonce: u64) -> Instruction 
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
             AccountMeta::new(proof, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
