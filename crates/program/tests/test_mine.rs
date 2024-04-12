@@ -40,7 +40,7 @@ async fn test_mine() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(true, ClockState::Normal).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -48,7 +48,7 @@ async fn test_mine() {
 
     // Assert proof state
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
-    assert_eq!(proof_account.owner, ore::id());
+    assert_eq!(proof_account.owner, ore_api::id());
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
     assert_eq!(proof.authority, payer.pubkey());
     assert_eq!(proof.claimable_rewards, 0);
@@ -77,7 +77,7 @@ async fn test_mine() {
         .unwrap();
     let slot_hash_bytes = &slot_hashes_account.data[0..size_of::<SlotHash>()];
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
-    assert_eq!(proof_account.owner, ore::id());
+    assert_eq!(proof_account.owner, ore_api::id());
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
     assert_eq!(proof.authority, payer.pubkey());
     assert_eq!(proof.claimable_rewards, INITIAL_REWARD_RATE);
@@ -142,7 +142,7 @@ async fn test_mine_alt_proof() {
         setup_program_test_env(true, ClockState::Normal).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -150,7 +150,7 @@ async fn test_mine_alt_proof() {
 
     // Submit register alt tx
     let proof_alt_pda =
-        Pubkey::find_program_address(&[PROOF, payer_alt.pubkey().as_ref()], &ore::id());
+        Pubkey::find_program_address(&[PROOF, payer_alt.pubkey().as_ref()], &ore_api::id());
     let ix_alt = ore_api::instruction::register(payer_alt.pubkey());
     let tx = Transaction::new_signed_with_payer(
         &[ix_alt],
@@ -170,7 +170,7 @@ async fn test_mine_alt_proof() {
         payer.pubkey(),
     );
     let ix = Instruction {
-        program_id: ore::id(),
+        program_id: ore_api::id(),
         accounts: vec![
             AccountMeta::new(payer.pubkey(), true),
             AccountMeta::new(BUS_ADDRESSES[0], false),
@@ -202,7 +202,7 @@ async fn test_mine_correct_hash_alt_proof() {
 
     // Submit register alt tx
     let proof_alt_pda =
-        Pubkey::find_program_address(&[PROOF, payer_alt.pubkey().as_ref()], &ore::id());
+        Pubkey::find_program_address(&[PROOF, payer_alt.pubkey().as_ref()], &ore_api::id());
     let ix_alt = ore_api::instruction::register(payer_alt.pubkey());
     let tx = Transaction::new_signed_with_payer(
         &[ix_alt],
@@ -222,7 +222,7 @@ async fn test_mine_correct_hash_alt_proof() {
         payer_alt.pubkey(),
     );
     let ix = Instruction {
-        program_id: ore::id(),
+        program_id: ore_api::id(),
         accounts: vec![
             AccountMeta::new(payer.pubkey(), true),
             AccountMeta::new(BUS_ADDRESSES[0], false),
@@ -252,7 +252,7 @@ async fn test_mine_bus_rewards_insufficient() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(false, ClockState::Normal).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -343,7 +343,7 @@ async fn test_mine_not_enough_accounts() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(true, ClockState::Normal).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -373,7 +373,7 @@ async fn test_mine_too_early() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(true, ClockState::TooEarly).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -402,7 +402,7 @@ async fn test_mine_needs_reset() {
         setup_program_test_env(true, ClockState::NeedsReset).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -462,7 +462,7 @@ async fn test_mine_fail_bad_data() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(true, ClockState::Normal).await;
 
     // Submit register tx
-    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore::id());
+    let proof_pda = Pubkey::find_program_address(&[PROOF, payer.pubkey().as_ref()], &ore_api::id());
     let ix = ore_api::instruction::register(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -480,7 +480,7 @@ async fn test_mine_fail_bad_data() {
         payer.pubkey(),
     );
     let signer = payer.pubkey();
-    let proof_address = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &ore::id()).0;
+    let proof_address = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &ore_api::id()).0;
 
     // Fuzz randomized instruction data
     for _ in 0..FUZZ {
@@ -488,7 +488,7 @@ async fn test_mine_fail_bad_data() {
         let length = rng.sample(length_range);
         let random_bytes: Vec<u8> = (0..length).map(|_| rng.gen()).collect();
         let ix = Instruction {
-            program_id: ore::id(),
+            program_id: ore_api::id(),
             accounts: vec![
                 AccountMeta::new(signer, true),
                 AccountMeta::new(BUS_ADDRESSES[0], false),
@@ -601,7 +601,7 @@ async fn assert_mine_tx_err(
     nonce: u64,
 ) {
     let ix = Instruction {
-        program_id: ore::id(),
+        program_id: ore_api::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
@@ -654,7 +654,8 @@ async fn setup_program_test_env(
     funded_busses: bool,
     clock_state: ClockState,
 ) -> (BanksClient, Keypair, Keypair, solana_program::hash::Hash) {
-    let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
+    let mut program_test =
+        ProgramTest::new("ore", ore_api::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
     // Busses
@@ -662,7 +663,7 @@ async fn setup_program_test_env(
         program_test.add_account_with_base64_data(
             BUS_ADDRESSES[i],
             1057920,
-            ore::id(),
+            ore_api::id(),
             bs64::encode(
                 &[
                     &(Bus::discriminator() as u64).to_le_bytes(),
@@ -680,11 +681,11 @@ async fn setup_program_test_env(
 
     // Treasury
     let admin_address = Pubkey::from_str("AeNqnoLwFanMd3ig9WoMxQZVwQHtCtqKMMBsT1sTrvz6").unwrap();
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore_api::id());
     program_test.add_account_with_base64_data(
         treasury_pda.0,
         1614720,
-        ore::id(),
+        ore_api::id(),
         bs64::encode(
             &[
                 &(Treasury::discriminator() as u64).to_le_bytes(),

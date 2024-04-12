@@ -91,7 +91,8 @@ async fn test_update_difficulty_not_enough_accounts() {
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Keypair, Hash) {
-    let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
+    let mut program_test =
+        ProgramTest::new("ore", ore_api::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
     // Setup metadata program

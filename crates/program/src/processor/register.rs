@@ -37,14 +37,14 @@ pub fn process_register<'a, 'info>(
         proof_info,
         &[PROOF, signer.key.as_ref()],
         args.bump,
-        &crate::id(),
+        &ore_api::id(),
     )?;
     load_program(system_program, system_program::id())?;
 
     // Initialize proof
     create_pda(
         proof_info,
-        &crate::id(),
+        &ore_api::id(),
         8 + size_of::<Proof>(),
         &[PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,

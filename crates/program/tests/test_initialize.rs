@@ -27,7 +27,7 @@ async fn test_initialize() {
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Pdas
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &ore_api::id());
     let treasury_tokens_address =
         spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &MINT_ADDRESS);
 
@@ -40,7 +40,7 @@ async fn test_initialize() {
     // Test bus state
     for i in 0..BUS_COUNT {
         let bus_account = banks.get_account(BUS_ADDRESSES[i]).await.unwrap().unwrap();
-        assert_eq!(bus_account.owner, ore::id());
+        assert_eq!(bus_account.owner, ore_api::id());
         let bus = Bus::try_from_bytes(&bus_account.data).unwrap();
         assert_eq!(bus.id as u8, i as u8);
         assert_eq!(bus.rewards, 0);
@@ -48,7 +48,7 @@ async fn test_initialize() {
 
     // Test treasury state
     let treasury_account = banks.get_account(treasury_pda.0).await.unwrap().unwrap();
-    assert_eq!(treasury_account.owner, ore::id());
+    assert_eq!(treasury_account.owner, ore_api::id());
     let treasury = Treasury::try_from_bytes(&treasury_account.data).unwrap();
     assert_eq!(treasury.bump as u8, treasury_pda.1);
     assert_eq!(treasury.admin, payer.pubkey());
@@ -124,7 +124,7 @@ async fn test_initialize_bad_key() {
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Bad addresses
-    let bad_pda = Pubkey::find_program_address(&[b"t"], &ore::id());
+    let bad_pda = Pubkey::find_program_address(&[b"t"], &ore_api::id());
     for i in 1..12 {
         let mut ix = ore_api::instruction::initialize(payer.pubkey());
         ix.accounts[i].pubkey = bad_pda.0;
@@ -152,7 +152,8 @@ async fn test_initialize_bad_programs() {
 }
 
 async fn setup_program_test_env() -> (BanksClient, Keypair, Hash) {
-    let mut program_test = ProgramTest::new("ore", ore::ID, processor!(ore::process_instruction));
+    let mut program_test =
+        ProgramTest::new("ore", ore_api::ID, processor!(ore::process_instruction));
     program_test.prefer_bpf(true);
 
     // Setup metadata program
