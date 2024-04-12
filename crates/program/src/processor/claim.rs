@@ -3,13 +3,13 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{
+use crate::loaders::*;
+use ore_api::{
+    consts::{MINT_ADDRESS, TREASURY},
     error::OreError,
     instruction::ClaimArgs,
-    loaders::*,
     state::{Proof, Treasury},
     utils::AccountDeserialize,
-    MINT_ADDRESS, TREASURY,
 };
 
 /// Claim distributes owed token rewards from the treasury to the miner. Its responsibilies include:

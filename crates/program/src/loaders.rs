@@ -4,10 +4,10 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-use crate::{
+use ore_api::{
+    consts::{BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS},
     state::{Bus, Proof, Treasury},
     utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, TREASURY_ADDRESS,
 };
 
 /// Errors if:
@@ -339,15 +339,17 @@ mod tests {
     };
     use spl_token::state::{AccountState, Mint};
 
-    use crate::{
-        loaders::{
-            load_account, load_any_bus, load_bus, load_mint, load_proof, load_signer, load_sysvar,
-            load_token_account, load_treasury, load_uninitialized_account, load_uninitialized_pda,
+    use crate::loaders::{
+        load_account, load_any_bus, load_bus, load_mint, load_proof, load_signer, load_sysvar,
+        load_token_account, load_treasury, load_uninitialized_account, load_uninitialized_pda,
+    };
+    use ore_api::{
+        consts::{
+            BUS, BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
+            TREASURY_ADDRESS,
         },
         state::{Bus, Proof, Treasury},
         utils::Discriminator,
-        BUS, BUS_ADDRESSES, BUS_COUNT, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
-        TREASURY_ADDRESS,
     };
 
     use super::load_program;

@@ -1,11 +1,13 @@
 use std::str::FromStr;
 
-use ore::{
+use ore_api::{
+    consts::{
+        BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS,
+        TREASURY, TREASURY_ADDRESS,
+    },
     instruction::{register, OreInstruction, RegisterArgs},
     state::{Bus, Treasury},
     utils::Discriminator,
-    BUS_ADDRESSES, BUS_COUNT, INITIAL_REWARD_RATE, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY,
-    TREASURY_ADDRESS,
 };
 use solana_program::{
     clock::Clock,

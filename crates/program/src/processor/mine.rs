@@ -13,13 +13,13 @@ use solana_program::{
     sysvar::{self, Sysvar},
 };
 
-use crate::{
+use crate::loaders::*;
+use ore_api::{
+    consts::{EPOCH_DURATION, START_AT},
     error::OreError,
     instruction::MineArgs,
-    loaders::*,
     state::{Bus, Proof, Treasury},
     utils::AccountDeserialize,
-    EPOCH_DURATION, START_AT,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:

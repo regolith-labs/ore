@@ -2,11 +2,13 @@ use mpl_token_metadata::{
     accounts::Metadata,
     types::{Key, TokenStandard},
 };
-use ore::{
+use ore_api::{
+    consts::{
+        BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA_ADDRESS,
+        METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT_ADDRESS, TREASURY,
+    },
     state::{Bus, Treasury},
     utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA_ADDRESS,
-    METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT_ADDRESS, TREASURY,
 };
 use solana_program::{
     hash::Hash, program_option::COption, program_pack::Pack, pubkey::Pubkey, rent::Rent,
@@ -30,7 +32,7 @@ async fn test_initialize() {
         spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &MINT_ADDRESS);
 
     // Submit tx
-    let ix = ore::instruction::initialize(payer.pubkey());
+    let ix = ore_api::instruction::initialize(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -61,7 +63,7 @@ async fn test_initialize() {
     let mint = Mint::unpack(&mint_account.data).unwrap();
     assert_eq!(mint.mint_authority, COption::Some(treasury_pda.0));
     assert_eq!(mint.supply, 0);
-    assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
+    assert_eq!(mint.decimals, ore_api::consts::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
 
@@ -109,7 +111,7 @@ async fn test_initialize_not_enough_accounts() {
     let (mut banks, payer, blockhash) = setup_program_test_env().await;
 
     // Submit tx
-    let mut ix = ore::instruction::initialize(payer.pubkey());
+    let mut ix = ore_api::instruction::initialize(payer.pubkey());
     ix.accounts.remove(1);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -124,7 +126,7 @@ async fn test_initialize_bad_key() {
     // Bad addresses
     let bad_pda = Pubkey::find_program_address(&[b"t"], &ore::id());
     for i in 1..12 {
-        let mut ix = ore::instruction::initialize(payer.pubkey());
+        let mut ix = ore_api::instruction::initialize(payer.pubkey());
         ix.accounts[i].pubkey = bad_pda.0;
         let tx =
             Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
@@ -140,7 +142,7 @@ async fn test_initialize_bad_programs() {
 
     // Bad addresses
     for i in 13..18 {
-        let mut ix = ore::instruction::initialize(payer.pubkey());
+        let mut ix = ore_api::instruction::initialize(payer.pubkey());
         ix.accounts[i].pubkey = Pubkey::new_unique();
         let tx =
             Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);

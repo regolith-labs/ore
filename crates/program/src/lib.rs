@@ -1,13 +1,8 @@
-pub mod consts;
-pub mod error;
-pub mod instruction;
 mod loaders;
 mod processor;
-pub mod state;
-pub mod utils;
+mod utils;
 
-pub use consts::*;
-use instruction::*;
+use ore_api::instruction::OreInstruction;
 use processor::*;
 use solana_program::{
     self, account_info::AccountInfo, declare_id, entrypoint::ProgramResult,

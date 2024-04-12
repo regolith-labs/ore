@@ -3,7 +3,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::AccountDeserialize};
+use crate::loaders::*;
+use ore_api::{instruction::UpdateAdminArgs, state::Treasury, utils::AccountDeserialize};
 
 /// UpdateAdmin updates the program's admin account. Its responsibilities include:
 /// 1. Update the treasury admin address.

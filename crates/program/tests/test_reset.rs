@@ -1,11 +1,13 @@
 use std::str::FromStr;
 
-use ore::{
+use ore_api::{
+    consts::{
+        BUS, BUS_ADDRESSES, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE,
+        MAX_EPOCH_REWARDS, MINT_ADDRESS, START_AT, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
+    },
     instruction::OreInstruction,
     state::{Bus, Treasury},
     utils::{AccountDeserialize, Discriminator},
-    BUS, BUS_ADDRESSES, BUS_COUNT, BUS_EPOCH_REWARDS, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE,
-    MAX_EPOCH_REWARDS, MINT_ADDRESS, START_AT, TOKEN_DECIMALS, TREASURY, TREASURY_ADDRESS,
 };
 use rand::seq::SliceRandom;
 use solana_program::{
@@ -50,7 +52,7 @@ async fn test_reset() {
     );
 
     // Submit tx
-    let ix = ore::instruction::reset(payer.pubkey());
+    let ix = ore_api::instruction::reset(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -83,7 +85,7 @@ async fn test_reset() {
     let mint = Mint::unpack(&mint_account.data).unwrap();
     assert_eq!(mint.mint_authority, COption::Some(TREASURY_ADDRESS));
     assert_eq!(mint.supply, MAX_EPOCH_REWARDS);
-    assert_eq!(mint.decimals, ore::TOKEN_DECIMALS);
+    assert_eq!(mint.decimals, ore_api::consts::TOKEN_DECIMALS);
     assert_eq!(mint.is_initialized, true);
     assert_eq!(mint.freeze_authority, COption::None);
 
@@ -113,7 +115,7 @@ async fn test_reset_bad_key() {
     // Bad addresses
     let bad_pda = Pubkey::find_program_address(&[b"t"], &ore::id());
     for i in 1..13 {
-        let mut ix = ore::instruction::reset(payer.pubkey());
+        let mut ix = ore_api::instruction::reset(payer.pubkey());
         ix.accounts[i].pubkey = bad_pda.0;
         let tx =
             Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
@@ -175,13 +177,13 @@ async fn test_reset_race() {
     let (mut banks, payer, payer_alt, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Reset one passes
-    let ix = ore::instruction::reset(payer.pubkey());
+    let ix = ore_api::instruction::reset(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
     // Reset two fails
-    let ix = ore::instruction::reset(payer_alt.pubkey());
+    let ix = ore_api::instruction::reset(payer_alt.pubkey());
     let tx = Transaction::new_signed_with_payer(
         &[ix],
         Some(&payer_alt.pubkey()),
@@ -198,7 +200,7 @@ async fn test_reset_too_early() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::TooEarly).await;
 
     // Reset one passes
-    let ix = ore::instruction::reset(payer.pubkey());
+    let ix = ore_api::instruction::reset(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_err());
@@ -210,7 +212,7 @@ async fn test_reset_not_enough_keys() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env(ClockState::Normal).await;
 
     // Reset with missing account
-    let mut ix = ore::instruction::reset(payer.pubkey());
+    let mut ix = ore_api::instruction::reset(payer.pubkey());
     ix.accounts.remove(1);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;

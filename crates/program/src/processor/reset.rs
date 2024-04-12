@@ -3,13 +3,15 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
 };
 
-use crate::{
+use crate::loaders::*;
+use ore_api::{
+    consts::{
+        BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        START_AT, TARGET_EPOCH_REWARDS, TREASURY,
+    },
     error::OreError,
-    loaders::*,
     state::{Bus, Treasury},
     utils::AccountDeserialize,
-    BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR, START_AT,
-    TARGET_EPOCH_REWARDS, TREASURY,
 };
 
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:
@@ -149,9 +151,9 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 mod tests {
     use rand::{distributions::Uniform, Rng};
 
-    use crate::{
-        calculate_new_reward_rate, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
-        TARGET_EPOCH_REWARDS,
+    use crate::calculate_new_reward_rate;
+    use ore_api::consts::{
+        BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS,
     };
 
     const FUZZ_SIZE: u64 = 10_000;

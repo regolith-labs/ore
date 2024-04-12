@@ -1,4 +1,4 @@
-use ore::{state::Treasury, utils::AccountDeserialize, TREASURY_ADDRESS};
+use ore_api::{consts::TREASURY_ADDRESS, state::Treasury, utils::AccountDeserialize};
 use solana_program::{
     hash::Hash, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, rent::Rent, system_program,
 };
@@ -15,7 +15,7 @@ async fn test_update_admin() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Submit tx
-    let ix = ore::instruction::initialize(payer.pubkey());
+    let ix = ore_api::instruction::initialize(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -26,7 +26,7 @@ async fn test_update_admin() {
 
     // Submit update admin ix
     let new_admin = Pubkey::new_unique();
-    let ix = ore::instruction::update_admin(payer.pubkey(), new_admin);
+    let ix = ore_api::instruction::update_admin(payer.pubkey(), new_admin);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -45,7 +45,7 @@ async fn test_update_admin() {
     );
 
     // Submit another update admin ix
-    let ix = ore::instruction::update_admin(payer.pubkey(), payer.pubkey());
+    let ix = ore_api::instruction::update_admin(payer.pubkey(), payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_err());
@@ -57,13 +57,13 @@ async fn test_update_admin_bad_signer() {
     let (mut banks, payer, alt_payer, blockhash) = setup_program_test_env().await;
 
     // Submit tx
-    let ix = ore::instruction::initialize(payer.pubkey());
+    let ix = ore_api::instruction::initialize(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
     // Submit ix
-    let ix = ore::instruction::update_admin(alt_payer.pubkey(), Pubkey::new_unique());
+    let ix = ore_api::instruction::update_admin(alt_payer.pubkey(), Pubkey::new_unique());
     let tx = Transaction::new_signed_with_payer(
         &[ix],
         Some(&alt_payer.pubkey()),
@@ -80,13 +80,13 @@ async fn test_update_admin_not_enough_accounts() {
     let (mut banks, payer, _, blockhash) = setup_program_test_env().await;
 
     // Submit tx
-    let ix = ore::instruction::initialize(payer.pubkey());
+    let ix = ore_api::instruction::initialize(payer.pubkey());
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
 
     // Submit ix without enough accounts
-    let mut ix = ore::instruction::update_admin(payer.pubkey(), Pubkey::new_unique());
+    let mut ix = ore_api::instruction::update_admin(payer.pubkey(), Pubkey::new_unique());
     ix.accounts.remove(1);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;

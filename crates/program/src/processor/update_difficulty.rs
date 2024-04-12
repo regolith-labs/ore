@@ -3,9 +3,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{
-    instruction::UpdateDifficultyArgs, loaders::*, state::Treasury, utils::AccountDeserialize,
-};
+use crate::loaders::*;
+use ore_api::{instruction::UpdateDifficultyArgs, state::Treasury, utils::AccountDeserialize};
 
 /// UpdateDifficulty updates the program's global difficulty value. Its responsibilities include:
 /// 1. Update the mining difficulty.

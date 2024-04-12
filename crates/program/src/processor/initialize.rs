@@ -10,15 +10,16 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-use crate::{
+use crate::{loaders::*, utils::create_pda};
+use ore_api::{
+    consts::{
+        BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
+        METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
+    },
     instruction::*,
-    loaders::*,
     state::{Bus, Treasury},
-    utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
-    METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:
