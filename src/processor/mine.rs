@@ -116,7 +116,7 @@ pub(crate) fn validate_hash(
         signer.as_ref(),
     ]);
     if hash.gt(&difficulty) {
-        return Err(OreError::DifficultyNotSatisfied.into());
+        return Err(OreError::HashInvalid.into());
     }
     Ok(hash)
 }

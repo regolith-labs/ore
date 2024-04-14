@@ -13,12 +13,10 @@ pub enum OreError {
     ResetTooEarly = 2,
     #[error("The provided hash was invalid")]
     HashInvalid = 3,
-    #[error("The provided hash does not satisfy the difficulty requirement")]
-    DifficultyNotSatisfied = 4,
     #[error("The bus does not have enough rewards to issue at this time")]
-    BusRewardsInsufficient = 5,
+    BusRewardsInsufficient = 4,
     #[error("The claim amount cannot be greater than the claimable rewards")]
-    ClaimTooLarge = 6,
+    ClaimTooLarge = 5,
 }
 
 impl From<OreError> for ProgramError {

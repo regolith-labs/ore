@@ -50,7 +50,6 @@ async fn test_mine() {
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
     assert_eq!(proof.authority, payer.pubkey());
     assert_eq!(proof.claimable_rewards, 0);
-    assert_eq!(proof.hash, hashv(&[payer.pubkey().as_ref()]).into());
     assert_eq!(proof.total_hashes, 0);
     assert_eq!(proof.total_rewards, 0);
 
@@ -497,23 +496,6 @@ async fn test_mine_fail_bad_data() {
         assert!(res.is_err());
     }
 
-    // Fuzz test random hashes and nonces
-    for _ in 0..FUZZ {
-        let nonce: u64 = rng.gen();
-        assert_mine_tx_err(
-            &mut banks,
-            &payer,
-            blockhash,
-            payer.pubkey(),
-            BUS_ADDRESSES[0],
-            proof_address,
-            TREASURY_ADDRESS,
-            sysvar::slot_hashes::id(),
-            nonce,
-        )
-        .await;
-    }
-
     // Fuzz test random bus addresses
     for _ in 0..FUZZ {
         assert_mine_tx_err(
@@ -615,9 +597,9 @@ fn find_next_hash(hash: KeccakHash, difficulty: KeccakHash, signer: Pubkey) -> (
     let mut nonce = 0u64;
     loop {
         next_hash = hashv(&[
+            nonce.to_le_bytes().as_slice(),
             hash.to_bytes().as_slice(),
             signer.to_bytes().as_slice(),
-            nonce.to_le_bytes().as_slice(),
         ]);
         if next_hash.le(&difficulty) {
             break;

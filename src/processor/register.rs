@@ -2,7 +2,7 @@ use std::mem::size_of;
 
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, keccak::hashv,
-    program_error::ProgramError, pubkey::Pubkey, system_program,
+    program_error::ProgramError, pubkey::Pubkey, slot_hashes::SlotHash, system_program, sysvar,
 };
 
 use crate::{
@@ -32,7 +32,7 @@ pub fn process_register<'a, 'info>(
     let args = RegisterArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, proof_info, system_program] = accounts else {
+    let [signer, proof_info, system_program, slot_hashes_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
@@ -43,6 +43,7 @@ pub fn process_register<'a, 'info>(
         &crate::id(),
     )?;
     load_program(system_program, system_program::id())?;
+    load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
     // Initialize proof
     create_pda(
@@ -58,7 +59,11 @@ pub fn process_register<'a, 'info>(
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
     proof.claimable_rewards = 0;
-    proof.hash = hashv(&[signer.key.as_ref()]).into();
+    proof.hash = hashv(&[
+        signer.key.as_ref(),
+        &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
+    ])
+    .into();
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 
