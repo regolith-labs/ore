@@ -62,7 +62,7 @@ async fn test_mine() {
     );
 
     // Submit mine tx
-    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], nonce);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_ok());
@@ -161,7 +161,7 @@ async fn test_mine_alt_proof() {
     // Submit mine tx with invalid proof
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
@@ -178,7 +178,6 @@ async fn test_mine_alt_proof() {
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
-                hash: next_hash.into(),
                 nonce: nonce.to_le_bytes(),
             }
             .to_bytes()
@@ -213,7 +212,7 @@ async fn test_mine_correct_hash_alt_proof() {
     // Submit with correct hash for invalid proof
     let proof_alt_account = banks.get_account(proof_alt_pda.0).await.unwrap().unwrap();
     let proof_alt = Proof::try_from_bytes(&proof_alt_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof_alt.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer_alt.pubkey(),
@@ -230,7 +229,6 @@ async fn test_mine_correct_hash_alt_proof() {
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
-                hash: next_hash.into(),
                 nonce: nonce.to_le_bytes(),
             }
             .to_bytes()
@@ -258,14 +256,14 @@ async fn test_mine_bus_rewards_insufficient() {
     // Find next hash
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
     );
 
     // Submit mine tx
-    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], nonce);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_err());
@@ -348,14 +346,14 @@ async fn test_mine_not_enough_accounts() {
     // Find next hash
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
     );
 
     // Submit mine tx
-    let mut ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let mut ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], nonce);
     ix.accounts.remove(1);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
@@ -377,14 +375,14 @@ async fn test_mine_too_early() {
     // Find next hash
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
     );
 
     // Submit mine tx
-    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], nonce);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_err());
@@ -406,14 +404,14 @@ async fn test_mine_needs_reset() {
     // Find next hash
     let proof_account = banks.get_account(proof_pda.0).await.unwrap().unwrap();
     let proof = Proof::try_from_bytes(&proof_account.data).unwrap();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
     );
 
     // Submit mine tx
-    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], next_hash.into(), nonce);
+    let ix = ore::instruction::mine(payer.pubkey(), BUS_ADDRESSES[0], nonce);
     let tx = Transaction::new_signed_with_payer(&[ix], Some(&payer.pubkey()), &[&payer], blockhash);
     let res = banks.process_transaction(tx).await;
     assert!(res.is_err());
@@ -469,7 +467,7 @@ async fn test_mine_fail_bad_data() {
 
     // Shared variables for tests.
     let mut rng = rand::thread_rng();
-    let (next_hash, nonce) = find_next_hash(
+    let (_next_hash, nonce) = find_next_hash(
         proof.hash.into(),
         KeccakHash::new_from_array([u8::MAX; 32]),
         payer.pubkey(),
@@ -501,7 +499,6 @@ async fn test_mine_fail_bad_data() {
 
     // Fuzz test random hashes and nonces
     for _ in 0..FUZZ {
-        let next_hash = KeccakHash::new_unique();
         let nonce: u64 = rng.gen();
         assert_mine_tx_err(
             &mut banks,
@@ -512,7 +509,6 @@ async fn test_mine_fail_bad_data() {
             proof_address,
             TREASURY_ADDRESS,
             sysvar::slot_hashes::id(),
-            next_hash,
             nonce,
         )
         .await;
@@ -529,7 +525,6 @@ async fn test_mine_fail_bad_data() {
             proof_address,
             TREASURY_ADDRESS,
             sysvar::slot_hashes::id(),
-            next_hash,
             nonce,
         )
         .await;
@@ -546,7 +541,6 @@ async fn test_mine_fail_bad_data() {
             Pubkey::new_unique(),
             TREASURY_ADDRESS,
             sysvar::slot_hashes::id(),
-            next_hash,
             nonce,
         )
         .await;
@@ -562,7 +556,6 @@ async fn test_mine_fail_bad_data() {
         TREASURY_ADDRESS,
         proof_address,
         sysvar::slot_hashes::id(),
-        next_hash,
         nonce,
     )
     .await;
@@ -577,7 +570,6 @@ async fn test_mine_fail_bad_data() {
         proof_address,
         TREASURY_ADDRESS,
         sysvar::clock::id(),
-        next_hash,
         nonce,
     )
     .await;
@@ -592,7 +584,6 @@ async fn assert_mine_tx_err(
     proof: Pubkey,
     treasury: Pubkey,
     slot_hash: Pubkey,
-    next_hash: KeccakHash,
     nonce: u64,
 ) {
     let ix = Instruction {
@@ -607,7 +598,6 @@ async fn assert_mine_tx_err(
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
-                hash: next_hash.into(),
                 nonce: nonce.to_le_bytes(),
             }
             .to_bytes()
