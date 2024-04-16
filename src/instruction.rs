@@ -8,9 +8,18 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, METADATA, MINT, MINT_ADDRESS,
-    MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, CONFIG, CONFIG_ADDRESS, METADATA,
+    MINT, MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
 };
+
+// TODO Stake
+// TODO Unstake
+
+// TODO Upgrade (v1 to v2 token)
+// TODO Downgrade (v2 to v1 token)
+
+// TODO Personalized difficulty
+// TODO Payout rewards based on multiplier and difficulty setting
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -80,11 +89,6 @@ pub enum OreInstruction {
     #[account(1, name = "signer", desc = "Admin signer", signer)]
     #[account(2, name = "treasury", desc = "Ore treasury account")]
     UpdateAdmin = 101,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "treasury", desc = "Ore treasury account")]
-    UpdateDifficulty = 102,
 }
 
 impl OreInstruction {
@@ -104,6 +108,7 @@ pub struct InitializeArgs {
     pub bus_5_bump: u8,
     pub bus_6_bump: u8,
     pub bus_7_bump: u8,
+    pub config_bump: u8,
     pub metadata_bump: u8,
     pub mint_bump: u8,
     pub treasury_bump: u8,
@@ -144,14 +149,12 @@ impl_to_bytes!(RegisterArgs);
 impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(UpdateAdminArgs);
-impl_to_bytes!(UpdateDifficultyArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
 impl_instruction_from_bytes!(RegisterArgs);
 impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
-impl_instruction_from_bytes!(UpdateDifficultyArgs);
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
@@ -215,8 +218,8 @@ pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
+            AccountMeta::new_readonly(CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
-            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
@@ -272,6 +275,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
         Pubkey::find_program_address(&[BUS, &[6]], &crate::id()),
         Pubkey::find_program_address(&[BUS, &[7]], &crate::id()),
     ];
+    let config_pda = Pubkey::find_program_address(&[CONFIG], &crate::id());
     let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
     let treasury_tokens =
@@ -296,6 +300,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new(bus_pdas[5].0, false),
             AccountMeta::new(bus_pdas[6].0, false),
             AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(config_pda.0, false),
             AccountMeta::new(metadata_pda.0, false),
             AccountMeta::new(mint_pda.0, false),
             AccountMeta::new(treasury_pda.0, false),
@@ -317,6 +322,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
                 bus_5_bump: bus_pdas[5].1,
                 bus_6_bump: bus_pdas[6].1,
                 bus_7_bump: bus_pdas[7].1,
+                config_bump: config_pda.1,
                 metadata_bump: metadata_pda.1,
                 mint_bump: mint_pda.1,
                 treasury_bump: treasury_pda.1,
@@ -339,22 +345,6 @@ pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
         data: [
             OreInstruction::UpdateAdmin.to_vec(),
             UpdateAdminArgs { new_admin }.to_bytes().to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Builds an update_difficulty instruction.
-pub fn update_difficulty(signer: Pubkey, new_difficulty: Hash) -> Instruction {
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(TREASURY_ADDRESS, false),
-        ],
-        data: [
-            OreInstruction::UpdateDifficulty.to_vec(),
-            UpdateDifficultyArgs { new_difficulty }.to_bytes().to_vec(),
         ]
         .concat(),
     }

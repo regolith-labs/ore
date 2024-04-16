@@ -14,6 +14,8 @@ use crate::{
     PROOF,
 };
 
+// TODO Create a stake account
+
 /// Register generates a new hash chain for a prospective miner. Its responsibilities include:
 /// 1. Initialize a new proof account.
 /// 2. Generate an initial hash from the signer's key.
@@ -58,12 +60,14 @@ pub fn process_register<'a, 'info>(
     proof_data[0] = Proof::discriminator() as u8;
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
-    proof.claimable_rewards = 0;
+    proof.balance = 0;
     proof.hash = hashv(&[
         signer.key.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .into();
+    proof.last_hash_at = 0;
+    proof.multiplier = 1; // TODO
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 

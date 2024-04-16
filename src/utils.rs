@@ -82,8 +82,9 @@ pub(crate) fn create_pda<'a, 'info>(
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum AccountDiscriminator {
     Bus = 100,
-    Proof = 101,
-    Treasury = 102,
+    Config = 101,
+    Proof = 102,
+    Treasury = 103,
 }
 
 pub trait Discriminator {

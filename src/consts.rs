@@ -48,6 +48,9 @@ static_assertions::const_assert!(
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
 
+/// The seed of the config account PDA.
+pub const CONFIG: &[u8] = b"config";
+
 /// The seed of the metadata account PDA.
 pub const METADATA: &[u8] = b"metadata";
 
@@ -85,6 +88,10 @@ pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
     pubkey!("EpcfjBs8eQ4unSMdowxyTE8K3vVJ3XUnEr5BEWvSX7RB"),
     pubkey!("Ay5N9vKS2Tyo2M9u9TFt59N1XbxdW93C7UrFZW3h8sMC"),
 ];
+
+// TODO
+/// The address of the config account.
+pub const CONFIG_ADDRESS: Pubkey = pubkey!("FTap9fv2GPpWGqrLj3o4c9nHH7p36ih7NbSWHnrkQYqa");
 
 /// The address of the mint metadata account.
 pub const METADATA_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");

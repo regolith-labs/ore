@@ -13,11 +13,11 @@ use spl_token::state::Mint;
 use crate::{
     instruction::*,
     loaders::*,
-    state::{Bus, Treasury},
+    state::{Bus, Config, Treasury},
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
+    BUS, BUS_COUNT, CONFIG, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
     METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
 
@@ -48,7 +48,7 @@ pub fn process_initialize<'a, 'info>(
     let args = InitializeArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
+    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -62,6 +62,7 @@ pub fn process_initialize<'a, 'info>(
     load_uninitialized_pda(bus_5_info, &[BUS, &[5]], args.bus_5_bump, &crate::id())?;
     load_uninitialized_pda(bus_6_info, &[BUS, &[6]], args.bus_6_bump, &crate::id())?;
     load_uninitialized_pda(bus_7_info, &[BUS, &[7]], args.bus_7_bump, &crate::id())?;
+    load_uninitialized_pda(config_info, &[CONFIG], args.config_bump, &crate::id())?;
     load_uninitialized_pda(
         metadata_info,
         &[
@@ -117,6 +118,21 @@ pub fn process_initialize<'a, 'info>(
         bus.rewards = 0;
     }
 
+    // Initialize config
+    create_pda(
+        config_info,
+        &crate::id(),
+        8 + size_of::<Config>(),
+        &[CONFIG, &[args.config_bump]],
+        system_program,
+        signer,
+    )?;
+    let mut config_data = config_info.data.borrow_mut();
+    config_data[0] = Config::discriminator() as u8;
+    let config = Config::try_from_bytes_mut(&mut config_data)?;
+    config.admin = *signer.key;
+    config.difficulty = INITIAL_DIFFICULTY.into();
+
     // Initialize treasury
     create_pda(
         treasury_info,
@@ -129,9 +145,7 @@ pub fn process_initialize<'a, 'info>(
     let mut treasury_data = treasury_info.data.borrow_mut();
     treasury_data[0] = Treasury::discriminator() as u8;
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    treasury.admin = *signer.key;
     treasury.bump = args.treasury_bump as u64;
-    treasury.difficulty = INITIAL_DIFFICULTY.into();
     treasury.last_reset_at = 0;
     treasury.reward_rate = INITIAL_REWARD_RATE;
     treasury.total_claimed_rewards = 0;

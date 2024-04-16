@@ -69,12 +69,16 @@ pub fn process_mine<'a, 'info>(
     // Validate provided hash
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    let hash = validate_hash(
-        proof.hash.into(),
-        *signer.key,
-        u64::from_le_bytes(args.nonce),
-        treasury.difficulty.into(),
-    )?;
+    // let hash = validate_hash(
+    //     proof.hash.into(),
+    //     *signer.key,
+    //     u64::from_le_bytes(args.nonce),
+    //     proof.difficulty.into(),
+    // )?;
+
+    // TODO Calculate reward based on difficulty
+    // TODO Calculate rewards multiplier
+    // TODO Calculate reward payout amount
 
     // Update claimable rewards
     let mut bus_data = bus_info.data.borrow_mut();
@@ -83,11 +87,12 @@ pub fn process_mine<'a, 'info>(
         .rewards
         .checked_sub(treasury.reward_rate)
         .ok_or(OreError::BusRewardsInsufficient)?;
-    proof.claimable_rewards = proof.claimable_rewards.saturating_add(treasury.reward_rate);
+    proof.balance = proof.balance.saturating_add(treasury.reward_rate);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.hash = hashv(&[
-        hash.as_ref(),
+        // TODO
+        // hash.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .into();

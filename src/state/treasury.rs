@@ -1,10 +1,8 @@
 use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
-use solana_program::pubkey::Pubkey;
 
 use crate::{
     impl_account_from_bytes, impl_to_bytes,
-    state::Hash,
     utils::{AccountDiscriminator, Discriminator},
 };
 
@@ -13,14 +11,8 @@ use crate::{
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Treasury {
-    /// The admin authority with permission to update the difficulty.
-    pub admin: Pubkey,
-
     /// The bump of the treasury account PDA, for signing CPIs.
     pub bump: u64,
-
-    /// The hash difficulty.
-    pub difficulty: Hash,
 
     /// The timestamp of the reset invocation.
     pub last_reset_at: i64,
@@ -28,7 +20,7 @@ pub struct Treasury {
     /// The reward rate to payout to miners for submiting valid hashes.
     pub reward_rate: u64,
 
-    /// The total lifetime claimed rewards.
+    /// The total lifetime claimed rewards of the program.
     pub total_claimed_rewards: u64,
 }
 

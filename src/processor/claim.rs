@@ -48,11 +48,11 @@ pub fn process_claim<'a, 'info>(
     )?;
     load_program(token_program, spl_token::id())?;
 
-    // Update claimable amount
+    // Update miner balance
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.claimable_rewards = proof
-        .claimable_rewards
+    proof.balance = proof
+        .balance
         .checked_sub(amount)
         .ok_or(OreError::ClaimTooLarge)?;
 

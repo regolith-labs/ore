@@ -3,7 +3,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use crate::{instruction::UpdateAdminArgs, loaders::*, state::Treasury, utils::AccountDeserialize};
+use crate::{instruction::UpdateAdminArgs, loaders::*, state::Config, utils::AccountDeserialize};
 
 /// UpdateAdmin updates the program's admin account. Its responsibilities include:
 /// 1. Update the treasury admin address.
@@ -34,21 +34,21 @@ pub fn process_update_admin<'a, 'info>(
     let args = UpdateAdminArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, treasury_info] = accounts else {
+    let [signer, config_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_treasury(treasury_info, true)?;
+    load_config(config_info, true)?;
 
     // Validate signer is admin
-    let mut treasury_data = treasury_info.data.borrow_mut();
-    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    if treasury.admin.ne(&signer.key) {
+    let mut config_data = config_info.data.borrow_mut();
+    let config = Config::try_from_bytes_mut(&mut config_data)?;
+    if config.admin.ne(&signer.key) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
     // Update admin
-    treasury.admin = args.new_admin;
+    config.admin = args.new_admin;
 
     Ok(())
 }

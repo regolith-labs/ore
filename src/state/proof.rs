@@ -13,14 +13,21 @@ use crate::{
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Proof {
-    /// The account (i.e. miner) authorized to use this proof.
+    /// The signer authorized to use this proof.
     pub authority: Pubkey,
 
     /// The quantity of tokens this miner may claim from the treasury.
-    pub claimable_rewards: u64,
+    pub balance: u64,
 
     /// The proof's current hash.
     pub hash: Hash,
+
+    /// The last time this account provided a hash.
+    pub last_hash_at: u64,
+
+    // TODO Figure out multiplier representation
+    /// The rewards multiplier for this account.
+    pub multiplier: u64,
 
     /// The total lifetime hashes provided by this miner.
     pub total_hashes: u64,

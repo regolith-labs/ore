@@ -39,7 +39,6 @@ pub fn process_instruction(
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
         OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
-        OreInstruction::UpdateDifficulty => process_update_difficulty(program_id, accounts, data)?,
     }
 
     Ok(())
