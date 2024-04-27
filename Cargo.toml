@@ -21,6 +21,7 @@ default = []
 [dependencies]
 bs58 = "0.5.0"
 bytemuck = "1.14.3"
+drillx = { git = "https://github.com/hardhatchad/drillx", branch = "master" }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 shank = "0.3.0"

@@ -2,9 +2,10 @@ use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
+// TODO next_min_difficulty: Option<u8>, update on reset
+
 use crate::{
     impl_account_from_bytes, impl_to_bytes,
-    state::Hash,
     utils::{AccountDiscriminator, Discriminator},
 };
 
@@ -15,8 +16,14 @@ pub struct Config {
     /// The admin authority with permission to update the difficulty.
     pub admin: Pubkey,
 
-    /// The hash difficulty.
-    pub difficulty: Hash,
+    /// The base reward rate paid out for a hash of minimum difficulty.
+    pub base_reward_rate: u64,
+
+    /// The minimum accepted difficulty.
+    pub min_difficulty: u32,
+
+    /// Is mining paused.
+    pub paused: u32,
 }
 
 impl Discriminator for Config {

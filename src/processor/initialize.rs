@@ -17,8 +17,8 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, CONFIG, INITIAL_DIFFICULTY, INITIAL_REWARD_RATE, METADATA, METADATA_NAME,
-    METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
+    BUS, BUS_COUNT, CONFIG, METADATA, METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT,
+    MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:
@@ -131,7 +131,7 @@ pub fn process_initialize<'a, 'info>(
     config_data[0] = Config::discriminator() as u8;
     let config = Config::try_from_bytes_mut(&mut config_data)?;
     config.admin = *signer.key;
-    config.difficulty = INITIAL_DIFFICULTY.into();
+    // config.difficulty = INITIAL_DIFFICULTY.into();
 
     // Initialize treasury
     create_pda(
@@ -146,8 +146,8 @@ pub fn process_initialize<'a, 'info>(
     treasury_data[0] = Treasury::discriminator() as u8;
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
     treasury.bump = args.treasury_bump as u64;
-    treasury.last_reset_at = 0;
-    treasury.reward_rate = INITIAL_REWARD_RATE;
+    // treasury.last_reset_at = 0;
+    // treasury.reward_rate = INITIAL_REWARD_RATE;
     treasury.total_claimed_rewards = 0;
     drop(treasury_data);
 

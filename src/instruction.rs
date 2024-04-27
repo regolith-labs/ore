@@ -8,18 +8,9 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, state::Hash, BUS, CONFIG, CONFIG_ADDRESS, METADATA,
-    MINT, MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, BUS, CONFIG, CONFIG_ADDRESS, METADATA, MINT,
+    MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
 };
-
-// TODO Stake
-// TODO Unstake
-
-// TODO Upgrade (v1 to v2 token)
-// TODO Downgrade (v2 to v1 token)
-
-// TODO Personalized difficulty
-// TODO Payout rewards based on multiplier and difficulty setting
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -136,12 +127,6 @@ pub struct ClaimArgs {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct UpdateAdminArgs {
     pub new_admin: Pubkey,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct UpdateDifficultyArgs {
-    pub new_difficulty: Hash,
 }
 
 impl_to_bytes!(InitializeArgs);

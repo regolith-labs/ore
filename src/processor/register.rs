@@ -14,7 +14,9 @@ use crate::{
     PROOF,
 };
 
-// TODO Create a stake account
+// TODO Create a stake account (token account)
+// TODO Need to keep claimable balance (from treasury) separate from staking balance (from stake account)
+// TODO Multiplier calculations should account for both
 
 /// Register generates a new hash chain for a prospective miner. Its responsibilities include:
 /// 1. Initialize a new proof account.
@@ -65,9 +67,8 @@ pub fn process_register<'a, 'info>(
         signer.key.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
-    .into();
+    .0;
     proof.last_hash_at = 0;
-    proof.multiplier = 1; // TODO
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 

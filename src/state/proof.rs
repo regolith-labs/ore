@@ -4,7 +4,6 @@ use solana_program::pubkey::Pubkey;
 
 use crate::{
     impl_account_from_bytes, impl_to_bytes,
-    state::Hash,
     utils::{AccountDiscriminator, Discriminator},
 };
 
@@ -16,18 +15,17 @@ pub struct Proof {
     /// The signer authorized to use this proof.
     pub authority: Pubkey,
 
-    /// The quantity of tokens this miner may claim from the treasury.
+    /// The quantity of tokens this miner has staked or earned.
     pub balance: u64,
 
     /// The proof's current hash.
-    pub hash: Hash,
+    pub hash: [u8; 32],
+
+    /// The last slot ore was deposited into this account.
+    pub last_deposit_slot: u64,
 
     /// The last time this account provided a hash.
-    pub last_hash_at: u64,
-
-    // TODO Figure out multiplier representation
-    /// The rewards multiplier for this account.
-    pub multiplier: u64,
+    pub last_hash_at: i64,
 
     /// The total lifetime hashes provided by this miner.
     pub total_hashes: u64,

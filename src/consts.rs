@@ -1,8 +1,5 @@
 use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 
-/// The unix timestamp after which mining can begin.
-pub const START_AT: i64 = 1712070600;
-
 /// The reward rate to intialize the program with.
 pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
 
@@ -39,6 +36,9 @@ pub const BUS_COUNT: usize = 8;
 /// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
 /// than a factor of this constant from one epoch to the next.
 pub const SMOOTHING_FACTOR: u64 = 2;
+
+/// The range of difficulties miners can target above the minimum.
+pub const DIFFICULTY_RANGE: usize = 32;
 
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
@@ -95,6 +95,9 @@ pub const CONFIG_ADDRESS: Pubkey = pubkey!("FTap9fv2GPpWGqrLj3o4c9nHH7p36ih7NbSW
 
 /// The address of the mint metadata account.
 pub const METADATA_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
+
+/// The address of the mint metadata account.
+pub const NOISE_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
 
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");

@@ -14,6 +14,12 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
+// TODO Stake
+// TODO Claim
+
+// TODO Upgrade (v1 to v2 token)
+// TODO Downgrade (v2 to v1 token)
+
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
 
 #[cfg(not(feature = "no-entrypoint"))]

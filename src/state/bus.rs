@@ -17,12 +17,6 @@ pub struct Bus {
 
     /// The quantity of rewards this bus can issue in the current epoch epoch.
     pub rewards: u64,
-
-    /// Histogram of hash count per difficulty
-    pub hash_hist: [u64; 32],
-
-    /// Cumulative sum of applied multipliers per difficulty
-    pub multiplier_hist: [u64; 32],
 }
 
 impl Discriminator for Bus {

@@ -7,8 +7,10 @@ use spl_token::state::Mint;
 use crate::{
     state::{Bus, Config, Proof, Treasury},
     utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, CONFIG_ADDRESS, MINT_ADDRESS, TREASURY_ADDRESS,
+    BUS_ADDRESSES, BUS_COUNT, CONFIG_ADDRESS, MINT_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
 };
+
+// TODO Account checks don't need to deserialize the whole byte array. They can just check the type byte
 
 /// Errors if:
 /// - Account is not a signer.
@@ -119,6 +121,30 @@ pub fn load_config<'a, 'info>(
 
     let config_data = info.data.borrow();
     let _ = Config::try_from_bytes(&config_data)?;
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// asdf
+pub fn load_noise<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&NOISE_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
 
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);

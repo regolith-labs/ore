@@ -14,12 +14,6 @@ pub struct Treasury {
     /// The bump of the treasury account PDA, for signing CPIs.
     pub bump: u64,
 
-    /// The timestamp of the reset invocation.
-    pub last_reset_at: i64,
-
-    /// The reward rate to payout to miners for submiting valid hashes.
-    pub reward_rate: u64,
-
     /// The total lifetime claimed rewards of the program.
     pub total_claimed_rewards: u64,
 }
