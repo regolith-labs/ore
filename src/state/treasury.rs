@@ -13,9 +13,6 @@ use crate::{
 pub struct Treasury {
     /// The bump of the treasury account PDA, for signing CPIs.
     pub bump: u64,
-
-    /// The total lifetime claimed rewards of the program.
-    pub total_claimed_rewards: u64,
 }
 
 impl Discriminator for Treasury {

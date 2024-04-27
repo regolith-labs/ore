@@ -14,9 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Stake
-// TODO Claim
-
 // TODO Upgrade (v1 to v2 token)
 // TODO Downgrade (v2 to v1 token)
 
@@ -43,6 +40,7 @@ pub fn process_instruction(
         OreInstruction::Register => process_register(program_id, accounts, data)?,
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
+        OreInstruction::Stake => process_stake(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
         OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
     }

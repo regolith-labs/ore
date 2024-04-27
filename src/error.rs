@@ -17,8 +17,10 @@ pub enum OreError {
     BusRewardsInsufficient = 4,
     #[error("The claim amount cannot be greater than the claimable rewards")]
     ClaimTooLarge = 5,
+    #[error("The stake amount cannot exceed u64 size")]
+    StakeTooLarge = 6,
     #[error("The clock time is invalid")]
-    ClockInvalid = 6,
+    ClockInvalid = 7,
 }
 
 impl From<OreError> for ProgramError {

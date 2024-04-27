@@ -56,6 +56,14 @@ pub enum OreInstruction {
     Claim = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "sender", desc = "Signer token account", writable)]
+    #[account(3, name = "proof", desc = "Ore proof account", writable)]
+    #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(5, name = "token_program", desc = "SPL token program")]
+    Stake = 4,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
     #[account(2, name = "bus_0", desc = "Ore bus account 0", writable)]
     #[account(3, name = "bus_1", desc = "Ore bus account 1", writable)]
@@ -125,6 +133,12 @@ pub struct ClaimArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct StakeArgs {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct UpdateAdminArgs {
     pub new_admin: Pubkey,
 }
@@ -133,12 +147,14 @@ impl_to_bytes!(InitializeArgs);
 impl_to_bytes!(RegisterArgs);
 impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
+impl_to_bytes!(StakeArgs);
 impl_to_bytes!(UpdateAdminArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
 impl_instruction_from_bytes!(RegisterArgs);
 impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
+impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
 
 /// Builds a reset instruction.

@@ -56,12 +56,9 @@ pub fn process_claim<'a, 'info>(
         .checked_sub(amount)
         .ok_or(OreError::ClaimTooLarge)?;
 
-    // Update lifetime status
+    // Distribute tokens from treasury to beneficiary
     let mut treasury_data = treasury_info.data.borrow_mut();
     let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    treasury.total_claimed_rewards = treasury.total_claimed_rewards.saturating_add(amount);
-
-    // Distribute tokens from treasury to beneficiary
     let treasury_bump = treasury.bump;
     drop(treasury_data);
     solana_program::program::invoke_signed(

@@ -148,7 +148,7 @@ pub fn process_initialize<'a, 'info>(
     treasury.bump = args.treasury_bump as u64;
     // treasury.last_reset_at = 0;
     // treasury.reward_rate = INITIAL_REWARD_RATE;
-    treasury.total_claimed_rewards = 0;
+    // treasury.total_claimed_rewards = 0;
     drop(treasury_data);
 
     // Initialize mint
