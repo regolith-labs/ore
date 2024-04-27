@@ -7,7 +7,7 @@ use spl_token::state::Mint;
 use crate::{
     state::{Bus, Config, Proof, Treasury},
     utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, CONFIG_ADDRESS, MINT_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
+    BUS_ADDRESSES, BUS_COUNT, CONFIG_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
 };
 
 // TODO Account checks don't need to deserialize the whole byte array. They can just check the type byte
@@ -226,13 +226,14 @@ pub fn load_treasury<'a, 'info>(
 /// - Expected to be writable, but is not.
 pub fn load_mint<'a, 'info>(
     info: &'a AccountInfo<'info>,
+    address: Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&spl_token::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
-    if info.key.ne(&MINT_ADDRESS) {
+    if info.key.ne(&address) {
         return Err(ProgramError::InvalidSeeds);
     }
 
