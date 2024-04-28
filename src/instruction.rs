@@ -8,8 +8,8 @@ use solana_program::{
 };
 
 use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, BUS, CONFIG, CONFIG_ADDRESS, METADATA, MINT,
-    MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
+    impl_instruction_from_bytes, impl_to_bytes, BUS, BUS_ADDRESSES, CONFIG, CONFIG_ADDRESS,
+    METADATA, MINT, MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -177,14 +177,6 @@ impl_instruction_from_bytes!(UpdateAdminArgs);
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
-    let bus_0 = Pubkey::find_program_address(&[BUS, &[0]], &crate::id()).0;
-    let bus_1 = Pubkey::find_program_address(&[BUS, &[1]], &crate::id()).0;
-    let bus_2 = Pubkey::find_program_address(&[BUS, &[2]], &crate::id()).0;
-    let bus_3 = Pubkey::find_program_address(&[BUS, &[3]], &crate::id()).0;
-    let bus_4 = Pubkey::find_program_address(&[BUS, &[4]], &crate::id()).0;
-    let bus_5 = Pubkey::find_program_address(&[BUS, &[5]], &crate::id()).0;
-    let bus_6 = Pubkey::find_program_address(&[BUS, &[6]], &crate::id()).0;
-    let bus_7 = Pubkey::find_program_address(&[BUS, &[7]], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
@@ -193,14 +185,14 @@ pub fn reset(signer: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(bus_0, false),
-            AccountMeta::new(bus_1, false),
-            AccountMeta::new(bus_2, false),
-            AccountMeta::new(bus_3, false),
-            AccountMeta::new(bus_4, false),
-            AccountMeta::new(bus_5, false),
-            AccountMeta::new(bus_6, false),
-            AccountMeta::new(bus_7, false),
+            AccountMeta::new(BUS_ADDRESSES[0], false),
+            AccountMeta::new(BUS_ADDRESSES[1], false),
+            AccountMeta::new(BUS_ADDRESSES[2], false),
+            AccountMeta::new(BUS_ADDRESSES[3], false),
+            AccountMeta::new(BUS_ADDRESSES[4], false),
+            AccountMeta::new(BUS_ADDRESSES[5], false),
+            AccountMeta::new(BUS_ADDRESSES[6], false),
+            AccountMeta::new(BUS_ADDRESSES[7], false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),

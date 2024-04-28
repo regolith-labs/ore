@@ -30,18 +30,18 @@ impl fmt::Display for Hash {
     }
 }
 
-impl Hash {
-    pub fn difficulty(&self) -> u32 {
-        let mut count = 0;
-        for &byte in &self.0 {
-            let lz = byte.leading_zeros();
-            count += lz;
-            if lz < 8 {
-                break;
-            }
-        }
-        count
-    }
-}
+// impl Hash {
+//     pub fn difficulty(&self) -> u32 {
+//         let mut count = 0;
+//         for &byte in &self.0 {
+//             let lz = byte.leading_zeros();
+//             count += lz;
+//             if lz < 8 {
+//                 break;
+//             }
+//         }
+//         count
+//     }
+// }
 
 impl_to_bytes!(Hash);

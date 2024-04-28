@@ -1,3 +1,4 @@
+use const_crypto::ed25519;
 use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
 
 /// The reward rate to intialize the program with.
@@ -37,9 +38,6 @@ pub const BUS_COUNT: usize = 8;
 /// than a factor of this constant from one epoch to the next.
 pub const SMOOTHING_FACTOR: u64 = 2;
 
-/// The range of difficulties miners can target above the minimum.
-pub const DIFFICULTY_RANGE: usize = 32;
-
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
     (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
@@ -57,11 +55,19 @@ pub const METADATA: &[u8] = b"metadata";
 /// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
 
+/// The seed of the noise account PDA.
+pub const NOISE: &[u8] = b"noise";
+
 /// The seed of proof account PDAs.
 pub const PROOF: &[u8] = b"proof";
 
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
+
+/// Noise for deriving the mint pda
+pub const MINT_NOISE: [u8; 16] = [
+    166, 199, 85, 221, 225, 119, 21, 185, 160, 82, 242, 237, 194, 84, 250, 252,
+];
 
 /// The name for token metadata.
 pub const METADATA_NAME: &str = "Ore";
@@ -72,38 +78,49 @@ pub const METADATA_SYMBOL: &str = "ORE";
 /// The uri for token metdata.
 pub const METADATA_URI: &str = "https://ore.supply/metadata.json";
 
-/// Noise for deriving the mint PDA.
-pub const MINT_NOISE: [u8; 16] = [
-    166, 199, 85, 221, 225, 119, 21, 185, 160, 82, 242, 237, 194, 84, 250, 252,
-];
+/// Program id for const pda derivations
+const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
 
 /// The addresses of the bus accounts.
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
-    pubkey!("9ShaCzHhQNvH8PLfGyrJbB8MeKHrDnuPMLnUDLJ2yMvz"),
-    pubkey!("4Cq8685h9GwsaD5ppPsrtfcsk3fum8f9UP4SPpKSbj2B"),
-    pubkey!("8L1vdGdvU3cPj9tsjJrKVUoBeXYvAzJYhExjTYHZT7h7"),
-    pubkey!("JBdVURCrUiHp4kr7srYtXbB7B4CwurUt1Bfxrxw6EoRY"),
-    pubkey!("DkmVBWJ4CLKb3pPHoSwYC2wRZXKKXLD2Ued5cGNpkWmr"),
-    pubkey!("9uLpj2ZCMqN6Yo1vV6yTkP6dDiTTXmeM5K3915q5CHyh"),
-    pubkey!("EpcfjBs8eQ4unSMdowxyTE8K3vVJ3XUnEr5BEWvSX7RB"),
-    pubkey!("Ay5N9vKS2Tyo2M9u9TFt59N1XbxdW93C7UrFZW3h8sMC"),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[0]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[1]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[2]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[3]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[4]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[5]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[6]], &PROGRAM_ID).0),
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[7]], &PROGRAM_ID).0),
 ];
 
-// TODO
 /// The address of the config account.
-pub const CONFIG_ADDRESS: Pubkey = pubkey!("FTap9fv2GPpWGqrLj3o4c9nHH7p36ih7NbSWHnrkQYqa");
+pub const CONFIG_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
 
 /// The address of the mint metadata account.
-pub const METADATA_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
-
-/// The address of the mint metadata account.
-pub const NOISE_ADDRESS: Pubkey = pubkey!("2nXZSxfjELuRatcoY64yHdFLZFi3mtesxobHmsoU3Dag");
+pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
+    ed25519::derive_program_address(
+        &[
+            METADATA,
+            unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+        ],
+        unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
+    )
+    .0,
+);
 
 /// The address of the mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
+pub const MINT_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).0);
 
-/// The address of the mint account.
+/// The address of the v1 mint account.
 pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
 
+/// The address of the mint metadata account.
+pub const NOISE_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[NOISE], &PROGRAM_ID).0);
+
 /// The address of the treasury account.
-pub const TREASURY_ADDRESS: Pubkey = pubkey!("FTap9fv2GPpWGqrLj3o4c9nHH7p36ih7NbSWHnrkQYqa");
+pub const TREASURY_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);

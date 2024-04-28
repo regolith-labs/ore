@@ -14,8 +14,7 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Upgrade (v1 to v2 token)
-// TODO Downgrade (v2 to v1 token)
+// TODO Is downgrade necessary or no?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
 

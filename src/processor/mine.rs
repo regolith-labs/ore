@@ -17,7 +17,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    DIFFICULTY_RANGE, EPOCH_DURATION,
+    EPOCH_DURATION,
 };
 
 // TODO Look into tx introspection to require 1 hash per tx
@@ -89,9 +89,7 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Calculate base reward rate
-    let difficulty = difficulty
-        .saturating_sub(config.min_difficulty)
-        .min(DIFFICULTY_RANGE as u32);
+    let difficulty = difficulty.saturating_sub(config.min_difficulty);
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
@@ -131,6 +129,7 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Update balances
+    // TODO Handle case where reward is higher than bus can payout
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     bus.rewards = bus

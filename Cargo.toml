@@ -21,11 +21,12 @@ default = []
 [dependencies]
 bs58 = "0.5.0"
 bytemuck = "1.14.3"
+const-crypto = "0.1.0"
 drillx = { git = "https://github.com/hardhatchad/drillx", branch = "master" }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 shank = "0.3.0"
-solana-program = "^1.16"
+solana-program = "1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
@@ -34,6 +35,6 @@ thiserror = "1.0.57"
 [dev-dependencies]
 bs64 = "0.1.2"
 rand = "0.8.5"
-solana-program-test = "^1.16"
-solana-sdk = "^1.16"
+solana-program-test = "^1.18"
+solana-sdk = "^1.18"
 tokio = { version = "1.35", features = ["full"] }
