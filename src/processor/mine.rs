@@ -79,7 +79,7 @@ pub fn process_mine<'a, 'info>(
 
     // Calculate the hash from the provided nonce
     let noise_data = noise_info.data.borrow();
-    let hx = drillx::hash(&proof.hash, &args.nonce, &noise_data);
+    let hx = drillx::hash(&proof.challenge, &args.nonce, &noise_data);
     drop(noise_data);
 
     // Validate hash satisfies the minimnum difficulty
@@ -139,7 +139,7 @@ pub fn process_mine<'a, 'info>(
     proof.balance = proof.balance.saturating_add(reward);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
-    proof.hash = hashv(&[
+    proof.challenge = hashv(&[
         hx.as_slice(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])

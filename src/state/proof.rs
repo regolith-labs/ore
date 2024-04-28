@@ -18,8 +18,8 @@ pub struct Proof {
     /// The quantity of tokens this miner has staked or earned.
     pub balance: u64,
 
-    /// The proof's current hash.
-    pub hash: [u8; 32],
+    /// The current mining challenge.
+    pub challenge: [u8; 32],
 
     /// The last slot ore was deposited into this account.
     pub last_deposit_slot: u64,
