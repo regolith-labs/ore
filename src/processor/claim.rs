@@ -4,18 +4,13 @@ use solana_program::{
 };
 
 use crate::{
-    error::OreError,
-    instruction::ClaimArgs,
-    loaders::*,
-    state::{Proof, Treasury},
-    utils::AccountDeserialize,
-    MINT_ADDRESS, TREASURY,
+    error::OreError, instruction::ClaimArgs, loaders::*, state::Proof, utils::AccountDeserialize,
+    MINT_ADDRESS, TREASURY, TREASURY_BUMP,
 };
 
 /// Claim distributes owed token rewards from the treasury to the miner. Its responsibilies include:
-/// 1. Transfer tokens from the treasury to the miner.
-/// 2. Decrement the miner's claimable rewards counter by an appropriate amount.
-/// 3. Update the program's lifetime stats.
+/// 1. Decrement the miner's claimable rewards counter.
+/// 2. Transfer tokens from the treasury to the miner.
 ///
 /// Safety requirements:
 /// - Claim is a permissionless instruction and can be called by any miner.
@@ -39,7 +34,7 @@ pub fn process_claim<'a, 'info>(
     load_signer(signer)?;
     load_token_account(beneficiary_info, None, &MINT_ADDRESS, true)?;
     load_proof(proof_info, signer.key, true)?;
-    load_treasury(treasury_info, true)?;
+    load_treasury(treasury_info, false)?;
     load_token_account(
         treasury_tokens_info,
         Some(treasury_info.key),
@@ -57,10 +52,6 @@ pub fn process_claim<'a, 'info>(
         .ok_or(OreError::ClaimTooLarge)?;
 
     // Distribute tokens from treasury to beneficiary
-    let mut treasury_data = treasury_info.data.borrow_mut();
-    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    let treasury_bump = treasury.bump;
-    drop(treasury_data);
     solana_program::program::invoke_signed(
         &spl_token::instruction::transfer(
             &spl_token::id(),
@@ -76,7 +67,7 @@ pub fn process_claim<'a, 'info>(
             beneficiary_info.clone(),
             treasury_info.clone(),
         ],
-        &[&[TREASURY, &[treasury_bump as u8]]],
+        &[&[TREASURY, &[TREASURY_BUMP]]],
     )?;
 
     Ok(())

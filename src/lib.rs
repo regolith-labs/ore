@@ -14,7 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Admin fn for pause
 // TODO u128 for internal rewards representation?
 // TODO Admin fn for min difficulty? What if this were set automatically by u128 base reward rate?
 // TODO Increase bus count?

@@ -57,8 +57,8 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "sender", desc = "Signer token account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account", writable)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
+    #[account(3, name = "sender", desc = "Signer token account", writable)]
     #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(5, name = "token_program", desc = "SPL token program")]
     Stake = 4,
@@ -271,13 +271,41 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(signer, true),
             AccountMeta::new(beneficiary, false),
             AccountMeta::new(proof, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: [
             OreInstruction::Claim.to_vec(),
             ClaimArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Build a stake instruction.
+pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(sender, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Stake.to_vec(),
+            StakeArgs {
                 amount: amount.to_le_bytes(),
             }
             .to_bytes()

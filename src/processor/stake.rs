@@ -18,13 +18,13 @@ pub fn process_stake<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer_info, sender_info, proof_info, treasury_tokens_info, token_program] = accounts
+    let [signer_info, proof_info, sender_info, treasury_tokens_info, token_program] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer_info)?;
-    load_token_account(sender_info, Some(signer_info.key), &MINT_ADDRESS, true)?;
     load_proof(proof_info, signer_info.key, true)?;
+    load_token_account(sender_info, Some(signer_info.key), &MINT_ADDRESS, true)?;
     load_token_account(
         treasury_tokens_info,
         Some(&TREASURY_ADDRESS),
