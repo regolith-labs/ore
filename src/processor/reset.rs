@@ -77,7 +77,7 @@ pub fn process_reset<'a, 'info>(
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let threshold = config.last_reset_at.saturating_add(EPOCH_DURATION);
     if clock.unix_timestamp.lt(&threshold) {
-        return Err(OreError::ResetTooEarly.into());
+        return Ok(());
     }
 
     // Update reset timestamp

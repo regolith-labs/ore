@@ -9,18 +9,16 @@ pub enum OreError {
     IsPaused = 0,
     #[error("The epoch has ended and needs reset")]
     NeedsReset = 1,
-    #[error("The epoch is active and cannot be reset at this time")]
-    ResetTooEarly = 2,
     #[error("The provided hash did not satisfy the minimum required difficulty")]
-    DifficultyInsufficient = 3,
+    DifficultyInsufficient = 2,
     #[error("The bus does not have enough rewards to issue at this time")]
-    BusRewardsInsufficient = 4,
+    BusRewardsInsufficient = 3,
     #[error("The claim amount cannot be greater than the claimable rewards")]
-    ClaimTooLarge = 5,
+    ClaimTooLarge = 4,
     #[error("The stake amount cannot exceed u64 size")]
-    StakeTooLarge = 6,
+    StakeTooLarge = 5,
     #[error("The clock time is invalid")]
-    ClockInvalid = 7,
+    ClockInvalid = 6,
 }
 
 impl From<OreError> for ProgramError {

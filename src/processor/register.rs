@@ -14,10 +14,6 @@ use crate::{
     PROOF,
 };
 
-// TODO Create a stake account (token account)
-// TODO Need to keep claimable balance (from treasury) separate from staking balance (from stake account)
-// TODO Multiplier calculations should account for both
-
 /// Register generates a new hash chain for a prospective miner. Its responsibilities include:
 /// 1. Initialize a new proof account.
 /// 2. Generate an initial hash from the signer's key.
