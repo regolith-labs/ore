@@ -54,7 +54,7 @@ pub fn process_mine<'a, 'info>(
     load_proof(proof_info, signer.key, true)?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
-    // Validate mining is allowed
+    // Validate mining is not paused
     let config_data = config_info.data.borrow();
     let config = Config::try_from_bytes(&config_data)?;
     if config.paused.ne(&0) {

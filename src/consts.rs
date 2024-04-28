@@ -1,15 +1,11 @@
+use array_const_fn_init::array_const_fn_init;
 use const_crypto::ed25519;
-use solana_program::{keccak::Hash, pubkey, pubkey::Pubkey};
+use solana_program::{pubkey, pubkey::Pubkey};
 
 /// The reward rate to intialize the program with.
-pub const INITIAL_REWARD_RATE: u64 = 10u64.pow(3u32);
+pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 
-/// The mining difficulty to initialize the program with.
-pub const INITIAL_DIFFICULTY: Hash = Hash::new_from_array([
-    0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-]);
-
+// TODO Migrate to 11 decimals?
 /// The decimal precision of the ORE token.
 /// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
 /// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
@@ -82,16 +78,12 @@ pub const METADATA_URI: &str = "https://ore.supply/metadata.json";
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
 
 /// The addresses of the bus accounts.
-pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = [
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[0]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[1]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[2]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[3]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[4]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[5]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[6]], &PROGRAM_ID).0),
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[7]], &PROGRAM_ID).0),
-];
+pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_bus_address; 8];
+
+/// Function to derive const bus addresses.
+const fn const_bus_address(i: usize) -> Pubkey {
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[i as u8]], &PROGRAM_ID).0)
+}
 
 /// The address of the config account.
 pub const CONFIG_ADDRESS: Pubkey =
@@ -124,3 +116,6 @@ pub const NOISE_ADDRESS: Pubkey =
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);
+
+/// The bump of the treasury account, for cpis.
+pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;

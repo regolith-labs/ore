@@ -53,8 +53,8 @@ pub fn process_upgrade<'a, 'info>(
         ],
     )?;
 
-    // Mint to beneficiary account
-    // TODO Account for decimals!
+    // Mint to the beneficiary account
+    // TODO Account for decimals change!
     let treasury_data = treasury_info.data.borrow();
     let treasury = Treasury::try_from_bytes(&treasury_data)?;
     let treasury_bump = treasury.bump as u8;

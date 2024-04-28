@@ -12,6 +12,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Treasury {
     /// The bump of the treasury account PDA, for signing CPIs.
+    // TODO Is this needed if bump is const?
     pub bump: u64,
 }
 

@@ -14,6 +14,7 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
+// TODO u128 for internal rewards representation?
 // TODO Is downgrade necessary or no?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");

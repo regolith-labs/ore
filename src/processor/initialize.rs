@@ -118,7 +118,7 @@ pub fn process_initialize<'a, 'info>(
         bus.rewards = 0;
     }
 
-    // Initialize config
+    // TODO Initialize config
     create_pda(
         config_info,
         &crate::id(),
@@ -133,7 +133,7 @@ pub fn process_initialize<'a, 'info>(
     config.admin = *signer.key;
     // config.difficulty = INITIAL_DIFFICULTY.into();
 
-    // Initialize treasury
+    // TODO Initialize treasury
     create_pda(
         treasury_info,
         &crate::id(),

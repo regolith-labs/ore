@@ -279,6 +279,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "array-const-fn-init"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bcb85e548c05d407fa6faff46b750ba287714ef32afc0f5e15b4641ffd6affb"
+
+[[package]]
 name = "arrayref"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2546,6 +2552,7 @@ dependencies = [
 name = "ore-program"
 version = "1.2.1"
 dependencies = [
+ "array-const-fn-init",
  "bs58 0.5.1",
  "bs64",
  "bytemuck",
