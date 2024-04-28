@@ -6,11 +6,9 @@ use spl_token::state::Mint;
 
 use crate::{
     state::{Bus, Config, Proof, Treasury},
-    utils::AccountDeserialize,
-    BUS_ADDRESSES, BUS_COUNT, CONFIG_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
+    utils::{AccountDeserialize, Discriminator},
+    BUS_ADDRESSES, CONFIG_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
 };
-
-// TODO Account checks don't need to deserialize the whole byte array. They can just check the type byte
 
 /// Errors if:
 /// - Account is not a signer.
@@ -79,14 +77,11 @@ pub fn load_any_bus<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    let bus_data = info.data.borrow();
-    let bus = Bus::try_from_bytes(&bus_data)?;
-
-    if bus.id.ge(&(BUS_COUNT as u64)) {
-        return Err(ProgramError::InvalidAccountData);
+    if info.data.borrow()[0].ne(&(Bus::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
-    if info.key.ne(&BUS_ADDRESSES[bus.id as usize]) {
+    if !BUS_ADDRESSES.contains(info.key) {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -119,8 +114,9 @@ pub fn load_config<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    let config_data = info.data.borrow();
-    let _ = Config::try_from_bytes(&config_data)?;
+    if info.data.borrow()[0].ne(&(Config::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
+    }
 
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
@@ -208,8 +204,9 @@ pub fn load_treasury<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    let treasury_data = info.data.borrow();
-    let _ = Treasury::try_from_bytes(&treasury_data)?;
+    if info.data.borrow()[0].ne(&(Treasury::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
+    }
 
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
@@ -241,8 +238,7 @@ pub fn load_mint<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    let mint_data = info.data.borrow();
-    if Mint::unpack_unchecked(&mint_data).is_err() {
+    if Mint::unpack_unchecked(&info.data.borrow()).is_err() {
         return Err(ProgramError::InvalidAccountData);
     }
 
