@@ -14,7 +14,10 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
+// TODO Admin fn for pause
 // TODO u128 for internal rewards representation?
+// TODO Admin fn for min difficulty? What if this were set automatically by u128 base reward rate?
+// TODO Increase bus count?
 // TODO Is downgrade necessary or no?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
@@ -44,6 +47,7 @@ pub fn process_instruction(
         OreInstruction::Upgrade => process_upgrade(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
         OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
+        OreInstruction::Pause => process_pause(program_id, accounts, data)?,
     }
 
     Ok(())

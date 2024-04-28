@@ -96,8 +96,13 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "treasury", desc = "Ore treasury account")]
+    #[account(2, name = "config", desc = "Ore config account")]
     UpdateAdmin = 101,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Admin signer", signer)]
+    #[account(2, name = "config", desc = "Ore config account")]
+    Pause = 102,
 }
 
 impl OreInstruction {
@@ -159,6 +164,12 @@ pub struct UpdateAdminArgs {
     pub new_admin: Pubkey,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct PauseArgs {
+    pub paused: u8,
+}
+
 impl_to_bytes!(InitializeArgs);
 impl_to_bytes!(RegisterArgs);
 impl_to_bytes!(MineArgs);
@@ -166,6 +177,7 @@ impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(StakeArgs);
 impl_to_bytes!(UpgradeArgs);
 impl_to_bytes!(UpdateAdminArgs);
+impl_to_bytes!(PauseArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
 impl_instruction_from_bytes!(RegisterArgs);
@@ -174,6 +186,7 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
+impl_instruction_from_bytes!(PauseArgs);
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
@@ -345,17 +358,37 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     }
 }
 
-/// Builds an update_admin instruction.
+/// Build an update_admin instruction.
 pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(CONFIG_ADDRESS, false),
         ],
         data: [
             OreInstruction::UpdateAdmin.to_vec(),
             UpdateAdminArgs { new_admin }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Build a pause instruction.
+pub fn pause(signer: Pubkey, paused: bool) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(CONFIG_ADDRESS, false),
+        ],
+        data: [
+            OreInstruction::UpdateAdmin.to_vec(),
+            PauseArgs {
+                paused: paused as u8,
+            }
+            .to_bytes()
+            .to_vec(),
         ]
         .concat(),
     }
