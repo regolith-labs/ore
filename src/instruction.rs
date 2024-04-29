@@ -26,10 +26,11 @@ pub enum OreInstruction {
     #[account(7, name = "bus_5", desc = "Ore bus account 5", writable)]
     #[account(8, name = "bus_6", desc = "Ore bus account 6", writable)]
     #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
-    #[account(10, name = "mint", desc = "Ore token mint account", writable)]
-    #[account(11, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(12, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(13, name = "token_program", desc = "SPL token program")]
+    #[account(10, name = "config", desc = "Ore config account")]
+    #[account(11, name = "mint", desc = "Ore token mint account", writable)]
+    #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(14, name = "token_program", desc = "SPL token program")]
     Reset = 0,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -41,9 +42,10 @@ pub enum OreInstruction {
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account", writable)]
-    #[account(4, name = "treasury", desc = "Ore treasury account")]
-    #[account(5, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
+    #[account(3, name = "config", desc = "Ore config account")]
+    #[account(4, name = "noise", desc = "Ore noise account")]
+    #[account(5, name = "proof", desc = "Ore proof account", writable)]
+    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Mine = 2,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -85,23 +87,24 @@ pub enum OreInstruction {
     #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
     #[account(10, name = "metadata", desc = "Ore mint metadata account", writable)]
     #[account(11, name = "mint", desc = "Ore mint account", writable)]
-    #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(14, name = "system_program", desc = "Solana system program")]
-    #[account(15, name = "token_program", desc = "SPL token program")]
-    #[account(16, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(17, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
-    #[account(18, name = "rent", desc = "Solana rent sysvar")]
+    #[account(12, name = "noise", desc = "Ore noise account", writable)]
+    #[account(13, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(14, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(15, name = "system_program", desc = "Solana system program")]
+    #[account(16, name = "token_program", desc = "SPL token program")]
+    #[account(17, name = "associated_token_program", desc = "SPL associated token program")]
+    #[account(18, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
+    #[account(19, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account")]
+    #[account(2, name = "config", desc = "Ore config account", writable)]
     UpdateAdmin = 101,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account")]
+    #[account(2, name = "config", desc = "Ore config account", writable)]
     Pause = 102,
 }
 
@@ -206,6 +209,7 @@ pub fn reset(signer: Pubkey) -> Instruction {
             AccountMeta::new(BUS_ADDRESSES[5], false),
             AccountMeta::new(BUS_ADDRESSES[6], false),
             AccountMeta::new(BUS_ADDRESSES[7], false),
+            AccountMeta::new(CONFIG_ADDRESS, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
@@ -360,7 +364,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-            AccountMeta::new_readonly(mpl_token_metadata::ID, false),
+            // AccountMeta::new_readonly(mpl_token_metadata::ID, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [

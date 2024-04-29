@@ -7,7 +7,7 @@ use spl_token::state::Mint;
 use crate::{
     state::{Bus, Config, Proof, Treasury},
     utils::{AccountDeserialize, Discriminator},
-    BUS_ADDRESSES, CONFIG_ADDRESS, NOISE_ADDRESS, TREASURY_ADDRESS,
+    BUS_ADDRESSES, CONFIG_ADDRESS, TREASURY_ADDRESS,
 };
 
 /// Errors if:
@@ -116,30 +116,6 @@ pub fn load_config<'a, 'info>(
 
     if info.data.borrow()[0].ne(&(Config::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
-    }
-
-    if is_writable && !info.is_writable {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    Ok(())
-}
-
-/// asdf
-pub fn load_noise<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
-    if info.owner.ne(&crate::id()) {
-        return Err(ProgramError::InvalidAccountOwner);
-    }
-
-    if info.key.ne(&NOISE_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
-    }
-
-    if info.data_is_empty() {
-        return Err(ProgramError::UninitializedAccount);
     }
 
     if is_writable && !info.is_writable {

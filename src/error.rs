@@ -19,6 +19,8 @@ pub enum OreError {
     StakeTooLarge = 5,
     #[error("The clock time is invalid")]
     ClockInvalid = 6,
+    #[error("The noise account is as large as it can get")]
+    NoiseSizeExceeded = 7,
 }
 
 impl From<OreError> for ProgramError {

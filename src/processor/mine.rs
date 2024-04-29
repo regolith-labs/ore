@@ -44,13 +44,12 @@ pub fn process_mine<'a, 'info>(
     let args = MineArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, bus_info, config_info, noise_info, proof_info, slot_hashes_info] = accounts else {
+    let [signer, bus_info, config_info, proof_info, slot_hashes_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
     load_any_bus(bus_info, true)?;
     load_config(config_info, false)?;
-    load_noise(noise_info, false)?;
     load_proof(proof_info, signer.key, true)?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
@@ -78,9 +77,7 @@ pub fn process_mine<'a, 'info>(
     // }
 
     // Calculate the hash from the provided nonce
-    let noise_data = noise_info.data.borrow();
-    let hx = drillx::hash(&proof.challenge, &args.nonce, &noise_data);
-    drop(noise_data);
+    let hx = drillx::hash(&proof.challenge, &args.nonce);
 
     // Validate hash satisfies the minimnum difficulty
     let difficulty = drillx::difficulty(hx);

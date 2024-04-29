@@ -51,9 +51,6 @@ pub const METADATA: &[u8] = b"metadata";
 /// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
 
-/// The seed of the noise account PDA.
-pub const NOISE: &[u8] = b"noise";
-
 /// The seed of proof account PDAs.
 pub const PROOF: &[u8] = b"proof";
 
@@ -108,10 +105,6 @@ pub const MINT_ADDRESS: Pubkey =
 
 /// The address of the v1 mint account.
 pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
-
-/// The address of the mint metadata account.
-pub const NOISE_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[NOISE], &PROGRAM_ID).0);
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
