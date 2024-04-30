@@ -105,7 +105,12 @@ pub enum OreInstruction {
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
     #[account(2, name = "config", desc = "Ore config account", writable)]
-    Pause = 102,
+    UpdateTolerance = 102,
+    
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Admin signer", signer)]
+    #[account(2, name = "config", desc = "Ore config account", writable)]
+    Pause = 103,
 }
 
 impl OreInstruction {
@@ -169,6 +174,13 @@ pub struct UpdateAdminArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct UpdateToleranceArgs {
+    pub tolerance_liveness: u64,
+    pub tolerance_spam: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct PauseArgs {
     pub paused: u8,
 }
@@ -180,6 +192,7 @@ impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(StakeArgs);
 impl_to_bytes!(UpgradeArgs);
 impl_to_bytes!(UpdateAdminArgs);
+impl_to_bytes!(UpdateToleranceArgs);
 impl_to_bytes!(PauseArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
@@ -189,6 +202,7 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
 impl_instruction_from_bytes!(UpdateAdminArgs);
+impl_instruction_from_bytes!(UpdateToleranceArgs);
 impl_instruction_from_bytes!(PauseArgs);
 
 /// Builds a reset instruction.
@@ -401,6 +415,31 @@ pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
         data: [
             OreInstruction::UpdateAdmin.to_vec(),
             UpdateAdminArgs { new_admin }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Build an update_tolerance instruction.
+pub fn update_tolerance(
+    signer: Pubkey,
+    new_liveness_tolerance: u64,
+    new_spam_tolerance: u64,
+) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(CONFIG_ADDRESS, false),
+        ],
+        data: [
+            OreInstruction::UpdateTolerance.to_vec(),
+            UpdateToleranceArgs {
+                tolerance_liveness: new_liveness_tolerance,
+                tolerance_spam: new_spam_tolerance,
+            }
+            .to_bytes()
+            .to_vec(),
         ]
         .concat(),
     }

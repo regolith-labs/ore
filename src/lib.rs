@@ -14,7 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Admin fn for min difficulty?
 // TODO Admin fn for spam/liveness tolerances?
 // TODO Alternative to bincode?
 // TODO Is downgrade necessary?
@@ -46,6 +45,7 @@ pub fn process_instruction(
         OreInstruction::Upgrade => process_upgrade(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
         OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
+        OreInstruction::UpdateTolerance => process_update_tolerance(program_id, accounts, data)?,
         OreInstruction::Pause => process_pause(program_id, accounts, data)?,
     }
 

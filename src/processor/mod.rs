@@ -6,6 +6,7 @@ mod register;
 mod reset;
 mod stake;
 mod update_admin;
+mod update_tolerance;
 mod upgrade;
 
 pub use claim::*;
@@ -16,4 +17,5 @@ pub use register::*;
 pub use reset::*;
 pub use stake::*;
 pub use update_admin::*;
+pub use update_tolerance::*;
 pub use upgrade::*;
