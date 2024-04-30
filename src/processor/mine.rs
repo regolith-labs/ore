@@ -18,7 +18,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    EPOCH_DURATION,
+    MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
 // TODO Look into tx introspection to require 1 hash per tx
@@ -72,7 +72,7 @@ pub fn process_mine<'a, 'info>(
     // TODO Validate epoch is active
     // let treasury_data = treasury_info.data.borrow();
     // let treasury = Treasury::try_from_bytes(&treasury_data)?;
-    // let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
+    // let threshold = treasury.last_reset_at.saturating_add(ONE_MINUTE);
     // if clock.unix_timestamp.ge(&threshold) {
     //     return Err(OreError::NeedsReset.into());
     // }
@@ -83,27 +83,21 @@ pub fn process_mine<'a, 'info>(
     // Validate hash satisfies the minimnum difficulty
     let difficulty = drillx::difficulty(hx);
     sol_log(&format!("Diff {}", difficulty));
-    if difficulty.le(&config.min_difficulty) {
+    if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
     }
 
     // Calculate base reward rate
-    let difficulty = difficulty.saturating_sub(config.min_difficulty);
+    let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
     sol_log(&format!("Base {}", reward));
 
-    // Apply staking multiplier
+    // Apply staking multiplier, only if last deposit was at least 1 block ago to prevent flash loan attacks
     if clock.slot.gt(&proof.last_deposit_slot) {
-        // Only apply if last deposit was at least 1 block ago to prevent flash loan attacks.
-        // TODO Cleanup math with a const here (unnecessary cus)
-        // TODO Move const into config
-        let max_stake = reward
-            .saturating_mul(60) // min/hour
-            .saturating_mul(24) // hour/day
-            .saturating_mul(365) // day/year
-            .saturating_mul(2); // year
+        // TODO Move staking requirement into config? Admin adjustable?
+        let max_stake = reward.saturating_mul(TWO_YEARS);
         let staking_reward = proof
             .balance
             .min(max_stake)
@@ -115,7 +109,7 @@ pub fn process_mine<'a, 'info>(
 
     // Apply spam/liveness penalty
     let t = clock.unix_timestamp;
-    let t_target = proof.last_hash_at.saturating_add(EPOCH_DURATION);
+    let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(config.tolerance_spam);
     let t_liveness = t_target.saturating_add(config.tolerance_liveness);
     if t.lt(&t_spam) {
@@ -127,7 +121,7 @@ pub fn process_mine<'a, 'info>(
                 .saturating_mul(t.saturating_sub(t_liveness) as u64)
                 .saturating_div(
                     t_target
-                        .saturating_add(EPOCH_DURATION)
+                        .saturating_add(ONE_MINUTE)
                         .saturating_sub(t_liveness) as u64,
                 ),
         );

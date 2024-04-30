@@ -28,7 +28,7 @@ pub fn process_pause<'a, 'info>(
     }
 
     // Update paused
-    config.paused = args.paused as u32;
+    config.paused = args.paused as u64;
 
     Ok(())
 }

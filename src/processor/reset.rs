@@ -11,8 +11,8 @@ use crate::{
     },
     state::{Bus, Config},
     utils::AccountDeserialize,
-    BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, MINT_ADDRESS,
-    SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
+    BUS_COUNT, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, MINT_ADDRESS, ONE_MINUTE, SMOOTHING_FACTOR,
+    TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
 };
 
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:
@@ -78,7 +78,7 @@ pub fn process_reset<'a, 'info>(
 
     // Validate enough time has passed since last reset
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    let threshold = config.last_reset_at.saturating_add(EPOCH_DURATION);
+    let threshold = config.last_reset_at.saturating_add(ONE_MINUTE);
     if clock.unix_timestamp.lt(&threshold) {
         return Ok(());
     }

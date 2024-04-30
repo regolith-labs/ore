@@ -2,8 +2,6 @@ use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
-// TODO next_min_difficulty: Option<u8>, update on reset
-
 use crate::{
     impl_account_from_bytes, impl_to_bytes,
     utils::{AccountDiscriminator, Discriminator},
@@ -22,11 +20,8 @@ pub struct Config {
     /// The timestamp of the last reset
     pub last_reset_at: i64,
 
-    /// The minimum accepted difficulty.
-    pub min_difficulty: u32,
-
     /// Is mining paused.
-    pub paused: u32,
+    pub paused: u64,
 
     /// Seconds prior to a miner's target time during which their hashes will not be penalized.
     pub tolerance_spam: i64,

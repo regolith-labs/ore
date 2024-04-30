@@ -5,11 +5,11 @@ use solana_program::{pubkey, pubkey::Pubkey};
 /// The reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 
-/// The minimum difficulty to initialize the program with.
-pub const INITIAL_MIN_DIFFICULTY: u32 = 12;
-
 /// The spam/liveness tolerance to initialize the program with.
 pub const INITIAL_TOLERANCE: i64 = 5;
+
+/// The minimum difficulty required of all submitted hashes.
+pub const MIN_DIFFICULTY: u32 = 12;
 
 /// The decimal precision of the ORE token.
 pub const TOKEN_DECIMALS: u8 = 11;
@@ -17,8 +17,11 @@ pub const TOKEN_DECIMALS: u8 = 11;
 /// One ORE token, denominated in indivisible units.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
-/// The duration of an epoch, in units of seconds.
-pub const EPOCH_DURATION: i64 = 60;
+/// The duration of one minute, in seconds.
+pub const ONE_MINUTE: i64 = 60;
+
+/// The duration of two years, in minutes.
+pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
 
 /// The target quantity of ORE to be mined per epoch.
 /// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
