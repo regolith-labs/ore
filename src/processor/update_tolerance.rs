@@ -30,14 +30,17 @@ pub fn process_update_tolerance<'a, 'info>(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
+    // Overflow checks
+    if args.tolerance_liveness.gt(&(i64::MAX as u64)) {
+        return Err(OreError::ToleranceInvalid.into());
+    }
+    if args.tolerance_spam.gt(&(i64::MAX as u64)) {
+        return Err(OreError::ToleranceInvalid.into());
+    }
+
     // Update tolerances
     config.tolerance_liveness = args.tolerance_liveness as i64;
     config.tolerance_spam = args.tolerance_spam as i64;
-
-    // Sanity checks
-    if config.tolerance_liveness.lt(&0) || config.tolerance_spam.lt(&0) {
-        return Err(OreError::ToleranceNegative.into());
-    }
 
     Ok(())
 }

@@ -14,7 +14,6 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO Admin fn for spam/liveness tolerances?
 // TODO Alternative to bincode?
 // TODO Is downgrade necessary?
 

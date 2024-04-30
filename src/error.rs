@@ -17,8 +17,8 @@ pub enum OreError {
     StakeTooLarge = 4,
     #[error("The clock time is invalid")]
     ClockInvalid = 5,
-    #[error("The tolerance cannot be negative")]
-    ToleranceNegative = 6,
+    #[error("The tolerance cannot exceed i64 max value")]
+    ToleranceInvalid = 6,
 }
 
 impl From<OreError> for ProgramError {
