@@ -94,7 +94,7 @@ pub fn process_mine<'a, 'info>(
         .saturating_mul(2u64.saturating_pow(difficulty));
     sol_log(&format!("Base {}", reward));
 
-    // Apply staking multiplier, only if last deposit was at least 1 block ago to prevent flash loan attacks
+    // Apply staking multiplier, only if last deposit was at least 1 block ago to prevent flash loan attacks.
     if clock.slot.gt(&proof.last_deposit_slot) {
         // TODO Move staking requirement into config? Admin adjustable?
         let max_stake = reward.saturating_mul(TWO_YEARS);

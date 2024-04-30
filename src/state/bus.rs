@@ -15,12 +15,10 @@ pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,
 
-    // TODO Update logic to count up rather than down
-    /// The quantity of rewards this bus can issue in the current epoch epoch.
+    /// The quantity of rewards this bus has left to issue in the current epoch epoch.
     pub rewards: u64,
 
-    // TODO Come up with better name
-    /// The rewards that would have been paid out this epoch if the bus had no limit.
+    /// The rewards that would have been paid out by this bus in the current epoch if the bus had no limit.
     pub theoretical_rewards: u64,
 }
 

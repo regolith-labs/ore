@@ -16,6 +16,7 @@ use solana_program::{
 
 // TODO Admin fn for min difficulty?
 // TODO Admin fn for spam/liveness tolerances?
+// TODO Alternative to bincode?
 // TODO Is downgrade necessary?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
