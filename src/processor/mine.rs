@@ -69,13 +69,13 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::ClockInvalid.into());
     }
 
-    // TODO Validate epoch is active
-    // let treasury_data = treasury_info.data.borrow();
-    // let treasury = Treasury::try_from_bytes(&treasury_data)?;
-    // let threshold = treasury.last_reset_at.saturating_add(ONE_MINUTE);
-    // if clock.unix_timestamp.ge(&threshold) {
-    //     return Err(OreError::NeedsReset.into());
-    // }
+    // Validate epoch is active
+    if clock
+        .unix_timestamp
+        .ge(&config.last_reset_at.saturating_add(ONE_MINUTE))
+    {
+        return Err(OreError::NeedsReset.into());
+    }
 
     // Calculate the hash from the provided nonce
     let hx = drillx::hash(&proof.challenge, &args.nonce);
