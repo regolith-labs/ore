@@ -24,8 +24,6 @@ use crate::{
     COMPUTE_BUDGET_PROGRAM_ID, MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
-// TODO Look into tx introspection to require 1 hash per tx
-
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.
 /// 2. Payout rewards based on difficulty, staking multiplier, and liveness penalty.

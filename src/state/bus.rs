@@ -15,10 +15,11 @@ pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,
 
-    /// The quantity of rewards this bus has left to issue in the current epoch epoch.
+    /// The remaining rewards this bus has left to payout in the current epoch epoch.
     pub rewards: u64,
 
-    /// The rewards that would have been paid out by this bus in the current epoch if the bus had no limit.
+    /// The rewards this bus would have paid out in the current epoch if there no limit.
+    /// Used to calculate the updated reward rate.
     pub theoretical_rewards: u64,
 }
 
