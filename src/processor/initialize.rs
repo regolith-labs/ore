@@ -18,7 +18,7 @@ use crate::{
     utils::AccountDeserialize,
     utils::Discriminator,
     BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_TOLERANCE, METADATA, MINT,
-    MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
+    MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY, TWO_YEARS,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:

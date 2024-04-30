@@ -69,7 +69,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::ClockInvalid.into());
     }
 
-    // Validate epoch is active
+    // TODO Validate epoch is active
     if clock
         .unix_timestamp
         .ge(&config.last_reset_at.saturating_add(ONE_MINUTE))
@@ -96,13 +96,12 @@ pub fn process_mine<'a, 'info>(
 
     // Apply staking multiplier, only if last deposit was at least 1 block ago to prevent flash loan attacks.
     if clock.slot.gt(&proof.last_deposit_slot) {
-        // TODO Move staking requirement into config? Admin adjustable?
-        let max_stake = reward.saturating_mul(TWO_YEARS);
+        let stake_max = reward.saturating_mul(TWO_YEARS);
         let staking_reward = proof
             .balance
-            .min(max_stake)
+            .min(stake_max)
             .saturating_mul(reward)
-            .saturating_div(max_stake);
+            .saturating_div(stake_max);
         sol_log(&format!("Staking {}", staking_reward));
         reward = reward.saturating_add(staking_reward);
     }
