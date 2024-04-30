@@ -5,6 +5,7 @@ use solana_program::{
     clock::Clock,
     entrypoint::ProgramResult,
     keccak::hashv,
+    log::sol_log,
     program_error::ProgramError,
     pubkey::Pubkey,
     slot_hashes::SlotHash,
@@ -17,7 +18,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    EPOCH_DURATION,
+    BUS_EPOCH_REWARDS, EPOCH_DURATION,
 };
 
 // TODO Look into tx introspection to require 1 hash per tx
@@ -81,6 +82,7 @@ pub fn process_mine<'a, 'info>(
 
     // Validate hash satisfies the minimnum difficulty
     let difficulty = drillx::difficulty(hx);
+    sol_log(&format!("Diff {}", difficulty));
     if difficulty.le(&config.min_difficulty) {
         return Err(OreError::DifficultyInsufficient.into());
     }
@@ -90,12 +92,13 @@ pub fn process_mine<'a, 'info>(
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
+    sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier
     if clock.slot.gt(&proof.last_deposit_slot) {
         // Only apply if last deposit was at least 1 block ago to prevent flash loan attacks.
         // TODO Cleanup math with a const here (unnecessary cus)
-        // TODO Maybe move const into config!?
+        // TODO Move const into config
         let max_stake = reward
             .saturating_mul(60) // min/hour
             .saturating_mul(24) // hour/day
@@ -106,29 +109,45 @@ pub fn process_mine<'a, 'info>(
             .min(max_stake)
             .saturating_mul(reward)
             .saturating_div(max_stake);
+        sol_log(&format!("Staking {}", staking_reward));
         reward = reward.saturating_add(staking_reward);
     }
 
-    // Apply liveness penalty
-    // TODO Should penalty be symmetric?
-    // TODO Or should the curve be steeper on the <1 min side?
-    // TODO Eg anything more frequent than 40 seconds should get 0
-    // TODO Anything longer than 2 minutes should be 0
-    let tolerance = 5i64; // TODO Get from config
-    let target_time = proof.last_hash_at.saturating_add(EPOCH_DURATION);
-    if clock
-        .unix_timestamp
-        .saturating_sub(target_time)
-        .abs()
-        .gt(&tolerance)
-    {
-        // TODO Apply
+    // Apply spam/liveness penalty
+    let tolerance_early = 5i64; // TODO Get from config
+    let tolerance_late = 5i64; // TODO Get from config
+    let t = clock.unix_timestamp;
+    let t_target = proof.last_hash_at.saturating_add(EPOCH_DURATION);
+    let t_early = t_target.saturating_sub(tolerance_early);
+    let t_late = t_target.saturating_add(tolerance_late);
+    if t.lt(&t_early) {
+        reward = 0;
+        sol_log("Spam penalty");
+    } else if t.gt(&t_late) {
+        reward = reward.saturating_sub(
+            reward
+                .saturating_mul(t.saturating_sub(t_late) as u64)
+                .saturating_div(
+                    t_target
+                        .saturating_add(EPOCH_DURATION)
+                        .saturating_sub(t_late) as u64,
+                ),
+        );
+        sol_log(&format!(
+            "Liveness penalty ({} sec) {}",
+            t.saturating_sub(t_late),
+            reward,
+        ));
     }
 
-    // Update balances
-    // TODO Handle case where reward is higher than bus can payout
+    // Set upper bound to whatever is left in the bus
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+    reward = reward.min(bus.rewards);
+
+    // Update balances
+    sol_log(&format!("Total {}", reward));
+    sol_log(&format!("Bus {}", bus.rewards));
     bus.rewards = bus
         .rewards
         .checked_sub(reward)
