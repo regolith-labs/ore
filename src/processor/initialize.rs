@@ -17,8 +17,9 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, METADATA, METADATA_NAME, METADATA_SYMBOL,
-    METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
+    BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_MIN_DIFFICULTY, METADATA,
+    METADATA_NAME, METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS,
+    TREASURY,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:
@@ -134,7 +135,7 @@ pub fn process_initialize<'a, 'info>(
     config.admin = *signer.key;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
-    config.min_difficulty = 8;
+    config.min_difficulty = INITIAL_MIN_DIFFICULTY;
     config.paused = 0;
 
     // Initialize treasury

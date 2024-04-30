@@ -5,23 +5,23 @@ use solana_program::{pubkey, pubkey::Pubkey};
 /// The reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 
-// TODO Migrate to 11 decimals?
-/// The decimal precision of the ORE token.
-/// Using SI prefixes, the smallest indivisible unit of ORE is a nanoORE.
-/// 1 nanoORE = 0.000000001 ORE = one billionth of an ORE
-pub const TOKEN_DECIMALS: u8 = 9;
+/// The minimum difficulty to initialize the program with.
+pub const INITIAL_MIN_DIFFICULTY: u32 = 12;
 
-/// One ORE token, denominated in units of nanoORE.
+/// The decimal precision of the ORE token.
+pub const TOKEN_DECIMALS: u8 = 11;
+
+/// One ORE token, denominated in indivisible units.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The duration of an epoch, in units of seconds.
 pub const EPOCH_DURATION: i64 = 60;
 
-/// The target quantity of ORE to be mined per epoch, in units of nanoORE.
+/// The target quantity of ORE to be mined per epoch.
 /// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE;
 
-/// The maximum quantity of ORE that can be mined per epoch, in units of nanoORE.
+/// The maximum quantity of ORE that can be mined per epoch.
 pub const MAX_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(2);
 
 /// The quantity of ORE each bus is allowed to issue per epoch.

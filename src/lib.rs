@@ -14,10 +14,8 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-// TODO u128 for internal rewards representation?
-// TODO Admin fn for min difficulty? What if this were set automatically by u128 base reward rate?
-// TODO Increase bus count?
-// TODO Is downgrade necessary or no?
+// TODO Admin fn for min difficulty?
+// TODO Is downgrade necessary?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
 

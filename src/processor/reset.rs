@@ -18,7 +18,7 @@ use crate::{
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:
 /// 1. Reset bus account rewards counters.
 /// 2. Adjust the reward rate to stabilize inflation.
-/// 3. Top up the treasury token account to backup claims.
+/// 3. Top up the treasury token account to fund claims.
 ///
 /// Safety requirements:
 /// - Reset is a permissionless instruction and can be invoked by any signer.
@@ -29,8 +29,11 @@ use crate::{
 /// Discussion:
 /// - It is important that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
 ///   stays within the guaranteed bounds of 0 ≤ R ≤ 2 ORE/min.
-/// - The reward rate is dynamically adjusted based on last epoch's actual reward rate (proxy for hashpower) to
-///   target an average supply growth rate of 1 ORE/min.
+/// - The reward rate is dynamically adjusted based on last epoch's theoretical reward rate to target an average
+///   supply growth rate of 1 ORE/min.
+/// - The "theoretical" reward rate refers to the amount that would have been paid out if rewards were not capped by
+///   the bus limits. It's necessary to use this value to ensure the reward rate update calculation accurately
+///   accounts for the difficulty of submitted hashes.
 pub fn process_reset<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
@@ -85,17 +88,21 @@ pub fn process_reset<'a, 'info>(
 
     // Reset bus accounts and calculate actual rewards mined since last reset
     let mut total_remaining_rewards = 0u64;
+    let mut total_theoretical_rewards = 0u64;
     for i in 0..BUS_COUNT {
         let mut bus_data = busses[i].data.borrow_mut();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
+        total_theoretical_rewards =
+            total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
         bus.rewards = BUS_EPOCH_REWARDS;
+        bus.theoretical_rewards = 0;
     }
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
 
     // Update base reward rate for next epoch
     config.base_reward_rate =
-        calculate_new_reward_rate(config.base_reward_rate, total_epoch_rewards);
+        calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
     // Fund treasury token account
     solana_program::program::invoke_signed(
@@ -135,9 +142,9 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     }
 
     // Calculate new reward rate.
-    let new_rate = (current_rate)
-        .saturating_mul(TARGET_EPOCH_REWARDS)
-        .saturating_div(epoch_rewards) as u64;
+    let new_rate = (current_rate as u128)
+        .saturating_mul(TARGET_EPOCH_REWARDS as u128)
+        .saturating_div(epoch_rewards as u128) as u64;
 
     // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);

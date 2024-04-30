@@ -53,8 +53,11 @@ pub fn process_upgrade<'a, 'info>(
         ],
     )?;
 
+    // Account for decimals change.
+    // v1 token has 9 decimals. v2 token has 11.
+    let amount_to_mint = amount.saturating_mul(100);
+
     // Mint to the beneficiary account
-    // TODO Account for decimals change!
     let treasury_data = treasury_info.data.borrow();
     let treasury = Treasury::try_from_bytes(&treasury_data)?;
     let treasury_bump = treasury.bump as u8;
@@ -66,7 +69,7 @@ pub fn process_upgrade<'a, 'info>(
             beneficiary_info.key,
             treasury_info.key,
             &[treasury_info.key],
-            amount,
+            amount_to_mint,
         )?,
         &[
             token_program.clone(),

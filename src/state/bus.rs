@@ -17,6 +17,10 @@ pub struct Bus {
 
     /// The quantity of rewards this bus can issue in the current epoch epoch.
     pub rewards: u64,
+
+    // TODO Come up with better name
+    /// The rewards that would have been paid out this epoch if the bus had no limit.
+    pub theoretical_rewards: u64,
 }
 
 impl Discriminator for Bus {

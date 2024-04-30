@@ -18,7 +18,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    BUS_EPOCH_REWARDS, EPOCH_DURATION,
+    EPOCH_DURATION,
 };
 
 // TODO Look into tx introspection to require 1 hash per tx
@@ -69,7 +69,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::ClockInvalid.into());
     }
 
-    // Validate epoch is active
+    // TODO Validate epoch is active
     // let treasury_data = treasury_info.data.borrow();
     // let treasury = Treasury::try_from_bytes(&treasury_data)?;
     // let threshold = treasury.last_reset_at.saturating_add(EPOCH_DURATION);
@@ -84,7 +84,7 @@ pub fn process_mine<'a, 'info>(
     let difficulty = drillx::difficulty(hx);
     sol_log(&format!("Diff {}", difficulty));
     if difficulty.le(&config.min_difficulty) {
-        return Err(OreError::DifficultyInsufficient.into());
+        return Err(OreError::HashTooEasy.into());
     }
 
     // Calculate base reward rate
@@ -143,16 +143,17 @@ pub fn process_mine<'a, 'info>(
     // Set upper bound to whatever is left in the bus
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    reward = reward.min(bus.rewards);
+    let actual_reward = reward.min(bus.rewards);
 
     // Update balances
     sol_log(&format!("Total {}", reward));
     sol_log(&format!("Bus {}", bus.rewards));
+    bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus
         .rewards
-        .checked_sub(reward)
-        .ok_or(OreError::BusRewardsInsufficient)?;
-    proof.balance = proof.balance.saturating_add(reward);
+        .checked_sub(actual_reward)
+        .expect("This should not happen");
+    proof.balance = proof.balance.saturating_add(actual_reward);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
