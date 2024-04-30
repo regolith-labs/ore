@@ -94,16 +94,19 @@ pub fn process_mine<'a, 'info>(
         .saturating_mul(2u64.saturating_pow(difficulty));
     sol_log(&format!("Base {}", reward));
 
-    // Apply staking multiplier, only if last deposit was at least 1 block ago to prevent flash loan attacks.
+    // Apply staking multiplier.
+    // To prevent flash loan attacks, multiplier is only applied if the last deposit was at least 1 block ago.
+    // The multiplier can range 1x to 2x. To get the maximum multiplier, the stake balance must be
+    // greater than or equal to two years worth of rewards at the selected difficulty.
     if clock.slot.gt(&proof.last_deposit_slot) {
-        let stake_max = reward.saturating_mul(TWO_YEARS);
+        let upper_bound = reward.saturating_mul(TWO_YEARS);
         let staking_reward = proof
             .balance
-            .min(stake_max)
+            .min(upper_bound)
             .saturating_mul(reward)
-            .saturating_div(stake_max);
-        sol_log(&format!("Staking {}", staking_reward));
+            .saturating_div(upper_bound);
         reward = reward.saturating_add(staking_reward);
+        sol_log(&format!("Staking {}", staking_reward));
     }
 
     // Apply spam/liveness penalty
