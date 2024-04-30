@@ -27,6 +27,12 @@ pub struct Config {
 
     /// Is mining paused.
     pub paused: u32,
+
+    /// Seconds prior to a miner's target time during which their hashes will not be penalized.
+    pub tolerance_spam: i64,
+
+    /// Seconds after a miner's target time during which their hashes will not be penalized.
+    pub tolerance_liveness: i64,
 }
 
 impl Discriminator for Config {

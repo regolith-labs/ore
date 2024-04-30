@@ -8,6 +8,9 @@ pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 /// The minimum difficulty to initialize the program with.
 pub const INITIAL_MIN_DIFFICULTY: u32 = 12;
 
+/// The spam/liveness tolerance to initialize the program with.
+pub const INITIAL_TOLERANCE: i64 = 5;
+
 /// The decimal precision of the ORE token.
 pub const TOKEN_DECIMALS: u8 = 11;
 

@@ -15,6 +15,7 @@ pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,
 
+    // TODO Update logic to count up rather than down
     /// The quantity of rewards this bus can issue in the current epoch epoch.
     pub rewards: u64,
 

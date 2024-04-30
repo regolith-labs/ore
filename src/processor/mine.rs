@@ -114,28 +114,26 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Apply spam/liveness penalty
-    let tolerance_early = 5i64; // TODO Get from config
-    let tolerance_late = 5i64; // TODO Get from config
     let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(EPOCH_DURATION);
-    let t_early = t_target.saturating_sub(tolerance_early);
-    let t_late = t_target.saturating_add(tolerance_late);
-    if t.lt(&t_early) {
+    let t_spam = t_target.saturating_sub(config.tolerance_spam);
+    let t_liveness = t_target.saturating_add(config.tolerance_liveness);
+    if t.lt(&t_spam) {
         reward = 0;
         sol_log("Spam penalty");
-    } else if t.gt(&t_late) {
+    } else if t.gt(&t_liveness) {
         reward = reward.saturating_sub(
             reward
-                .saturating_mul(t.saturating_sub(t_late) as u64)
+                .saturating_mul(t.saturating_sub(t_liveness) as u64)
                 .saturating_div(
                     t_target
                         .saturating_add(EPOCH_DURATION)
-                        .saturating_sub(t_late) as u64,
+                        .saturating_sub(t_liveness) as u64,
                 ),
         );
         sol_log(&format!(
             "Liveness penalty ({} sec) {}",
-            t.saturating_sub(t_late),
+            t.saturating_sub(t_liveness),
             reward,
         ));
     }
