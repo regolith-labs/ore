@@ -32,10 +32,10 @@ pub fn process_update_tolerance<'a, 'info>(
 
     // Overflow checks
     if args.tolerance_liveness.gt(&(i64::MAX as u64)) {
-        return Err(OreError::ToleranceInvalid.into());
+        return Err(OreError::ToleranceOverflow.into());
     }
     if args.tolerance_spam.gt(&(i64::MAX as u64)) {
-        return Err(OreError::ToleranceInvalid.into());
+        return Err(OreError::ToleranceOverflow.into());
     }
 
     // Update tolerances

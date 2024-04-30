@@ -4,8 +4,8 @@ use solana_program::{
 };
 
 use crate::{
-    error::OreError, instruction::StakeArgs, loaders::*, state::Proof, utils::AccountDeserialize,
-    MINT_ADDRESS, TREASURY_ADDRESS,
+    instruction::StakeArgs, loaders::*, state::Proof, utils::AccountDeserialize, MINT_ADDRESS,
+    TREASURY_ADDRESS,
 };
 
 pub fn process_stake<'a, 'info>(
@@ -36,10 +36,7 @@ pub fn process_stake<'a, 'info>(
     // Update proof balance
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.balance = proof
-        .balance
-        .checked_add(amount)
-        .ok_or(OreError::StakeTooLarge)?;
+    proof.balance = proof.balance.saturating_add(amount);
 
     // Update deposit timestamp
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;

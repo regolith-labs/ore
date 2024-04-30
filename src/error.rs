@@ -13,12 +13,12 @@ pub enum OreError {
     HashTooEasy = 2,
     #[error("The claim amount cannot be greater than the claimable rewards")]
     ClaimTooLarge = 3,
-    #[error("The stake amount cannot exceed u64 size")]
-    StakeTooLarge = 4,
     #[error("The clock time is invalid")]
-    ClockInvalid = 5,
+    ClockInvalid = 4,
+    #[error("Only one hash may be validated per transaction")]
+    TransactionInvalid = 5,
     #[error("The tolerance cannot exceed i64 max value")]
-    ToleranceInvalid = 6,
+    ToleranceOverflow = 6,
 }
 
 impl From<OreError> for ProgramError {

@@ -262,6 +262,7 @@ pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
             AccountMeta::new(bus, false),
             AccountMeta::new_readonly(CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [

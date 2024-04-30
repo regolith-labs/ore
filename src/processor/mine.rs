@@ -1,5 +1,6 @@
 use std::mem::size_of;
 
+#[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
@@ -8,17 +9,19 @@ use solana_program::{
     log::sol_log,
     program_error::ProgramError,
     pubkey::Pubkey,
+    sanitize::SanitizeError,
+    serialize_utils::{read_pubkey, read_u16, read_u8},
     slot_hashes::SlotHash,
-    sysvar::{self, Sysvar},
+    sysvar::{self, instructions::load_current_index, Sysvar},
 };
 
 use crate::{
     error::OreError,
-    instruction::MineArgs,
+    instruction::{MineArgs, OreInstruction},
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
+    COMPUTE_BUDGET_PROGRAM_ID, MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
 // TODO Look into tx introspection to require 1 hash per tx
@@ -45,14 +48,22 @@ pub fn process_mine<'a, 'info>(
     let args = MineArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, bus_info, config_info, proof_info, slot_hashes_info] = accounts else {
+    let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
     load_any_bus(bus_info, true)?;
     load_config(config_info, false)?;
     load_proof(proof_info, signer.key, true)?;
-    load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
+    load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
+    load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
+
+    // Validate this is the only mine ix in the transaction
+    if !validate_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
+        return Err(OreError::TransactionInvalid.into());
+    }
 
     // Validate mining is not paused
     let config_data = config_info.data.borrow();
@@ -152,7 +163,7 @@ pub fn process_mine<'a, 'info>(
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
         hx.as_slice(),
-        &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
+        &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;
 
@@ -169,3 +180,83 @@ pub fn process_mine<'a, 'info>(
 
     Ok(())
 }
+
+/// Require that there is only one `mine` instruction per transaction and it is called from the
+/// top level of the transaction.
+fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
+    #[allow(deprecated)]
+    let idx = load_current_index(msg);
+    let mut c = 0;
+    let num_instructions = read_u16(&mut c, msg)?;
+    let pc = c;
+    for i in 0..num_instructions as usize {
+        c = pc + i * 2;
+        c = read_u16(&mut c, msg)? as usize;
+        let num_accounts = read_u16(&mut c, msg)? as usize;
+        c += num_accounts * 33;
+        match read_pubkey(&mut c, msg)? {
+            crate::ID => {
+                c += 2;
+                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                    if let OreInstruction::Mine = ix {
+                        if i.ne(&(idx as usize)) {
+                            return Ok(false);
+                        }
+                    }
+                } else {
+                    return Ok(false);
+                }
+            }
+            COMPUTE_BUDGET_PROGRAM_ID => {
+                // Noop
+            }
+            _ => return Ok(false),
+        }
+    }
+
+    Ok(true)
+}
+
+// fn deserialize_instruction(index: usize, data: &[u8]) -> Result<Instruction, SanitizeError> {
+//     const IS_SIGNER_BIT: usize = 0;
+//     const IS_WRITABLE_BIT: usize = 1;
+
+//     let mut current = 0;
+//     let num_instructions = read_u16(&mut current, data)?;
+//     if index >= num_instructions as usize {
+//         return Err(SanitizeError::IndexOutOfBounds);
+//     }
+
+//     // index into the instruction byte-offset table.
+//     current += index * 2;
+//     let start = read_u16(&mut current, data)?;
+
+//     current = start as usize;
+//     let num_accounts = read_u16(&mut current, data)?;
+//     let mut accounts = Vec::with_capacity(num_accounts as usize);
+//     for _ in 0..num_accounts {
+//         let meta_byte = read_u8(&mut current, data)?;
+//         let mut is_signer = false;
+//         let mut is_writable = false;
+//         if meta_byte & (1 << IS_SIGNER_BIT) != 0 {
+//             is_signer = true;
+//         }
+//         if meta_byte & (1 << IS_WRITABLE_BIT) != 0 {
+//             is_writable = true;
+//         }
+//         let pubkey = read_pubkey(&mut current, data)?;
+//         accounts.push(AccountMeta {
+//             pubkey,
+//             is_signer,
+//             is_writable,
+//         });
+//     }
+//     let program_id = read_pubkey(&mut current, data)?;
+//     let data_len = read_u16(&mut current, data)?;
+//     let data = read_slice(&mut current, data, data_len as usize)?;
+//     Ok(Instruction {
+//         program_id,
+//         accounts,
+//         data,
+//     })
+// }
