@@ -69,7 +69,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::ClockInvalid.into());
     }
 
-    // TODO Validate epoch is active
+    // Validate epoch is active
     if clock
         .unix_timestamp
         .ge(&config.last_reset_at.saturating_add(ONE_MINUTE))
