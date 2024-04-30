@@ -104,8 +104,8 @@ pub fn process_mine<'a, 'info>(
     sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier.
-    // To prevent flash loan attacks, multiplier is only applied if the last deposit was at least 1 block ago.
-    // The multiplier can range 1x to 2x. To get the maximum multiplier, the stake balance must be
+    // To prevent flash loan attacks, only apply if the last deposit was at least 1 block ago.
+    // The multiplier can range 1x to 2x. To receive the maximum multiplier, the stake balance must be
     // greater than or equal to two years worth of rewards at the selected difficulty.
     if clock.slot.gt(&proof.last_deposit_slot) {
         let upper_bound = reward.saturating_mul(TWO_YEARS);
@@ -143,10 +143,10 @@ pub fn process_mine<'a, 'info>(
         ));
     }
 
-    // Set upper bound to whatever is left in the bus
+    // Limit payout amount to whatever is left in the bus
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    let actual_reward = reward.min(bus.rewards);
+    let reward_actual = reward.min(bus.rewards);
 
     // Update balances
     sol_log(&format!("Total {}", reward));
@@ -154,9 +154,9 @@ pub fn process_mine<'a, 'info>(
     bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus
         .rewards
-        .checked_sub(actual_reward)
+        .checked_sub(reward_actual)
         .expect("This should not happen");
-    proof.balance = proof.balance.saturating_add(actual_reward);
+    proof.balance = proof.balance.saturating_add(reward_actual);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
@@ -181,6 +181,13 @@ pub fn process_mine<'a, 'info>(
 
 /// Require that there is only one `mine` instruction per transaction and it is called from the
 /// top level of the transaction.
+///
+/// The intent here is to disincentivize sybil. As long as a user can fit multiple hashes in a single
+/// transaction, there is a financial incentive to sybil multiple keypairs and pack as many hashes
+/// as possible into each transaction to minimize fee / hash.
+///
+/// If each transaction is limited to one hash only, then a user will minimize their fee / hash
+/// by allocating all their hashpower to finding the single most difficult hash they can.
 fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
     #[allow(deprecated)]
     let idx = load_current_index(msg);
@@ -192,6 +199,7 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c = read_u16(&mut c, msg)? as usize;
         let num_accounts = read_u16(&mut c, msg)? as usize;
         c += num_accounts * 33;
+        // Only allow instructions to call ore and the compute budget program.
         match read_pubkey(&mut c, msg)? {
             crate::ID => {
                 c += 2;
@@ -214,47 +222,3 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
 
     Ok(true)
 }
-
-// fn deserialize_instruction(index: usize, data: &[u8]) -> Result<Instruction, SanitizeError> {
-//     const IS_SIGNER_BIT: usize = 0;
-//     const IS_WRITABLE_BIT: usize = 1;
-
-//     let mut current = 0;
-//     let num_instructions = read_u16(&mut current, data)?;
-//     if index >= num_instructions as usize {
-//         return Err(SanitizeError::IndexOutOfBounds);
-//     }
-
-//     // index into the instruction byte-offset table.
-//     current += index * 2;
-//     let start = read_u16(&mut current, data)?;
-
-//     current = start as usize;
-//     let num_accounts = read_u16(&mut current, data)?;
-//     let mut accounts = Vec::with_capacity(num_accounts as usize);
-//     for _ in 0..num_accounts {
-//         let meta_byte = read_u8(&mut current, data)?;
-//         let mut is_signer = false;
-//         let mut is_writable = false;
-//         if meta_byte & (1 << IS_SIGNER_BIT) != 0 {
-//             is_signer = true;
-//         }
-//         if meta_byte & (1 << IS_WRITABLE_BIT) != 0 {
-//             is_writable = true;
-//         }
-//         let pubkey = read_pubkey(&mut current, data)?;
-//         accounts.push(AccountMeta {
-//             pubkey,
-//             is_signer,
-//             is_writable,
-//         });
-//     }
-//     let program_id = read_pubkey(&mut current, data)?;
-//     let data_len = read_u16(&mut current, data)?;
-//     let data = read_slice(&mut current, data, data_len as usize)?;
-//     Ok(Instruction {
-//         program_id,
-//         accounts,
-//         data,
-//     })
-// }
