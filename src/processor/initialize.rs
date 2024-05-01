@@ -179,6 +179,7 @@ pub fn process_initialize<'a, 'info>(
         &[&[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
     )?;
 
+    // TODO Fix metadata initialization
     // Initialize mint metadata
     // mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
     //     __program: metadata_program,

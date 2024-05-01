@@ -4,8 +4,7 @@ use solana_program::{
 };
 
 use crate::{
-    instruction::StakeArgs, loaders::*, state::Treasury, utils::AccountDeserialize, MINT_ADDRESS,
-    MINT_V1_ADDRESS, TREASURY,
+    instruction::StakeArgs, loaders::*, MINT_ADDRESS, MINT_V1_ADDRESS, TREASURY, TREASURY_BUMP,
 };
 
 pub fn process_upgrade<'a, 'info>(
@@ -18,21 +17,16 @@ pub fn process_upgrade<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer_info, beneficiary_info, mint_info, mint_v1_info, sender_info, treasury_info, token_program] =
+    let [signer, beneficiary_info, mint_info, mint_v1_info, sender_info, treasury_info, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer_info)?;
-    load_token_account(
-        beneficiary_info,
-        Some(&signer_info.key),
-        &MINT_ADDRESS,
-        true,
-    )?;
+    load_signer(signer)?;
+    load_token_account(beneficiary_info, Some(&signer.key), &MINT_ADDRESS, true)?;
     load_mint(mint_info, MINT_ADDRESS, true)?;
     load_mint(mint_v1_info, MINT_V1_ADDRESS, true)?;
-    load_token_account(sender_info, Some(signer_info.key), &MINT_V1_ADDRESS, true)?;
+    load_token_account(sender_info, Some(signer.key), &MINT_V1_ADDRESS, true)?;
     load_program(token_program, spl_token::id())?;
 
     // Burn v1 tokens
@@ -41,15 +35,15 @@ pub fn process_upgrade<'a, 'info>(
             &spl_token::id(),
             sender_info.key,
             mint_v1_info.key,
-            signer_info.key,
-            &[signer_info.key],
+            signer.key,
+            &[signer.key],
             amount,
         )?,
         &[
             token_program.clone(),
             sender_info.clone(),
             mint_v1_info.clone(),
-            signer_info.clone(),
+            signer.clone(),
         ],
     )?;
 
@@ -58,10 +52,6 @@ pub fn process_upgrade<'a, 'info>(
     let amount_to_mint = amount.saturating_mul(100);
 
     // Mint to the beneficiary account
-    let treasury_data = treasury_info.data.borrow();
-    let treasury = Treasury::try_from_bytes(&treasury_data)?;
-    let treasury_bump = treasury.bump as u8;
-    drop(treasury_data);
     solana_program::program::invoke_signed(
         &spl_token::instruction::mint_to(
             &spl_token::id(),
@@ -77,7 +67,7 @@ pub fn process_upgrade<'a, 'info>(
             beneficiary_info.clone(),
             treasury_info.clone(),
         ],
-        &[&[TREASURY, &[treasury_bump]]],
+        &[&[TREASURY, &[TREASURY_BUMP]]],
     )?;
 
     Ok(())

@@ -14,6 +14,7 @@ use solana_program::{
     slot_hashes::SlotHash,
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
+use solana_program::{program::set_return_data, pubkey};
 
 use crate::{
     error::OreError,
@@ -21,7 +22,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    COMPUTE_BUDGET_PROGRAM_ID, MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
+    MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -118,23 +119,22 @@ pub fn process_mine<'a, 'info>(
         sol_log(&format!("Staking {}", staking_reward));
     }
 
-    // Apply spam/liveness penalty
+    // Apply spam penalty
     let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(config.tolerance_spam);
-    let t_liveness = t_target.saturating_add(config.tolerance_liveness);
     if t.lt(&t_spam) {
         reward = 0;
         sol_log("Spam penalty");
-    } else if t.gt(&t_liveness) {
+    }
+
+    // Apply liveness penalty
+    let t_liveness = t_target.saturating_add(config.tolerance_liveness);
+    if t.gt(&t_liveness) {
         reward = reward.saturating_sub(
             reward
                 .saturating_mul(t.saturating_sub(t_liveness) as u64)
-                .saturating_div(
-                    t_target
-                        .saturating_add(ONE_MINUTE)
-                        .saturating_sub(t_liveness) as u64,
-                ),
+                .saturating_div(ONE_MINUTE as u64),
         );
         sol_log(&format!(
             "Liveness penalty ({} sec) {}",
@@ -174,7 +174,7 @@ pub fn process_mine<'a, 'info>(
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
     // Log the mined rewards
-    // set_return_data(reward.to_le_bytes().as_slice());
+    set_return_data(reward_actual.to_le_bytes().as_slice());
 
     Ok(())
 }
@@ -222,3 +222,6 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
 
     Ok(true)
 }
+
+/// Program id of the compute budge program.
+const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");

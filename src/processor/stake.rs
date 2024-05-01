@@ -18,13 +18,12 @@ pub fn process_stake<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer_info, proof_info, sender_info, treasury_tokens_info, token_program] = accounts
-    else {
+    let [signer, proof_info, sender_info, treasury_tokens_info, token_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer_info)?;
-    load_proof(proof_info, signer_info.key, true)?;
-    load_token_account(sender_info, Some(signer_info.key), &MINT_ADDRESS, true)?;
+    load_signer(signer)?;
+    load_proof(proof_info, signer.key, true)?;
+    load_token_account(sender_info, Some(signer.key), &MINT_ADDRESS, true)?;
     load_token_account(
         treasury_tokens_info,
         Some(&TREASURY_ADDRESS),
@@ -48,15 +47,15 @@ pub fn process_stake<'a, 'info>(
             &spl_token::id(),
             sender_info.key,
             treasury_tokens_info.key,
-            signer_info.key,
-            &[signer_info.key],
+            signer.key,
+            &[signer.key],
             amount,
         )?,
         &[
             token_program.clone(),
             sender_info.clone(),
             treasury_tokens_info.clone(),
-            signer_info.clone(),
+            signer.clone(),
         ],
     )?;
 
