@@ -5,7 +5,7 @@ use solana_program::{
 
 use crate::{
     error::OreError, instruction::UpdateToleranceArgs, loaders::*, state::Config,
-    utils::AccountDeserialize,
+    utils::AccountDeserialize, ONE_MINUTE,
 };
 
 pub fn process_update_tolerance<'a, 'info>(
@@ -30,11 +30,11 @@ pub fn process_update_tolerance<'a, 'info>(
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // Overflow checks
-    if args.tolerance_liveness.gt(&(i64::MAX as u64)) {
+    // Sanity checks
+    if args.tolerance_liveness.ge(&(ONE_MINUTE as u64)) {
         return Err(OreError::ToleranceOverflow.into());
     }
-    if args.tolerance_spam.gt(&(i64::MAX as u64)) {
+    if args.tolerance_spam.ge(&(ONE_MINUTE as u64)) {
         return Err(OreError::ToleranceOverflow.into());
     }
 

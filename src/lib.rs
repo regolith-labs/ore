@@ -14,6 +14,7 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
+// TODO Close proof accounts to recover sol
 // TODO Is downgrade necessary?
 
 declare_id!("mineRHF5r6S7HyD9SppBfVMXMavDkJsxwGesEvxZr2A");
@@ -41,6 +42,7 @@ pub fn process_instruction(
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Stake => process_stake(program_id, accounts, data)?,
         OreInstruction::Upgrade => process_upgrade(program_id, accounts, data)?,
+        OreInstruction::Deregister => process_deregister(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
         OreInstruction::UpdateAdmin => process_update_admin(program_id, accounts, data)?,
         OreInstruction::UpdateTolerance => process_update_tolerance(program_id, accounts, data)?,

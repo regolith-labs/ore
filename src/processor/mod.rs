@@ -1,4 +1,5 @@
 mod claim;
+mod deregister;
 mod initialize;
 mod mine;
 mod pause;
@@ -10,6 +11,7 @@ mod update_tolerance;
 mod upgrade;
 
 pub use claim::*;
+pub use deregister::*;
 pub use initialize::*;
 pub use mine::*;
 pub use pause::*;
