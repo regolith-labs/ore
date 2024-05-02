@@ -8,6 +8,14 @@ use crate::{
     utils::AccountDeserialize, ONE_MINUTE,
 };
 
+/// UpdateTolerance updates the program's tolerance settings. Its responsibilities include:
+/// 1. Update the liveness tolerance.
+/// 2. Update the spam tolerance.
+///
+/// Safety requirements:
+/// - Can only succeed if the signer is the program admin.
+/// - Can only succeed if the provided config is valid.
+/// - Can only succeed if the tolerances pass sanity tests.
 pub fn process_update_tolerance<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

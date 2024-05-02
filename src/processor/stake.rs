@@ -8,6 +8,14 @@ use crate::{
     TREASURY_ADDRESS,
 };
 
+/// Stake deposits Ore into a miner's proof account to earn multiplier. Its responsibilies include:
+/// 1. Transfer tokens from the miner to the treasury account.
+/// 2. Increment the miner's claimable balance.
+///
+/// Safety requirements:
+/// - Stake is a permissionless instruction and can be called by any user.
+/// - Can only succeed if the amount is less than or equal to the miner's transferable tokens.
+/// - The provided beneficiary, proof, sender, treasury token account, and token program must be valid.
 pub fn process_stake<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],

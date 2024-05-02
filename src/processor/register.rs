@@ -21,7 +21,7 @@ use crate::{
 /// Safety requirements:
 /// - Register is a permissionless instruction and can be invoked by any singer.
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
-/// - Can only succeed once per signer.
+/// - Can only succeed if the user does not already have a proof account.
 /// - The provided system program must be valid.
 pub fn process_register<'a, 'info>(
     _program_id: &Pubkey,
