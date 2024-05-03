@@ -1,3 +1,4 @@
+use bytemuck::{Pod, Zeroable};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -76,6 +77,16 @@ pub(crate) fn create_pda<'a, 'info>(
     }
 
     Ok(())
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct MineEvent {
+    pub difficulty: u32,
+    pub multiplier: f32,
+    pub reward: u64,
+    pub reward_actual: u64,
+    pub timing: i64,
 }
 
 #[repr(u8)]
