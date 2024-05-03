@@ -33,7 +33,6 @@ pub fn process_claim<'a, 'info>(
     };
     load_signer(signer)?;
     load_token_account(beneficiary_info, None, &MINT_ADDRESS, true)?;
-    load_proof(proof_info, signer.key, true)?;
     load_treasury(treasury_info, false)?;
     load_token_account(
         treasury_tokens_info,
