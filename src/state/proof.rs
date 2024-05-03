@@ -21,11 +21,11 @@ pub struct Proof {
     /// The current mining challenge.
     pub challenge: [u8; 32],
 
-    /// The last slot ore was deposited into this account.
-    pub last_deposit_slot: u64,
-
     /// The last time this account provided a hash.
     pub last_hash_at: i64,
+
+    /// The last time stake was deposited into this account.
+    pub last_stake_at: i64,
 
     /// The total lifetime hashes provided by this miner.
     pub total_hashes: u64,

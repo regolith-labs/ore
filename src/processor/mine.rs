@@ -91,23 +91,27 @@ pub fn process_mine<'a, 'info>(
 
     // Validate hash satisfies the minimnum difficulty
     let difficulty = drillx::difficulty(hx);
+    sol_log(&format!("Diff {}", difficulty));
     if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
     }
 
     // Calculate base reward rate
     let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
-    sol_log(&format!("Diff {}", difficulty));
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
     sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier.
-    // To prevent flash loan attacks, only apply if the last deposit was at least 1 block ago.
     // The multiplier can range 1x to 2x. To receive the maximum multiplier, the stake balance must be
-    // greater than or equal to two years worth of rewards at the selected difficulty.
-    if clock.slot.gt(&proof.last_deposit_slot) {
+    // greater than or equal to two years worth of rewards at the selected difficulty. Miners are only
+    // eligable for a multipler if their last stake deposit was more than one minute ago.
+    if proof
+        .last_stake_at
+        .saturating_add(ONE_MINUTE)
+        .le(&clock.unix_timestamp)
+    {
         let upper_bound = reward.saturating_mul(TWO_YEARS);
         let staking_reward = proof
             .balance
@@ -165,7 +169,6 @@ pub fn process_mine<'a, 'info>(
     .0;
 
     // Update time trackers
-    proof.last_deposit_slot = clock.slot;
     proof.last_hash_at = clock.unix_timestamp;
 
     // Update lifetime stats

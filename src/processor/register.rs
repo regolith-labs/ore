@@ -64,8 +64,8 @@ pub fn process_register<'a, 'info>(
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;
-    proof.last_deposit_slot = 0;
     proof.last_hash_at = 0;
+    proof.last_stake_at = 0;
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 
