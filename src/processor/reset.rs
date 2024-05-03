@@ -1,7 +1,8 @@
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
+    program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, sysvar::Sysvar,
 };
+use spl_token::state::Mint;
 
 use crate::{
     error::OreError,
@@ -11,8 +12,8 @@ use crate::{
     },
     state::{Bus, Config},
     utils::AccountDeserialize,
-    BUS_COUNT, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, MINT_ADDRESS, ONE_MINUTE, SMOOTHING_FACTOR,
-    TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
+    BUS_COUNT, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, MAX_SUPPLY, MINT_ADDRESS, ONE_MINUTE,
+    SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
 };
 
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:
@@ -104,6 +105,15 @@ pub fn process_reset<'a, 'info>(
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
+    // Load mint
+    let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
+    let amount = MAX_SUPPLY
+        .saturating_sub(mint.supply)
+        .min(total_epoch_rewards);
+    if amount.eq(&0) {
+        return Err(OreError::MaxSupply.into());
+    }
+
     // Fund treasury token account
     solana_program::program::invoke_signed(
         &spl_token::instruction::mint_to(
@@ -112,7 +122,7 @@ pub fn process_reset<'a, 'info>(
             treasury_tokens_info.key,
             treasury_info.key,
             &[treasury_info.key],
-            total_epoch_rewards,
+            amount,
         )?,
         &[
             token_program.clone(),

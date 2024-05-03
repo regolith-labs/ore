@@ -19,6 +19,8 @@ pub enum OreError {
     TransactionInvalid = 5,
     #[error("The tolerance cannot exceed i64 max value")]
     ToleranceOverflow = 6,
+    #[error("The maximum supply has been reached")]
+    MaxSupply = 7,
 }
 
 impl From<OreError> for ProgramError {

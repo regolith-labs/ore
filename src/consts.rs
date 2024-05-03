@@ -11,10 +11,10 @@ pub const INITIAL_TOLERANCE: i64 = 5;
 /// The minimum difficulty required of all submitted hashes.
 pub const MIN_DIFFICULTY: u32 = 12;
 
-/// The decimal precision of the ORE token.
+/// The decimal precision of the Ore token (100 billion indivisible units per Ore).
 pub const TOKEN_DECIMALS: u8 = 11;
 
-/// One ORE token, denominated in indivisible units.
+/// One Ore token, denominated in indivisible units.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The duration of one minute, in seconds.
@@ -22,6 +22,9 @@ pub const ONE_MINUTE: i64 = 60;
 
 /// The duration of two years, in minutes.
 pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
+
+/// The maximum token supply (100 million).
+pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(100_000_000);
 
 /// The target quantity of ORE to be mined per epoch.
 /// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
