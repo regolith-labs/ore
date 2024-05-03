@@ -105,16 +105,16 @@ pub fn process_reset<'a, 'info>(
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
-    // Load mint
+    // Max supply check
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
-    let amount = MAX_SUPPLY
-        .saturating_sub(mint.supply)
-        .min(total_epoch_rewards);
-    if amount.eq(&0) {
+    if mint.supply.ge(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
 
     // Fund treasury token account
+    let amount = MAX_SUPPLY
+        .saturating_sub(mint.supply)
+        .min(total_epoch_rewards);
     solana_program::program::invoke_signed(
         &spl_token::instruction::mint_to(
             &spl_token::id(),

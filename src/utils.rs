@@ -82,10 +82,8 @@ pub(crate) fn create_pda<'a, 'info>(
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct MineEvent {
-    pub difficulty: u32,
-    pub multiplier: f32,
+    pub difficulty: u64,
     pub reward: u64,
-    pub reward_actual: u64,
     pub timing: i64,
 }
 

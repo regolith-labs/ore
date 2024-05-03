@@ -13,14 +13,14 @@ use solana_program::{
     slot_hashes::SlotHash,
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
-use solana_program::{program::set_return_data, pubkey};
+use solana_program::{log::sol_log, pubkey};
 
 use crate::{
     error::OreError,
     instruction::{MineArgs, OreInstruction},
     loaders::*,
     state::{Bus, Config, Proof},
-    utils::{AccountDeserialize, MineEvent},
+    utils::AccountDeserialize,
     MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
@@ -97,15 +97,16 @@ pub fn process_mine<'a, 'info>(
 
     // Calculate base reward rate
     let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
+    sol_log(&format!("Diff {}", difficulty));
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
+    sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier.
     // To prevent flash loan attacks, only apply if the last deposit was at least 1 block ago.
     // The multiplier can range 1x to 2x. To receive the maximum multiplier, the stake balance must be
     // greater than or equal to two years worth of rewards at the selected difficulty.
-    let mut multiplier = 1f32;
     if clock.slot.gt(&proof.last_deposit_slot) {
         let upper_bound = reward.saturating_mul(TWO_YEARS);
         let staking_reward = proof
@@ -113,9 +114,8 @@ pub fn process_mine<'a, 'info>(
             .min(upper_bound)
             .saturating_mul(reward)
             .saturating_div(upper_bound);
-        let multiplied_reward = reward.saturating_add(staking_reward);
-        multiplier = ((multiplied_reward as f64) / (reward as f64)) as f32;
-        reward = multiplied_reward;
+        reward = reward.saturating_add(staking_reward);
+        sol_log(&format!("Staking {}", staking_reward));
     };
 
     // Apply spam penalty
@@ -124,6 +124,7 @@ pub fn process_mine<'a, 'info>(
     let t_spam = t_target.saturating_sub(config.tolerance_spam);
     if t.lt(&t_spam) {
         reward = 0;
+        sol_log("Spam penalty");
     }
 
     // Apply liveness penalty
@@ -134,6 +135,11 @@ pub fn process_mine<'a, 'info>(
                 .saturating_mul(t.saturating_sub(t_liveness) as u64)
                 .saturating_div(ONE_MINUTE as u64),
         );
+        sol_log(&format!(
+            "Liveness penalty ({} sec) {}",
+            t.saturating_sub(t_liveness),
+            reward,
+        ));
     }
 
     // Limit payout amount to whatever is left in the bus
@@ -142,6 +148,8 @@ pub fn process_mine<'a, 'info>(
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances
+    sol_log(&format!("Total {}", reward));
+    sol_log(&format!("Bus {}", bus.rewards));
     bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus
         .rewards
@@ -165,13 +173,11 @@ pub fn process_mine<'a, 'info>(
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
     // Log the mined rewards
-    set_return_data(bytemuck::bytes_of(&MineEvent {
-        difficulty,
-        multiplier,
-        reward,
-        reward_actual,
-        timing: t.saturating_sub(t_target),
-    }));
+    // set_return_data(bytemuck::bytes_of(&MineEvent {
+    //     difficulty: difficulty as u64,
+    //     reward,
+    //     timing: t.saturating_sub(t_target),
+    // }));
 
     Ok(())
 }
