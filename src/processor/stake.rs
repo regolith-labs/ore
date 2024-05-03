@@ -47,7 +47,7 @@ pub fn process_stake<'a, 'info>(
 
     // Update deposit timestamp
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    proof.last_deposit_slot = clock.slot;
+    proof.last_stake_at = clock.unix_timestamp;
 
     // Distribute tokens from signer to treasury
     solana_program::program::invoke(
