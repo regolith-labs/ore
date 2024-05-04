@@ -20,6 +20,9 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
+/// The duration of an Ore epoch, in seconds.
+pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(3);
+
 /// The duration of two years, in minutes.
 pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
 

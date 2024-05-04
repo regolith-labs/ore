@@ -21,7 +21,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
+    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -70,6 +70,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::IsPaused.into());
     }
 
+    // TODO Is this really needed?
     // Validate the clock state
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
@@ -79,9 +80,10 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Validate epoch is active
-    if clock
-        .unix_timestamp
-        .ge(&config.last_reset_at.saturating_add(ONE_MINUTE))
+    if config
+        .last_reset_at
+        .saturating_add(EPOCH_DURATION)
+        .le(&clock.unix_timestamp)
     {
         return Err(OreError::NeedsReset.into());
     }
