@@ -21,13 +21,13 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 pub const ONE_MINUTE: i64 = 60;
 
 /// The duration of an Ore epoch, in seconds.
-pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(3);
+pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(5);
 
 /// The duration of two years, in minutes.
 pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
 
-/// The maximum token supply (100 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(100_000_000);
+/// The maximum token supply (42 million).
+pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(42_000_000);
 
 /// The target quantity of ORE to be mined per epoch.
 /// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
