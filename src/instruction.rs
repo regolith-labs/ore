@@ -385,7 +385,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-            // AccountMeta::new_readonly(mpl_token_metadata::ID, false),
+            AccountMeta::new_readonly(mpl_token_metadata::ID, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [

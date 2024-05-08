@@ -17,8 +17,8 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_TOLERANCE, METADATA, MINT,
-    MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
+    BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_TOLERANCE, METADATA, METADATA_NAME,
+    METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
 
 /// Initialize sets up the Ore program. Its responsibilities include:
@@ -48,8 +48,7 @@ pub fn process_initialize<'a, 'info>(
     let args = InitializeArgs::try_from_bytes(data)?;
 
     // Load accounts
-    // let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -85,7 +84,7 @@ pub fn process_initialize<'a, 'info>(
     load_program(system_program, system_program::id())?;
     load_program(token_program, spl_token::id())?;
     load_program(associated_token_program, spl_associated_token_account::id())?;
-    // load_program(metadata_program, mpl_token_metadata::ID)?;
+    load_program(metadata_program, mpl_token_metadata::ID)?;
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Initialize bus accounts
@@ -179,32 +178,31 @@ pub fn process_initialize<'a, 'info>(
         &[&[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
     )?;
 
-    // TODO Fix metadata initialization
     // Initialize mint metadata
-    // mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
-    //     __program: metadata_program,
-    //     metadata: metadata_info,
-    //     mint: mint_info,
-    //     mint_authority: treasury_info,
-    //     payer: signer,
-    //     update_authority: (signer, true),
-    //     system_program,
-    //     rent: Some(rent_sysvar),
-    //     __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
-    //         data: mpl_token_metadata::types::DataV2 {
-    //             name: METADATA_NAME.to_string(),
-    //             symbol: METADATA_SYMBOL.to_string(),
-    //             uri: METADATA_URI.to_string(),
-    //             seller_fee_basis_points: 0,
-    //             creators: None,
-    //             collection: None,
-    //             uses: None,
-    //         },
-    //         is_mutable: true,
-    //         collection_details: None,
-    //     },
-    // }
-    // .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
+    mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
+        __program: metadata_program,
+        metadata: metadata_info,
+        mint: mint_info,
+        mint_authority: treasury_info,
+        payer: signer,
+        update_authority: (signer, true),
+        system_program,
+        rent: Some(rent_sysvar),
+        __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
+            data: mpl_token_metadata::types::DataV2 {
+                name: METADATA_NAME.to_string(),
+                symbol: METADATA_SYMBOL.to_string(),
+                uri: METADATA_URI.to_string(),
+                seller_fee_basis_points: 0,
+                creators: None,
+                collection: None,
+                uses: None,
+            },
+            is_mutable: true,
+            collection_details: None,
+        },
+    }
+    .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
 
     // Initialize treasury token account
     solana_program::program::invoke(
