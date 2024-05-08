@@ -14,6 +14,9 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
+// TODO Initialize with mining paused
+// TODO Require hardcoded admin key for initialization
+
 declare_id!("mineS8xKxv3GurPq4RAssdZa6kNSXuuxJCEVtQwPZX4");
 
 #[cfg(not(feature = "no-entrypoint"))]
