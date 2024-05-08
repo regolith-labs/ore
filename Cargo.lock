@@ -2549,7 +2549,7 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "1.2.1"
+version = "2.0.0"
 dependencies = [
  "array-const-fn-init",
  "bs58 0.5.0",
