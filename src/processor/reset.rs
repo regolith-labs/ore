@@ -16,6 +16,8 @@ use crate::{
     SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
 };
 
+// TODO Update comments to account for 5 minute epoch
+
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:
 /// 1. Reset bus account rewards counters.
 /// 2. Adjust the reward rate to stabilize inflation.

@@ -11,7 +11,8 @@ pub const INITIAL_TOLERANCE: i64 = 5;
 /// The minimum difficulty required of all submitted hashes.
 pub const MIN_DIFFICULTY: u32 = 12;
 
-/// The decimal precision of the Ore token (100 billion indivisible units per Ore).
+/// The decimal precision of the Ore token.
+/// There are 100 billion indivisible units per Ore (called "grains").
 pub const TOKEN_DECIMALS: u8 = 11;
 
 /// One Ore token, denominated in indivisible units.
@@ -20,21 +21,21 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
-/// The duration of an Ore epoch, in seconds.
-pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(5);
+/// The number of minutes in an Ore epoch.
+pub const EPOCH_MINUTES: i64 = 5;
 
-/// The duration of two years, in minutes.
-pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
+/// The duration of an Ore epoch, in seconds.
+pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(EPOCH_MINUTES);
 
 /// The maximum token supply (42 million).
 pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(42_000_000);
 
 /// The target quantity of ORE to be mined per epoch.
-/// Inflation rate ≈ 1 ORE / epoch (min 0, max 2)
-pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE;
+/// Inflation rate ≈ 1 ORE / min (min 0, max 2)
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(EPOCH_MINUTES as u64);
 
 /// The maximum quantity of ORE that can be mined per epoch.
-pub const MAX_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(2);
+pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(2);
 
 /// The quantity of ORE each bus is allowed to issue per epoch.
 pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64);
@@ -50,6 +51,10 @@ pub const SMOOTHING_FACTOR: u64 = 2;
 static_assertions::const_assert!(
     (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
 );
+
+/// The duration of two years, in minutes.
+/// Used to calculate the staking reward multiplier.
+pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
 
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
