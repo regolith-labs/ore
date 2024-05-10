@@ -35,7 +35,7 @@ pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(42_000_000);
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(EPOCH_MINUTES as u64);
 
 /// The maximum quantity of ORE that can be mined per epoch.
-pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(2);
+pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(3);
 
 /// The quantity of ORE each bus is allowed to issue per epoch.
 pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64);
