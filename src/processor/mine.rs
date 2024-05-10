@@ -156,11 +156,11 @@ pub fn process_mine<'a, 'info>(
     // Update balances
     sol_log(&format!("Total {}", reward));
     sol_log(&format!("Bus {}", bus.rewards));
-    bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus
         .rewards
         .checked_sub(reward_actual)
         .expect("This should not happen");
+    bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     proof.balance = proof.balance.saturating_add(reward_actual);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
