@@ -151,7 +151,7 @@ pub fn process_mine<'a, 'info>(
     // Limit payout amount to whatever is left in the bus
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    let reward_actual = reward.min(bus.rewards);
+    reward = reward.min(bus.rewards); // the actual reward
 
     // Update balances
     sol_log(&format!("Total {}", reward));
@@ -159,9 +159,9 @@ pub fn process_mine<'a, 'info>(
     bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus
         .rewards
-        .checked_sub(reward_actual)
+        .checked_sub(reward)
         .expect("This should not happen");
-    proof.balance = proof.balance.saturating_add(reward_actual);
+    proof.balance = proof.balance.saturating_add(reward);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
