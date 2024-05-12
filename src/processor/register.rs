@@ -1,8 +1,15 @@
 use std::mem::size_of;
 
 use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, keccak::hashv,
-    program_error::ProgramError, pubkey::Pubkey, slot_hashes::SlotHash, system_program, sysvar,
+    account_info::AccountInfo,
+    clock::Clock,
+    entrypoint::ProgramResult,
+    keccak::hashv,
+    program_error::ProgramError,
+    pubkey::Pubkey,
+    slot_hashes::SlotHash,
+    system_program,
+    sysvar::{self, Sysvar},
 };
 
 use crate::{
@@ -54,6 +61,7 @@ pub fn process_register<'a, 'info>(
         system_program,
         signer,
     )?;
+    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
     proof_data[0] = Proof::discriminator() as u8;
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
@@ -64,8 +72,9 @@ pub fn process_register<'a, 'info>(
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;
-    proof.last_hash_at = 0;
-    proof.last_stake_at = 0;
+    proof.last_claim_at = clock.unix_timestamp;
+    proof.last_hash_at = clock.unix_timestamp;
+    proof.last_stake_at = clock.unix_timestamp;
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 
