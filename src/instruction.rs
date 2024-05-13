@@ -258,6 +258,20 @@ pub fn register(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds a deregister instruction.
+pub fn deregister(signer: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        ],
+        data: OreInstruction::Deregister.to_vec(),
+    }
+}
+
 /// Builds a mine instruction.
 pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;

@@ -48,9 +48,9 @@ pub(crate) fn create_pda<'a, 'info>(
                     rent_exempt_balance,
                 ),
                 &[
-                    payer.as_ref().clone(),
-                    target_account.as_ref().clone(),
-                    system_program.as_ref().clone(),
+                    payer.clone(),
+                    target_account.clone(),
+                    system_program.clone(),
                 ],
             )?;
         }
@@ -58,20 +58,14 @@ pub(crate) fn create_pda<'a, 'info>(
         // 2) allocate space for the account
         solana_program::program::invoke_signed(
             &solana_program::system_instruction::allocate(target_account.key, space as u64),
-            &[
-                target_account.as_ref().clone(),
-                system_program.as_ref().clone(),
-            ],
+            &[target_account.clone(), system_program.clone()],
             &[pda_seeds],
         )?;
 
         // 3) assign our program as the owner
         solana_program::program::invoke_signed(
             &solana_program::system_instruction::assign(target_account.key, owner),
-            &[
-                target_account.as_ref().clone(),
-                system_program.as_ref().clone(),
-            ],
+            &[target_account.clone(), system_program.clone()],
             &[pda_seeds],
         )?;
     }
