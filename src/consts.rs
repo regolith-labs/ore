@@ -57,7 +57,7 @@ static_assertions::const_assert!(
 
 /// The duration of two years, in minutes.
 /// Used to calculate the staking reward multiplier.
-pub const TWO_YEARS: u64 = 60 * 24 * 365 * 2;
+pub const ONE_YEAR: u64 = 60 * 24 * 365;
 
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";

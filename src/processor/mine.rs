@@ -21,7 +21,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, TWO_YEARS,
+    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -114,7 +114,7 @@ pub fn process_mine<'a, 'info>(
         .saturating_add(ONE_MINUTE)
         .le(&clock.unix_timestamp)
     {
-        let upper_bound = reward.saturating_mul(TWO_YEARS);
+        let upper_bound = reward.saturating_mul(ONE_YEAR);
         let staking_reward = proof
             .balance
             .min(upper_bound)

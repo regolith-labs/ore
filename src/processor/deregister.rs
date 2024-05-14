@@ -38,7 +38,7 @@ pub fn process_deregister<'a, 'info>(
     proof_info.realloc(0, true)?;
 
     // Send lamports to signer
-    **signer.lamports.borrow_mut() = signer.lamports().saturating_add(proof_info.lamports());
+    **signer.lamports.borrow_mut() += proof_info.lamports();
     **proof_info.lamports.borrow_mut() = 0;
 
     Ok(())
