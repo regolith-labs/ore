@@ -151,6 +151,7 @@ pub struct RegisterArgs {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct MineArgs {
+    pub digest: [u8; 16],
     pub nonce: [u8; 8],
 }
 
@@ -273,7 +274,7 @@ pub fn deregister(signer: Pubkey) -> Instruction {
 }
 
 /// Builds a mine instruction.
-pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
+pub fn mine(signer: Pubkey, bus: Pubkey, digest: [u8; 16], nonce: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
@@ -288,6 +289,7 @@ pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
+                digest,
                 nonce: nonce.to_le_bytes(),
             }
             .to_bytes()

@@ -9,18 +9,20 @@ pub enum OreError {
     IsPaused = 0,
     #[error("The epoch has ended and needs reset")]
     NeedsReset = 1,
+    #[error("The provided hash is invalid")]
+    HashInvalid = 2,
     #[error("The provided hash did not satisfy the minimum required difficulty")]
-    HashTooEasy = 2,
+    HashTooEasy = 3,
     #[error("The claim amount cannot be greater than the claimable rewards")]
-    ClaimTooLarge = 3,
+    ClaimTooLarge = 4,
     #[error("The clock time is invalid")]
-    ClockInvalid = 4,
+    ClockInvalid = 5,
     #[error("Only one hash may be validated per transaction")]
-    TransactionInvalid = 5,
+    TransactionInvalid = 6,
     #[error("The tolerance cannot exceed i64 max value")]
-    ToleranceOverflow = 6,
+    ToleranceOverflow = 7,
     #[error("The maximum supply has been reached")]
-    MaxSupply = 7,
+    MaxSupply = 8,
 }
 
 impl From<OreError> for ProgramError {
