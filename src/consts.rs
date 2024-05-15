@@ -9,7 +9,7 @@ pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 pub const INITIAL_TOLERANCE: i64 = 5;
 
 /// The minimum difficulty required of all submitted hashes.
-pub const MIN_DIFFICULTY: u32 = 12;
+pub const MIN_DIFFICULTY: u32 = 8; // 12;
 
 /// The decimal precision of the Ore token.
 /// There are 100 billion indivisible units per Ore (called "grains").
@@ -23,6 +23,9 @@ pub const ONE_MINUTE: i64 = 60;
 
 /// The duration of one day, in seconds.
 pub const ONE_DAY: i64 = 86400;
+
+/// The duration of one year, in minutes.
+pub const ONE_YEAR: u64 = 525600;
 
 /// The number of minutes in an Ore epoch.
 pub const EPOCH_MINUTES: i64 = 1;
@@ -54,10 +57,6 @@ pub const SMOOTHING_FACTOR: u64 = 2;
 static_assertions::const_assert!(
     (MAX_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_EPOCH_REWARDS
 );
-
-/// The duration of two years, in minutes.
-/// Used to calculate the staking reward multiplier.
-pub const ONE_YEAR: u64 = 60 * 24 * 365;
 
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
