@@ -1,11 +1,12 @@
 use std::mem::size_of;
 
+use drillx::Solution;
 #[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
+    blake3::hashv,
     clock::Clock,
     entrypoint::ProgramResult,
-    keccak::hashv,
     program_error::ProgramError,
     pubkey::Pubkey,
     sanitize::SanitizeError,
@@ -88,11 +89,15 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::NeedsReset.into());
     }
 
-    // Calculate the hash from the provided nonce
-    let hx = drillx::hash(&proof.challenge, &args.nonce);
+    // Validate the digest
+    let solution = Solution::new(args.digest, args.nonce);
+    if !solution.is_valid(&proof.challenge) {
+        return Err(OreError::HashInvalid.into());
+    }
 
     // Validate hash satisfies the minimnum difficulty
-    let difficulty = drillx::difficulty(hx);
+    let hash = solution.to_hash();
+    let difficulty = hash.difficulty();
     sol_log(&format!("Diff {}", difficulty));
     if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
@@ -165,7 +170,7 @@ pub fn process_mine<'a, 'info>(
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
-        hx.as_slice(),
+        hash.h.as_slice(),
         &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;

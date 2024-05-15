@@ -1,4 +1,5 @@
 use bytemuck::{Pod, Zeroable};
+use drillx::Solution;
 use num_enum::TryFromPrimitive;
 use shank::ShankInstruction;
 use solana_program::{
@@ -151,6 +152,7 @@ pub struct RegisterArgs {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct MineArgs {
+    pub digest: [u8; 16],
     pub nonce: [u8; 8],
 }
 
@@ -273,7 +275,7 @@ pub fn deregister(signer: Pubkey) -> Instruction {
 }
 
 /// Builds a mine instruction.
-pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
+pub fn mine(signer: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
@@ -288,7 +290,8 @@ pub fn mine(signer: Pubkey, bus: Pubkey, nonce: u64) -> Instruction {
         data: [
             OreInstruction::Mine.to_vec(),
             MineArgs {
-                nonce: nonce.to_le_bytes(),
+                digest: solution.d,
+                nonce: solution.n,
             }
             .to_bytes()
             .to_vec(),
