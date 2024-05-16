@@ -130,27 +130,32 @@ pub fn process_mine<'a, 'info>(
     };
 
     // Apply spam penalty
-    let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(config.tolerance_spam);
-    if t.lt(&t_spam) {
+    if clock.unix_timestamp.lt(&t_spam) {
         reward = 0;
         sol_log("Spam penalty");
     }
 
-    // Apply liveness penalty
+    // Apply liveness penalty. Halve the reward for every minute late.
     let t_liveness = t_target.saturating_add(config.tolerance_liveness);
-    if t.gt(&t_liveness) {
-        reward = reward.saturating_sub(
-            reward
-                .saturating_mul(t.saturating_sub(t_liveness) as u64)
-                .saturating_div(ONE_MINUTE as u64),
-        );
-        sol_log(&format!(
-            "Liveness penalty ({} sec) {}",
-            t.saturating_sub(t_liveness),
-            reward,
-        ));
+    if clock.unix_timestamp.gt(&t_liveness) {
+        let tardiness = clock.unix_timestamp.saturating_sub(t_target) as u64;
+        let halvings = tardiness.saturating_div(ONE_MINUTE as u64);
+        if halvings.gt(&0) {
+            let penalty = reward.saturating_div(2u64.saturating_mul(halvings));
+            reward = reward.saturating_sub(penalty);
+        }
+        let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
+        if remainder_secs.gt(&0) {
+            let penalty = reward
+                .saturating_div(2)
+                .saturating_mul(remainder_secs)
+                .saturating_div(ONE_MINUTE as u64);
+            reward = reward.saturating_sub(penalty);
+        }
+
+        sol_log(&format!("Liveness penalty ({} sec) {}", tardiness, reward,));
     }
 
     // Limit payout amount to whatever is left in the bus
