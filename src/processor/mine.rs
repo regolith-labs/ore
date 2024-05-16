@@ -143,7 +143,7 @@ pub fn process_mine<'a, 'info>(
         let tardiness = clock.unix_timestamp.saturating_sub(t_target) as u64;
         let halvings = tardiness.saturating_div(ONE_MINUTE as u64);
         if halvings.gt(&0) {
-            let penalty = reward.saturating_div(2u64.saturating_mul(halvings));
+            let penalty = reward.saturating_div(2u64.saturating_pow(halvings as u32));
             reward = reward.saturating_sub(penalty);
         }
         let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
