@@ -8,6 +8,8 @@ use crate::{
     MINT_ADDRESS, ONE_DAY, TREASURY, TREASURY_BUMP,
 };
 
+// TODO Change rate limitter to be based on 1440 non spam txs rather than time based
+
 /// Claim distributes Ore from the treasury to a miner. Its responsibilies include:
 /// 1. Decrement the miner's claimable balance.
 /// 2. Transfer tokens from the treasury to the miner.
