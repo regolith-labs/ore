@@ -51,7 +51,7 @@ pub fn process_claim<'a, 'info>(
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    vest_rewards(clock, proof);
+    vest_rewards(&clock, proof);
 
     // Update proof balance
     proof.balance = proof

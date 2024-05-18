@@ -159,7 +159,7 @@ pub fn process_mine<'a, 'info>(
     let reward_actual = reward.min(bus.rewards);
 
     // Vest rewards
-    vest_rewards(clock, proof);
+    vest_rewards(&clock, proof);
 
     // Update balances
     sol_log(&format!("Total {}", reward));
@@ -196,7 +196,7 @@ pub fn process_mine<'a, 'info>(
     Ok(())
 }
 
-pub fn vest_rewards(clock: Clock, proof: &mut Proof) {
+pub fn vest_rewards(clock: &Clock, proof: &mut Proof) {
     let hours_since_vest = clock
         .unix_timestamp
         .saturating_sub(proof.last_vest_at)
