@@ -21,20 +21,23 @@ pub struct Proof {
     /// The current mining challenge.
     pub challenge: [u8; 32],
 
-    /// The last time this account claimed rewards.
-    pub last_claim_at: i64,
-
     /// The last time this account provided a hash.
     pub last_hash_at: i64,
 
     /// The last time stake was deposited into this account.
     pub last_stake_at: i64,
 
+    /// The last time this account vested.
+    pub last_vest_at: i64,
+
     /// The total lifetime hashes provided by this miner.
     pub total_hashes: u64,
 
     /// The total lifetime rewards distributed to this miner.
     pub total_rewards: u64,
+
+    /// The hourly vesting status of rewards.
+    pub vesting: [u64; 25],
 }
 
 impl Discriminator for Proof {

@@ -22,7 +22,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::AccountDeserialize,
-    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR,
+    EPOCH_DURATION, MIN_DIFFICULTY, ONE_HOUR, ONE_MINUTE, ONE_YEAR,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -95,7 +95,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::HashInvalid.into());
     }
 
-    // Validate hash satisfies the minimnum difficulty
+    // Validate hash satisfies the minimum difficulty
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
     sol_log(&format!("Diff {}", difficulty));
@@ -158,6 +158,9 @@ pub fn process_mine<'a, 'info>(
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     let reward_actual = reward.min(bus.rewards);
 
+    // Vest rewards
+    vest_rewards(clock, proof);
+
     // Update balances
     sol_log(&format!("Total {}", reward));
     sol_log(&format!("Bus {}", bus.rewards));
@@ -167,6 +170,7 @@ pub fn process_mine<'a, 'info>(
         .checked_sub(reward_actual)
         .expect("This should not happen");
     proof.balance = proof.balance.saturating_add(reward_actual);
+    proof.vesting[0] = proof.vesting[0].saturating_add(reward_actual);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.challenge = hashv(&[
@@ -190,6 +194,26 @@ pub fn process_mine<'a, 'info>(
     // }));
 
     Ok(())
+}
+
+pub fn vest_rewards(clock: Clock, proof: &mut Proof) {
+    let hours_since_vest = clock
+        .unix_timestamp
+        .saturating_sub(proof.last_vest_at)
+        .saturating_div(ONE_HOUR);
+
+    for _ in 0..hours_since_vest.min(24) {
+        for i in (0..24).rev() {
+            proof.vesting[i + 1] = proof.vesting[i + 1].saturating_add(proof.vesting[i]);
+            proof.vesting[i] = 0;
+        }
+    }
+
+    proof.last_vest_at = proof
+        .last_vest_at
+        .saturating_add(hours_since_vest.saturating_mul(ONE_HOUR));
+
+    // TODO Checksum
 }
 
 /// Require that there is only one `mine` instruction per transaction and it is called from the
