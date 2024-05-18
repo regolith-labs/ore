@@ -5,10 +5,8 @@ use solana_program::{
 
 use crate::{
     error::OreError, instruction::ClaimArgs, loaders::*, state::Proof, utils::AccountDeserialize,
-    MINT_ADDRESS, ONE_DAY, TREASURY, TREASURY_BUMP,
+    MINT_ADDRESS, TREASURY, TREASURY_BUMP,
 };
-
-// TODO Change rate limitter to be based on 1440 non spam txs rather than time based
 
 /// Claim distributes Ore from the treasury to a miner. Its responsibilies include:
 /// 1. Decrement the miner's claimable balance.
@@ -46,39 +44,9 @@ pub fn process_claim<'a, 'info>(
     load_program(token_program, spl_token::id())?;
 
     // If last claim was less than 1 day ago, burn some of the claim amount
-    let mut claim_amount = amount;
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    let t = proof.last_claim_at.saturating_add(ONE_DAY);
-    if clock.unix_timestamp.lt(&t) {
-        // Calculate burn amount
-        let burn_amount = amount
-            .saturating_mul(t.saturating_sub(clock.unix_timestamp) as u64)
-            .saturating_div(ONE_DAY as u64);
-
-        // Burn tokens from treasury
-        solana_program::program::invoke_signed(
-            &spl_token::instruction::burn(
-                &spl_token::id(),
-                treasury_tokens_info.key,
-                mint_info.key,
-                treasury_info.key,
-                &[treasury_info.key],
-                burn_amount,
-            )?,
-            &[
-                token_program.clone(),
-                treasury_tokens_info.clone(),
-                mint_info.clone(),
-                treasury_info.clone(),
-            ],
-            &[&[TREASURY, &[TREASURY_BUMP]]],
-        )?;
-
-        // Update claim amount
-        claim_amount = amount.saturating_sub(burn_amount);
-    }
 
     // Update miner balance
     proof.balance = proof
@@ -97,7 +65,7 @@ pub fn process_claim<'a, 'info>(
             beneficiary_info.key,
             treasury_info.key,
             &[treasury_info.key],
-            claim_amount,
+            amount,
         )?,
         &[
             token_program.clone(),
