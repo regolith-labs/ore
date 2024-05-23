@@ -21,8 +21,8 @@ pub struct Proof {
     /// The current mining challenge.
     pub challenge: [u8; 32],
 
-    /// The last time this account claimed rewards.
-    pub last_claim_at: i64,
+    /// The last hash the miner provided.
+    pub last_hash: [u8; 32],
 
     /// The last time this account provided a hash.
     pub last_hash_at: i64,

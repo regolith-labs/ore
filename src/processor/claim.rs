@@ -54,9 +54,6 @@ pub fn process_claim<'a, 'info>(
         .checked_sub(amount)
         .ok_or(OreError::ClaimTooLarge)?;
 
-    // Update timestamp
-    proof.last_claim_at = clock.unix_timestamp;
-
     // Distribute tokens from treasury to beneficiary
     solana_program::program::invoke_signed(
         &spl_token::instruction::transfer(

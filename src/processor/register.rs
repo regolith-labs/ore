@@ -72,7 +72,7 @@ pub fn process_register<'a, 'info>(
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;
-    proof.last_claim_at = clock.unix_timestamp;
+    proof.last_hash = [0; 32];
     proof.last_hash_at = clock.unix_timestamp;
     proof.last_stake_at = clock.unix_timestamp;
     proof.total_hashes = 0;

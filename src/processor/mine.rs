@@ -169,6 +169,7 @@ pub fn process_mine<'a, 'info>(
     proof.balance = proof.balance.saturating_add(reward_actual);
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
+    proof.last_hash = hash.h;
     proof.challenge = hashv(&[
         hash.h.as_slice(),
         &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
