@@ -43,12 +43,9 @@ pub fn process_claim<'a, 'info>(
     )?;
     load_program(token_program, spl_token::id())?;
 
-    // If last claim was less than 1 day ago, burn some of the claim amount
+    // Update miner balance
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-
-    // Update miner balance
     proof.balance = proof
         .balance
         .checked_sub(amount)
