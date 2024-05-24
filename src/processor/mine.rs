@@ -72,16 +72,8 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::IsPaused.into());
     }
 
-    // TODO Is this really needed?
-    // Validate the clock state
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    let mut proof_data = proof_info.data.borrow_mut();
-    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    if clock.unix_timestamp.lt(&proof.last_hash_at) {
-        return Err(OreError::ClockInvalid.into());
-    }
-
     // Validate epoch is active
+    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
         .saturating_add(EPOCH_DURATION)
@@ -91,6 +83,8 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Validate the digest
+    let mut proof_data = proof_info.data.borrow_mut();
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
