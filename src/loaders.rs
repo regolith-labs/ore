@@ -757,7 +757,7 @@ pub fn load_program<'a, 'info>(
 //                 hash: KeccakHash::new_from_array([u8::MAX; 32]).into(),
 //                 total_hashes: 0,
 //                 total_rewards: 0,
-//                 multiplier: 1, // TODO
+//                 multiplier: 1,
 //                 last_hash_at: 0,
 //             }
 //             .to_bytes(),
