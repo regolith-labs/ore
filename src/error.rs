@@ -17,12 +17,14 @@ pub enum OreError {
     ClaimTooLarge = 4,
     #[error("The clock time is invalid")]
     ClockInvalid = 5,
+    #[error("You are trying to submit too soon")]
+    Spam = 6,
     #[error("Only one hash may be validated per transaction")]
-    TransactionInvalid = 6,
+    TransactionInvalid = 7,
     #[error("The tolerance cannot exceed i64 max value")]
-    ToleranceOverflow = 7,
+    ToleranceOverflow = 8,
     #[error("The maximum supply has been reached")]
-    MaxSupply = 8,
+    MaxSupply = 9,
 }
 
 impl From<OreError> for ProgramError {

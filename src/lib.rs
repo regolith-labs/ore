@@ -1,7 +1,7 @@
 pub mod consts;
 pub mod error;
 pub mod instruction;
-mod loaders;
+pub mod loaders;
 mod processor;
 pub mod state;
 pub mod utils;
@@ -13,9 +13,6 @@ use solana_program::{
     self, account_info::AccountInfo, declare_id, entrypoint::ProgramResult,
     program_error::ProgramError, pubkey::Pubkey,
 };
-
-// TODO Initialize with mining paused
-// TODO Require hardcoded admin key for initialization
 
 declare_id!("mineQW6HcBby3YyZMTaRRtuFWPaGEg8AjmCAWs4nBU8");
 

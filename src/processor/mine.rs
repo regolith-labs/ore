@@ -7,14 +7,15 @@ use solana_program::{
     blake3::hashv,
     clock::Clock,
     entrypoint::ProgramResult,
+    log::sol_log,
     program_error::ProgramError,
+    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16, read_u8},
     slot_hashes::SlotHash,
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
-use solana_program::{log::sol_log, pubkey};
 
 use crate::{
     error::OreError,
@@ -134,8 +135,8 @@ pub fn process_mine<'a, 'info>(
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(config.tolerance_spam);
     if t.lt(&t_spam) {
-        reward = 0;
         sol_log("Spam penalty");
+        return Err(OreError::Spam.into());
     }
 
     // Apply liveness penalty

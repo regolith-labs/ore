@@ -5,6 +5,7 @@ use solana_program::{
     entrypoint::ProgramResult,
     program_error::ProgramError,
     program_pack::Pack,
+    pubkey,
     pubkey::Pubkey,
     system_program, {self, sysvar},
 };
@@ -20,6 +21,9 @@ use crate::{
     BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_TOLERANCE, METADATA, METADATA_NAME,
     METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
+
+/// The address to allow for initialization.
+const AUTHORIZED_INITIALIZER: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
 
 /// Initialize sets up the Ore program. Its responsibilities include:
 /// 1. Initialize the 8 bus accounts.
@@ -87,6 +91,11 @@ pub fn process_initialize<'a, 'info>(
     load_program(metadata_program, mpl_token_metadata::ID)?;
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
+    // Check signer
+    if signer.key.ne(&AUTHORIZED_INITIALIZER) {
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
     // Initialize bus accounts
     let bus_infos = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
@@ -133,7 +142,7 @@ pub fn process_initialize<'a, 'info>(
     config.admin = *signer.key;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
-    config.paused = 0;
+    config.paused = 1;
     config.tolerance_liveness = INITIAL_TOLERANCE;
     config.tolerance_spam = INITIAL_TOLERANCE;
 
