@@ -157,8 +157,6 @@ pub fn process_initialize<'a, 'info>(
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
     treasury_data[0] = Treasury::discriminator() as u8;
-    let treasury = Treasury::try_from_bytes_mut(&mut treasury_data)?;
-    treasury.bump = args.treasury_bump as u64;
     drop(treasury_data);
 
     // Initialize mint
