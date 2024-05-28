@@ -14,7 +14,7 @@ use solana_program::{
     program_error::ProgramError, pubkey::Pubkey,
 };
 
-declare_id!("mineQW6HcBby3YyZMTaRRtuFWPaGEg8AjmCAWs4nBU8");
+declare_id!("oreFHcE6FvJTrsfaYca4mVeZn7J7T6oZS9FAvW9eg4q");
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
