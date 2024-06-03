@@ -1,10 +1,12 @@
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
+    program_pack::Pack, pubkey::Pubkey,
 };
+use spl_token::state::Mint;
 
 use crate::{
-    instruction::StakeArgs, loaders::*, MINT_ADDRESS, MINT_V1_ADDRESS, TREASURY, TREASURY_BUMP,
+    error::OreError, instruction::StakeArgs, loaders::*, MAX_SUPPLY, MINT_ADDRESS, MINT_V1_ADDRESS,
+    TREASURY, TREASURY_BUMP,
 };
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token one-for-one. Its responsibilies include:
@@ -57,6 +59,13 @@ pub fn process_upgrade<'a, 'info>(
     // Account for decimals change.
     // v1 token has 9 decimals. v2 token has 11.
     let amount_to_mint = amount.saturating_mul(100);
+
+    // Cap at max supply.
+    let mint_data = mint_info.data.borrow();
+    let mint = Mint::unpack(&mint_data)?;
+    if mint.supply.saturating_add(amount_to_mint).gt(&MAX_SUPPLY) {
+        return Err(OreError::MaxSupply.into());
+    }
 
     // Mint to the beneficiary account
     solana_program::program::invoke_signed(
