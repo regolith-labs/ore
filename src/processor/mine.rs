@@ -1,6 +1,7 @@
 use std::mem::size_of;
 
 use drillx::Solution;
+use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
@@ -22,7 +23,7 @@ use crate::{
     instruction::{MineArgs, OreInstruction},
     loaders::*,
     state::{Bus, Config, Proof},
-    utils::AccountDeserialize,
+    utils::{AccountDeserialize, MineEvent},
     EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR,
 };
 
@@ -176,11 +177,11 @@ pub fn process_mine<'a, 'info>(
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
     // Log the mined rewards
-    // set_return_data(bytemuck::bytes_of(&MineEvent {
-    //     difficulty: difficulty as u64,
-    //     reward,
-    //     timing: t.saturating_sub(t_target),
-    // }));
+    set_return_data(bytemuck::bytes_of(&MineEvent {
+        difficulty: difficulty as u64,
+        reward: reward_actual,
+        timing: t.saturating_sub(t_liveness),
+    }));
 
     Ok(())
 }
