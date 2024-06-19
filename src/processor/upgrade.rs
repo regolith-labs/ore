@@ -66,6 +66,7 @@ pub fn process_upgrade<'a, 'info>(
     if mint.supply.saturating_add(amount_to_mint).gt(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
+    drop(mint_data);
 
     // Mint to the beneficiary account
     solana_program::program::invoke_signed(
