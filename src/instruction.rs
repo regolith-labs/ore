@@ -10,7 +10,7 @@ use solana_program::{
 
 use crate::{
     impl_instruction_from_bytes, impl_to_bytes, BUS, BUS_ADDRESSES, CONFIG, CONFIG_ADDRESS,
-    METADATA, MINT, MINT_ADDRESS, MINT_NOISE, PROOF, TREASURY, TREASURY_ADDRESS,
+    METADATA, MINT, MINT_ADDRESS, MINT_NOISE, MINT_V1_ADDRESS, PROOF, TREASURY, TREASURY_ADDRESS,
 };
 
 #[repr(u8)]
@@ -349,6 +349,31 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
         data: [
             OreInstruction::Stake.to_vec(),
             StakeArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+// build an upgrade instruction.
+pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(beneficiary, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(MINT_V1_ADDRESS, false),
+            AccountMeta::new(sender, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Upgrade.to_vec(),
+            UpgradeArgs {
                 amount: amount.to_le_bytes(),
             }
             .to_bytes()
