@@ -61,8 +61,8 @@ pub fn process_upgrade<'a, 'info>(
     let amount_to_mint = amount.saturating_mul(100);
 
     // Cap at max supply.
-    let mint_data = mint_info.data.borrow();
-    let mint = Mint::unpack(&mint_data)?;
+    let mint_data = mint_info.data.clone();
+    let mint = Mint::unpack(&mint_data.borrow())?;
     if mint.supply.saturating_add(amount_to_mint).gt(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
