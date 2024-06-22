@@ -171,6 +171,7 @@ pub fn process_mine<'a, 'info>(
 
     // Update time trackers
     proof.last_hash_at = clock.unix_timestamp;
+    proof.last_stake_at = clock.unix_timestamp;
 
     // Update lifetime stats
     proof.total_hashes = proof.total_hashes.saturating_add(1);
