@@ -19,9 +19,6 @@ pub struct Config {
 
     /// The timestamp of the last reset
     pub last_reset_at: i64,
-
-    /// Is mining paused.
-    pub paused: u64,
 }
 
 impl Discriminator for Config {
