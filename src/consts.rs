@@ -15,6 +15,9 @@ pub const MIN_DIFFICULTY: u32 = 8; // 12;
 /// There are 100 billion indivisible units per Ore (called "grains").
 pub const TOKEN_DECIMALS: u8 = 11;
 
+/// The decimal precision of the Ore v1 token.
+pub const TOKEN_DECIMALS_V1: u8 = 9;
+
 /// One Ore token, denominated in indivisible units.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
