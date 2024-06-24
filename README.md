@@ -1,6 +1,6 @@
 # ORE
 
-**ORE is a fair-launch, proof-of-work, cross-border digital currency everyone can mine.**
+**ORE is a fair-launch, proof-of-work, cross-border digital currency anyone can mine.**
 
 
 ## Program
