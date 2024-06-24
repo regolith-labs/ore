@@ -1,16 +1,6 @@
-# Ore
+# ORE
 
-**Ore is a digital currency you can mine from anywhere, at home or on your phone.** It uses a novel proof-of-work algorithm to guarantee no miner can ever be starved out from earning rewards. 
-
-
-## How it works
-
-The primary innovation of Ore is to offer non-exclusive mining rewards. This means one miner finding a valid solution does not prevent another miner from finding one as well. Rather than setting up every miner in a winner-take-all competition against one another, Ore gives each miner a personalized computational challenge. As long as a miner provides a valid solution to their own individual challenge, the protocol guarantees they will earn a piece of the supply. Since no miner can be censored from the network and valid solutions are non-exclusive, starvation is avoided.
-
-
-## Supply
-
-Ore is designed to protect holders from runaway supply inflation. Regardless of how many miners are active in the world, supply growth is strictly bounded to a rate of `0 ≤ R ≤ 2 ORE/min`. In other words, linear. The mining reward rate – amount paid out to miners per valid solution – is dynamically adjusted every 60 seconds to maintain an average supply growth of `1 ORE/min`. This level was chosen for its straightforward simplicity, scale agnosticism, and for striking a balance between the extremes of exponential inflation on one hand and stagnant deflation on the other.
+**ORE is a fair-launch, proof-of-work, cross-border digital currency everyone can mine.**
 
 
 ## Program
