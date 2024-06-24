@@ -2,6 +2,12 @@
 
 **ORE is a fair-launch, proof-of-work, cross-border digital currency anyone can mine.**
 
+## Install
+
+```sh
+cargo install ore-cli
+```
+
 
 ## Program
 - [`Consts`](src/consts.rs) – Program constants.
