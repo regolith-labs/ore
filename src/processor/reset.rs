@@ -70,14 +70,9 @@ pub fn process_reset<'a, 'info>(
         bus_7_info,
     ];
 
-    // Validate mining is not paused
+    // Validate enough time has passed since last reset
     let mut config_data = config_info.data.borrow_mut();
     let config = Config::try_from_bytes_mut(&mut config_data)?;
-    if config.paused.ne(&0) {
-        return Err(OreError::IsPaused.into());
-    }
-
-    // Validate enough time has passed since last reset
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at

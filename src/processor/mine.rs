@@ -66,14 +66,9 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::TransactionInvalid.into());
     }
 
-    // Validate mining is not paused
+    // Validate epoch is active
     let config_data = config_info.data.borrow();
     let config = Config::try_from_bytes(&config_data)?;
-    if config.paused.ne(&0) {
-        return Err(OreError::IsPaused.into());
-    }
-
-    // Validate epoch is active
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
