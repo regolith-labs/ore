@@ -160,6 +160,39 @@ pub fn load_proof<'a, 'info>(
 
 /// Errors if:
 /// - Owner is not Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a proof account.
+/// - Proof miner does not match the expected address.
+/// - Expected to be writable, but is not.
+pub fn load_proof_with_miner<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    miner: &Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let proof_data = info.data.borrow();
+    let proof = Proof::try_from_bytes(&proof_data)?;
+
+    if proof.miner.ne(&miner) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Ore program.
 /// - Address does not match the expected address.
 /// - Data is empty.
 /// - Data cannot deserialize into a treasury account.
