@@ -39,7 +39,7 @@ pub fn process_crown<'a, 'info>(
         let proof = Proof::try_from_bytes(&proof_data)?;
 
         // Require the provided proof account is the current top staker
-        if proof_info.key.ne(&config.top_staker) {
+        if config.top_staker.ne(&proof_info.key) {
             return Err(ProgramError::InvalidAccountData);
         }
 
