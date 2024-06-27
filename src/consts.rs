@@ -5,8 +5,11 @@ use solana_program::{pubkey, pubkey::Pubkey};
 /// The reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 
-/// The spam/liveness tolerance to initialize the program with.
-pub const INITIAL_TOLERANCE: i64 = 5;
+/// The admin allowed to initialize the program.
+pub const INITIAL_ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+
+/// The spam/liveness tolerance in seconds.
+pub const TOLERANCE: i64 = 5;
 
 /// The minimum difficulty required of all submitted hashes.
 pub const MIN_DIFFICULTY: u32 = 8; // 12;

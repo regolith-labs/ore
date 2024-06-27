@@ -103,21 +103,6 @@ pub enum OreInstruction {
     #[account(18, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
     #[account(19, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    UpdateAdmin = 101,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    UpdateTolerance = 102,
-    
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    Pause = 103,
 }
 
 impl OreInstruction {
@@ -182,13 +167,6 @@ pub struct UpdateAdminArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct UpdateToleranceArgs {
-    pub tolerance_liveness: u64,
-    pub tolerance_spam: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct PauseArgs {
     pub paused: u8,
 }
@@ -199,9 +177,6 @@ impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(StakeArgs);
 impl_to_bytes!(UpgradeArgs);
-impl_to_bytes!(UpdateAdminArgs);
-impl_to_bytes!(UpdateToleranceArgs);
-impl_to_bytes!(PauseArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
 impl_instruction_from_bytes!(RegisterArgs);
@@ -209,9 +184,6 @@ impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
-impl_instruction_from_bytes!(UpdateAdminArgs);
-impl_instruction_from_bytes!(UpdateToleranceArgs);
-impl_instruction_from_bytes!(PauseArgs);
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
@@ -446,67 +418,6 @@ pub fn initialize(signer: Pubkey) -> Instruction {
                 metadata_bump: metadata_pda.1,
                 mint_bump: mint_pda.1,
                 treasury_bump: treasury_pda.1,
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Build an update_admin instruction.
-pub fn update_admin(signer: Pubkey, new_admin: Pubkey) -> Instruction {
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(CONFIG_ADDRESS, false),
-        ],
-        data: [
-            OreInstruction::UpdateAdmin.to_vec(),
-            UpdateAdminArgs { new_admin }.to_bytes().to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Build an update_tolerance instruction.
-pub fn update_tolerance(
-    signer: Pubkey,
-    new_liveness_tolerance: u64,
-    new_spam_tolerance: u64,
-) -> Instruction {
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(CONFIG_ADDRESS, false),
-        ],
-        data: [
-            OreInstruction::UpdateTolerance.to_vec(),
-            UpdateToleranceArgs {
-                tolerance_liveness: new_liveness_tolerance,
-                tolerance_spam: new_spam_tolerance,
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
-    }
-}
-
-/// Build a pause instruction.
-pub fn pause(signer: Pubkey, paused: bool) -> Instruction {
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(CONFIG_ADDRESS, false),
-        ],
-        data: [
-            OreInstruction::UpdateAdmin.to_vec(),
-            PauseArgs {
-                paused: paused as u8,
             }
             .to_bytes()
             .to_vec(),

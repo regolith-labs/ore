@@ -19,15 +19,6 @@ pub struct Config {
 
     /// The timestamp of the last reset
     pub last_reset_at: i64,
-
-    /// Is mining paused.
-    pub paused: u64,
-
-    /// Seconds prior to a miner's target time during which their hashes will not be penalized.
-    pub tolerance_spam: i64,
-
-    /// Seconds after a miner's target time during which their hashes will not be penalized.
-    pub tolerance_liveness: i64,
 }
 
 impl Discriminator for Config {

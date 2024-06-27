@@ -5,7 +5,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     program_error::ProgramError,
     program_pack::Pack,
-    pubkey,
     pubkey::Pubkey,
     system_program, {self, sysvar},
 };
@@ -18,12 +17,9 @@ use crate::{
     utils::create_pda,
     utils::AccountDeserialize,
     utils::Discriminator,
-    BUS, BUS_COUNT, CONFIG, INITIAL_BASE_REWARD_RATE, INITIAL_TOLERANCE, METADATA, METADATA_NAME,
+    BUS, BUS_COUNT, CONFIG, INITIAL_ADMIN, INITIAL_BASE_REWARD_RATE, METADATA, METADATA_NAME,
     METADATA_SYMBOL, METADATA_URI, MINT, MINT_ADDRESS, MINT_NOISE, TOKEN_DECIMALS, TREASURY,
 };
-
-/// The address to allow for initialization.
-const AUTHORIZED_INITIALIZER: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
 
 /// Initialize sets up the Ore program. Its responsibilities include:
 /// 1. Initialize the 8 bus accounts.
@@ -92,7 +88,7 @@ pub fn process_initialize<'a, 'info>(
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Check signer
-    if signer.key.ne(&AUTHORIZED_INITIALIZER) {
+    if signer.key.ne(&INITIAL_ADMIN) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
@@ -142,9 +138,6 @@ pub fn process_initialize<'a, 'info>(
     config.admin = *signer.key;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
-    config.paused = 1;
-    config.tolerance_liveness = INITIAL_TOLERANCE;
-    config.tolerance_spam = INITIAL_TOLERANCE;
 
     // Initialize treasury
     create_pda(

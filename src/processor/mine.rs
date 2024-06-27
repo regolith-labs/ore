@@ -24,7 +24,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::{AccountDeserialize, MineEvent},
-    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR,
+    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR, TOLERANCE,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
@@ -66,14 +66,9 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::TransactionInvalid.into());
     }
 
-    // Validate mining is not paused
+    // Validate epoch is active
     let config_data = config_info.data.borrow();
     let config = Config::try_from_bytes(&config_data)?;
-    if config.paused.ne(&0) {
-        return Err(OreError::IsPaused.into());
-    }
-
-    // Validate epoch is active
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
@@ -128,14 +123,14 @@ pub fn process_mine<'a, 'info>(
     // Apply spam penalty
     let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
-    let t_spam = t_target.saturating_sub(config.tolerance_spam);
+    let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
         sol_log("Spam penalty");
         return Err(OreError::Spam.into());
     }
 
     // Apply liveness penalty
-    let t_liveness = t_target.saturating_add(config.tolerance_liveness);
+    let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         reward = reward.saturating_sub(
             reward
