@@ -13,7 +13,7 @@ use solana_program::{
 };
 
 use crate::{
-    instruction::RegisterArgs,
+    instruction::OpenArgs,
     loaders::*,
     state::Proof,
     utils::AccountDeserialize,
@@ -30,13 +30,13 @@ use crate::{
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - Can only succeed if the user does not already have a proof account.
 /// - The provided system program must be valid.
-pub fn process_register<'a, 'info>(
+pub fn process_open<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
     // Parse args
-    let args = RegisterArgs::try_from_bytes(data)?;
+    let args = OpenArgs::try_from_bytes(data)?;
 
     // Load accounts
     let [signer, proof_info, system_program, slot_hashes_info] = accounts else {

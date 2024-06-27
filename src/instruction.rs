@@ -38,7 +38,13 @@ pub enum OreInstruction {
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore proof account", writable)]
     #[account(3, name = "system_program", desc = "Solana system program")]
-    Register = 1,
+    Open = 1,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
+    #[account(3, name = "system_program", desc = "Solana system program")]
+    Close = 2,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -47,7 +53,7 @@ pub enum OreInstruction {
     #[account(4, name = "noise", desc = "Ore noise account")]
     #[account(5, name = "proof", desc = "Ore proof account", writable)]
     #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
-    Mine = 2,
+    Mine = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -56,7 +62,7 @@ pub enum OreInstruction {
     #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(5, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(6, name = "token_program", desc = "SPL token program")]
-    Claim = 3,
+    Claim = 4,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -64,7 +70,7 @@ pub enum OreInstruction {
     #[account(3, name = "sender", desc = "Signer token account", writable)]
     #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(5, name = "token_program", desc = "SPL token program")]
-    Stake = 4,
+    Stake = 5,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -74,13 +80,7 @@ pub enum OreInstruction {
     #[account(5, name = "mint", desc = "Ore token mint account", writable)]
     #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
-    Upgrade = 5,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "system_program", desc = "Solana system program")]
-    Deregister = 6,
+    Upgrade = 6,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
@@ -130,7 +130,7 @@ pub struct InitializeArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct RegisterArgs {
+pub struct OpenArgs {
     pub bump: u8,
 }
 
@@ -172,14 +172,14 @@ pub struct PauseArgs {
 }
 
 impl_to_bytes!(InitializeArgs);
-impl_to_bytes!(RegisterArgs);
+impl_to_bytes!(OpenArgs);
 impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(StakeArgs);
 impl_to_bytes!(UpgradeArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
-impl_instruction_from_bytes!(RegisterArgs);
+impl_instruction_from_bytes!(OpenArgs);
 impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
@@ -213,8 +213,8 @@ pub fn reset(signer: Pubkey) -> Instruction {
     }
 }
 
-/// Builds a register instruction.
-pub fn register(signer: Pubkey) -> Instruction {
+/// Builds an open instruction.
+pub fn open(signer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
@@ -225,15 +225,15 @@ pub fn register(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
-            OreInstruction::Register.to_vec(),
-            RegisterArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+            OreInstruction::Open.to_vec(),
+            OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
         ]
         .concat(),
     }
 }
 
-/// Builds a deregister instruction.
-pub fn deregister(signer: Pubkey) -> Instruction {
+/// Builds a close instruction.
+pub fn close(signer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
@@ -242,7 +242,7 @@ pub fn deregister(signer: Pubkey) -> Instruction {
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
-        data: OreInstruction::Deregister.to_vec(),
+        data: OreInstruction::Close.to_vec(),
     }
 }
 

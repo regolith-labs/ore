@@ -19,13 +19,14 @@ cargo install ore-cli
 
 
 ## Instructions
-- [`Initialize`](src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
 - [`Reset`](src/processor/reset.rs) – Resets the program for a new epoch.
-- [`Register`](src/processor/register.rs) – Creates a new proof account for a prospective miner.
+- [`Open`](src/processor/open.rs) – Creates a new proof account for a prospective miner.
+- [`Close`](src/processor/close.rs) – Closes a new proof account returns the rent to the owner.
 - [`Mine`](src/processor/mine.rs) – Verifies a hash provided by a miner and issues claimable rewards.
+- [`Stake`](src/processor/stake.rs) – Stakes ORE with a miner to increase their multiplier.
 - [`Claim`](src/processor/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
-- [`UpdateAdmin`](src/processor/update_admin.rs) – Updates the admin authority.
-- [`UpdateDifficulty`](src/processor/update_difficulty.rs) - Updates the hashing difficulty.
+- [`Upgrade`](src/processor/upgrade.rs) – Migrates v1 ORE tokens to v2 ORE.
+- [`Initialize`](src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
 
 
 ## State

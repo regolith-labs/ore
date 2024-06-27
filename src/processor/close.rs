@@ -5,7 +5,7 @@ use solana_program::{
 
 use crate::{loaders::*, state::Proof, utils::AccountDeserialize};
 
-/// Deregister closes a proof account and returns the rent to the owner. Its responsibilities include:
+/// Close closes a proof account and returns the rent to the owner. Its responsibilities include:
 /// 1. Realloc proof account size to 0.
 /// 2. Transfer lamports to the owner.
 ///
@@ -13,7 +13,7 @@ use crate::{loaders::*, state::Proof, utils::AccountDeserialize};
 /// - Deregister is a permissionless instruction and can be invoked by any singer.
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - The provided system program must be valid.
-pub fn process_deregister<'a, 'info>(
+pub fn process_close<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     _data: &[u8],
