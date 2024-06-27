@@ -138,6 +138,8 @@ pub fn process_initialize<'a, 'info>(
     config.admin = *signer.key;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
+    config.max_stake = 0;
+    config.top_staker = Pubkey::new_from_array([0; 32]);
 
     // Initialize treasury
     create_pda(

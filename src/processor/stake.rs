@@ -4,11 +4,8 @@ use solana_program::{
 };
 
 use crate::{
-    instruction::StakeArgs,
-    loaders::*,
-    state::{Config, Proof},
-    utils::AccountDeserialize,
-    MINT_ADDRESS, TREASURY_ADDRESS,
+    instruction::StakeArgs, loaders::*, state::Proof, utils::AccountDeserialize, MINT_ADDRESS,
+    TREASURY_ADDRESS,
 };
 
 /// Stake deposits Ore into a miner's proof account to earn multiplier. Its responsibilies include:
@@ -29,13 +26,10 @@ pub fn process_stake<'a, 'info>(
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer, config_info, proof_info, sender_info, treasury_tokens_info, token_program] =
-        accounts
-    else {
+    let [signer, proof_info, sender_info, treasury_tokens_info, token_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_config(config_info, true)?;
     load_proof(proof_info, signer.key, true)?;
     load_token_account(sender_info, Some(signer.key), &MINT_ADDRESS, true)?;
     load_token_account(
@@ -54,11 +48,6 @@ pub fn process_stake<'a, 'info>(
     // Update deposit timestamp
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     proof.last_stake_at = clock.unix_timestamp;
-
-    // Update the max stake tracker
-    let mut config_data = config_info.data.borrow_mut();
-    let config = Config::try_from_bytes_mut(&mut config_data)?;
-    config.max_stake = config.max_stake.max(proof.balance);
 
     // Distribute tokens from signer to treasury
     solana_program::program::invoke(

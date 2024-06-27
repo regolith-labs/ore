@@ -24,7 +24,7 @@ use crate::{
     loaders::*,
     state::{Bus, Config, Proof},
     utils::{AccountDeserialize, MineEvent},
-    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, ONE_YEAR, TOLERANCE,
+    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, TOLERANCE,
 };
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:

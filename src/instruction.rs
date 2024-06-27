@@ -79,6 +79,13 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "config", desc = "Ore config account", writable)]
+    #[account(3, name = "proof", desc = "Ore proof account – current top staker")]
+    #[account(4, name = "proof_new", desc = "Ore proof account – new top staker")]
+    Crown = 6,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
     #[account(3, name = "sender", desc = "Signer token account", writable)]
     #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
