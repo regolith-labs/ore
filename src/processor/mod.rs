@@ -1,17 +1,17 @@
 mod claim;
-mod deregister;
+mod close;
 mod initialize;
 mod mine;
-mod register;
+mod open;
 mod reset;
 mod stake;
 mod upgrade;
 
 pub use claim::*;
-pub use deregister::*;
+pub use close::*;
 pub use initialize::*;
 pub use mine::*;
-pub use register::*;
+pub use open::*;
 pub use reset::*;
 pub use stake::*;
 pub use upgrade::*;
