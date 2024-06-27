@@ -24,12 +24,6 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
-/// The duration of one day, in seconds.
-pub const ONE_DAY: i64 = 86400;
-
-/// The duration of one year, in minutes.
-pub const ONE_YEAR: u64 = 525600;
-
 /// The number of minutes in an Ore epoch.
 pub const EPOCH_MINUTES: i64 = 1;
 

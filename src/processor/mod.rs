@@ -1,5 +1,6 @@
 mod claim;
 mod close;
+mod crown;
 mod initialize;
 mod mine;
 mod open;
@@ -9,6 +10,7 @@ mod upgrade;
 
 pub use claim::*;
 pub use close::*;
+pub use crown::*;
 pub use initialize::*;
 pub use mine::*;
 pub use open::*;

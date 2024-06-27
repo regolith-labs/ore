@@ -20,8 +20,11 @@ pub struct Config {
     /// The timestamp of the last reset.
     pub last_reset_at: i64,
 
-    /// The largest stake account on the network.
+    /// The largest known stake balance on the network.
     pub max_stake: u64,
+
+    /// The address of the proof account with the highest stake balance.
+    pub top_staker: Pubkey,
 }
 
 impl Discriminator for Config {
