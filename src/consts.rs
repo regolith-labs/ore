@@ -9,10 +9,10 @@ pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 pub const INITIAL_TOLERANCE: i64 = 5;
 
 /// The minimum difficulty required of all submitted hashes.
-pub const MIN_DIFFICULTY: u32 = 8; // 12;
+pub const MIN_DIFFICULTY: u32 = 8;
 
-/// The decimal precision of the Ore token.
-/// There are 100 billion indivisible units per Ore (called "grains").
+/// The decimal precision of the ORE token.
+/// There are 100 billion indivisible units per ORE (called "grains").
 pub const TOKEN_DECIMALS: u8 = 11;
 
 /// One Ore token, denominated in indivisible units.
@@ -27,21 +27,21 @@ pub const ONE_DAY: i64 = 86400;
 /// The duration of one year, in minutes.
 pub const ONE_YEAR: u64 = 525600;
 
-/// The number of minutes in an Ore epoch.
+/// The number of minutes in an ORE epoch.
 pub const EPOCH_MINUTES: i64 = 1;
 
-/// The duration of an Ore epoch, in seconds.
+/// The duration of a program epoch, in seconds.
 pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(EPOCH_MINUTES);
 
-/// The maximum token supply (42 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(42_000_000);
+/// The maximum token supply (21 million).
+pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(21_000_000);
 
 /// The target quantity of ORE to be mined per epoch.
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(EPOCH_MINUTES as u64);
 
 /// The maximum quantity of ORE that can be mined per epoch.
-/// Inflation rate ≈ 1 ORE / min (min 0, max 5)
-pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(5);
+/// Inflation rate ≈ 1 ORE / min (min 0, max 8)
+pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(BUS_COUNT as u64);
 
 /// The quantity of ORE each bus is allowed to issue per epoch.
 pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64);
@@ -82,7 +82,7 @@ pub const MINT_NOISE: [u8; 16] = [
 ];
 
 /// The name for token metadata.
-pub const METADATA_NAME: &str = "Ore";
+pub const METADATA_NAME: &str = "ORE";
 
 /// The ticker symbol for token metadata.
 pub const METADATA_SYMBOL: &str = "ORE";
