@@ -39,10 +39,11 @@ pub fn process_open<'a, 'info>(
     let args = OpenArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, proof_info, system_program, slot_hashes_info] = accounts else {
+    let [signer, miner_info, proof_info, system_program, slot_hashes_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
+    load_signer(miner_info)?;
     load_uninitialized_pda(
         proof_info,
         &[PROOF, signer.key.as_ref()],
@@ -75,6 +76,7 @@ pub fn process_open<'a, 'info>(
     proof.last_hash = [0; 32];
     proof.last_hash_at = clock.unix_timestamp;
     proof.last_stake_at = clock.unix_timestamp;
+    proof.miner = *miner_info.key;
     proof.total_hashes = 0;
     proof.total_rewards = 0;
 

@@ -57,7 +57,7 @@ pub fn process_mine<'a, 'info>(
     load_signer(signer)?;
     load_any_bus(bus_info, true)?;
     load_config(config_info, false)?;
-    load_proof(proof_info, signer.key, true)?;
+    load_proof_with_miner(proof_info, signer.key, true)?;
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
