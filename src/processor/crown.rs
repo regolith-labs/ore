@@ -40,12 +40,12 @@ pub fn process_crown<'a, 'info>(
 
         // Require the provided proof account is the current top staker
         if config.top_staker.ne(&proof_info.key) {
-            return Err(ProgramError::InvalidAccountData);
+            return Ok(());
         }
 
         // Compare balances
         if proof_new.balance.lt(&proof.balance) {
-            return Err(ProgramError::InvalidAccountData);
+            return Ok(());
         }
     }
 
