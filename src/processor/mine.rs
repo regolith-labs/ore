@@ -102,23 +102,23 @@ pub fn process_mine<'a, 'info>(
     sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier.
-    // The multiplier can range 1x to 2x. To receive the maximum multiplier, the stake balance must be
-    // greater than or equal to two years worth of rewards at the selected difficulty. Miners are only
-    // eligable for a multipler if their last stake deposit was more than one minute ago.
-    if proof
-        .last_stake_at
-        .saturating_add(ONE_MINUTE)
-        .le(&clock.unix_timestamp)
+    // If user has greater than or equal to the max stake on the network, they will receive 2x multiplier.
+    // Any less than this, and they will receive between 1x and 2x. Miners are only eligable for a multipler
+    // if their last stake deposit was more than one minute ago.
+    if config.max_stake.gt(&0)
+        && proof
+            .last_stake_at
+            .saturating_add(ONE_MINUTE)
+            .le(&clock.unix_timestamp)
     {
-        let upper_bound = reward.saturating_mul(ONE_YEAR);
         let staking_reward = proof
             .balance
-            .min(upper_bound)
+            .min(config.max_stake)
             .saturating_mul(reward)
-            .saturating_div(upper_bound);
+            .saturating_div(config.max_stake);
         reward = reward.saturating_add(staking_reward);
         sol_log(&format!("Staking {}", staking_reward));
-    };
+    }
 
     // Apply spam penalty
     let t = clock.unix_timestamp;
