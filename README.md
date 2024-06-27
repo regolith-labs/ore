@@ -1,6 +1,7 @@
 # ORE
 
-**ORE is a fair-launch, proof-of-work, cross-border digital currency anyone can mine.**
+**ORE is a fair-launch, proof-of-work, digital currency anyone can mine.**
+
 
 ## Install
 
