@@ -160,12 +160,6 @@ pub struct StakeArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct UpdateArgs {
-    pub new_miner: Pubkey,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct UpgradeArgs {
     pub amount: [u8; 8],
 }
@@ -175,7 +169,6 @@ impl_to_bytes!(OpenArgs);
 impl_to_bytes!(MineArgs);
 impl_to_bytes!(ClaimArgs);
 impl_to_bytes!(StakeArgs);
-impl_to_bytes!(UpdateArgs);
 impl_to_bytes!(UpgradeArgs);
 
 impl_instruction_from_bytes!(InitializeArgs);
@@ -183,7 +176,6 @@ impl_instruction_from_bytes!(OpenArgs);
 impl_instruction_from_bytes!(MineArgs);
 impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
-impl_instruction_from_bytes!(UpdateArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
 
 /// Builds a reset instruction.
@@ -221,7 +213,7 @@ pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner, true),
+            AccountMeta::new(miner, false),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
@@ -333,19 +325,16 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
 }
 
 // Build an update instruction.
-pub fn update(signer: Pubkey, new_miner: Pubkey) -> Instruction {
+pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(miner, false),
             AccountMeta::new(proof, false),
         ],
-        data: [
-            OreInstruction::Update.to_vec(),
-            UpdateArgs { new_miner }.to_bytes().to_vec(),
-        ]
-        .concat(),
+        data: OreInstruction::Update.to_vec(),
     }
 }
 
