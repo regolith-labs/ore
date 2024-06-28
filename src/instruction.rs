@@ -19,6 +19,36 @@ use crate::{
 pub enum OreInstruction {
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
+    #[account(3, name = "proof", desc = "Ore proof account", writable)]
+    #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(5, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(6, name = "token_program", desc = "SPL token program")]
+    Claim = 0,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
+    #[account(3, name = "system_program", desc = "Solana system program")]
+    Close = 1,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "bus", desc = "Ore bus account", writable)]
+    #[account(3, name = "config", desc = "Ore config account")]
+    #[account(4, name = "noise", desc = "Ore noise account")]
+    #[account(5, name = "proof", desc = "Ore proof account", writable)]
+    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
+    Mine = 2,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
+    #[account(3, name = "system_program", desc = "Solana system program")]
+    Open = 3,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus_0", desc = "Ore bus account 0", writable)]
     #[account(3, name = "bus_1", desc = "Ore bus account 1", writable)]
     #[account(4, name = "bus_2", desc = "Ore bus account 2", writable)]
@@ -32,37 +62,7 @@ pub enum OreInstruction {
     #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(14, name = "token_program", desc = "SPL token program")]
-    Reset = 0,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "system_program", desc = "Solana system program")]
-    Open = 1,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "system_program", desc = "Solana system program")]
-    Close = 2,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "bus", desc = "Ore bus account", writable)]
-    #[account(3, name = "config", desc = "Ore config account")]
-    #[account(4, name = "noise", desc = "Ore noise account")]
-    #[account(5, name = "proof", desc = "Ore proof account", writable)]
-    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
-    Mine = 3,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account", writable)]
-    #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(5, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(6, name = "token_program", desc = "SPL token program")]
-    Claim = 4,
+    Reset = 4,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -71,6 +71,11 @@ pub enum OreInstruction {
     #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(5, name = "token_program", desc = "SPL token program")]
     Stake = 5,
+    
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "proof", desc = "Ore proof account", writable)]
+    Update = 6,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -80,7 +85,7 @@ pub enum OreInstruction {
     #[account(5, name = "mint", desc = "Ore token mint account", writable)]
     #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
-    Upgrade = 6,
+    Upgrade = 7,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
@@ -159,18 +164,6 @@ pub struct UpgradeArgs {
     pub amount: [u8; 8],
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct UpdateAdminArgs {
-    pub new_admin: Pubkey,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct PauseArgs {
-    pub paused: u8,
-}
-
 impl_to_bytes!(InitializeArgs);
 impl_to_bytes!(OpenArgs);
 impl_to_bytes!(MineArgs);
@@ -220,7 +213,7 @@ pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner, true),
+            AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
@@ -331,7 +324,21 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     }
 }
 
-// build an upgrade instruction.
+// Build an update instruction.
+pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(proof, false),
+        ],
+        data: OreInstruction::Update.to_vec(),
+    }
+}
+
+// Build an upgrade instruction.
 pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     Instruction {
         program_id: crate::id(),
