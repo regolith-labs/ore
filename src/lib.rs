@@ -33,12 +33,13 @@ pub fn process_instruction(
         .ok_or(ProgramError::InvalidInstructionData)?;
 
     match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
-        OreInstruction::Open => process_open(program_id, accounts, data)?,
+        OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Close => process_close(program_id, accounts, data)?,
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
-        OreInstruction::Claim => process_claim(program_id, accounts, data)?,
-        OreInstruction::Stake => process_stake(program_id, accounts, data)?,
+        OreInstruction::Open => process_open(program_id, accounts, data)?,
         OreInstruction::Reset => process_reset(program_id, accounts, data)?,
+        OreInstruction::Stake => process_stake(program_id, accounts, data)?,
+        OreInstruction::Update => process_update(program_id, accounts, data)?,
         OreInstruction::Upgrade => process_upgrade(program_id, accounts, data)?,
         OreInstruction::Initialize => process_initialize(program_id, accounts, data)?,
     }

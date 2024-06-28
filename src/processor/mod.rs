@@ -5,6 +5,7 @@ mod mine;
 mod open;
 mod reset;
 mod stake;
+mod update;
 mod upgrade;
 
 pub use claim::*;
@@ -14,4 +15,5 @@ pub use mine::*;
 pub use open::*;
 pub use reset::*;
 pub use stake::*;
+pub use update::*;
 pub use upgrade::*;
