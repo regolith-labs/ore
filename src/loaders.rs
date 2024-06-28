@@ -319,15 +319,16 @@ pub fn load_uninitialized_pda<'a, 'info>(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    load_uninitialized_account(info)
+    load_system_account(info, true)
 }
 
 /// Errors if:
 /// - Owner is not the system program.
 /// - Data is not empty.
 /// - Account is not writable.
-pub fn load_uninitialized_account<'a, 'info>(
+pub fn load_system_account<'a, 'info>(
     info: &'a AccountInfo<'info>,
+    is_writable: bool,
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&system_program::id()) {
         return Err(ProgramError::InvalidAccountOwner);
@@ -337,7 +338,7 @@ pub fn load_uninitialized_account<'a, 'info>(
         return Err(ProgramError::AccountAlreadyInitialized);
     }
 
-    if !info.is_writable {
+    if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
 

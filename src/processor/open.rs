@@ -43,7 +43,7 @@ pub fn process_open<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_account(miner_info)?;
+    load_system_account(miner_info, false)?;
     load_uninitialized_pda(
         proof_info,
         &[PROOF, signer.key.as_ref()],

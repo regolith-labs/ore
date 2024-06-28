@@ -16,7 +16,7 @@ pub fn process_update<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_account(miner_info)?;
+    load_system_account(miner_info, false)?;
     load_proof(proof_info, signer.key, true)?;
 
     // Update the proof

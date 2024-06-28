@@ -80,7 +80,7 @@ pub fn process_initialize<'a, 'info>(
         &crate::id(),
     )?;
     load_uninitialized_pda(treasury_info, &[TREASURY], args.treasury_bump, &crate::id())?;
-    load_uninitialized_account(treasury_tokens_info)?;
+    load_system_account(treasury_tokens_info, true)?;
     load_program(system_program, system_program::id())?;
     load_program(token_program, spl_token::id())?;
     load_program(associated_token_program, spl_associated_token_account::id())?;

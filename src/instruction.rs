@@ -213,7 +213,7 @@ pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner, false),
+            AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
@@ -331,7 +331,7 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner, false),
+            AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof, false),
         ],
         data: OreInstruction::Update.to_vec(),
