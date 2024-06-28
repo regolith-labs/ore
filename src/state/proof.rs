@@ -30,6 +30,9 @@ pub struct Proof {
     /// The last time stake was deposited into this account.
     pub last_stake_at: i64,
 
+    /// The keypair which has permission to submit hashes for mining.
+    pub miner: Pubkey,
+
     /// The total lifetime hashes provided by this miner.
     pub total_hashes: u64,
 
