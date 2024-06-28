@@ -5,7 +5,7 @@ use solana_program::{
 
 use crate::{instruction::UpdateArgs, loaders::*, state::Proof, utils::AccountDeserialize};
 
-/// Update updates a proof account.
+/// Update changes the miner authority on a proof account.
 pub fn process_update<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
