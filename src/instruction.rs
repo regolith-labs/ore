@@ -34,18 +34,25 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
+    #[account(2, name = "config", desc = "Ore config account", writable)]
+    #[account(3, name = "proof", desc = "Ore proof account – current top staker")]
+    #[account(4, name = "proof_new", desc = "Ore proof account – new top staker")]
+    Crown = 2,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
     #[account(3, name = "config", desc = "Ore config account")]
     #[account(4, name = "noise", desc = "Ore noise account")]
     #[account(5, name = "proof", desc = "Ore proof account", writable)]
     #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
-    Mine = 2,
+    Mine = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore proof account", writable)]
     #[account(3, name = "system_program", desc = "Solana system program")]
-    Open = 3,
+    Open = 4,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -62,7 +69,7 @@ pub enum OreInstruction {
     #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(14, name = "token_program", desc = "SPL token program")]
-    Reset = 4,
+    Reset = 5,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -70,26 +77,12 @@ pub enum OreInstruction {
     #[account(3, name = "sender", desc = "Signer token account", writable)]
     #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(5, name = "token_program", desc = "SPL token program")]
-    Stake = 5,
+    Stake = 6,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    Update = 6,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account – current top staker")]
-    #[account(4, name = "proof_new", desc = "Ore proof account – new top staker")]
-    Crown = 6,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account – current top staker")]
-    #[account(4, name = "proof_new", desc = "Ore proof account – new top staker")]
-    Crown = 6,
+    Update = 7,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -99,7 +92,7 @@ pub enum OreInstruction {
     #[account(5, name = "mint", desc = "Ore token mint account", writable)]
     #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
-    Upgrade = 7,
+    Upgrade = 8,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
