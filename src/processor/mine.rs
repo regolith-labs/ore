@@ -61,12 +61,12 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
-    // Validate this is the only mine ix in the transaction
+    // Validate this is the only mine ix in the transaction.
     if !validate_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
         return Err(OreError::TransactionInvalid.into());
     }
 
-    // Validate epoch is active
+    // Validate epoch is active.
     let config_data = config_info.data.borrow();
     let config = Config::try_from_bytes(&config_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
@@ -78,7 +78,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::NeedsReset.into());
     }
 
-    // Validate the digest
+    // Validate the hash digest.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
@@ -86,7 +86,7 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::HashInvalid.into());
     }
 
-    // Validate hash satisfies the minimnum difficulty
+    // Validate hash satisfies the minimnum difficulty.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
     sol_log(&format!("Diff {}", difficulty));
@@ -94,17 +94,16 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::HashTooEasy.into());
     }
 
-    // Calculate base reward rate
+    // Calculate base reward rate.
     let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
-    sol_log(&format!("Base {}", reward));
 
     // Apply staking multiplier.
-    // If user has greater than or equal to the max stake on the network, they will receive 2x multiplier.
-    // Any less than this, and they will receive between 1x and 2x. Miners are only eligable for a multipler
-    // if their last stake deposit was more than one minute ago.
+    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
+    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
+    // if the miner's last stake deposit was more than one minute ago.
     if config.max_stake.gt(&0)
         && proof
             .last_stake_at
@@ -117,19 +116,17 @@ pub fn process_mine<'a, 'info>(
             .saturating_mul(reward)
             .saturating_div(config.max_stake);
         reward = reward.saturating_add(staking_reward);
-        sol_log(&format!("Staking {}", staking_reward));
     }
 
-    // Apply spam penalty
+    // Reject spam transactions.
     let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
-        sol_log("Spam penalty");
         return Err(OreError::Spam.into());
     }
 
-    // Apply liveness penalty
+    // Apply liveness penalty.
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         reward = reward.saturating_sub(
@@ -137,11 +134,6 @@ pub fn process_mine<'a, 'info>(
                 .saturating_mul(t.saturating_sub(t_liveness) as u64)
                 .saturating_div(ONE_MINUTE as u64),
         );
-        sol_log(&format!(
-            "Liveness penalty ({} sec) {}",
-            t.saturating_sub(t_liveness),
-            reward,
-        ));
     }
 
     // Limit payout amount to whatever is left in the bus
@@ -150,8 +142,6 @@ pub fn process_mine<'a, 'info>(
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances
-    sol_log(&format!("Total {}", reward));
-    sol_log(&format!("Bus {}", bus.rewards));
     bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
     bus.rewards = bus.rewards.saturating_sub(reward_actual);
     proof.balance = proof.balance.saturating_add(reward_actual);
@@ -215,9 +205,7 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
                     return Ok(false);
                 }
             }
-            COMPUTE_BUDGET_PROGRAM_ID => {
-                // Noop
-            }
+            COMPUTE_BUDGET_PROGRAM_ID => {} // Noop
             _ => return Ok(false),
         }
     }
