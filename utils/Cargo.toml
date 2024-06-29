@@ -1,0 +1,18 @@
+[package]
+name = "utils"
+description = "Utils for building ORE programs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "utils"
+
+[dependencies]
+bytemuck.workspace = true
+solana-program.workspace = true

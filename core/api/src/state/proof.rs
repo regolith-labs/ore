@@ -2,10 +2,9 @@ use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
-use crate::{
-    impl_account_from_bytes, impl_to_bytes,
-    utils::{AccountDiscriminator, Discriminator},
-};
+use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+
+use super::AccountDiscriminator;
 
 /// Proof accounts track a miner's current hash, claimable rewards, and lifetime stats.
 /// Every miner is allowed one proof account which is required by the program to mine or claim rewards.
@@ -41,8 +40,8 @@ pub struct Proof {
 }
 
 impl Discriminator for Proof {
-    fn discriminator() -> AccountDiscriminator {
-        AccountDiscriminator::Proof
+    fn discriminator() -> u8 {
+        AccountDiscriminator::Proof.into()
     }
 }
 

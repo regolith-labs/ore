@@ -4,9 +4,9 @@ use drillx::Solution;
 use ore_api::{
     consts::*,
     error::OreError,
+    event::MineEvent,
     instruction::{MineArgs, OreInstruction},
     state::{Bus, Config, Proof},
-    utils::{AccountDeserialize, MineEvent},
 };
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
@@ -25,7 +25,7 @@ use solana_program::{
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
 
-use crate::loaders::*;
+use crate::{loaders::*, utils::AccountDeserialize};
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.

@@ -25,6 +25,7 @@ ore-api = { path = "../api" }
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
+utils.workspace = true
 
 [dev-dependencies]
 bs64 = "0.1.2"

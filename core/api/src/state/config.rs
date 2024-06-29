@@ -2,10 +2,9 @@ use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
-use crate::{
-    impl_account_from_bytes, impl_to_bytes,
-    utils::{AccountDiscriminator, Discriminator},
-};
+use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+
+use super::AccountDiscriminator;
 
 /// Config is a singleton account which manages admin configurable variables.
 #[repr(C)]
@@ -28,8 +27,8 @@ pub struct Config {
 }
 
 impl Discriminator for Config {
-    fn discriminator() -> AccountDiscriminator {
-        AccountDiscriminator::Config
+    fn discriminator() -> u8 {
+        AccountDiscriminator::Config.into()
     }
 }
 

@@ -4,9 +4,6 @@ use ore_api::{
     consts::*,
     instruction::*,
     state::{Bus, Config, Treasury},
-    utils::create_pda,
-    utils::AccountDeserialize,
-    utils::Discriminator,
 };
 use solana_program::{
     account_info::AccountInfo,
@@ -18,7 +15,10 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-use crate::loaders::*;
+use crate::{
+    loaders::*,
+    utils::{create_pda, AccountDeserialize, Discriminator},
+};
 
 /// Initialize sets up the Ore program. Its responsibilities include:
 /// 1. Initialize the 8 bus accounts.

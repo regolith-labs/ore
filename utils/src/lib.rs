@@ -1,5 +1,3 @@
-use bytemuck::{Pod, Zeroable};
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, rent::Rent, sysvar::Sysvar,
@@ -73,17 +71,8 @@ pub fn create_pda<'a, 'info>(
     Ok(())
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum AccountDiscriminator {
-    Bus = 100,
-    Config = 101,
-    Proof = 102,
-    Treasury = 103,
-}
-
 pub trait Discriminator {
-    fn discriminator() -> AccountDiscriminator;
+    fn discriminator() -> u8; //AccountDiscriminator;
 }
 
 pub trait AccountDeserialize {
@@ -109,7 +98,7 @@ macro_rules! impl_account_from_bytes {
             fn try_from_bytes(
                 data: &[u8],
             ) -> Result<&Self, solana_program::program_error::ProgramError> {
-                if (Self::discriminator() as u8).ne(&data[0]) {
+                if Self::discriminator().ne(&data[0]) {
                     return Err(solana_program::program_error::ProgramError::InvalidAccountData);
                 }
                 bytemuck::try_from_bytes::<Self>(&data[8..]).or(Err(
@@ -119,7 +108,7 @@ macro_rules! impl_account_from_bytes {
             fn try_from_bytes_mut(
                 data: &mut [u8],
             ) -> Result<&mut Self, solana_program::program_error::ProgramError> {
-                if (Self::discriminator() as u8).ne(&data[0]) {
+                if Self::discriminator().ne(&data[0]) {
                     return Err(solana_program::program_error::ProgramError::InvalidAccountData);
                 }
                 bytemuck::try_from_bytes_mut::<Self>(&mut data[8..]).or(Err(
@@ -144,13 +133,3 @@ macro_rules! impl_instruction_from_bytes {
         }
     };
 }
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct MineEvent {
-    pub difficulty: u64,
-    pub reward: u64,
-    pub timing: i64,
-}
-
-impl_to_bytes!(MineEvent);

@@ -1,13 +1,14 @@
 use ore_api::{
     consts::*,
     state::{Bus, Config, Proof, Treasury},
-    utils::{AccountDeserialize, Discriminator},
 };
 use solana_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
     system_program, sysvar,
 };
 use spl_token::state::Mint;
+
+use crate::utils::{AccountDeserialize, Discriminator};
 
 /// Errors if:
 /// - Account is not a signer.

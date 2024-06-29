@@ -8,7 +8,10 @@ use solana_program::{
     system_program, sysvar,
 };
 
-use crate::{consts::*, impl_instruction_from_bytes, impl_to_bytes};
+use crate::{
+    consts::*,
+    utils::{impl_instruction_from_bytes, impl_to_bytes},
+};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]

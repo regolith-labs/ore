@@ -1,10 +1,9 @@
 use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 
-use crate::{
-    impl_account_from_bytes, impl_to_bytes,
-    utils::{AccountDiscriminator, Discriminator},
-};
+use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+
+use super::AccountDiscriminator;
 
 /// Treasury is a singleton account which manages all program wide variables.
 /// It is the mint authority for the Ore token and also the authority of the program-owned token account.
@@ -13,8 +12,8 @@ use crate::{
 pub struct Treasury {}
 
 impl Discriminator for Treasury {
-    fn discriminator() -> AccountDiscriminator {
-        AccountDiscriminator::Treasury
+    fn discriminator() -> u8 {
+        AccountDiscriminator::Treasury.into()
     }
 }
 

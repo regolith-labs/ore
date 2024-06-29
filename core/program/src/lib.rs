@@ -8,6 +8,8 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+pub(crate) use utils;
+
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
 

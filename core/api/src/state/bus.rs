@@ -1,10 +1,9 @@
 use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
 
-use crate::{
-    impl_account_from_bytes, impl_to_bytes,
-    utils::{AccountDiscriminator, Discriminator},
-};
+use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+
+use super::AccountDiscriminator;
 
 /// Bus accounts are responsible for distributing mining rewards.
 /// There are 8 busses total to minimize write-lock contention and allow for parallel mine operations.
@@ -23,8 +22,8 @@ pub struct Bus {
 }
 
 impl Discriminator for Bus {
-    fn discriminator() -> AccountDiscriminator {
-        AccountDiscriminator::Bus
+    fn discriminator() -> u8 {
+        AccountDiscriminator::Bus.into()
     }
 }
 

@@ -1,10 +1,10 @@
-use ore_api::{consts::*, instruction::StakeArgs, state::Proof, utils::AccountDeserialize};
+use ore_api::{consts::*, instruction::StakeArgs, state::Proof};
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
     program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
 };
 
-use crate::loaders::*;
+use crate::{loaders::*, utils::AccountDeserialize};
 
 /// Stake deposits Ore into a miner's proof account to earn multiplier. Its responsibilies include:
 /// 1. Transfer tokens from the miner to the treasury account.

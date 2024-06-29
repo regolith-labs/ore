@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core/*"]
+members = ["core/*", "utils"]
 
 [workspace.package]
 version = "2.0.0"
@@ -13,8 +13,10 @@ readme = "./README.md"
 keywords = ["solana", "crypto", "mining"]
 
 [workspace.dependencies]
+bytemuck = "1.14.3"
 drillx = { git = "https://github.com/regolith-labs/drillx", branch = "master", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 solana-program = "1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
+utils = { path = "utils" }
