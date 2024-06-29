@@ -23,10 +23,10 @@
 - [`Initialize`](program/src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
 
 ## State
- - [`Bus`](src/state/bus.rs) - An account (8 total) which tracks and limits the amount mined rewards each epoch.
- - [`Proof`](src/state/proof.rs) - An account (1 per miner) which tracks a miner's hash, claimable rewards, and lifetime stats.
- - [`Treasury`](src/state/treasury.rs) – A singleton account which manages program-wide variables and authorities.
-
+ - [`Bus`](api/src/state/bus.rs) - An account (8 total) which tracks and limits the amount ORE mined each epoch.
+ - [`Config`](api/src/state/config.rs) – A singleton account which manages program-wide variables.
+ - [`Proof`](api/src/state/proof.rs) - An account (1 per user) which tracks a miner's current hash and current stake.
+ - [`Treasury`](api/src/state/treasury.rs) – A singleton account which has authority to mint ORE and holds onto user stake.
 
 
 ## Tests
