@@ -671,15 +671,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
-name = "bs58"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5353f36341f7451062466f0b755b96ac3a9547e4d7f6b70d603fc721a7d7896"
-dependencies = [
- "tinyvec",
-]
-
-[[package]]
 name = "bs64"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2591,27 +2582,40 @@ dependencies = [
 ]
 
 [[package]]
-name = "ore-program"
+name = "ore-api"
 version = "2.0.0"
 dependencies = [
  "array-const-fn-init",
- "bs58 0.5.0",
- "bs64",
  "bytemuck",
  "const-crypto",
  "drillx",
  "mpl-token-metadata",
  "num_enum 0.7.2",
- "rand 0.8.5",
  "shank",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+ "utils",
+]
+
+[[package]]
+name = "ore-program"
+version = "2.0.0"
+dependencies = [
+ "bs64",
+ "drillx",
+ "mpl-token-metadata",
+ "ore-api",
+ "rand 0.8.5",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
- "static_assertions",
- "thiserror",
  "tokio",
+ "utils",
 ]
 
 [[package]]
@@ -3662,7 +3666,7 @@ dependencies = [
  "Inflector",
  "base64 0.21.7",
  "bincode",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "lazy_static",
  "serde",
@@ -3972,7 +3976,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35a0b24cc4d0ebd5fd45d6bd47bed3790f8a75ade67af8ff24a3d719a8bc93bc"
 dependencies = [
  "block-buffer 0.10.4",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "either",
  "generic-array",
@@ -4125,7 +4129,7 @@ dependencies = [
  "borsh 0.10.3",
  "borsh 0.9.3",
  "borsh 1.5.0",
- "bs58 0.4.0",
+ "bs58",
  "bv",
  "bytemuck",
  "cc",
@@ -4311,7 +4315,7 @@ dependencies = [
  "async-trait",
  "base64 0.21.7",
  "bincode",
- "bs58 0.4.0",
+ "bs58",
  "indicatif",
  "log",
  "reqwest",
@@ -4335,7 +4339,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a31feddef24d3e0aab189571adea7f109639ef6179fcd3cd34ffc8c73d3409f1"
 dependencies = [
  "base64 0.21.7",
- "bs58 0.4.0",
+ "bs58",
  "jsonrpc-core",
  "reqwest",
  "semver",
@@ -4451,7 +4455,7 @@ dependencies = [
  "bincode",
  "bitflags 2.5.0",
  "borsh 1.5.0",
- "bs58 0.4.0",
+ "bs58",
  "bytemuck",
  "byteorder",
  "chrono",
@@ -4501,7 +4505,7 @@ version = "1.18.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5cb099b2f9c0a65a6f23ced791325141cd68c27b04d11c04fef838a00f613861"
 dependencies = [
- "bs58 0.4.0",
+ "bs58",
  "proc-macro2",
  "quote",
  "rustversion",
@@ -4641,7 +4645,7 @@ dependencies = [
  "base64 0.21.7",
  "bincode",
  "borsh 0.10.3",
- "bs58 0.4.0",
+ "bs58",
  "lazy_static",
  "log",
  "serde",
@@ -5709,6 +5713,14 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
+
+[[package]]
+name = "utils"
+version = "2.0.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+]
 
 [[package]]
 name = "valuable"
