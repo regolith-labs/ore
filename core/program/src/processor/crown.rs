@@ -9,7 +9,7 @@ use solana_program::{
 
 use crate::loaders::*;
 
-/// Crown marks an account as the top staker if their balance is greater than the last known top staker.
+/// Crown flags an account as the top staker if their balance is greater than the last known top staker.
 pub fn process_crown<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
@@ -31,19 +31,17 @@ pub fn process_crown<'a, 'info>(
     let proof_new_data = proof_new_info.data.borrow();
     let proof_new = Proof::try_from_bytes(&proof_new_data)?;
 
-    // If top staker is not the default null address, then compare balances
+    // If top staker is the defualt null balance, skip this.
     if config.top_staker.ne(&Pubkey::new_from_array([0; 32])) {
         // Load current top staker
         load_any_proof(proof_info, false)?;
-        let proof_data = proof_info.data.borrow();
-        let proof = Proof::try_from_bytes(&proof_data)?;
-
-        // Require the provided proof account is the current top staker
-        if config.top_staker.ne(&proof_info.key) {
+        if proof_info.key.ne(&config.top_staker) {
             return Ok(());
         }
 
         // Compare balances
+        let proof_data = proof_info.data.borrow();
+        let proof = Proof::try_from_bytes(&proof_data)?;
         if proof_new.balance.lt(&proof.balance) {
             return Ok(());
         }
