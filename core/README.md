@@ -19,7 +19,7 @@
 - [`Stake`](program/src/processor/stake.rs) – Stakes ORE with a miner to increase their multiplier.
 - [`Reset`](program/src/processor/reset.rs) – Resets the program for a new epoch.
 - [`Update`](program/src/processor/update.rs) – Updates a proof account's miner authority.
-- [`Upgrade`](program/src/processor/upgrade.rs) – Migrates v1 ORE tokens to v2 ORE.
+- [`Upgrade`](program/src/processor/upgrade.rs) – Migrates ORE v1 tokens to ORE v2, one-for-one.
 - [`Initialize`](program/src/processor/initialize.rs) – Initializes the Ore program, creating the bus, mint, and treasury accounts.
 
 ## State
