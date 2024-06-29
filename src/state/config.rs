@@ -17,8 +17,14 @@ pub struct Config {
     /// The base reward rate paid out for a hash of minimum difficulty.
     pub base_reward_rate: u64,
 
-    /// The timestamp of the last reset
+    /// The timestamp of the last reset.
     pub last_reset_at: i64,
+
+    /// The largest known stake balance on the network.
+    pub max_stake: u64,
+
+    /// The address of the proof account with the highest stake balance.
+    pub top_staker: Pubkey,
 }
 
 impl Discriminator for Config {

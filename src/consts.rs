@@ -18,22 +18,16 @@ pub const MIN_DIFFICULTY: u32 = 8;
 /// There are 100 billion indivisible units per ORE (called "grains").
 pub const TOKEN_DECIMALS: u8 = 11;
 
-/// The decimal precision of the Ore v1 token.
+/// The decimal precision of the ORE v1 token.
 pub const TOKEN_DECIMALS_V1: u8 = 9;
 
-/// One Ore token, denominated in indivisible units.
+/// One ORE token, denominated in indivisible units.
 pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
-/// The duration of one day, in seconds.
-pub const ONE_DAY: i64 = 86400;
-
-/// The duration of one year, in minutes.
-pub const ONE_YEAR: u64 = 525600;
-
-/// The number of minutes in an ORE epoch.
+/// The number of minutes in a program epoch.
 pub const EPOCH_MINUTES: i64 = 1;
 
 /// The duration of a program epoch, in seconds.
