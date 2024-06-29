@@ -1,8 +1,27 @@
+mod claim;
+mod close;
+mod crown;
+mod initialize;
 mod loaders;
-mod processor;
+mod mine;
+mod open;
+mod reset;
+mod stake;
+mod update;
+mod upgrade;
+
+use claim::*;
+use close::*;
+use crown::*;
+use initialize::*;
+use mine::*;
+use open::*;
+use reset::*;
+use stake::*;
+use update::*;
+use upgrade::*;
 
 use ore_api::instruction::*;
-use processor::*;
 use solana_program::{
     self, account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
