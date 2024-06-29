@@ -10,17 +10,16 @@ repository.workspace = true
 keywords.workspace = true
 
 [dependencies]
-array-const-fn-init = "0.1.1"
-bs58 = "0.5.0"
-bytemuck = "1.14.3"
-const-crypto = "0.1.0"
+array-const-fn-init.workspace = true
+bytemuck.workspace = true
+const-crypto.workspace = true
 drillx.workspace = true
 mpl-token-metadata.workspace = true
-num_enum = "0.7.2"
-shank = "0.3.0"
+num_enum.workspace = true
+shank.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
-static_assertions = "1.1.0"
-thiserror = "1.0.57"
+static_assertions.workspace = true
+thiserror.workspace = true
 utils.workspace = true
