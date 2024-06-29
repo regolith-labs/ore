@@ -1,0 +1,25 @@
+[package]
+name = "ore-api"
+description = "API for interacting with the ORE program"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+keywords.workspace = true
+
+[dependencies]
+array-const-fn-init.workspace = true
+bytemuck.workspace = true
+const-crypto.workspace = true
+drillx.workspace = true
+mpl-token-metadata.workspace = true
+num_enum.workspace = true
+shank.workspace = true
+solana-program.workspace = true
+spl-token.workspace = true
+spl-associated-token-account.workspace = true
+static_assertions.workspace = true
+thiserror.workspace = true
+utils.workspace = true
