@@ -7,7 +7,7 @@ use solana_program::{
 
 /// Creates a new pda
 #[inline(always)]
-pub(crate) fn create_pda<'a, 'info>(
+pub fn create_pda<'a, 'info>(
     target_account: &'a AccountInfo<'info>,
     owner: &Pubkey,
     space: usize,
@@ -71,14 +71,6 @@ pub(crate) fn create_pda<'a, 'info>(
     }
 
     Ok(())
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct MineEvent {
-    pub difficulty: u64,
-    pub reward: u64,
-    pub timing: i64,
 }
 
 #[repr(u8)]
@@ -152,3 +144,13 @@ macro_rules! impl_instruction_from_bytes {
         }
     };
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct MineEvent {
+    pub difficulty: u64,
+    pub reward: u64,
+    pub timing: i64,
+}
+
+impl_to_bytes!(MineEvent);

@@ -1,9 +1,10 @@
+use ore_api::{state::Proof, utils::AccountDeserialize};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, system_program,
 };
 
-use crate::{loaders::*, state::Proof, utils::AccountDeserialize};
+use crate::loaders::*;
 
 /// Close closes a proof account and returns the rent to the owner. Its responsibilities include:
 /// 1. Realloc proof account size to 0.

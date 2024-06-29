@@ -8,10 +8,7 @@ use solana_program::{
     system_program, sysvar,
 };
 
-use crate::{
-    impl_instruction_from_bytes, impl_to_bytes, BUS, BUS_ADDRESSES, CONFIG, CONFIG_ADDRESS,
-    METADATA, MINT, MINT_ADDRESS, MINT_NOISE, MINT_V1_ADDRESS, PROOF, TREASURY, TREASURY_ADDRESS,
-};
+use crate::{consts::*, impl_instruction_from_bytes, impl_to_bytes};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
@@ -185,8 +182,9 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
 
-/// Builds a reset instruction.
-pub fn reset(signer: Pubkey) -> Instruction {
+/// Builds a claim instruction.
+pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
@@ -195,39 +193,20 @@ pub fn reset(signer: Pubkey) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(BUS_ADDRESSES[0], false),
-            AccountMeta::new(BUS_ADDRESSES[1], false),
-            AccountMeta::new(BUS_ADDRESSES[2], false),
-            AccountMeta::new(BUS_ADDRESSES[3], false),
-            AccountMeta::new(BUS_ADDRESSES[4], false),
-            AccountMeta::new(BUS_ADDRESSES[5], false),
-            AccountMeta::new(BUS_ADDRESSES[6], false),
-            AccountMeta::new(BUS_ADDRESSES[7], false),
-            AccountMeta::new(CONFIG_ADDRESS, false),
+            AccountMeta::new(beneficiary, false),
             AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: OreInstruction::Reset.to_vec(),
-    }
-}
-
-/// Builds an open instruction.
-pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new_readonly(miner, false),
-            AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
-        ],
         data: [
-            OreInstruction::Open.to_vec(),
-            OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+            OreInstruction::Claim.to_vec(),
+            ClaimArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
         ]
         .concat(),
     }
@@ -273,9 +252,28 @@ pub fn mine(signer: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
     }
 }
 
-/// Builds a claim instruction.
-pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+/// Builds an open instruction.
+pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Open.to_vec(),
+            OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+/// Builds a reset instruction.
+pub fn reset(signer: Pubkey) -> Instruction {
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
@@ -284,22 +282,21 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(beneficiary, false),
+            AccountMeta::new(BUS_ADDRESSES[0], false),
+            AccountMeta::new(BUS_ADDRESSES[1], false),
+            AccountMeta::new(BUS_ADDRESSES[2], false),
+            AccountMeta::new(BUS_ADDRESSES[3], false),
+            AccountMeta::new(BUS_ADDRESSES[4], false),
+            AccountMeta::new(BUS_ADDRESSES[5], false),
+            AccountMeta::new(BUS_ADDRESSES[6], false),
+            AccountMeta::new(BUS_ADDRESSES[7], false),
+            AccountMeta::new(CONFIG_ADDRESS, false),
             AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(proof, false),
-            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: [
-            OreInstruction::Claim.to_vec(),
-            ClaimArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: OreInstruction::Reset.to_vec(),
     }
 }
 

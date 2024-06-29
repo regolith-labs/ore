@@ -1,41 +1,20 @@
-[package]
-name = "ore-program"
+[workspace]
+resolver = "2"
+members = ["core/*"]
+
+[workspace.package]
 version = "2.0.0"
-description = "Ore is a digital currency you can mine from anywhere, at home or on your phone."
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
 documentation = "https://ore.supply"
-repository = "https://github.com/hardhatchad/ore"
+repository = "https://github.com/regolith-labs/ore"
 readme = "./README.md"
 keywords = ["solana", "crypto", "mining"]
 
-[lib]
-crate-type = ["cdylib", "lib"]
-name = "ore"
-
-[features]
-no-entrypoint = []
-default = []
-
-[dependencies]
-array-const-fn-init = "0.1.1"
-bs58 = "0.5.0"
-bytemuck = "1.14.3"
-const-crypto = "0.1.0"
+[workspace.dependencies]
 drillx = { git = "https://github.com/regolith-labs/drillx", branch = "master", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
-num_enum = "0.7.2"
-shank = "0.3.0"
 solana-program = "1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
-static_assertions = "1.1.0"
-thiserror = "1.0.57"
-
-[dev-dependencies]
-bs64 = "0.1.2"
-rand = "0.8.5"
-solana-program-test = "^1.18"
-solana-sdk = "^1.18"
-tokio = { version = "1.35", features = ["full"] }

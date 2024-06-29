@@ -1,19 +1,17 @@
+use ore_api::{
+    consts::*,
+    error::OreError,
+    state::{Bus, Config},
+    utils::AccountDeserialize,
+};
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
     program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, sysvar::Sysvar,
 };
 use spl_token::state::Mint;
 
-use crate::{
-    error::OreError,
-    loaders::{
-        load_bus, load_config, load_mint, load_program, load_signer, load_token_account,
-        load_treasury,
-    },
-    state::{Bus, Config},
-    utils::AccountDeserialize,
-    BUS_COUNT, BUS_EPOCH_REWARDS, EPOCH_DURATION, MAX_EPOCH_REWARDS, MAX_SUPPLY, MINT_ADDRESS,
-    SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS, TREASURY, TREASURY_BUMP,
+use crate::loaders::{
+    load_bus, load_config, load_mint, load_program, load_signer, load_token_account, load_treasury,
 };
 
 /// Reset sets up the Ore program for the next epoch. Its responsibilities include:

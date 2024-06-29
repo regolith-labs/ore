@@ -1,9 +1,10 @@
+use ore_api::{state::Proof, utils::AccountDeserialize};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
 
-use crate::{loaders::*, state::Proof, utils::AccountDeserialize};
+use crate::loaders::*;
 
 /// Update changes the miner authority on a proof account.
 pub fn process_update<'a, 'info>(

@@ -1,6 +1,13 @@
 use std::mem::size_of;
 
 use drillx::Solution;
+use ore_api::{
+    consts::*,
+    error::OreError,
+    instruction::{MineArgs, OreInstruction},
+    state::{Bus, Config, Proof},
+    utils::{AccountDeserialize, MineEvent},
+};
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
@@ -18,14 +25,7 @@ use solana_program::{
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
 
-use crate::{
-    error::OreError,
-    instruction::{MineArgs, OreInstruction},
-    loaders::*,
-    state::{Bus, Config, Proof},
-    utils::{AccountDeserialize, MineEvent},
-    EPOCH_DURATION, MIN_DIFFICULTY, ONE_MINUTE, TOLERANCE,
-};
+use crate::loaders::*;
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.
@@ -162,11 +162,14 @@ pub fn process_mine<'a, 'info>(
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
     // Log the mined rewards
-    set_return_data(bytemuck::bytes_of(&MineEvent {
-        difficulty: difficulty as u64,
-        reward: reward_actual,
-        timing: t.saturating_sub(t_liveness),
-    }));
+    set_return_data(
+        MineEvent {
+            difficulty: difficulty as u64,
+            reward: reward_actual,
+            timing: t.saturating_sub(t_liveness),
+        }
+        .to_bytes(),
+    );
 
     Ok(())
 }
@@ -193,7 +196,7 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c += num_accounts * 33;
         // Only allow instructions to call ore and the compute budget program.
         match read_pubkey(&mut c, msg)? {
-            crate::ID => {
+            ore_api::ID => {
                 c += 2;
                 if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
                     if let OreInstruction::Mine = ix {

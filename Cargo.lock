@@ -2591,26 +2591,38 @@ dependencies = [
 ]
 
 [[package]]
-name = "ore-program"
+name = "ore-api"
 version = "2.0.0"
 dependencies = [
  "array-const-fn-init",
  "bs58 0.5.0",
- "bs64",
  "bytemuck",
  "const-crypto",
  "drillx",
  "mpl-token-metadata",
  "num_enum 0.7.2",
- "rand 0.8.5",
  "shank",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "ore-program"
+version = "2.0.0"
+dependencies = [
+ "bs64",
+ "drillx",
+ "mpl-token-metadata",
+ "ore-api",
+ "rand 0.8.5",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
- "static_assertions",
- "thiserror",
  "tokio",
 ]
 
