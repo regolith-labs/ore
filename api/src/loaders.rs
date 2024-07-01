@@ -1,14 +1,14 @@
-use ore_api::{
-    consts::*,
-    state::{Bus, Config, Proof, Treasury},
-};
 use solana_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
     system_program, sysvar,
 };
 use spl_token::state::Mint;
 
-use crate::utils::{AccountDeserialize, Discriminator};
+use crate::{
+    consts::*,
+    state::{Bus, Config, Proof, Treasury},
+    utils::{AccountDeserialize, Discriminator},
+};
 
 /// Errors if:
 /// - Account is not a signer.
@@ -32,7 +32,7 @@ pub fn load_bus<'a, 'info>(
     id: u64,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -69,7 +69,7 @@ pub fn load_any_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -102,7 +102,7 @@ pub fn load_config<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -136,7 +136,7 @@ pub fn load_proof<'a, 'info>(
     authority: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -169,7 +169,7 @@ pub fn load_proof_with_miner<'a, 'info>(
     miner: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -200,7 +200,7 @@ pub fn load_any_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 
@@ -229,7 +229,7 @@ pub fn load_treasury<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.owner.ne(&ore_api::id()) {
+    if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
 

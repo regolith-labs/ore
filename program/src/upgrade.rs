@@ -1,11 +1,9 @@
-use ore_api::{consts::*, error::OreError, instruction::StakeArgs};
+use ore_api::{consts::*, error::OreError, instruction::StakeArgs, loaders::*};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     program_pack::Pack, pubkey::Pubkey,
 };
 use spl_token::state::Mint;
-
-use crate::loaders::*;
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token one-for-one. Its responsibilies include:
 /// 1. Burns the v1 tokens.

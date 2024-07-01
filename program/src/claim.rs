@@ -1,10 +1,10 @@
-use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, state::Proof};
+use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
 
-use crate::{loaders::*, utils::AccountDeserialize};
+use crate::utils::AccountDeserialize;
 
 /// Claim distributes Ore from the treasury to a miner. Its responsibilies include:
 /// 1. Decrement the miner's claimable balance.

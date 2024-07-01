@@ -1,10 +1,13 @@
-use ore_api::state::{Config, Proof};
+use ore_api::{
+    loaders::*,
+    state::{Config, Proof},
+};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
 
-use crate::{loaders::*, utils::AccountDeserialize};
+use crate::utils::AccountDeserialize;
 
 /// Crown flags an account as the top staker if their balance is greater than the last known top staker.
 pub fn process_crown<'a, 'info>(

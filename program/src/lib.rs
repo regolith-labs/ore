@@ -2,7 +2,6 @@ mod claim;
 mod close;
 mod crown;
 mod initialize;
-mod loaders;
 mod mine;
 mod open;
 mod reset;

@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::OpenArgs, state::Proof};
+use ore_api::{consts::*, instruction::OpenArgs, loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo,
     blake3::hashv,
@@ -13,10 +13,7 @@ use solana_program::{
     sysvar::{self, Sysvar},
 };
 
-use crate::{
-    loaders::*,
-    utils::{create_pda, AccountDeserialize, Discriminator},
-};
+use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
 /// Register generates a new hash chain for a prospective miner. Its responsibilities include:
 /// 1. Initialize a new proof account.

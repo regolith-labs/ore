@@ -6,6 +6,7 @@ use ore_api::{
     error::OreError,
     event::MineEvent,
     instruction::{MineArgs, OreInstruction},
+    loaders::*,
     state::{Bus, Config, Proof},
 };
 use solana_program::program::set_return_data;
@@ -25,7 +26,7 @@ use solana_program::{
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
 
-use crate::{loaders::*, utils::AccountDeserialize};
+use crate::utils::AccountDeserialize;
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.
