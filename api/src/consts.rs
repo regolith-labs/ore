@@ -131,3 +131,16 @@ pub const TREASURY_ADDRESS: Pubkey =
 
 /// The bump of the treasury account, for cpis.
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
+
+/// The address of the treasury token account.
+pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
+    ed25519::derive_program_address(
+        &[
+            unsafe { &*(&TREASURY_ADDRESS as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+        ],
+        unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
+    )
+    .0,
+);

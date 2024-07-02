@@ -253,6 +253,20 @@ pub fn load_treasury<'a, 'info>(
 }
 
 /// Errors if:
+/// - Address does not match the expected treasury tokens address.
+/// - Cannot load as a token account
+pub fn load_treasury_tokens<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    load_token_account(info, Some(&TREASURY_ADDRESS), &MINT_ADDRESS, is_writable)
+}
+
+/// Errors if:
 /// - Owner is not SPL token program.
 /// - Address does not match the expected mint address.
 /// - Data is empty.

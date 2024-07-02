@@ -54,12 +54,7 @@ pub fn process_reset<'a, 'info>(
     load_config(config_info, true)?;
     load_mint(mint_info, MINT_ADDRESS, true)?;
     load_treasury(treasury_info, true)?;
-    load_token_account(
-        treasury_tokens_info,
-        Some(treasury_info.key),
-        mint_info.key,
-        true,
-    )?;
+    load_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
     let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,

@@ -30,12 +30,7 @@ pub fn process_stake<'a, 'info>(
     load_signer(signer)?;
     load_proof(proof_info, signer.key, true)?;
     load_token_account(sender_info, Some(signer.key), &MINT_ADDRESS, true)?;
-    load_token_account(
-        treasury_tokens_info,
-        Some(&TREASURY_ADDRESS),
-        &MINT_ADDRESS,
-        true,
-    )?;
+    load_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
 
     // Update proof balance
