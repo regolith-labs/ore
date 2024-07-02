@@ -31,20 +31,20 @@ pub const ONE_MINUTE: i64 = 60;
 pub const EPOCH_MINUTES: i64 = 1;
 
 /// The duration of a program epoch, in seconds.
-pub const EPOCH_DURATION: i64 = ONE_MINUTE.saturating_mul(EPOCH_MINUTES);
+pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
 
 /// The maximum token supply (21 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE.saturating_mul(21_000_000);
+pub const MAX_SUPPLY: u64 = ONE_ORE * 21_000_000;
 
 /// The target quantity of ORE to be mined per epoch.
-pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE.saturating_mul(EPOCH_MINUTES as u64);
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64;
 
 /// The maximum quantity of ORE that can be mined per epoch.
 /// Inflation rate ≈ 1 ORE / min (min 0, max 8)
-pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS.saturating_mul(BUS_COUNT as u64);
+pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS * BUS_COUNT as u64;
 
 /// The quantity of ORE each bus is allowed to issue per epoch.
-pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS.saturating_div(BUS_COUNT as u64);
+pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS / BUS_COUNT as u64;
 
 /// The number of bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: usize = 8;
