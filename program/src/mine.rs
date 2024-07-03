@@ -63,7 +63,7 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
     // Validate this is the only mine ix in the transaction.
-    if !validate_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
+    if !introspect_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
         return Err(OreError::TransactionInvalid.into());
     }
 
@@ -94,9 +94,6 @@ pub fn process_mine<'a, 'info>(
     if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
     }
-
-    // Calculate base reward rate.
-    let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
         .saturating_mul(2u64.saturating_pow(difficulty));
@@ -187,7 +184,7 @@ pub fn process_mine<'a, 'info>(
 ///
 /// If each transaction is limited to one hash only, then a user will minimize their fee / hash
 /// by allocating all their hashpower to finding the single most difficult hash they can.
-fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
+fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
     #[allow(deprecated)]
     let idx = load_current_index(msg);
     let mut c = 0;
@@ -198,7 +195,6 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c = read_u16(&mut c, msg)? as usize;
         let num_accounts = read_u16(&mut c, msg)? as usize;
         c += num_accounts * 33;
-        // Only allow instructions to call ore and the compute budget program.
         match read_pubkey(&mut c, msg)? {
             ore_api::ID => {
                 c += 2;
@@ -212,13 +208,9 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
                     return Ok(false);
                 }
             }
-            COMPUTE_BUDGET_PROGRAM_ID => {} // Noop
-            _ => return Ok(false),
+            _ => {} // Noop return Ok(false),
         }
     }
 
     Ok(true)
 }
-
-/// Program id of the compute budge program.
-const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");
