@@ -18,7 +18,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     log::sol_log,
     program_error::ProgramError,
-    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16, read_u8},
@@ -195,20 +194,27 @@ fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c = read_u16(&mut c, msg)? as usize;
         let num_accounts = read_u16(&mut c, msg)? as usize;
         c += num_accounts * 33;
-        match read_pubkey(&mut c, msg)? {
-            ore_api::ID => {
-                c += 2;
-                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                    if let OreInstruction::Mine = ix {
-                        if i.ne(&(idx as usize)) {
-                            return Ok(false);
-                        }
-                    }
-                } else {
+        let program_id = read_pubkey(&mut c, msg)?;
+        if i.eq(&(idx as usize)) {
+            // Require top-level instruction at current index is a `mine`
+            if program_id.ne(&ore_api::ID) {
+                return Ok(false);
+            }
+            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                if ix.ne(&OreInstruction::Mine) {
                     return Ok(false);
                 }
             }
-            _ => {} // Noop return Ok(false),
+        } else {
+            // Require no other instructions in the transaction are a `mine`
+            if program_id.eq(&ore_api::ID) {
+                c += 2;
+                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                    if ix.eq(&OreInstruction::Mine) {
+                        return Ok(false);
+                    }
+                }
+            }
         }
     }
 
