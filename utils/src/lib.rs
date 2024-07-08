@@ -1,3 +1,6 @@
+#[cfg(feature = "spl")]
+pub mod spl;
+
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, rent::Rent, sysvar::Sysvar,

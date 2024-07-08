@@ -2624,6 +2624,8 @@ version = "2.0.0"
 dependencies = [
  "bytemuck",
  "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
 ]
 
 [[package]]

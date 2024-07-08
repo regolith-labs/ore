@@ -9,6 +9,12 @@ documentation.workspace = true
 repository.workspace = true
 keywords.workspace = true
 
+[features]
+deafult = []
+spl = ["spl-token", "spl-associated-token-account"]
+
 [dependencies]
 bytemuck.workspace = true
 solana-program.workspace = true
+spl-token = { workspace = true, optional = true }
+spl-associated-token-account = { workspace = true, optional = true }

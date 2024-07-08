@@ -1,4 +1,5 @@
 use ore_api::{consts::*, instruction::StakeArgs, loaders::*, state::Proof};
+use ore_utils::spl::transfer;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
     program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
@@ -43,21 +44,12 @@ pub fn process_stake<'a, 'info>(
     proof.last_stake_at = clock.unix_timestamp;
 
     // Distribute tokens from signer to treasury
-    solana_program::program::invoke(
-        &spl_token::instruction::transfer(
-            &spl_token::id(),
-            sender_info.key,
-            treasury_tokens_info.key,
-            signer.key,
-            &[signer.key],
-            amount,
-        )?,
-        &[
-            token_program.clone(),
-            sender_info.clone(),
-            treasury_tokens_info.clone(),
-            signer.clone(),
-        ],
+    transfer(
+        signer,
+        sender_info,
+        treasury_tokens_info,
+        token_program,
+        amount,
     )?;
 
     Ok(())
