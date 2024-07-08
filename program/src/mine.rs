@@ -39,7 +39,7 @@ use crate::utils::AccountDeserialize;
 /// - Can only succeed if mining is not paused.
 /// - Can only succeed if the last reset was less than 60 seconds ago.
 /// - Can only succeed if the provided hash satisfies the minimum difficulty requirement.
-/// - The the provided proof account must be associated with the signer.
+/// - The provided proof account must be associated with the signer.
 /// - The provided bus, config, noise, stake, and slot hash sysvar must be valid.
 pub fn process_mine<'a, 'info>(
     _program_id: &Pubkey,
