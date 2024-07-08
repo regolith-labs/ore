@@ -1,4 +1,5 @@
 use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::Proof};
+use ore_utils::spl::transfer_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
@@ -45,21 +46,12 @@ pub fn process_claim<'a, 'info>(
         .ok_or(OreError::ClaimTooLarge)?;
 
     // Distribute tokens from treasury to beneficiary
-    solana_program::program::invoke_signed(
-        &spl_token::instruction::transfer(
-            &spl_token::id(),
-            treasury_tokens_info.key,
-            beneficiary_info.key,
-            treasury_info.key,
-            &[treasury_info.key],
-            amount,
-        )?,
-        &[
-            token_program.clone(),
-            treasury_tokens_info.clone(),
-            beneficiary_info.clone(),
-            treasury_info.clone(),
-        ],
+    transfer_signed(
+        treasury_info,
+        treasury_tokens_info,
+        beneficiary_info,
+        token_program,
+        amount,
         &[&[TREASURY, &[TREASURY_BUMP]]],
     )?;
 

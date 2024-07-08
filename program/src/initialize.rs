@@ -6,6 +6,7 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config, Treasury},
 };
+use ore_utils::spl::create_ata;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -209,22 +210,14 @@ pub fn process_initialize<'a, 'info>(
     .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
 
     // Initialize treasury token account
-    solana_program::program::invoke(
-        &spl_associated_token_account::instruction::create_associated_token_account(
-            signer.key,
-            treasury_info.key,
-            mint_info.key,
-            &spl_token::id(),
-        ),
-        &[
-            associated_token_program.clone(),
-            signer.clone(),
-            treasury_tokens_info.clone(),
-            treasury_info.clone(),
-            mint_info.clone(),
-            system_program.clone(),
-            token_program.clone(),
-        ],
+    create_ata(
+        signer,
+        treasury_info,
+        treasury_tokens_info,
+        mint_info,
+        system_program,
+        token_program,
+        associated_token_program,
     )?;
 
     Ok(())

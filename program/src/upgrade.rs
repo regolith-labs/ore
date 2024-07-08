@@ -1,4 +1,5 @@
 use ore_api::{consts::*, error::OreError, instruction::StakeArgs, loaders::*};
+use ore_utils::spl::mint_to_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     program_pack::Pack, pubkey::Pubkey,
@@ -65,21 +66,12 @@ pub fn process_upgrade<'a, 'info>(
     drop(mint_data);
 
     // Mint to the beneficiary account
-    solana_program::program::invoke_signed(
-        &spl_token::instruction::mint_to(
-            &spl_token::id(),
-            mint_info.key,
-            beneficiary_info.key,
-            treasury_info.key,
-            &[treasury_info.key],
-            amount_to_mint,
-        )?,
-        &[
-            token_program.clone(),
-            mint_info.clone(),
-            beneficiary_info.clone(),
-            treasury_info.clone(),
-        ],
+    mint_to_signed(
+        mint_info,
+        beneficiary_info,
+        treasury_info,
+        token_program,
+        amount_to_mint,
         &[&[TREASURY, &[TREASURY_BUMP]]],
     )?;
 
