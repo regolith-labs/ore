@@ -99,28 +99,26 @@ pub fn process_mine<'a, 'info>(
     let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
-        .saturating_mul(2u64.saturating_pow(difficulty));
+        .checked_mul(2u64.checked_pow(difficulty).unwrap())
+        .unwrap();
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
-    if config.max_stake.gt(&0)
-        && proof
-            .last_stake_at
-            .saturating_add(ONE_MINUTE)
-            .le(&clock.unix_timestamp)
-    {
+    let t = clock.unix_timestamp;
+    if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
         let staking_reward = proof
             .balance
             .min(config.max_stake)
-            .saturating_mul(reward)
-            .saturating_div(config.max_stake);
-        reward = reward.saturating_add(staking_reward);
+            .checked_mul(reward)
+            .unwrap()
+            .checked_div(config.max_stake)
+            .unwrap();
+        reward = reward.checked_add(staking_reward).unwrap();
     }
 
     // Reject spam transactions.
-    let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
@@ -130,11 +128,15 @@ pub fn process_mine<'a, 'info>(
     // Apply liveness penalty.
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
-        reward = reward.saturating_sub(
-            reward
-                .saturating_mul(t.saturating_sub(t_liveness) as u64)
-                .saturating_div(ONE_MINUTE as u64),
-        );
+        reward = reward
+            .checked_sub(
+                reward
+                    .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
+                    .unwrap()
+                    .checked_div(ONE_MINUTE as u64)
+                    .unwrap(),
+            )
+            .unwrap();
     }
 
     // Limit payout amount to whatever is left in the bus
@@ -143,9 +145,9 @@ pub fn process_mine<'a, 'info>(
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances
-    bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
-    bus.rewards = bus.rewards.saturating_sub(reward_actual);
-    proof.balance = proof.balance.saturating_add(reward_actual);
+    bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
+    bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
+    proof.balance = proof.balance.checked_add(reward_actual).unwrap();
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.last_hash = hash.h;
@@ -156,10 +158,7 @@ pub fn process_mine<'a, 'info>(
     .0;
 
     // Update time trackers
-    proof.last_hash_at = proof
-        .last_hash_at
-        .saturating_add(ONE_MINUTE)
-        .max(clock.unix_timestamp);
+    proof.last_hash_at = t.max(t_target);
 
     // Update lifetime stats
     proof.total_hashes = proof.total_hashes.saturating_add(1);

@@ -289,9 +289,7 @@ pub fn load_mint<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if Mint::unpack_unchecked(&info.data.borrow()).is_err() {
-        return Err(ProgramError::InvalidAccountData);
-    }
+    Mint::unpack(&info.data.borrow())?;
 
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
@@ -322,8 +320,7 @@ pub fn load_token_account<'a, 'info>(
     }
 
     let account_data = info.data.borrow();
-    let account = spl_token::state::Account::unpack_unchecked(&account_data)
-        .or(Err(ProgramError::InvalidAccountData))?;
+    let account = spl_token::state::Account::unpack(&account_data)?;
 
     if account.mint.ne(&mint) {
         return Err(ProgramError::InvalidAccountData);
