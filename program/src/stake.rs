@@ -36,7 +36,7 @@ pub fn process_stake<'a, 'info>(
     // Update proof balance
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.balance = proof.balance.saturating_add(amount);
+    proof.balance = proof.balance.checked_add(amount).unwrap();
 
     // Update deposit timestamp
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;

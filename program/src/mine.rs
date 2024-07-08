@@ -18,7 +18,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     log::sol_log,
     program_error::ProgramError,
-    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16, read_u8},
@@ -63,7 +62,7 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
     // Validate this is the only mine ix in the transaction.
-    if !validate_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
+    if !introspect_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
         return Err(OreError::TransactionInvalid.into());
     }
 
@@ -94,33 +93,28 @@ pub fn process_mine<'a, 'info>(
     if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
     }
-
-    // Calculate base reward rate.
-    let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
-        .saturating_mul(2u64.saturating_pow(difficulty));
+        .checked_mul(2u64.checked_pow(difficulty).unwrap())
+        .unwrap();
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
-    if config.max_stake.gt(&0)
-        && proof
-            .last_stake_at
-            .saturating_add(ONE_MINUTE)
-            .le(&clock.unix_timestamp)
-    {
+    let t = clock.unix_timestamp;
+    if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
         let staking_reward = proof
             .balance
             .min(config.max_stake)
-            .saturating_mul(reward)
-            .saturating_div(config.max_stake);
-        reward = reward.saturating_add(staking_reward);
+            .checked_mul(reward)
+            .unwrap()
+            .checked_div(config.max_stake)
+            .unwrap();
+        reward = reward.checked_add(staking_reward).unwrap();
     }
 
     // Reject spam transactions.
-    let t = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
@@ -130,11 +124,15 @@ pub fn process_mine<'a, 'info>(
     // Apply liveness penalty.
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
-        reward = reward.saturating_sub(
-            reward
-                .saturating_mul(t.saturating_sub(t_liveness) as u64)
-                .saturating_div(ONE_MINUTE as u64),
-        );
+        reward = reward
+            .checked_sub(
+                reward
+                    .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
+                    .unwrap()
+                    .checked_div(ONE_MINUTE as u64)
+                    .unwrap(),
+            )
+            .unwrap();
     }
 
     // Limit payout amount to whatever is left in the bus
@@ -143,9 +141,9 @@ pub fn process_mine<'a, 'info>(
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances
-    bus.theoretical_rewards = bus.theoretical_rewards.saturating_add(reward);
-    bus.rewards = bus.rewards.saturating_sub(reward_actual);
-    proof.balance = proof.balance.saturating_add(reward_actual);
+    bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
+    bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
+    proof.balance = proof.balance.checked_add(reward_actual).unwrap();
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.last_hash = hash.h;
@@ -156,10 +154,7 @@ pub fn process_mine<'a, 'info>(
     .0;
 
     // Update time trackers
-    proof.last_hash_at = proof
-        .last_hash_at
-        .saturating_add(ONE_MINUTE)
-        .max(clock.unix_timestamp);
+    proof.last_hash_at = t.max(t_target);
 
     // Update lifetime stats
     proof.total_hashes = proof.total_hashes.saturating_add(1);
@@ -187,7 +182,7 @@ pub fn process_mine<'a, 'info>(
 ///
 /// If each transaction is limited to one hash only, then a user will minimize their fee / hash
 /// by allocating all their hashpower to finding the single most difficult hash they can.
-fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
+fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
     #[allow(deprecated)]
     let idx = load_current_index(msg);
     let mut c = 0;
@@ -198,27 +193,29 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c = read_u16(&mut c, msg)? as usize;
         let num_accounts = read_u16(&mut c, msg)? as usize;
         c += num_accounts * 33;
-        // Only allow instructions to call ore and the compute budget program.
-        match read_pubkey(&mut c, msg)? {
-            ore_api::ID => {
-                c += 2;
-                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                    if let OreInstruction::Mine = ix {
-                        if i.ne(&(idx as usize)) {
-                            return Ok(false);
-                        }
-                    }
-                } else {
+        let program_id = read_pubkey(&mut c, msg)?;
+        if i.eq(&(idx as usize)) {
+            // Require top-level instruction at current index is a `mine`
+            if program_id.ne(&ore_api::ID) {
+                return Ok(false);
+            }
+            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                if ix.ne(&OreInstruction::Mine) {
                     return Ok(false);
                 }
             }
-            COMPUTE_BUDGET_PROGRAM_ID => {} // Noop
-            _ => return Ok(false),
+        } else {
+            // Require no other instructions in the transaction are a `mine`
+            if program_id.eq(&ore_api::ID) {
+                c += 2;
+                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                    if ix.eq(&OreInstruction::Mine) {
+                        return Ok(false);
+                    }
+                }
+            }
         }
     }
 
     Ok(true)
 }
-
-/// Program id of the compute budge program.
-const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");

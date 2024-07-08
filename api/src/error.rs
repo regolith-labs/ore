@@ -23,6 +23,10 @@ pub enum OreError {
     ToleranceOverflow = 7,
     #[error("The maximum supply has been reached")]
     MaxSupply = 8,
+    #[error("This account cannot be closed because it's the top staker")]
+    CannotClose = 9,
+    #[error("This account cannot be crowned because its last stake was too recent")]
+    CannotCrown = 10,
 }
 
 impl From<OreError> for ProgramError {
