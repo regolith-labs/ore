@@ -21,11 +21,11 @@ default = []
 [dependencies]
 drillx.workspace = true
 mpl-token-metadata.workspace = true
-ore-api = { path = "../api" }
+ore-api.workspace = true
+ore-utils.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
-utils.workspace = true
 
 [dev-dependencies]
 bs64 = "0.1.2"

@@ -2591,13 +2591,13 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "num_enum 0.7.2",
+ "ore-utils",
  "shank",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
  "thiserror",
- "utils",
 ]
 
 [[package]]
@@ -2608,6 +2608,7 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "ore-api",
+ "ore-utils",
  "rand 0.8.5",
  "solana-program",
  "solana-program-test",
@@ -2615,7 +2616,14 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "tokio",
- "utils",
+]
+
+[[package]]
+name = "ore-utils"
+version = "2.0.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
 ]
 
 [[package]]
@@ -5713,14 +5721,6 @@ name = "utf-8"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
-
-[[package]]
-name = "utils"
-version = "2.0.0"
-dependencies = [
- "bytemuck",
- "solana-program",
-]
 
 [[package]]
 name = "valuable"

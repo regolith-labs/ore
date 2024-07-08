@@ -26,7 +26,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-pub(crate) use utils;
+pub(crate) use ore_utils as utils;
 
 #[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
