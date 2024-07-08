@@ -6,7 +6,8 @@ use solana_program::{pubkey, pubkey::Pubkey};
 pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
 
 /// The admin allowed to initialize the program.
-pub const INITIAL_ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+// pub const INITIAL_ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+pub const INITIAL_ADMIN: Pubkey = pubkey!("DEuG4JnzvMVxMFPoBVvf2GH38mn3ybunMxtfmVU3ms86");
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
@@ -123,7 +124,8 @@ pub const MINT_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).0);
 
 /// The address of the v1 mint account.
-pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
+// pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
+pub const MINT_V1_ADDRESS: Pubkey = pubkey!("2Hr9iaAd7a5q9V4XmLHPBtSZcfhff8RBrvaG6zf2bEae");
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
