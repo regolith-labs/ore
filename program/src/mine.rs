@@ -18,7 +18,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     log::sol_log,
     program_error::ProgramError,
-    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16, read_u8},
@@ -63,7 +62,7 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
     // Validate this is the only mine ix in the transaction.
-    if !validate_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
+    if !introspect_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
         return Err(OreError::TransactionInvalid.into());
     }
 
@@ -94,9 +93,6 @@ pub fn process_mine<'a, 'info>(
     if difficulty.lt(&MIN_DIFFICULTY) {
         return Err(OreError::HashTooEasy.into());
     }
-
-    // Calculate base reward rate.
-    let difficulty = difficulty.saturating_sub(MIN_DIFFICULTY);
     let mut reward = config
         .base_reward_rate
         .checked_mul(2u64.checked_pow(difficulty).unwrap())
@@ -186,7 +182,7 @@ pub fn process_mine<'a, 'info>(
 ///
 /// If each transaction is limited to one hash only, then a user will minimize their fee / hash
 /// by allocating all their hashpower to finding the single most difficult hash they can.
-fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
+fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
     #[allow(deprecated)]
     let idx = load_current_index(msg);
     let mut c = 0;
@@ -197,27 +193,29 @@ fn validate_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
         c = read_u16(&mut c, msg)? as usize;
         let num_accounts = read_u16(&mut c, msg)? as usize;
         c += num_accounts * 33;
-        // Only allow instructions to call ore and the compute budget program.
-        match read_pubkey(&mut c, msg)? {
-            ore_api::ID => {
-                c += 2;
-                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                    if let OreInstruction::Mine = ix {
-                        if i.ne(&(idx as usize)) {
-                            return Ok(false);
-                        }
-                    }
-                } else {
+        let program_id = read_pubkey(&mut c, msg)?;
+        if i.eq(&(idx as usize)) {
+            // Require top-level instruction at current index is a `mine`
+            if program_id.ne(&ore_api::ID) {
+                return Ok(false);
+            }
+            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                if ix.ne(&OreInstruction::Mine) {
                     return Ok(false);
                 }
             }
-            COMPUTE_BUDGET_PROGRAM_ID => {} // Noop
-            _ => return Ok(false),
+        } else {
+            // Require no other instructions in the transaction are a `mine`
+            if program_id.eq(&ore_api::ID) {
+                c += 2;
+                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
+                    if ix.eq(&OreInstruction::Mine) {
+                        return Ok(false);
+                    }
+                }
+            }
         }
     }
 
     Ok(true)
 }
-
-/// Program id of the compute budge program.
-const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");
