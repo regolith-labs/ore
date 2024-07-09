@@ -19,8 +19,8 @@ const-crypto = "0.1.0"
 drillx = { version = "2.0.0-alpha", features = ["solana"] } 
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
-ore-api = "2.0.0-alpha"
-ore-utils = { version = "2.0.0-alpha", features = ["spl"] }
+ore-api = { path = "api", version = "2.0.0-beta" }
+ore-utils = { path = "utils", version = "2.0.0-beta", features = ["spl"] }
 shank = "0.3.0"
 solana-program = "=1.18.17"
 spl-memo = { veresion = "=4.0.0", features = ["no-entrypoint"] }
@@ -28,7 +28,3 @@ spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
 thiserror = "1.0.57"
-
-[patch.crates-io]
-ore-api = { path = "api" }
-ore-utils = { path = "utils" }
