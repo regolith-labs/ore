@@ -31,6 +31,7 @@ pub enum OreError {
 
 impl From<OreError> for ProgramError {
     fn from(e: OreError) -> Self {
-        ProgramError::Custom(e as u32)
+        let f = (e as u32) + 300;
+        ProgramError::Custom(f)
     }
 }
