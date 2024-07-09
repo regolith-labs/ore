@@ -23,6 +23,7 @@ ore-api = "2.0.0-alpha"
 ore-utils = { version = "2.0.0-alpha", features = ["spl"] }
 shank = "0.3.0"
 solana-program = "=1.18.17"
+spl-memo = { veresion = "=4.0.0", features = ["no-entrypoint"] }
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
