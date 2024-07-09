@@ -148,7 +148,7 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
-    let new_rate_smoothed = new_rate_min.max(new_rate_max.min(new_rate));
+    let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
 
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
     new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
@@ -182,8 +182,10 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_lower() {
         let current_rate = 1000;
-        let new_rate =
-            calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_add(1_000_000));
+        let new_rate = calculate_new_reward_rate(
+            current_rate,
+            TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
+        );
         assert!(new_rate.lt(&current_rate));
     }
 
@@ -202,9 +204,10 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_higher() {
         let current_rate = 1000;
-        let new_rate =
-            calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS.saturating_sub(1_000_000));
-        println!("{:?} {:?}", new_rate, current_rate);
+        let new_rate = calculate_new_reward_rate(
+            current_rate,
+            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000),
+        );
         assert!(new_rate.gt(&current_rate));
     }
 
