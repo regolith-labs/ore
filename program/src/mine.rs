@@ -199,6 +199,7 @@ fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
             if program_id.ne(&ore_api::ID) {
                 return Ok(false);
             }
+            c += 2;
             if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
                 if ix.ne(&OreInstruction::Mine) {
                     return Ok(false);
