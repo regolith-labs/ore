@@ -3,7 +3,7 @@ resolver = "2"
 members = ["api", "program", "utils"]
 
 [workspace.package]
-version = "2.0.0-alpha"
+version = "2.0.0-beta"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
@@ -25,7 +25,7 @@ shank = "0.3.0"
 solana-program = "=1.18.17"
 spl-memo = { veresion = "=4.0.0", features = ["no-entrypoint"] }
 spl-token = { version = "=4.0.0", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "^2.2", features = [ "no-entrypoint" ] } 
+spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
 thiserror = "1.0.57"
 
