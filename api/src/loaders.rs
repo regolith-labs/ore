@@ -1,6 +1,6 @@
 use solana_program::{
-    account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    system_program, sysvar,
+    account_info::AccountInfo, log::sol_log, program_error::ProgramError, program_pack::Pack,
+    pubkey::Pubkey, system_program, sysvar,
 };
 use spl_token::state::Mint;
 
@@ -36,6 +36,11 @@ pub fn load_bus<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
+    sol_log(&format!("key: {}", info.key.to_string()));
+    sol_log(&format!(
+        "bus address: {}",
+        BUS_ADDRESSES[id as usize].to_string()
+    ));
     if info.key.ne(&BUS_ADDRESSES[id as usize]) {
         return Err(ProgramError::InvalidSeeds);
     }
@@ -106,6 +111,8 @@ pub fn load_config<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
+    sol_log(&format!("key: {}", info.key.to_string()));
+    sol_log(&format!("config address: {}", CONFIG_ADDRESS.to_string()));
     if info.key.ne(&CONFIG_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
@@ -233,6 +240,11 @@ pub fn load_treasury<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
+    sol_log(&format!("key: {}", info.key.to_string()));
+    sol_log(&format!(
+        "treasury address: {}",
+        TREASURY_ADDRESS.to_string()
+    ));
     if info.key.ne(&TREASURY_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }

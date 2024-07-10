@@ -5,7 +5,7 @@ use ore_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, log::sol_log,
     program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, sysvar::Sysvar,
 };
 use spl_token::state::Mint;
@@ -42,18 +42,31 @@ pub fn process_reset<'a, 'info>(
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
+    sol_log("loading signer");
     load_signer(signer)?;
+    sol_log("loading bus 0");
     load_bus(bus_0_info, 0, true)?;
+    sol_log("loading bus 1");
     load_bus(bus_1_info, 1, true)?;
+    sol_log("loading bus 2");
     load_bus(bus_2_info, 2, true)?;
+    sol_log("loading bus 3");
     load_bus(bus_3_info, 3, true)?;
+    sol_log("loading bus 4");
     load_bus(bus_4_info, 4, true)?;
+    sol_log("loading bus 5");
     load_bus(bus_5_info, 5, true)?;
+    sol_log("loading bus 6");
     load_bus(bus_6_info, 6, true)?;
+    sol_log("loading bus 7");
     load_bus(bus_7_info, 7, true)?;
+    sol_log("loading config");
     load_config(config_info, true)?;
+    sol_log("loading mint");
     load_mint(mint_info, MINT_ADDRESS, true)?;
+    sol_log("loading treasury");
     load_treasury(treasury_info, true)?;
+    sol_log("loading treasury tokens");
     load_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
     let busses: [&AccountInfo; BUS_COUNT] = [
