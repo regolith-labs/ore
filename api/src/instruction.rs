@@ -230,12 +230,17 @@ pub fn close(signer: Pubkey) -> Instruction {
 }
 
 /// Builds a mine instruction.
-pub fn mine(signer: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+pub fn mine(
+    miner: Pubkey,
+    proof_authority: Pubkey,
+    bus: Pubkey,
+    solution: Solution,
+) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
-            AccountMeta::new(signer, true),
+            AccountMeta::new(miner, true),
             AccountMeta::new(bus, false),
             AccountMeta::new_readonly(CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
