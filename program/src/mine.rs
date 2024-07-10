@@ -131,7 +131,7 @@ pub fn process_mine<'a, 'info>(
         .unwrap();
     sol_log(&format!("ratio: {}", ratio));
     if t.gt(&t_liveness) {
-        let reward_diff = reward.checked_sub(ratio).unwrap();
+        let reward_diff = reward.saturating_sub(ratio);
         sol_log(&format!("reward_diff: {}", reward_diff));
         reward = reward_diff;
     }
