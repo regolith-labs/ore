@@ -256,14 +256,13 @@ pub fn mine(signer: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
 }
 
 /// Builds an open instruction.
-pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
+pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(miner, true),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
