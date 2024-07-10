@@ -271,9 +271,15 @@ pub fn load_treasury_tokens<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
+    sol_log(&format!("key: {}", info.key.to_string()));
+    sol_log(&format!(
+        "treasury tokens address: {}",
+        TREASURY_TOKENS_ADDRESS.to_string()
+    ));
     if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
+    sol_log("validated");
 
     load_token_account(info, Some(&TREASURY_ADDRESS), &MINT_ADDRESS, is_writable)
 }

@@ -113,6 +113,8 @@ pub fn process_reset<'a, 'info>(
         return Err(OreError::MaxSupply.into());
     }
 
+    sol_log("funding treasury token account");
+
     // Fund treasury token account
     let amount = MAX_SUPPLY
         .saturating_sub(mint.supply)
