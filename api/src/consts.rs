@@ -142,7 +142,7 @@ pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
             unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
             unsafe { &*(&MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
         ],
-        unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
+        unsafe { &*(&spl_associated_token_account::id() as *const Pubkey as *const [u8; 32]) },
     )
     .0,
 );
