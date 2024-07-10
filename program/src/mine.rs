@@ -97,6 +97,7 @@ pub fn process_mine<'a, 'info>(
         .base_reward_rate
         .checked_mul(2u64.checked_pow(difficulty).unwrap())
         .unwrap();
+    sol_log(&format!("reward: {}", reward));
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
@@ -123,16 +124,16 @@ pub fn process_mine<'a, 'info>(
 
     // Apply liveness penalty.
     let t_liveness = t_target.saturating_add(TOLERANCE);
+    let ratio = reward
+        .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
+        .unwrap()
+        .checked_div(ONE_MINUTE as u64)
+        .unwrap();
+    sol_log(&format!("ratio: {}", ratio));
     if t.gt(&t_liveness) {
-        reward = reward
-            .checked_sub(
-                reward
-                    .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
-                    .unwrap()
-                    .checked_div(ONE_MINUTE as u64)
-                    .unwrap(),
-            )
-            .unwrap();
+        let reward_diff = reward.checked_sub(ratio).unwrap();
+        sol_log(&format!("reward_diff: {}", reward_diff));
+        reward = reward_diff;
     }
 
     // Limit payout amount to whatever is left in the bus
