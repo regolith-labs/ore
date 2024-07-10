@@ -1319,6 +1319,7 @@ dependencies = [
  "shank",
  "solana-program",
  "spl-associated-token-account",
+ "spl-memo",
  "spl-token",
  "static_assertions",
  "thiserror",

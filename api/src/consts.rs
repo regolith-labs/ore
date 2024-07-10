@@ -78,7 +78,7 @@ pub const TREASURY: &[u8] = b"treasury";
 
 /// Noise for deriving the mint pda
 pub const MINT_NOISE: [u8; 16] = [
-    166, 199, 85, 221, 225, 119, 21, 185, 160, 82, 242, 237, 194, 84, 250, 252,
+    89, 157, 88, 232, 243, 249, 197, 132, 199, 49, 19, 234, 91, 94, 150, 41,
 ];
 
 /// The name for token metadata.
