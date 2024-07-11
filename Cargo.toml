@@ -16,7 +16,7 @@ keywords = ["solana", "crypto", "mining"]
 array-const-fn-init = "0.1.1"
 bytemuck = "1.14.3"
 const-crypto = "0.1.0"
-drillx = { version = "2.0.0-alpha", features = ["solana"] } 
+drillx = { version = "2.0.0-beta", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 ore-api = { path = "api", version = "2.0.0-beta" }

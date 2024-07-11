@@ -723,9 +723,9 @@ dependencies = [
 
 [[package]]
 name = "drillx"
-version = "2.0.0-alpha"
+version = "2.0.0-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea238c16b88704ada0d49d7c024936e1809666d068441a2842d5590667caa31"
+checksum = "a3e8d2de66aeedec77a653a4e2cf0cf4de4ddf556947214becfc16de4604c5db"
 dependencies = [
  "blake3",
  "equix",
