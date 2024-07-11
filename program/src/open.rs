@@ -33,11 +33,13 @@ pub fn process_open<'a, 'info>(
     let args = OpenArgs::try_from_bytes(data)?;
 
     // Load accounts
-    let [signer, miner_info, proof_info, system_program, slot_hashes_info] = accounts else {
+    let [signer, miner_info, payer_info, proof_info, system_program, slot_hashes_info] = accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
     load_system_account(miner_info, false)?;
+    load_signer(payer_info)?;
     load_uninitialized_pda(
         proof_info,
         &[PROOF, signer.key.as_ref()],
@@ -54,7 +56,7 @@ pub fn process_open<'a, 'info>(
         8 + size_of::<Proof>(),
         &[PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,
-        signer,
+        payer_info,
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
