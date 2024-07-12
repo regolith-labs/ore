@@ -97,7 +97,6 @@ pub fn process_mine<'a, 'info>(
         .base_reward_rate
         .checked_mul(2u64.checked_pow(difficulty).unwrap())
         .unwrap();
-    sol_log(&format!("reward: {}", reward));
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
@@ -105,13 +104,11 @@ pub fn process_mine<'a, 'info>(
     // if the miner's last stake deposit was more than one minute ago.
     let t = clock.unix_timestamp;
     if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
-        let staking_reward = proof
-            .balance
-            .min(config.max_stake)
-            .checked_mul(reward)
+        let staking_reward = (reward as u128)
+            .checked_mul(proof.balance.min(config.max_stake) as u128)
             .unwrap()
-            .checked_div(config.max_stake)
-            .unwrap();
+            .checked_div(config.max_stake as u128)
+            .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
     }
 
@@ -124,16 +121,14 @@ pub fn process_mine<'a, 'info>(
 
     // Apply liveness penalty.
     let t_liveness = t_target.saturating_add(TOLERANCE);
-    let ratio = reward
-        .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
-        .unwrap()
-        .checked_div(ONE_MINUTE as u64)
-        .unwrap();
-    sol_log(&format!("ratio: {}", ratio));
     if t.gt(&t_liveness) {
-        let reward_diff = reward.saturating_sub(ratio);
-        sol_log(&format!("reward_diff: {}", reward_diff));
-        reward = reward_diff;
+        reward = reward.saturating_sub(
+            reward
+                .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
+                .unwrap()
+                .checked_div(ONE_MINUTE as u64)
+                .unwrap(),
+        );
     }
 
     // Limit payout amount to whatever is left in the bus
@@ -200,6 +195,7 @@ fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
             if program_id.ne(&ore_api::ID) {
                 return Ok(false);
             }
+            c += 2;
             if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
                 if ix.ne(&OreInstruction::Mine) {
                     return Ok(false);

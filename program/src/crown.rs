@@ -40,11 +40,11 @@ pub fn process_crown<'a, 'info>(
     // If top staker is the default null address, skip this.
     let mut config_data = config_info.data.borrow_mut();
     let config = Config::try_from_bytes_mut(&mut config_data)?;
-    let proof_data = proof_info.data.borrow();
-    let proof = Proof::try_from_bytes(&proof_data)?;
     if config.top_staker.ne(&Pubkey::new_from_array([0; 32])) {
         // Load current top staker
         load_any_proof(proof_info, false)?;
+        let proof_data = proof_info.data.borrow();
+        let proof = Proof::try_from_bytes(&proof_data)?;
         if proof_info.key.ne(&config.top_staker) {
             return Ok(());
         }

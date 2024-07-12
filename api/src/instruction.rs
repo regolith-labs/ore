@@ -50,8 +50,11 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "system_program", desc = "Solana system program")]
+    #[account(2, name = "miner", desc = "Address to be initialized as the miner")]
+    #[account(3, name = "payer", desc = "Account to pay for account creation", writable, signer)]
+    #[account(4, name = "proof", desc = "Ore proof account", writable)]
+    #[account(5, name = "system_program", desc = "Solana system program")]
+    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Open = 4,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -225,6 +228,21 @@ pub fn close(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: OreInstruction::Close.to_vec(),
+    }
+}
+
+/// Builds a crown instruction.
+pub fn crown(signer: Pubkey, current_top_staker: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(CONFIG_ADDRESS, false),
+            AccountMeta::new_readonly(current_top_staker, false),
+            AccountMeta::new_readonly(proof_pda.0, false),
+        ],
+        data: OreInstruction::Crown.to_vec(),
     }
 }
 
