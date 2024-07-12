@@ -104,13 +104,11 @@ pub fn process_mine<'a, 'info>(
     // if the miner's last stake deposit was more than one minute ago.
     let t = clock.unix_timestamp;
     if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
-        let staking_reward = proof
-            .balance
-            .min(config.max_stake)
-            .checked_mul(reward)
+        let staking_reward = (reward as u128)
+            .checked_mul(proof.balance.min(config.max_stake) as u128)
             .unwrap()
-            .checked_div(config.max_stake)
-            .unwrap();
+            .checked_div(config.max_stake as u128)
+            .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
     }
 

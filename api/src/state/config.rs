@@ -10,7 +10,7 @@ use super::AccountDiscriminator;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Config {
-    /// The admin authority with permission to update the difficulty.
+    // TODO Remove this
     pub admin: Pubkey,
 
     /// The base reward rate paid out for a hash of minimum difficulty.
