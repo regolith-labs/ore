@@ -197,7 +197,6 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(beneficiary, false),
-            AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
