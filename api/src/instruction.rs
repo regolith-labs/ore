@@ -231,6 +231,21 @@ pub fn close(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds a crown instruction.
+pub fn crown(signer: Pubkey, current_top_staker: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(CONFIG_ADDRESS, false),
+            AccountMeta::new_readonly(current_top_staker, false),
+            AccountMeta::new_readonly(proof_pda.0, false),
+        ],
+        data: OreInstruction::Crown.to_vec(),
+    }
+}
+
 /// Builds a mine instruction.
 pub fn mine(signer: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
