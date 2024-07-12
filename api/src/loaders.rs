@@ -262,6 +262,7 @@ pub fn load_treasury_tokens<'a, 'info>(
     if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
+
     load_token_account(info, Some(&TREASURY_ADDRESS), &MINT_ADDRESS, is_writable)
 }
 

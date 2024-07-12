@@ -248,7 +248,7 @@ pub fn crown(signer: Pubkey, current_top_staker: Pubkey) -> Instruction {
 
 /// Builds a mine instruction.
 pub fn mine(
-    miner: Pubkey,
+    signer: Pubkey,
     proof_authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
@@ -257,7 +257,7 @@ pub fn mine(
     Instruction {
         program_id: crate::id(),
         accounts: vec![
-            AccountMeta::new(miner, true),
+            AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
             AccountMeta::new_readonly(CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
