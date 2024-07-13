@@ -40,10 +40,10 @@ pub fn process_claim<'a, 'info>(
     // Update miner balance
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.balance = proof
-        .balance
-        .checked_sub(amount)
-        .ok_or(OreError::ClaimTooLarge)?;
+
+    if proof.balance < amount {
+        return Err(OreError::ClaimTooLarge.into());
+    }
 
     // Distribute tokens from treasury to beneficiary
     transfer_signed(
@@ -54,6 +54,11 @@ pub fn process_claim<'a, 'info>(
         amount,
         &[&[TREASURY, &[TREASURY_BUMP]]],
     )?;
+
+    proof.balance = proof
+        .balance
+        .checked_sub(amount)
+        .ok_or(OreError::ClaimTooLarge)?;
 
     Ok(())
 }
