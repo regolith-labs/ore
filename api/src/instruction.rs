@@ -280,6 +280,7 @@ pub fn open(signer: Pubkey, miner: Pubkey) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(signer, true),
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
