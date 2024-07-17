@@ -103,7 +103,10 @@ pub fn process_mine<'a, 'info>(
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
     let t = clock.unix_timestamp;
-    if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+    if config.max_stake.gt(&0)
+        && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t)
+        && proof.balance > 0
+    {
         let staking_reward = (reward as u128)
             .checked_mul(proof.balance.min(config.max_stake) as u128)
             .unwrap()
