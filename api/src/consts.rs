@@ -2,17 +2,25 @@ use array_const_fn_init::array_const_fn_init;
 use const_crypto::ed25519;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-/// The reward rate to intialize the program with.
-pub const INITIAL_BASE_REWARD_RATE: u64 = 10u64.pow(3u32);
-
 /// The admin allowed to initialize the program.
-pub const INITIAL_ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+pub const ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+
+/// The reward rate to intialize the program with.
+pub const INITIAL_BASE_REWARD_RATE: u64 = 2u64.pow(25); // 10u64.pow(3u32);
+
+/// The minimum threshold for the base reward rate, at which point the min difficulty should be increased
+// TODO 2^8 (0.00000000256)
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(24);
+
+/// The maximum threshold for the base reward rate, at which point the min difficulty should be decreased.
+// TODO 2^32 (0.04294967296)
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(26);
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
 
-/// The minimum difficulty required of all submitted hashes.
-pub const MIN_DIFFICULTY: u32 = 8;
+/// The minimum difficulty to initialize the program with.
+pub const INITIAL_MIN_DIFFICULTY: u32 = 0; // 8;
 
 /// The decimal precision of the ORE token.
 /// There are 100 billion indivisible units per ORE (called "grains").
