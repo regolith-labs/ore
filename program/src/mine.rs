@@ -110,7 +110,10 @@ pub fn process_mine<'a, 'info>(
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
-    if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+    if config.max_stake.gt(&0) 
+        && proof.balance.gt(&0)
+        && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t)
+    {
         let staking_reward = (reward as u128)
             .checked_mul(proof.balance.min(config.max_stake) as u128)
             .unwrap()
