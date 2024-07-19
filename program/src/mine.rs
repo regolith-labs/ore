@@ -89,25 +89,30 @@ pub fn process_mine<'a, 'info>(
     // Validate hash satisfies the minimnum difficulty.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
-    sol_log(&format!("Diff {}", difficulty));
-    if difficulty.lt(&MIN_DIFFICULTY) {
+    if difficulty.lt(&(config.min_difficulty as u32)) {
         return Err(OreError::HashTooEasy.into());
     }
+
+    // Normalize difficulty and calculate reward rate
+    let normalized_difficulty = difficulty
+        .checked_sub(config.min_difficulty as u32)
+        .unwrap();
     let mut reward = config
         .base_reward_rate
-        .checked_mul(2u64.checked_pow(difficulty).unwrap())
+        .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
+    sol_log(&format!("Diff {}", difficulty));
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
     let t = clock.unix_timestamp;
-    if config.max_stake.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+    if config.top_staker_balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
         let staking_reward = (reward as u128)
-            .checked_mul(proof.balance.min(config.max_stake) as u128)
+            .checked_mul(proof.balance.min(config.top_staker_balance) as u128)
             .unwrap()
-            .checked_div(config.max_stake as u128)
+            .checked_div(config.top_staker_balance as u128)
             .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
     }
