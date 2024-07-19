@@ -86,6 +86,14 @@ pub fn process_mine<'a, 'info>(
         return Err(OreError::HashInvalid.into());
     }
 
+    // Reject spam transactions.
+    let t: i64 = clock.unix_timestamp;
+    let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
+    let t_spam = t_target.saturating_sub(TOLERANCE);
+    if t.lt(&t_spam) {
+        return Err(OreError::Spam.into());
+    }
+
     // Validate hash satisfies the minimnum difficulty.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
@@ -107,21 +115,16 @@ pub fn process_mine<'a, 'info>(
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
-    let t = clock.unix_timestamp;
-    if config.top_staker_balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+    if config.max_stake.gt(&0) 
+        && proof.balance.gt(&0)
+        && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t)
+    {
         let staking_reward = (reward as u128)
             .checked_mul(proof.balance.min(config.top_staker_balance) as u128)
             .unwrap()
             .checked_div(config.top_staker_balance as u128)
             .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
-    }
-
-    // Reject spam transactions.
-    let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
-    let t_spam = t_target.saturating_sub(TOLERANCE);
-    if t.lt(&t_spam) {
-        return Err(OreError::Spam.into());
     }
 
     // Apply liveness penalty.
