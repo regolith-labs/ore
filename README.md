@@ -1,6 +1,6 @@
 # ORE
 
-**ORE is a fair-launch, proof-of-work, digital currency everyone can mine.**
+**ORE is a fair launch, proof of work, digital currency everyone can mine.**
 
 
 ## API
