@@ -1,8 +1,4 @@
-use ore_api::{
-    error::OreError,
-    loaders::*,
-    state::{Config, Proof},
-};
+use ore_api::{loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey, system_program,
@@ -24,20 +20,12 @@ pub fn process_close<'a, 'info>(
     _data: &[u8],
 ) -> ProgramResult {
     // Load accounts
-    let [signer, config_info, proof_info, system_program] = accounts else {
+    let [signer, proof_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_config(config_info, false)?;
     load_proof(proof_info, signer.key, true)?;
     load_program(system_program, system_program::id())?;
-
-    // Validate the account is not the crowned top staker.
-    let config_data = config_info.data.borrow();
-    let config = Config::try_from_bytes(&config_data)?;
-    if config.top_staker.eq(proof_info.key) {
-        return Err(OreError::CannotClose.into());
-    }
 
     // Validate balance is zero
     let proof_data = proof_info.data.borrow();

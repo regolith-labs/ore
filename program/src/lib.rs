@@ -1,6 +1,5 @@
 mod claim;
 mod close;
-mod crown;
 mod initialize;
 mod mine;
 mod open;
@@ -11,7 +10,6 @@ mod upgrade;
 
 use claim::*;
 use close::*;
-use crown::*;
 use initialize::*;
 use mine::*;
 use open::*;
@@ -47,7 +45,6 @@ pub fn process_instruction(
     match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Close => process_close(program_id, accounts, data)?,
-        OreInstruction::Crown => process_crown(program_id, accounts, data)?,
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
         OreInstruction::Open => process_open(program_id, accounts, data)?,
         OreInstruction::Reset => process_reset(program_id, accounts, data)?,

@@ -115,14 +115,14 @@ pub fn process_mine<'a, 'info>(
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
-    if config.top_staker_balance.gt(&0)
+    if config.top_balance.gt(&0)
         && proof.balance.gt(&0)
-        && proof.last_stake_at.saturating_add(ONE_MINUTE).le(&t)
+        && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t)
     {
         let staking_reward = (reward as u128)
-            .checked_mul(proof.balance.min(config.top_staker_balance) as u128)
+            .checked_mul(proof.balance.min(config.top_balance) as u128)
             .unwrap()
-            .checked_div(config.top_staker_balance as u128)
+            .checked_div(config.top_balance as u128)
             .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
     }
@@ -148,6 +148,9 @@ pub fn process_mine<'a, 'info>(
     bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
     bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
     proof.balance = proof.balance.checked_add(reward_actual).unwrap();
+    if proof.balance.gt(&bus.top_balance) {
+        bus.top_balance = proof.balance;
+    }
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.last_hash = hash.h;
