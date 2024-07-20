@@ -91,7 +91,7 @@ pub fn process_initialize<'a, 'info>(
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Check signer
-    if signer.key.ne(&INITIAL_ADMIN) {
+    if signer.key.ne(&INITIALIZER_ADDRESS) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
@@ -140,8 +140,9 @@ pub fn process_initialize<'a, 'info>(
     let config = Config::try_from_bytes_mut(&mut config_data)?;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
-    config.max_stake = 0;
+    config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_staker = Pubkey::new_from_array([0; 32]);
+    config.top_staker_balance = 0;
 
     // Initialize treasury
     create_pda(

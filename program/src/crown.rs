@@ -56,8 +56,8 @@ pub fn process_crown<'a, 'info>(
     }
 
     // Crown the new top staker.
-    config.max_stake = proof_new.balance;
     config.top_staker = *proof_new_info.key;
+    config.top_staker_balance = proof_new.balance;
 
     Ok(())
 }

@@ -94,6 +94,18 @@ pub fn process_reset<'a, 'info>(
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
+    // If base_reward_rate is too low, then increment difficulty by 1 and double base reward rate
+    if config.base_reward_rate.le(&BASE_REWARD_RATE_MIN_THRESHOLD) {
+        config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
+        config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
+    }
+
+    // If base reward rate is too high, then decrement difficulty by 1 and halve base reward rate
+    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&0) {
+        config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
+        config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
+    }
+
     // Max supply check
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
     if mint.supply.ge(&MAX_SUPPLY) {
@@ -160,7 +172,8 @@ mod tests {
 
     use crate::calculate_new_reward_rate;
     use ore_api::consts::{
-        BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS,
+        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        TARGET_EPOCH_REWARDS,
     };
 
     const FUZZ_SIZE: u64 = 10_000;
@@ -186,6 +199,13 @@ mod tests {
             current_rate,
             TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
         );
+        assert!(new_rate.lt(&current_rate));
+    }
+
+    #[test]
+    fn test_calculate_new_reward_rate_lower_edge() {
+        let current_rate = BASE_REWARD_RATE_MIN_THRESHOLD;
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS + 1);
         assert!(new_rate.lt(&current_rate));
     }
 
