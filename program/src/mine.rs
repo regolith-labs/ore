@@ -115,6 +115,8 @@ pub fn process_mine<'a, 'info>(
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago.
+    let mut bus_data = bus_info.data.borrow_mut();
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if config.top_balance.gt(&0)
         && proof.balance.gt(&0)
         && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t)
@@ -125,6 +127,11 @@ pub fn process_mine<'a, 'info>(
             .checked_div(config.top_balance as u128)
             .unwrap() as u64;
         reward = reward.checked_add(staking_reward).unwrap();
+
+        // Update bus stake tracker if stake is active
+        if proof.balance.gt(&bus.top_balance) {
+            bus.top_balance = proof.balance;
+        }
     }
 
     // Apply liveness penalty.
@@ -140,17 +147,12 @@ pub fn process_mine<'a, 'info>(
     }
 
     // Limit payout amount to whatever is left in the bus
-    let mut bus_data = bus_info.data.borrow_mut();
-    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances
     bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
     bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
     proof.balance = proof.balance.checked_add(reward_actual).unwrap();
-    if proof.balance.gt(&bus.top_balance) {
-        bus.top_balance = proof.balance;
-    }
 
     // Hash recent slot hash into the next challenge to prevent pre-mining attacks
     proof.last_hash = hash.h;
