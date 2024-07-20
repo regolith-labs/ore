@@ -1,6 +1,5 @@
 use bytemuck::{Pod, Zeroable};
 use shank::ShankAccount;
-use solana_program::pubkey::Pubkey;
 
 use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
@@ -19,11 +18,8 @@ pub struct Config {
     /// The minimum accepted difficulty.
     pub min_difficulty: u64,
 
-    /// The address of the proof account with the highest stake balance.
-    pub top_staker: Pubkey,
-
-    /// The largest known stake balance on the network.
-    pub top_staker_balance: u64,
+    /// The largest known stake balance on the network from the last epoch.
+    pub top_balance: u64,
 }
 
 impl Discriminator for Config {

@@ -141,8 +141,7 @@ pub fn process_initialize<'a, 'info>(
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
-    config.top_staker = Pubkey::new_from_array([0; 32]);
-    config.top_staker_balance = 0;
+    config.top_balance = 0;
 
     // Initialize treasury
     create_pda(

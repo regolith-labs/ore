@@ -19,6 +19,9 @@ pub struct Bus {
     /// The rewards this bus would have paid out in the current epoch if there no limit.
     /// Used to calculate the updated reward rate.
     pub theoretical_rewards: u64,
+
+    /// The largest known stake balance seen by the bus this epoch.
+    pub top_balance: u64,
 }
 
 impl Discriminator for Bus {

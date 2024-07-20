@@ -79,9 +79,13 @@ pub fn process_reset<'a, 'info>(
     // Reset bus accounts and calculate actual rewards mined since last reset
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
+    let mut top_balance = 0u64;
     for i in 0..BUS_COUNT {
         let mut bus_data = busses[i].data.borrow_mut();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        if bus.top_balance.gt(&top_balance) {
+            top_balance = bus.top_balance;
+        }
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
         total_theoretical_rewards =
             total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
@@ -89,6 +93,9 @@ pub fn process_reset<'a, 'info>(
         bus.theoretical_rewards = 0;
     }
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
+
+    // Update the top balance
+    config.top_balance = top_balance;
 
     // Update base reward rate for next epoch
     config.base_reward_rate =

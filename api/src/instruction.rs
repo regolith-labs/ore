@@ -34,19 +34,12 @@ pub enum OreInstruction {
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "config", desc = "Ore config account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account – current top staker")]
-    #[account(4, name = "proof_new", desc = "Ore proof account – new top staker")]
-    Crown = 2,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
     #[account(3, name = "config", desc = "Ore config account")]
     #[account(4, name = "noise", desc = "Ore noise account")]
     #[account(5, name = "proof", desc = "Ore proof account", writable)]
     #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
-    Mine = 3,
+    Mine = 2,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -55,7 +48,7 @@ pub enum OreInstruction {
     #[account(4, name = "proof", desc = "Ore proof account", writable)]
     #[account(5, name = "system_program", desc = "Solana system program")]
     #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
-    Open = 4,
+    Open = 3,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -72,7 +65,7 @@ pub enum OreInstruction {
     #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
     #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(14, name = "token_program", desc = "SPL token program")]
-    Reset = 5,
+    Reset = 4,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -80,12 +73,12 @@ pub enum OreInstruction {
     #[account(3, name = "sender", desc = "Signer token account", writable)]
     #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
     #[account(5, name = "token_program", desc = "SPL token program")]
-    Stake = 6,
+    Stake = 5,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    Update = 7,
+    Update = 6,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Signer", signer)]
@@ -95,7 +88,7 @@ pub enum OreInstruction {
     #[account(5, name = "mint", desc = "Ore token mint account", writable)]
     #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
-    Upgrade = 8,
+    Upgrade = 7,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]
@@ -228,21 +221,6 @@ pub fn close(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: OreInstruction::Close.to_vec(),
-    }
-}
-
-/// Builds a crown instruction.
-pub fn crown(signer: Pubkey, current_top_staker: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(CONFIG_ADDRESS, false),
-            AccountMeta::new_readonly(current_top_staker, false),
-            AccountMeta::new_readonly(proof_pda.0, false),
-        ],
-        data: OreInstruction::Crown.to_vec(),
     }
 }
 
