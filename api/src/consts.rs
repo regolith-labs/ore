@@ -6,19 +6,19 @@ use solana_program::{pubkey, pubkey::Pubkey};
 pub const ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
 
 /// The base reward rate to intialize the program with.
-pub const INITIAL_BASE_REWARD_RATE: u64 = 2u64.pow(10);
+pub const INITIAL_BASE_REWARD_RATE: u64 = 2u64.pow(6);
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2;
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5);
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(24);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8);
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
 
 /// The minimum difficulty to initialize the program with.
-pub const INITIAL_MIN_DIFFICULTY: u32 = 0;
+pub const INITIAL_MIN_DIFFICULTY: u32 = 8;
 
 /// The decimal precision of the ORE token.
 /// There are 100 billion indivisible units per ORE (called "grains").
