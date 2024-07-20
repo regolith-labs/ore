@@ -91,6 +91,7 @@ pub fn process_reset<'a, 'info>(
             total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
         bus.rewards = BUS_EPOCH_REWARDS;
         bus.theoretical_rewards = 0;
+        bus.top_balance = 0;
     }
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
 
