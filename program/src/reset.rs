@@ -180,7 +180,8 @@ mod tests {
 
     use crate::calculate_new_reward_rate;
     use ore_api::consts::{
-        BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR, TARGET_EPOCH_REWARDS,
+        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        TARGET_EPOCH_REWARDS,
     };
 
     const FUZZ_SIZE: u64 = 10_000;
@@ -206,6 +207,13 @@ mod tests {
             current_rate,
             TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
         );
+        assert!(new_rate.lt(&current_rate));
+    }
+
+    #[test]
+    fn test_calculate_new_reward_rate_lower_edge() {
+        let current_rate = BASE_REWARD_RATE_MIN_THRESHOLD;
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS + 1);
         assert!(new_rate.lt(&current_rate));
     }
 
