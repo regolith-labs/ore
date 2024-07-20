@@ -13,7 +13,6 @@
 ## Instructions
 - [`Claim`](program/src/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
 - [`Close`](program/src/close.rs) – Closes a proof account returns the rent to the owner.
-- [`Crown`](program/src/crown.rs) – Flags a proof account as the top staker on the network.
 - [`Open`](program/src/open.rs) – Creates a new proof account for a prospective miner.
 - [`Mine`](program/src/mine.rs) – Verifies a hash provided by a miner and issues claimable rewards.
 - [`Stake`](program/src/stake.rs) – Stakes ORE with a miner to increase their multiplier.
