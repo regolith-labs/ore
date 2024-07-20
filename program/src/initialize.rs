@@ -91,7 +91,7 @@ pub fn process_initialize<'a, 'info>(
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
     // Check signer
-    if signer.key.ne(&ADMIN) {
+    if signer.key.ne(&INITIALIZER_ADDRESS) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 

@@ -2,8 +2,8 @@ use array_const_fn_init::array_const_fn_init;
 use const_crypto::ed25519;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-/// The admin allowed to initialize the program.
-pub const ADMIN: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+/// The authority allowed to initialize the program.
+pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
 
 /// The base reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = 2u64.pow(6);
