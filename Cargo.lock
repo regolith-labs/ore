@@ -1287,7 +1287,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "ore-api"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1306,7 +1306,7 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "drillx",
  "mpl-token-metadata",
@@ -1320,7 +1320,7 @@ dependencies = [
 
 [[package]]
 name = "ore-utils"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "bytemuck",
  "solana-program",
