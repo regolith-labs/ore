@@ -14,6 +14,7 @@
 - [`Claim`](program/src/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
 - [`Close`](program/src/close.rs) – Closes a proof account returns the rent to the owner.
 - [`Open`](program/src/open.rs) – Creates a new proof account for a prospective miner.
+- [`DeclareProof`](program/src/declare_proof.rs) – Declares a single proof pubkey for processing.
 - [`Mine`](program/src/mine.rs) – Verifies a hash provided by a miner and issues claimable rewards.
 - [`Stake`](program/src/stake.rs) – Stakes ORE with a miner to increase their multiplier.
 - [`Reset`](program/src/reset.rs) – Resets the program for a new epoch.
