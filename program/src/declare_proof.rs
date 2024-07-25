@@ -11,8 +11,8 @@ use solana_program::{
 /// DeclareProof is used by other instructions in the same transaction.
 /// - Other instructions will use transaction introspection to ensure they
 /// only process the declared proof.
-/// - Other instructions that need to get the declared proof for validation
-/// will only look at the first and second instructions in the transaction
+/// - Other instructions will use find_and_parse_declared_proof with the 
+/// introspection data
 ///
 /// Safety requirements:
 /// - No safety requirements are required in this instruction to keep cu's as
@@ -33,6 +33,15 @@ pub fn process_declare_proof<'a, 'info>(
     Ok(())
 }
 
+/// Require that only the declared proof can be processed in this transaction.
+///
+/// The intent here is to disincentivize sybil. As long as a user can fit multiple hashes in a single
+/// transaction, there is a financial incentive to sybil multiple keypairs and pack as many hashes
+/// as possible into each transaction to minimize fee / hash.
+///
+/// If each transaction is limited to one hash only, then a user will minimize their fee / hash
+/// by allocating all their hashpower to finding the single most difficult hash they can.
+///
 /// Errors if:
 /// - Fails to find and parse the declared proof pubkey in the second instruction
 /// of the transaction
