@@ -117,16 +117,16 @@ pub fn process_mine<'a, 'info>(
     // if the miner's last stake deposit was more than one minute ago.
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    if config.top_balance.gt(&0)
-        && proof.balance.gt(&0)
-        && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t)
-    {
-        let staking_reward = (reward as u128)
-            .checked_mul(proof.balance.min(config.top_balance) as u128)
-            .unwrap()
-            .checked_div(config.top_balance as u128)
-            .unwrap() as u64;
-        reward = reward.checked_add(staking_reward).unwrap();
+    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
+        // Update staking reward
+        if config.top_balance.gt(&0) {
+            let staking_reward = (reward as u128)
+                .checked_mul(proof.balance.min(config.top_balance) as u128)
+                .unwrap()
+                .checked_div(config.top_balance as u128)
+                .unwrap() as u64;
+            reward = reward.checked_add(staking_reward).unwrap();
+        }
 
         // Update bus stake tracker if stake is active
         if proof.balance.gt(&bus.top_balance) {
