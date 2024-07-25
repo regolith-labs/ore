@@ -228,6 +228,19 @@ pub fn close(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds a declare proof instruction.
+pub fn declare_proof(
+    proof: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new_readonly(proof, false),
+        ],
+        data: OreInstruction::DeclareProof.to_vec(),
+    }
+}
+
 /// Builds a mine instruction.
 pub fn mine(
     signer: Pubkey,
