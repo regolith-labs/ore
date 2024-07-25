@@ -89,6 +89,10 @@ pub enum OreInstruction {
     #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
     #[account(7, name = "token_program", desc = "SPL token program")]
     Upgrade = 7,
+
+    #[account(0, name = "ore_program", desc = "Ore program")]
+    #[account(1, name = "proof", desc = "Ore proof account")]
+    DeclareProof = 8,
     
     #[account(0, name = "ore_program", desc = "Ore program")]
     #[account(1, name = "signer", desc = "Admin signer", signer)]

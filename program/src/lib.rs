@@ -1,6 +1,7 @@
 mod claim;
 mod close;
 mod initialize;
+mod declare_proof;
 mod mine;
 mod open;
 mod reset;
@@ -11,6 +12,7 @@ mod upgrade;
 use claim::*;
 use close::*;
 use initialize::*;
+use declare_proof::*;
 use mine::*;
 use open::*;
 use reset::*;
@@ -45,6 +47,7 @@ pub fn process_instruction(
     match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
         OreInstruction::Claim => process_claim(program_id, accounts, data)?,
         OreInstruction::Close => process_close(program_id, accounts, data)?,
+        OreInstruction::DeclareProof => process_declare_proof(program_id, accounts, data)?,
         OreInstruction::Mine => process_mine(program_id, accounts, data)?,
         OreInstruction::Open => process_open(program_id, accounts, data)?,
         OreInstruction::Reset => process_reset(program_id, accounts, data)?,
