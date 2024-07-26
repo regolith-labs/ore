@@ -32,8 +32,6 @@ pub fn process_auth<'a, 'info>(
     Ok(())
 }
 
-const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");
-
 /// Require that only the declared proof can be processed in this transaction.
 ///
 /// The intent here is to disincentivize sybil. As long as a user can fit multiple hashes in a single
