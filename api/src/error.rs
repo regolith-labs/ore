@@ -18,7 +18,7 @@ pub enum OreError {
     #[error("You are trying to submit too soon")]
     Spam = 5,
     #[error("The maximum supply has been reached")]
-    MaxSupply = 8,
+    MaxSupply = 6,
     #[error("Only one hash may be validated per transaction")]
     TransactionInvalid = 7,
 }
