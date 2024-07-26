@@ -27,6 +27,10 @@ pub enum OreError {
     CannotClose = 9,
     #[error("This account cannot be crowned because its last stake was too recent")]
     CannotCrown = 10,
+    #[error("Only the declared proof can be processed in this transaction")]
+    DeclaredProofMissmatch = 11,
+    #[error("Failed to find and parse the declared proof from the transaction")]
+    FindAndParseDeclaredProofFailed = 12,
 }
 
 impl From<OreError> for ProgramError {

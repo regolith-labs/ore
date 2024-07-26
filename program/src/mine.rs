@@ -25,7 +25,7 @@ use solana_program::{
     sysvar::{self, instructions::load_current_index, Sysvar},
 };
 
-use crate::utils::AccountDeserialize;
+use crate::{find_and_parse_declared_proof, utils::AccountDeserialize};
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.
@@ -38,6 +38,7 @@ use crate::utils::AccountDeserialize;
 /// - Can only succeed if mining is not paused.
 /// - Can only succeed if the last reset was less than 60 seconds ago.
 /// - Can only succeed if the provided hash satisfies the minimum difficulty requirement.
+/// - Can only succeed if the miners proof pubkey matches the declared proof pubkey.
 /// - The provided proof account must be associated with the signer.
 /// - The provided bus, config, noise, stake, and slot hash sysvar must be valid.
 pub fn process_mine<'a, 'info>(
@@ -61,10 +62,13 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
-    // Validate this is the only mine ix in the transaction.
-    if !introspect_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
-        return Err(OreError::TransactionInvalid.into());
-    }
+    if let Ok(pubkey) = find_and_parse_declared_proof(&instructions_sysvar.data.borrow()) {
+        if !pubkey.eq(proof_info.key) {
+            return Err(OreError::DeclaredProofMissmatch.into());
+        }
+    } else {
+        return Err(OreError::FindAndParseDeclaredProofFailed.into());
+    };
 
     // Validate epoch is active.
     let config_data = config_info.data.borrow();
@@ -182,50 +186,3 @@ pub fn process_mine<'a, 'info>(
     Ok(())
 }
 
-/// Require that there is only one `mine` instruction per transaction and it is called from the
-/// top level of the transaction.
-///
-/// The intent here is to disincentivize sybil. As long as a user can fit multiple hashes in a single
-/// transaction, there is a financial incentive to sybil multiple keypairs and pack as many hashes
-/// as possible into each transaction to minimize fee / hash.
-///
-/// If each transaction is limited to one hash only, then a user will minimize their fee / hash
-/// by allocating all their hashpower to finding the single most difficult hash they can.
-fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
-    #[allow(deprecated)]
-    let idx = load_current_index(msg);
-    let mut c = 0;
-    let num_instructions = read_u16(&mut c, msg)?;
-    let pc = c;
-    for i in 0..num_instructions as usize {
-        c = pc + i * 2;
-        c = read_u16(&mut c, msg)? as usize;
-        let num_accounts = read_u16(&mut c, msg)? as usize;
-        c += num_accounts * 33;
-        let program_id = read_pubkey(&mut c, msg)?;
-        if i.eq(&(idx as usize)) {
-            // Require top-level instruction at current index is a `mine`
-            if program_id.ne(&ore_api::ID) {
-                return Ok(false);
-            }
-            c += 2;
-            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                if ix.ne(&OreInstruction::Mine) {
-                    return Ok(false);
-                }
-            }
-        } else {
-            // Require no other instructions in the transaction are a `mine`
-            if program_id.eq(&ore_api::ID) {
-                c += 2;
-                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                    if ix.eq(&OreInstruction::Mine) {
-                        return Ok(false);
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(true)
-}
