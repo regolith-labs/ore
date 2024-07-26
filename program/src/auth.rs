@@ -8,16 +8,11 @@ use solana_program::{
     serialize_utils::{read_pubkey, read_u16, read_u8},
 };
 
-/// DeclareProof is used by other instructions in the same transaction.
-/// - Other instructions will use transaction introspection to ensure they
-/// only process the declared proof.
-/// - Other instructions will use find_and_parse_declared_proof with the
-/// introspection data
+/// Auth is used to authenticate a proof account address via transaction introspection.
 ///
 /// Safety requirements:
-/// - No safety requirements are required in this instruction to keep cu's as
-/// low as possible. Other instructions that use the declared proof handle
-/// validation via the loader.
+/// - No safety requirements are required in this instruction to keep CUs low.
+/// - Other instructions are expected to validate the provided account is a valid proof.
 /// - Only one account should be provided.
 pub fn process_auth<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     let [_proof_info] = accounts else {
