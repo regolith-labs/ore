@@ -2,7 +2,7 @@ use ore_api::{consts::*, error::OreError, instruction::StakeArgs, loaders::*};
 use ore_utils::spl::mint_to_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    program_pack::Pack, pubkey::Pubkey,
+    program_pack::Pack,
 };
 use spl_token::state::Mint;
 
@@ -14,7 +14,6 @@ use spl_token::state::Mint;
 /// - Upgrade is a permissionless instruction and can be called by any user.
 /// - The provided beneficiary, mint, mint v1, sender, and token program must be valid.
 pub fn process_upgrade<'a, 'info>(
-    _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {

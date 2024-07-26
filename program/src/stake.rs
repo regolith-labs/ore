@@ -2,7 +2,7 @@ use ore_api::{consts::*, instruction::StakeArgs, loaders::*, state::Proof};
 use ore_utils::spl::transfer;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, pubkey::Pubkey, sysvar::Sysvar,
+    program_error::ProgramError, sysvar::Sysvar,
 };
 
 use crate::utils::AccountDeserialize;
@@ -15,11 +15,7 @@ use crate::utils::AccountDeserialize;
 /// - Stake is a permissionless instruction and can be called by any user.
 /// - Can only succeed if the amount is less than or equal to the miner's transferable tokens.
 /// - The provided beneficiary, proof, sender, treasury token account, and token program must be valid.
-pub fn process_stake<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = StakeArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

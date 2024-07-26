@@ -7,7 +7,6 @@ use solana_program::{
     clock::Clock,
     entrypoint::ProgramResult,
     program_error::ProgramError,
-    pubkey::Pubkey,
     slot_hashes::SlotHash,
     system_program,
     sysvar::{self, Sysvar},
@@ -24,11 +23,7 @@ use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - Can only succeed if the user does not already have a proof account.
 /// - The provided system program must be valid.
-pub fn process_open<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = OpenArgs::try_from_bytes(data)?;
 

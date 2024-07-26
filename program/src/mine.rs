@@ -18,7 +18,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     log::sol_log,
     program_error::ProgramError,
-    pubkey::Pubkey,
     slot_hashes::SlotHash,
     sysvar::{self, Sysvar},
 };
@@ -39,11 +38,7 @@ use crate::{authenticate, utils::AccountDeserialize};
 /// - Can only succeed if the miners proof pubkey matches the declared proof pubkey.
 /// - The provided proof account must be associated with the signer.
 /// - The provided bus, config, noise, stake, and slot hash sysvar must be valid.
-pub fn process_mine<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = MineArgs::try_from_bytes(data)?;
 
