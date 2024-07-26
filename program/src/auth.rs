@@ -3,7 +3,6 @@ use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     program_error::ProgramError,
-    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16, read_u8},
@@ -20,11 +19,7 @@ use solana_program::{
 /// low as possible. Other instructions that use the declared proof handle
 /// validation via the loader.
 /// - Only one account should be provided.
-pub fn process_auth<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    _data: &[u8],
-) -> ProgramResult {
+pub fn process_auth<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     let [_proof_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
