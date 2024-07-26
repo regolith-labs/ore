@@ -1,6 +1,6 @@
+mod auth;
 mod claim;
 mod close;
-mod declare_proof;
 mod initialize;
 mod mine;
 mod open;
@@ -9,9 +9,9 @@ mod stake;
 mod update;
 mod upgrade;
 
+use auth::*;
 use claim::*;
 use close::*;
-use declare_proof::*;
 use initialize::*;
 use mine::*;
 use open::*;
