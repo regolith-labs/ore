@@ -5,7 +5,7 @@ use ore_api::{
     consts::*,
     error::OreError,
     event::MineEvent,
-    instruction::{MineArgs, OreInstruction},
+    instruction::MineArgs,
     loaders::*,
     state::{Bus, Config, Proof},
 };
@@ -19,13 +19,11 @@ use solana_program::{
     log::sol_log,
     program_error::ProgramError,
     pubkey::Pubkey,
-    sanitize::SanitizeError,
-    serialize_utils::{read_pubkey, read_u16, read_u8},
     slot_hashes::SlotHash,
-    sysvar::{self, instructions::load_current_index, Sysvar},
+    sysvar::{self, Sysvar},
 };
 
-use crate::{find_and_parse_declared_proof, utils::AccountDeserialize};
+use crate::{authenticate, utils::AccountDeserialize};
 
 /// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
 /// 1. Calculate the hash from the provided nonce.
@@ -62,13 +60,14 @@ pub fn process_mine<'a, 'info>(
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
-    if let Ok(pubkey) = find_and_parse_declared_proof(&instructions_sysvar.data.borrow()) {
-        if !pubkey.eq(proof_info.key) {
-            return Err(OreError::DeclaredProofMissmatch.into());
+    // Authenticate the proof account
+    if let Ok(Some(auth_address)) = authenticate(&instructions_sysvar.data.borrow()) {
+        if auth_address.ne(proof_info.key) {
+            return Err(OreError::AuthFailed.into());
         }
     } else {
-        return Err(OreError::FindAndParseDeclaredProofFailed.into());
-    };
+        return Err(OreError::AuthFailed.into());
+    }
 
     // Validate epoch is active.
     let config_data = config_info.data.borrow();
@@ -185,4 +184,3 @@ pub fn process_mine<'a, 'info>(
 
     Ok(())
 }
-

@@ -1,17 +1,18 @@
+use ore_api::instruction::OreInstruction;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     program_error::ProgramError,
+    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
-    serialize_utils::{read_pubkey, read_u16},
+    serialize_utils::{read_pubkey, read_u16, read_u8},
 };
-
 
 /// DeclareProof is used by other instructions in the same transaction.
 /// - Other instructions will use transaction introspection to ensure they
 /// only process the declared proof.
-/// - Other instructions will use find_and_parse_declared_proof with the 
+/// - Other instructions will use find_and_parse_declared_proof with the
 /// introspection data
 ///
 /// Safety requirements:
@@ -19,19 +20,19 @@ use solana_program::{
 /// low as possible. Other instructions that use the declared proof handle
 /// validation via the loader.
 /// - Only one account should be provided.
-pub fn process_declare_proof<'a, 'info>(
+pub fn process_auth<'a, 'info>(
     _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     _data: &[u8],
 ) -> ProgramResult {
-    let [_proof_info] =
-        accounts
-    else {
+    let [_proof_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 
     Ok(())
 }
+
+const COMPUTE_BUDGET_PROGRAM_ID: Pubkey = pubkey!("ComputeBudget111111111111111111111111111111");
 
 /// Require that only the declared proof can be processed in this transaction.
 ///
@@ -45,41 +46,38 @@ pub fn process_declare_proof<'a, 'info>(
 /// Errors if:
 /// - Fails to find and parse the declared proof pubkey in the second instruction
 /// of the transaction
-pub fn find_and_parse_declared_proof(data: &[u8]) -> Result<Pubkey, SanitizeError> {
-    // start the current byte index at 0
-    let mut current = 0;
-    let num_instructions = read_u16(&mut current, data)?;
-
-    if num_instructions < 2 {
-        // Not enough instructions in this transaction.
-        // The declare_proof instruction must be included with 
-        // the other instruction in the same transaction.
-        return Err(SanitizeError::IndexOutOfBounds)
+pub fn authenticate(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
+    // Start the current byte index at 0
+    let mut curr = 0;
+    let num_instructions = read_u16(&mut curr, data)?;
+    let pc = curr;
+    for i in 0..num_instructions as usize {
+        curr = pc + i * 2;
+        curr = read_u16(&mut curr, data)? as usize;
+        let num_accounts = read_u16(&mut curr, data)? as usize;
+        let mut ac = curr;
+        curr += num_accounts * 33;
+        let program_id = read_pubkey(&mut curr, data)?;
+        if program_id.eq(&ore_api::ID) {
+            curr += 2;
+            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut curr, data)?) {
+                // Validate ix is an auth
+                if ix.ne(&OreInstruction::Auth) {
+                    return Ok(None);
+                }
+                // Valid num accounts is correct
+                if num_accounts.ne(&1) {
+                    return Ok(None);
+                }
+                // Return provided pubkey
+                let address = read_pubkey(&mut ac, data)?;
+                return Ok(Some(address));
+            } else {
+                // Otherwise return
+                return Ok(None);
+            }
+        }
     }
 
-    // The first ix should be a set compute budget ix
-    // The second ix should be a declare_proof ix
-    // The starting index is the second ix
-    let index = 1;
-
-    current += index * 2;
-    let start = read_u16(&mut current, data)?;
-
-    current = start as usize;
-
-    current += 2; // skip the accounts length variable
-    current += 1; // skip the meta_byte
-
-    // The only account provided should be the proof pubkey
-    let proof_pubkey = read_pubkey(&mut current, data)?;
-
-    // There shouldn't be any more accounts,
-    // this should be the Ore program ID
-    let program_pubkey = read_pubkey(&mut current, data)?;
-    if program_pubkey.eq(&ore_api::ID) {
-        return Ok(proof_pubkey);
-    } else {
-        return Err(SanitizeError::InvalidValue);
-    }
+    Ok(None)
 }
-
