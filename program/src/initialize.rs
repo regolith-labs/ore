@@ -12,7 +12,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     program_error::ProgramError,
     program_pack::Pack,
-    pubkey::Pubkey,
     system_program, {self, sysvar},
 };
 use spl_token::state::Mint;
@@ -38,7 +37,6 @@ use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 /// - The signer of this instruction is set as the program admin and the
 ///   upgrade authority of the mint metadata account.
 pub fn process_initialize<'a, 'info>(
-    _program_id: &Pubkey,
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {

@@ -6,7 +6,7 @@ use ore_api::{
 };
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, sysvar::Sysvar,
+    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar,
 };
 use spl_token::state::Mint;
 
@@ -31,11 +31,7 @@ use crate::utils::AccountDeserialize;
 /// - The "theoretical" reward rate refers to the amount that would have been paid out if rewards were not capped by
 ///   the bus limits. It's necessary to use this value to ensure the reward rate update calculation accurately
 ///   accounts for the difficulty of submitted hashes.
-pub fn process_reset<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    _data: &[u8],
-) -> ProgramResult {
+pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         accounts

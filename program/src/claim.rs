@@ -2,7 +2,6 @@ use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, st
 use ore_utils::spl::transfer_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
 };
 
 use crate::utils::AccountDeserialize;
@@ -15,11 +14,7 @@ use crate::utils::AccountDeserialize;
 /// - Claim is a permissionless instruction and can be called by any user.
 /// - Can only succeed if the claimed amount is less than or equal to the miner's claimable rewards.
 /// - The provided beneficiary, token account, treasury, treasury token account, and token program must be valid.
-pub fn process_claim<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = ClaimArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

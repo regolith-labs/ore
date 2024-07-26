@@ -1,7 +1,7 @@
 use ore_api::{loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey, system_program,
+    system_program,
 };
 
 use crate::utils::AccountDeserialize;
@@ -14,11 +14,7 @@ use crate::utils::AccountDeserialize;
 /// - Deregister is a permissionless instruction and can be invoked by any singer.
 /// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - The provided system program must be valid.
-pub fn process_close<'a, 'info>(
-    _program_id: &Pubkey,
-    accounts: &'a [AccountInfo<'info>],
-    _data: &[u8],
-) -> ProgramResult {
+pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts
     let [signer, proof_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
