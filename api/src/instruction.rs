@@ -36,9 +36,8 @@ pub enum OreInstruction {
     #[account(1, name = "signer", desc = "Signer", signer)]
     #[account(2, name = "bus", desc = "Ore bus account", writable)]
     #[account(3, name = "config", desc = "Ore config account")]
-    #[account(4, name = "noise", desc = "Ore noise account")]
-    #[account(5, name = "proof", desc = "Ore proof account", writable)]
-    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
+    #[account(4, name = "proof", desc = "Ore proof account", writable)]
+    #[account(5, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Mine = 2,
 
     #[account(0, name = "ore_program", desc = "Ore program")]
@@ -102,14 +101,13 @@ pub enum OreInstruction {
     #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
     #[account(10, name = "metadata", desc = "Ore mint metadata account", writable)]
     #[account(11, name = "mint", desc = "Ore mint account", writable)]
-    #[account(12, name = "noise", desc = "Ore noise account", writable)]
-    #[account(13, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(14, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(15, name = "system_program", desc = "Solana system program")]
-    #[account(16, name = "token_program", desc = "SPL token program")]
-    #[account(17, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(18, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
-    #[account(19, name = "rent", desc = "Solana rent sysvar")]
+    #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
+    #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
+    #[account(14, name = "system_program", desc = "Solana system program")]
+    #[account(15, name = "token_program", desc = "SPL token program")]
+    #[account(16, name = "associated_token_program", desc = "SPL associated token program")]
+    #[account(17, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
+    #[account(18, name = "rent", desc = "Solana rent sysvar")]
     Initialize = 100,
 }
 
