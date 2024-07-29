@@ -208,23 +208,26 @@ fn authenticate(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
 
     // Iterate through the transaction instructions
     for i in 0..num_instructions as usize {
-        // Get byte counter
+        // Shift pointer to correct positition
         curr = pc + i * 2;
         curr = read_u16(&mut curr, data)? as usize;
 
-        // Read the instruction program id
+        // Skip accounts
         let num_accounts = read_u16(&mut curr, data)? as usize;
         curr += num_accounts * 33;
+
+        // Read the instruction program id
         let program_id = read_pubkey(&mut curr, data)?;
 
-        // Introspect on the first non compute budget instruction
-        if program_id.ne(&COMPUTE_BUDGET_PROGRAM_ID) {
-            // Read address from ix data
+        // Introspect on the first noop instruction
+        if program_id.eq(&NOOP_PROGRAM_ID) {
+            // Retrun address read from instruction data
             curr += 2;
             let address = read_pubkey(&mut curr, data)?;
             return Ok(Some(address));
         }
     }
 
+    // Default return none
     Ok(None)
 }
