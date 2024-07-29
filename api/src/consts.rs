@@ -94,7 +94,7 @@ pub const METADATA_NAME: &str = "ORE";
 pub const METADATA_SYMBOL: &str = "ORE";
 
 /// The uri for token metdata.
-pub const METADATA_URI: &str = "https://ore.supply/metadata.json";
+pub const METADATA_URI: &str = "https://ore.supply/metadata-v2.json";
 
 /// Program id for const pda derivations
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
