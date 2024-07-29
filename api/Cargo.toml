@@ -17,7 +17,6 @@ drillx.workspace = true
 mpl-token-metadata.workspace = true
 num_enum.workspace = true
 ore-utils.workspace = true
-shank.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true

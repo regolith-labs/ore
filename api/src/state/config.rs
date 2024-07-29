@@ -1,5 +1,4 @@
 use bytemuck::{Pod, Zeroable};
-use shank::ShankAccount;
 
 use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
@@ -7,7 +6,7 @@ use super::AccountDiscriminator;
 
 /// Config is a singleton account which manages admin configurable variables.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Config {
     /// The base reward rate paid out for a hash of minimum difficulty.
     pub base_reward_rate: u64,

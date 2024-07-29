@@ -1,7 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 use drillx::Solution;
 use num_enum::TryFromPrimitive;
-use shank::ShankInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -14,102 +13,18 @@ use crate::{
 };
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, ShankInstruction, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[rustfmt::skip]
 pub enum OreInstruction {
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
-    #[account(3, name = "proof", desc = "Ore proof account", writable)]
-    #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(5, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(6, name = "token_program", desc = "SPL token program")]
     Claim = 0,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "system_program", desc = "Solana system program")]
     Close = 1,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "bus", desc = "Ore bus account", writable)]
-    #[account(3, name = "config", desc = "Ore config account")]
-    #[account(4, name = "noise", desc = "Ore noise account")]
-    #[account(5, name = "proof", desc = "Ore proof account", writable)]
-    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Mine = 2,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "miner", desc = "Address to be initialized as the miner")]
-    #[account(3, name = "payer", desc = "Account to pay for account creation", writable, signer)]
-    #[account(4, name = "proof", desc = "Ore proof account", writable)]
-    #[account(5, name = "system_program", desc = "Solana system program")]
-    #[account(6, name = "slot_hashes", desc = "Solana slot hashes sysvar")]
     Open = 3,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "bus_0", desc = "Ore bus account 0", writable)]
-    #[account(3, name = "bus_1", desc = "Ore bus account 1", writable)]
-    #[account(4, name = "bus_2", desc = "Ore bus account 2", writable)]
-    #[account(5, name = "bus_3", desc = "Ore bus account 3", writable)]
-    #[account(6, name = "bus_4", desc = "Ore bus account 4", writable)]
-    #[account(7, name = "bus_5", desc = "Ore bus account 5", writable)]
-    #[account(8, name = "bus_6", desc = "Ore bus account 6", writable)]
-    #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
-    #[account(10, name = "config", desc = "Ore config account")]
-    #[account(11, name = "mint", desc = "Ore token mint account", writable)]
-    #[account(12, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(13, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(14, name = "token_program", desc = "SPL token program")]
     Reset = 4,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
-    #[account(3, name = "sender", desc = "Signer token account", writable)]
-    #[account(4, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(5, name = "token_program", desc = "SPL token program")]
     Stake = 5,
-    
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "proof", desc = "Ore proof account", writable)]
     Update = 6,
-
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Signer", signer)]
-    #[account(2, name = "beneficiary", desc = "Beneficiary token account", writable)]
-    #[account(3, name = "sender", desc = "Signer token account", writable)]
-    #[account(4, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(5, name = "mint", desc = "Ore token mint account", writable)]
-    #[account(6, name = "mint_v1", desc = "Ore v1 token mint account", writable)]
-    #[account(7, name = "token_program", desc = "SPL token program")]
     Upgrade = 7,
-    
-    #[account(0, name = "ore_program", desc = "Ore program")]
-    #[account(1, name = "signer", desc = "Admin signer", signer)]
-    #[account(2, name = "bus_0", desc = "Ore bus account 0", writable)]
-    #[account(3, name = "bus_1", desc = "Ore bus account 1", writable)]
-    #[account(4, name = "bus_2", desc = "Ore bus account 2", writable)]
-    #[account(5, name = "bus_3", desc = "Ore bus account 3", writable)]
-    #[account(6, name = "bus_4", desc = "Ore bus account 4", writable)]
-    #[account(7, name = "bus_5", desc = "Ore bus account 5", writable)]
-    #[account(8, name = "bus_6", desc = "Ore bus account 6", writable)]
-    #[account(9, name = "bus_7", desc = "Ore bus account 7", writable)]
-    #[account(10, name = "metadata", desc = "Ore mint metadata account", writable)]
-    #[account(11, name = "mint", desc = "Ore mint account", writable)]
-    #[account(12, name = "noise", desc = "Ore noise account", writable)]
-    #[account(13, name = "treasury", desc = "Ore treasury account", writable)]
-    #[account(14, name = "treasury_tokens", desc = "Ore treasury token account", writable)]
-    #[account(15, name = "system_program", desc = "Solana system program")]
-    #[account(16, name = "token_program", desc = "SPL token program")]
-    #[account(17, name = "associated_token_program", desc = "SPL associated token program")]
-    #[account(18, name = "mpl_metadata_program", desc = "Metaplex metadata program")]
-    #[account(19, name = "rent", desc = "Solana rent sysvar")]
+
     Initialize = 100,
 }
 
