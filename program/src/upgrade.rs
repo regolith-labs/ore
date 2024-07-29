@@ -6,13 +6,7 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-/// Upgrade allows a user to migrate a v1 token to a v2 token one-for-one. Its responsibilies include:
-/// 1. Burns the v1 tokens.
-/// 2. Mints an equivalent number of v2 tokens to the user.
-///
-/// Safety requirements:
-/// - Upgrade is a permissionless instruction and can be called by any user.
-/// - The provided beneficiary, mint, mint v1, sender, and token program must be valid.
+/// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.
 pub fn process_upgrade<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],

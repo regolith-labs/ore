@@ -6,14 +6,7 @@ use solana_program::{
 
 use crate::utils::AccountDeserialize;
 
-/// Claim distributes Ore from the treasury to a miner. Its responsibilies include:
-/// 1. Decrement the miner's claimable balance.
-/// 2. Transfer tokens from the treasury to the miner.
-///
-/// Safety requirements:
-/// - Claim is a permissionless instruction and can be called by any user.
-/// - Can only succeed if the claimed amount is less than or equal to the miner's claimable rewards.
-/// - The provided beneficiary, token account, treasury, treasury token account, and token program must be valid.
+/// Claim distributes ORE from the treasury to a miner.
 pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = ClaimArgs::try_from_bytes(data)?;

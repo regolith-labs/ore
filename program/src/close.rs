@@ -6,14 +6,7 @@ use solana_program::{
 
 use crate::utils::AccountDeserialize;
 
-/// Close closes a proof account and returns the rent to the owner. Its responsibilities include:
-/// 1. Realloc proof account size to 0.
-/// 2. Transfer lamports to the owner.
-///
-/// Safety requirements:
-/// - Deregister is a permissionless instruction and can be invoked by any singer.
-/// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
-/// - The provided system program must be valid.
+/// Close closes a proof account and returns the rent to the owner.
 pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts
     let [signer, proof_info, system_program] = accounts else {

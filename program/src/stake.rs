@@ -7,14 +7,7 @@ use solana_program::{
 
 use crate::utils::AccountDeserialize;
 
-/// Stake deposits Ore into a miner's proof account to earn multiplier. Its responsibilies include:
-/// 1. Transfer tokens from the miner to the treasury account.
-/// 2. Increment the miner's claimable balance.
-///
-/// Safety requirements:
-/// - Stake is a permissionless instruction and can be called by any user.
-/// - Can only succeed if the amount is less than or equal to the miner's transferable tokens.
-/// - The provided beneficiary, proof, sender, treasury token account, and token program must be valid.
+/// Stake deposits ORE into a proof account to earn multiplier.
 pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = StakeArgs::try_from_bytes(data)?;

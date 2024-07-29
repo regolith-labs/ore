@@ -16,7 +16,6 @@ use solana_program::{
     blake3::hashv,
     clock::Clock,
     entrypoint::ProgramResult,
-    log::sol_log,
     program_error::ProgramError,
     pubkey::Pubkey,
     sanitize::SanitizeError,
@@ -27,20 +26,7 @@ use solana_program::{
 
 use crate::utils::AccountDeserialize;
 
-/// Mine is the primary workhorse instruction of the Ore program. Its responsibilities include:
-/// 1. Calculate the hash from the provided nonce.
-/// 2. Payout rewards based on difficulty, staking multiplier, and liveness penalty.
-/// 3. Generate a new challenge for the miner.
-/// 4. Update the miner's lifetime stats.
-///
-/// Safety requirements:
-/// - Mine is a permissionless instruction and can be called by any signer.
-/// - Can only succeed if mining is not paused.
-/// - Can only succeed if the last reset was less than 60 seconds ago.
-/// - Can only succeed if the provided hash satisfies the minimum difficulty requirement.
-/// - Can only succeed if the miners proof pubkey matches the declared proof pubkey.
-/// - The provided proof account must be associated with the signer.
-/// - The provided bus, config, noise, stake, and slot hash sysvar must be valid.
+/// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = MineArgs::try_from_bytes(data)?;
@@ -59,13 +45,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
     // Authenticate the proof account
-    if let Ok(Some(auth_address)) = authenticate(&instructions_sysvar.data.borrow()) {
-        if auth_address.ne(proof_info.key) {
-            return Err(OreError::AuthFailed.into());
-        }
-    } else {
-        return Err(OreError::AuthFailed.into());
-    }
+    authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
     let config_data = config_info.data.borrow();
@@ -110,7 +90,6 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         .base_reward_rate
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
-    sol_log(&format!("Diff {}", difficulty));
 
     // Apply staking multiplier.
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
@@ -183,24 +162,29 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     Ok(())
 }
 
-/// Get the authenticated pubkey.
+/// Authenticate the proof account.
 ///
-/// The intent here is to disincentivize sybil. If a user can fit multiple hashes into a single
-/// transaction, there is a financial incentive to sybil multiple keypairs and pack as many hashes
-/// as possible into each transaction to minimize fee / hash.
+/// This process is necessary to prevent sybil attacks. If a user can pack multiple hashes into a single
+/// transaction, then there is a financial incentive to mine across multiple keypairs and submit as many hashes
+/// as possible in each transaction to minimize fee / hash.
 ///
-/// If each transaction is limited to one hash only, then a user will minimize their fee / hash
-/// by allocating all their hashpower to finding the single most difficult hash they can.
-///
-/// We solve this by "authenticating" the proof account on every mine instruction. That is,
-/// every transaction with a `mine` instruction needs to include an `auth` instruction that
-/// specifies the proof account that will be used. The `auth` instruction must be first ORE
-/// instruction in the transaction. The `mine` instruction should error out if the provided proof
-/// account doesn't match the authenticated address.
-///
-/// Errors if:
-/// - Fails to find and parse an authentication address.
-fn authenticate(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
+/// We prevent this by forcing every transaction to declare the proof account being mined with upfont.
+/// The authentication process includes passing the 32 byte pubkey address as instruction data to the
+/// CU-optimized noop program. We parse this address through transaction introspection and use it to
+/// ensure only one proof account can be used for `mine` instructions for a given transaction.
+fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
+    if let Ok(Some(auth_address)) = parse_auth_address(data) {
+        if proof_address.ne(&auth_address) {
+            return Err(OreError::AuthFailed.into());
+        }
+    } else {
+        return Err(OreError::AuthFailed.into());
+    }
+    Ok(())
+}
+
+/// Use transaction introspection to parse the authenticated pubkey.
+fn parse_auth_address(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
     // Start the current byte index at 0
     let mut curr = 0;
     let num_instructions = read_u16(&mut curr, data)?;

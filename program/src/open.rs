@@ -14,15 +14,11 @@ use solana_program::{
 
 use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
-/// Register generates a new hash chain for a prospective miner. Its responsibilities include:
-/// 1. Initialize a new proof account.
-/// 2. Generate an initial hash from the signer's key.
+/// Open creates a new proof account to track a miner's state.
 ///
 /// Safety requirements:
 /// - Register is a permissionless instruction and can be invoked by any singer.
-/// - Can only succeed if the provided proof acount PDA is valid (associated with the signer).
 /// - Can only succeed if the user does not already have a proof account.
-/// - The provided system program must be valid.
 pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = OpenArgs::try_from_bytes(data)?;

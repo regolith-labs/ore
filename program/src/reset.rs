@@ -12,25 +12,7 @@ use spl_token::state::Mint;
 
 use crate::utils::AccountDeserialize;
 
-/// Reset sets up the Ore program for the next epoch. Its responsibilities include:
-/// 1. Reset bus account rewards counters.
-/// 2. Adjust the reward rate to stabilize inflation.
-/// 3. Top up the treasury token account to fund claims.
-///
-/// Safety requirements:
-/// - Reset is a permissionless instruction and can be invoked by any signer.
-/// - Can only succeed if START_AT has passed.
-/// - Can only succeed if more tha 60 seconds or more have passed since the last successful reset.
-/// - The busses, mint, treasury, treasury token account, and token program must all be valid.
-///
-/// Discussion:
-/// - It is important that `reset` can only be invoked once per 60 second period to ensure the supply growth rate
-///   stays within the guaranteed bounds of 0 ≤ R ≤ 2 ORE/min.
-/// - The reward rate is dynamically adjusted based on last epoch's theoretical reward rate to target an average
-///   supply growth rate of 1 ORE/min.
-/// - The "theoretical" reward rate refers to the amount that would have been paid out if rewards were not capped by
-///   the bus limits. It's necessary to use this value to ensure the reward rate update calculation accurately
-///   accounts for the difficulty of submitted hashes.
+/// Reset tops up the busses, updates the base reward rate, and generally sets up the ORE program for the next epoch.
 pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
