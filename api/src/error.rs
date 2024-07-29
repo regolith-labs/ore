@@ -19,8 +19,8 @@ pub enum OreError {
     Spam = 5,
     #[error("The maximum supply has been reached")]
     MaxSupply = 6,
-    #[error("Only one hash may be validated per transaction")]
-    TransactionInvalid = 7,
+    #[error("The proof does not match the expected account")]
+    AuthFailed = 7,
 }
 
 impl From<OreError> for ProgramError {

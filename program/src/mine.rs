@@ -5,7 +5,7 @@ use ore_api::{
     consts::*,
     error::OreError,
     event::MineEvent,
-    instruction::{MineArgs, OreInstruction},
+    instruction::MineArgs,
     loaders::*,
     state::{Bus, Config, Proof},
 };
@@ -18,10 +18,11 @@ use solana_program::{
     entrypoint::ProgramResult,
     log::sol_log,
     program_error::ProgramError,
+    pubkey::Pubkey,
     sanitize::SanitizeError,
-    serialize_utils::{read_pubkey, read_u16, read_u8},
+    serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
-    sysvar::{self, instructions::load_current_index, Sysvar},
+    sysvar::{self, Sysvar},
 };
 
 use crate::utils::AccountDeserialize;
@@ -37,6 +38,7 @@ use crate::utils::AccountDeserialize;
 /// - Can only succeed if mining is not paused.
 /// - Can only succeed if the last reset was less than 60 seconds ago.
 /// - Can only succeed if the provided hash satisfies the minimum difficulty requirement.
+/// - Can only succeed if the miners proof pubkey matches the declared proof pubkey.
 /// - The provided proof account must be associated with the signer.
 /// - The provided bus, config, noise, stake, and slot hash sysvar must be valid.
 pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
@@ -56,9 +58,13 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
-    // Validate this is the only mine ix in the transaction.
-    if !introspect_transaction(&instructions_sysvar.data.borrow()).unwrap_or(false) {
-        return Err(OreError::TransactionInvalid.into());
+    // Authenticate the proof account
+    if let Ok(Some(auth_address)) = authenticate(&instructions_sysvar.data.borrow()) {
+        if auth_address.ne(proof_info.key) {
+            return Err(OreError::AuthFailed.into());
+        }
+    } else {
+        return Err(OreError::AuthFailed.into());
     }
 
     // Validate epoch is active.
@@ -177,50 +183,48 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     Ok(())
 }
 
-/// Require that there is only one `mine` instruction per transaction and it is called from the
-/// top level of the transaction.
+/// Get the authenticated pubkey.
 ///
-/// The intent here is to disincentivize sybil. As long as a user can fit multiple hashes in a single
+/// The intent here is to disincentivize sybil. If a user can fit multiple hashes into a single
 /// transaction, there is a financial incentive to sybil multiple keypairs and pack as many hashes
 /// as possible into each transaction to minimize fee / hash.
 ///
 /// If each transaction is limited to one hash only, then a user will minimize their fee / hash
 /// by allocating all their hashpower to finding the single most difficult hash they can.
-fn introspect_transaction(msg: &[u8]) -> Result<bool, SanitizeError> {
-    #[allow(deprecated)]
-    let idx = load_current_index(msg);
-    let mut c = 0;
-    let num_instructions = read_u16(&mut c, msg)?;
-    let pc = c;
+///
+/// We solve this by "authenticating" the proof account on every mine instruction. That is,
+/// every transaction with a `mine` instruction needs to include an `auth` instruction that
+/// specifies the proof account that will be used. The `auth` instruction must be first ORE
+/// instruction in the transaction. The `mine` instruction should error out if the provided proof
+/// account doesn't match the authenticated address.
+///
+/// Errors if:
+/// - Fails to find and parse an authentication address.
+fn authenticate(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
+    // Start the current byte index at 0
+    let mut curr = 0;
+    let num_instructions = read_u16(&mut curr, data)?;
+    let pc = curr;
+
+    // Iterate through the transaction instructions
     for i in 0..num_instructions as usize {
-        c = pc + i * 2;
-        c = read_u16(&mut c, msg)? as usize;
-        let num_accounts = read_u16(&mut c, msg)? as usize;
-        c += num_accounts * 33;
-        let program_id = read_pubkey(&mut c, msg)?;
-        if i.eq(&(idx as usize)) {
-            // Require top-level instruction at current index is a `mine`
-            if program_id.ne(&ore_api::ID) {
-                return Ok(false);
-            }
-            c += 2;
-            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                if ix.ne(&OreInstruction::Mine) {
-                    return Ok(false);
-                }
-            }
-        } else {
-            // Require no other instructions in the transaction are a `mine`
-            if program_id.eq(&ore_api::ID) {
-                c += 2;
-                if let Ok(ix) = OreInstruction::try_from(read_u8(&mut c, msg)?) {
-                    if ix.eq(&OreInstruction::Mine) {
-                        return Ok(false);
-                    }
-                }
-            }
+        // Get byte counter
+        curr = pc + i * 2;
+        curr = read_u16(&mut curr, data)? as usize;
+
+        // Read the instruction program id
+        let num_accounts = read_u16(&mut curr, data)? as usize;
+        curr += num_accounts * 33;
+        let program_id = read_pubkey(&mut curr, data)?;
+
+        // Introspect on the first non compute budget instruction
+        if program_id.ne(&COMPUTE_BUDGET_PROGRAM_ID) {
+            // Read address from ix data
+            curr += 2;
+            let address = read_pubkey(&mut curr, data)?;
+            return Ok(Some(address));
         }
     }
 
-    Ok(true)
+    Ok(None)
 }

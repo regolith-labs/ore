@@ -224,6 +224,15 @@ pub fn close(signer: Pubkey) -> Instruction {
     }
 }
 
+/// Builds an auth instruction.
+pub fn auth(proof: Pubkey) -> Instruction {
+    Instruction {
+        program_id: NOOP_PROGRAM_ID,
+        accounts: vec![],
+        data: proof.to_bytes().to_vec(),
+    }
+}
+
 /// Builds a mine instruction.
 pub fn mine(
     signer: Pubkey,

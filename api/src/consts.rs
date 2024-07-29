@@ -150,3 +150,11 @@ pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
     )
     .0,
 );
+
+/// The address of the Solana compute budget program.
+pub const COMPUTE_BUDGET_PROGRAM_ID: Pubkey =
+    pubkey!("ComputeBudget111111111111111111111111111111");
+
+/// The address of the CU-optimized Solana noop program.
+// pub const NOOP_PROGRAM_ID: Pubkey = pubkey!("noop8ytexvkpCuqbf6FB89BSuNemHtPRqaNC31GWivW");
+pub const NOOP_PROGRAM_ID: Pubkey = pubkey!("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
