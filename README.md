@@ -11,7 +11,6 @@
 - [`Instruction`](api/src/instruction.rs) – Declared instructions and arguments.
 
 ## Instructions
-- [`Auth`](program/src/auth.rs) – Declares a proof pubkey for processing for mining.
 - [`Claim`](program/src/claim.rs) – Distributes claimable rewards as tokens from the treasury to a miner.
 - [`Close`](program/src/close.rs) – Closes a proof account returns the rent to the owner.
 - [`Open`](program/src/open.rs) – Creates a new proof account for a prospective miner.
