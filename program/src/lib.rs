@@ -1,4 +1,3 @@
-mod auth;
 mod claim;
 mod close;
 mod initialize;
@@ -9,7 +8,6 @@ mod stake;
 mod update;
 mod upgrade;
 
-use auth::*;
 use claim::*;
 use close::*;
 use initialize::*;
