@@ -1,26 +1,10 @@
-use ore_api::instruction::OreInstruction;
+use ore_api::consts::COMPUTE_BUDGET_PROGRAM_ID;
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
+    pubkey,
     pubkey::Pubkey,
     sanitize::SanitizeError,
-    serialize_utils::{read_pubkey, read_u16, read_u8},
+    serialize_utils::{read_pubkey, read_u16},
 };
-
-/// Auth is used to authenticate a proof account address via transaction introspection.
-///
-/// Safety requirements:
-/// - No safety requirements are required in this instruction to keep CUs low.
-/// - Other instructions are expected to validate the provided account is a valid proof.
-/// - Only one account should be provided.
-pub fn process_auth<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
-    let [_proof_info] = accounts else {
-        return Err(ProgramError::NotEnoughAccountKeys);
-    };
-
-    Ok(())
-}
 
 /// Get the authenticated pubkey.
 ///
@@ -45,45 +29,23 @@ pub fn authenticate(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
     let num_instructions = read_u16(&mut curr, data)?;
     let pc = curr;
 
-    // Iterate through the top-level instructions
+    // Iterate through the transaction instructions
     for i in 0..num_instructions as usize {
         // Get byte counter
         curr = pc + i * 2;
         curr = read_u16(&mut curr, data)? as usize;
 
-        // Read num accounts on this ix
-        let num_accounts = read_u16(&mut curr, data)? as usize;
-
-        // Hold a pointer to the first account in the accounts array
-        let mut ac = curr + 1;
-
         // Read the instruction program id
+        let num_accounts = read_u16(&mut curr, data)? as usize;
         curr += num_accounts * 33;
         let program_id = read_pubkey(&mut curr, data)?;
 
-        // We only need to introspect on the first ore ix
-        if program_id.eq(&ore_api::ID) {
+        // Introspect on the first non compute budget instruction
+        if program_id.ne(&COMPUTE_BUDGET_PROGRAM_ID) {
+            // Read address from ix data
             curr += 2;
-
-            // Parse the instruction data
-            if let Ok(ix) = OreInstruction::try_from(read_u8(&mut curr, data)?) {
-                // Return immediately if the ix is not an auth
-                if ix.ne(&OreInstruction::Auth) {
-                    return Ok(None);
-                }
-
-                // Valid the num accounts is expected
-                if num_accounts.ne(&1) {
-                    return Ok(None);
-                }
-
-                // Return the address of the authenticated account
-                let address = read_pubkey(&mut ac, data)?;
-                return Ok(Some(address));
-            }
-
-            // Return if instruction data can't be parsed
-            return Ok(None);
+            let address = read_pubkey(&mut curr, data)?;
+            return Ok(Some(address));
         }
     }
 

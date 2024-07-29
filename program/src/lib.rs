@@ -45,7 +45,6 @@ pub fn process_instruction(
         .ok_or(ProgramError::InvalidInstructionData)?;
 
     match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
-        OreInstruction::Auth => process_auth(accounts, data)?,
         OreInstruction::Claim => process_claim(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
