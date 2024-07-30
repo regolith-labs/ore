@@ -121,13 +121,12 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         let tardiness = t.saturating_sub(t_target) as u64;
         let halvings = tardiness.saturating_div(ONE_MINUTE as u64);
         if halvings.gt(&0) {
-            let penalty = reward.saturating_div(2u64.saturating_pow(halvings as u32));
-            reward = reward.saturating_sub(penalty);
+            reward = reward.saturating_div(2u64.saturating_pow(halvings as u32));
         }
 
         // Linear decay between minutes
         let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
-        if remainder_secs.gt(&0) {
+        if remainder_secs.gt(&0) && reward.gt(&0) {
             let penalty = reward
                 .saturating_div(2)
                 .saturating_mul(remainder_secs)
