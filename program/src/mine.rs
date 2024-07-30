@@ -28,10 +28,10 @@ use crate::utils::AccountDeserialize;
 
 /// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    // Parse args
+    // Parse args.
     let args = MineArgs::try_from_bytes(data)?;
 
-    // Load accounts
+    // Load accounts.
     let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         accounts
     else {
@@ -44,7 +44,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
-    // Authenticate the proof account
+    // Authenticate the proof account.
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
@@ -75,14 +75,17 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         return Err(OreError::Spam.into());
     }
 
-    // Validate hash satisfies the minimnum difficulty.
+    // Validate the hash satisfies the minimum difficulty.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
     if difficulty.lt(&(config.min_difficulty as u32)) {
         return Err(OreError::HashTooEasy.into());
     }
 
-    // Normalize difficulty and calculate reward rate
+    // Normalize difficulty and calculate reward rate.
+    //
+    // The reward double for every bit of difficulty (leading zero) on the hash. We use the normalized
+    // difficulty so the minimum accepted difficulty pays out at the base reward rate.
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
         .unwrap();
@@ -92,9 +95,10 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         .unwrap();
 
     // Apply staking multiplier.
+    //
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago.
+    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
@@ -115,6 +119,13 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     }
 
     // Apply liveness penalty.
+    //
+    // The liveness penalty exists to ensure there is no "invisible" hashpower on the network. It
+    // should not be possible to spend ~1 hour on a given challenge and submit a hash with a large
+    // difficulty value to earn an outsized reward.
+    //
+    // This penalty works by halving the reward amount for every minute late the solution has been submitted.
+    // This ultimately drives the reward to zero given enough time (10-20 minutes).
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         reward = reward.saturating_sub(
@@ -126,15 +137,19 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         );
     }
 
-    // Limit payout amount to whatever is left in the bus
+    // Limit payout amount to whatever is left in the bus.
+    //
+    // Busses are limited 1 ORE per epoch. This is the maximum amount a miner can earn for any one hash.
+    // We still track the theoretical rewards that would have been paid out ignoring the bus limit, so the
+    // base reward rate will be updated to account for the real hashpower on the network.
     let reward_actual = reward.min(bus.rewards);
 
-    // Update balances
+    // Update balances.
     bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
     bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
     proof.balance = proof.balance.checked_add(reward_actual).unwrap();
 
-    // Hash recent slot hash into the next challenge to prevent pre-mining attacks
+    // Hash recent slot hash into the next challenge to prevent pre-mining attacks.
     proof.last_hash = hash.h;
     proof.challenge = hashv(&[
         hash.h.as_slice(),
@@ -142,14 +157,14 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     ])
     .0;
 
-    // Update time trackers
+    // Update time trackers.
     proof.last_hash_at = t.max(t_target);
 
-    // Update lifetime stats
+    // Update lifetime stats.
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
-    // Log the mined rewards
+    // Log the mined rewards.
     set_return_data(
         MineEvent {
             difficulty: difficulty as u64,
@@ -166,12 +181,12 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 ///
 /// This process is necessary to prevent sybil attacks. If a user can pack multiple hashes into a single
 /// transaction, then there is a financial incentive to mine across multiple keypairs and submit as many hashes
-/// as possible in each transaction to minimize fee / hash.
+/// as possible in the same transaction to minimize fee / hash.
 ///
-/// We prevent this by forcing every transaction to declare the proof account being mined with upfont.
-/// The authentication process includes passing the 32 byte pubkey address as instruction data to the
-/// CU-optimized noop program. We parse this address through transaction introspection and use it to
-/// ensure only one proof account can be used for `mine` instructions for a given transaction.
+/// This is prevented by forcing every transaction to declare upfront the proof account that will be used for mining.
+/// The authentication process includes passing the 32 byte pubkey address as instruction data to a CU-optimized noop
+/// program. We parse this address through transaction introspection and use it to ensure the same proof account is
+/// used for every `mine` instruction in a given transaction.
 fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
     if let Ok(Some(auth_address)) = parse_auth_address(data) {
         if proof_address.ne(&auth_address) {

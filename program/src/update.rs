@@ -10,7 +10,7 @@ pub fn process_update<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     _data: &[u8],
 ) -> ProgramResult {
-    // Load accounts
+    // Load accounts.
     let [signer, miner_info, proof_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -18,7 +18,7 @@ pub fn process_update<'a, 'info>(
     load_system_account(miner_info, false)?;
     load_proof(proof_info, signer.key, true)?;
 
-    // Update the proof
+    // Update the proof's miner authority.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.miner = *miner_info.key;

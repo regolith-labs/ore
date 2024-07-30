@@ -23,10 +23,10 @@ pub fn process_initialize<'a, 'info>(
     accounts: &'a [AccountInfo<'info>],
     data: &[u8],
 ) -> ProgramResult {
-    // Parse args
+    // Parse args.
     let args = InitializeArgs::try_from_bytes(data)?;
 
-    // Load accounts
+    // Load accounts.
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
     else {
@@ -71,12 +71,12 @@ pub fn process_initialize<'a, 'info>(
     load_program(metadata_program, mpl_token_metadata::ID)?;
     load_sysvar(rent_sysvar, sysvar::rent::id())?;
 
-    // Check signer
+    // Check signer.
     if signer.key.ne(&INITIALIZER_ADDRESS) {
         return Err(ProgramError::MissingRequiredSignature);
     }
 
-    // Initialize bus accounts
+    // Initialize bus accounts.
     let bus_infos = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
@@ -107,7 +107,7 @@ pub fn process_initialize<'a, 'info>(
         bus.rewards = 0;
     }
 
-    // Initialize config
+    // Initialize config.
     create_pda(
         config_info,
         &ore_api::id(),
@@ -124,7 +124,7 @@ pub fn process_initialize<'a, 'info>(
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_balance = 0;
 
-    // Initialize treasury
+    // Initialize treasury.
     create_pda(
         treasury_info,
         &ore_api::id(),
@@ -137,7 +137,7 @@ pub fn process_initialize<'a, 'info>(
     treasury_data[0] = Treasury::discriminator() as u8;
     drop(treasury_data);
 
-    // Initialize mint
+    // Initialize mint.
     create_pda(
         mint_info,
         &spl_token::id(),
@@ -163,7 +163,7 @@ pub fn process_initialize<'a, 'info>(
         &[&[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
     )?;
 
-    // Initialize mint metadata
+    // Initialize mint metadata.
     mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
         __program: metadata_program,
         metadata: metadata_info,
@@ -189,7 +189,7 @@ pub fn process_initialize<'a, 'info>(
     }
     .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
 
-    // Initialize treasury token account
+    // Initialize treasury token account.
     create_ata(
         signer,
         treasury_info,

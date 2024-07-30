@@ -4,8 +4,8 @@ use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
-/// Treasury is a singleton account which manages all program wide variables.
-/// It is the mint authority for the Ore token and also the authority of the program-owned token account.
+/// Treasury is a singleton account which is the mint authority for the ORE token and the authority of
+/// the program's global token account.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Treasury {}

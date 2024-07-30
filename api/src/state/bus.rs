@@ -4,8 +4,8 @@ use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
-/// Bus accounts are responsible for distributing mining rewards.
-/// There are 8 busses total to minimize write-lock contention and allow for parallel mine operations.
+/// Bus accounts are responsible for distributing mining rewards. There are 8 busses total
+/// to minimize write-lock contention and allow Solana to process mine instructions in parallel.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Bus {
@@ -16,7 +16,7 @@ pub struct Bus {
     pub rewards: u64,
 
     /// The rewards this bus would have paid out in the current epoch if there no limit.
-    /// Used to calculate the updated reward rate.
+    /// This is used to calculate the updated reward rate.
     pub theoretical_rewards: u64,
 
     /// The largest known stake balance seen by the bus this epoch.

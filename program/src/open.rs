@@ -15,15 +15,11 @@ use solana_program::{
 use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
 /// Open creates a new proof account to track a miner's state.
-///
-/// Safety requirements:
-/// - Register is a permissionless instruction and can be invoked by any singer.
-/// - Can only succeed if the user does not already have a proof account.
 pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    // Parse args
+    // Parse args.
     let args = OpenArgs::try_from_bytes(data)?;
 
-    // Load accounts
+    // Load accounts.
     let [signer, miner_info, payer_info, proof_info, system_program, slot_hashes_info] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -40,7 +36,7 @@ pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     load_program(system_program, system_program::id())?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
 
-    // Initialize proof
+    // Initialize proof.
     create_pda(
         proof_info,
         &ore_api::id(),

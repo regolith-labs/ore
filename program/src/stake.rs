@@ -9,11 +9,11 @@ use crate::utils::AccountDeserialize;
 
 /// Stake deposits ORE into a proof account to earn multiplier.
 pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    // Parse args
+    // Parse args.
     let args = StakeArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
 
-    // Load accounts
+    // Load accounts.
     let [signer, proof_info, sender_info, treasury_tokens_info, token_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -23,16 +23,16 @@ pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
     load_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
 
-    // Update proof balance
+    // Update the proof balance.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof.balance.checked_add(amount).unwrap();
 
-    // Update deposit timestamp
+    // Update deposit timestamp.
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     proof.last_stake_at = clock.unix_timestamp;
 
-    // Distribute tokens from signer to treasury
+    // Transfer tokens from signer to treasury.
     transfer(
         signer,
         sender_info,

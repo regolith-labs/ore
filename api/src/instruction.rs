@@ -16,6 +16,7 @@ use crate::{
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[rustfmt::skip]
 pub enum OreInstruction {
+    // User
     Claim = 0,
     Close = 1,
     Mine = 2,
@@ -25,6 +26,7 @@ pub enum OreInstruction {
     Update = 6,
     Upgrade = 7,
 
+    // Admin
     Initialize = 100,
 }
 
@@ -96,6 +98,15 @@ impl_instruction_from_bytes!(ClaimArgs);
 impl_instruction_from_bytes!(StakeArgs);
 impl_instruction_from_bytes!(UpgradeArgs);
 
+/// Builds an auth instruction.
+pub fn auth(proof: Pubkey) -> Instruction {
+    Instruction {
+        program_id: NOOP_PROGRAM_ID,
+        accounts: vec![],
+        data: proof.to_bytes().to_vec(),
+    }
+}
+
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
@@ -136,15 +147,6 @@ pub fn close(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
         data: OreInstruction::Close.to_vec(),
-    }
-}
-
-/// Builds an auth instruction.
-pub fn auth(proof: Pubkey) -> Instruction {
-    Instruction {
-        program_id: NOOP_PROGRAM_ID,
-        accounts: vec![],
-        data: proof.to_bytes().to_vec(),
     }
 }
 

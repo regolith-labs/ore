@@ -6,7 +6,7 @@ use solana_program::{
     pubkey::Pubkey, rent::Rent, sysvar::Sysvar,
 };
 
-/// Creates a new pda
+/// Creates a new pda.
 #[inline(always)]
 pub fn create_pda<'a, 'info>(
     target_account: &'a AccountInfo<'info>,
@@ -75,7 +75,7 @@ pub fn create_pda<'a, 'info>(
 }
 
 pub trait Discriminator {
-    fn discriminator() -> u8; //AccountDiscriminator;
+    fn discriminator() -> u8;
 }
 
 pub trait AccountDeserialize {

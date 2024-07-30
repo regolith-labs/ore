@@ -6,13 +6,13 @@ use solana_program::{
 
 use crate::utils::AccountDeserialize;
 
-/// Claim distributes ORE from the treasury to a miner.
+/// Claim distributes claimable ORE from the treasury to a miner.
 pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    // Parse args
+    // Parse args.
     let args = ClaimArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
 
-    // Load accounts
+    // Load accounts.
     let [signer, beneficiary_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
@@ -25,7 +25,7 @@ pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
     load_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
 
-    // Update miner balance
+    // Update miner balance.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof
@@ -33,7 +33,7 @@ pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
         .checked_sub(amount)
         .ok_or(OreError::ClaimTooLarge)?;
 
-    // Distribute tokens from treasury to beneficiary
+    // Transfer tokens from treasury to beneficiary.
     transfer_signed(
         treasury_info,
         treasury_tokens_info,

@@ -12,9 +12,9 @@ use spl_token::state::Mint;
 
 use crate::utils::AccountDeserialize;
 
-/// Reset tops up the busses, updates the base reward rate, and generally sets up the ORE program for the next epoch.
+/// Reset tops up the busses, updates the base reward rate, and sets up the ORE program for the next epoch.
 pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
-    // Load accounts
+    // Load accounts.
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
@@ -39,7 +39,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
         bus_7_info,
     ];
 
-    // Validate enough time has passed since last reset
+    // Validate enough time has passed since last reset.
     let mut config_data = config_info.data.borrow_mut();
     let config = Config::try_from_bytes_mut(&mut config_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
@@ -51,10 +51,10 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
         return Ok(());
     }
 
-    // Update reset timestamp
+    // Update reset timestamp.
     config.last_reset_at = clock.unix_timestamp;
 
-    // Reset bus accounts and calculate actual rewards mined since last reset
+    // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
     let mut top_balance = 0u64;
@@ -73,32 +73,32 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     }
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
 
-    // Update the top balance
+    // Update the top balance.
     config.top_balance = top_balance;
 
-    // Update base reward rate for next epoch
+    // Update base reward rate for next epoch.
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
-    // If base_reward_rate is too low, then increment difficulty by 1 and double base reward rate
+    // If base_reward_rate is too low, then increment difficulty by 1 and double base reward rate.
     if config.base_reward_rate.le(&BASE_REWARD_RATE_MIN_THRESHOLD) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
     }
 
-    // If base reward rate is too high, then decrement difficulty by 1 and halve base reward rate
+    // If base reward rate is too high, then decrement difficulty by 1 and halve base reward rate.
     if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
         config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
     }
 
-    // Max supply check
+    // Max supply check.
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
     if mint.supply.ge(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
 
-    // Fund treasury token account
+    // Fund treasury token account.
     let amount = MAX_SUPPLY
         .saturating_sub(mint.supply)
         .min(total_epoch_rewards);

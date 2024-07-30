@@ -4,7 +4,7 @@ use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
-/// Config is a singleton account which manages admin configurable variables.
+/// Config is a singleton account which manages program global variables.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Config {
