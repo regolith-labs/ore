@@ -19,8 +19,8 @@ const-crypto = "0.1.0"
 drillx = { version = "1.0.0", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
-ore-api = { path = "api" }
-ore-utils = { path = "utils", features = ["spl"] }
+ore-api = { path = "api", version = "2.0.0" }
+ore-utils = { path = "utils", features = ["spl"], version = "2.0.0" }
 solana-program = "^1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
