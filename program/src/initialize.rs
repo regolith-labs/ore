@@ -105,6 +105,8 @@ pub fn process_initialize<'a, 'info>(
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
         bus.rewards = 0;
+        bus.theoretical_rewards = 0;
+        bus.top_balance = 0;
     }
 
     // Initialize config.

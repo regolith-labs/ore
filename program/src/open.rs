@@ -25,7 +25,7 @@ pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_system_account(miner_info, false)?;
+    load_any(miner_info, false)?;
     load_signer(payer_info)?;
     load_uninitialized_pda(
         proof_info,

@@ -434,3 +434,16 @@ pub fn load_program<'a, 'info>(
 
     Ok(())
 }
+
+/// Errors if:
+/// - Account is not writable.
+pub fn load_any<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}

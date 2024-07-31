@@ -45,6 +45,9 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
     // Authenticate the proof account.
+    //
+    // Only one proof account can be used for any given transaction. All `mine` instructions
+    // in the transaction must use the same proof account.
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
@@ -60,6 +63,9 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     }
 
     // Validate the hash digest.
+    //
+    // Here we use drillx to validate the provided solution is a valid hash of the challenge.
+    // If invalid, we return an error.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
@@ -68,6 +74,9 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     }
 
     // Reject spam transactions.
+    //
+    // If a miner attempts to submit solutions too frequently, we reject with an error. In general,
+    // miners are limited to 1 hash per epoch on average.
     let t: i64 = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
@@ -76,15 +85,18 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     }
 
     // Validate the hash satisfies the minimum difficulty.
+    //
+    // We use drillx to get the difficulty (leading zeros) of the hash. If the hash does not have the
+    // minimum required difficulty, we reject it with an error.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
     if difficulty.lt(&(config.min_difficulty as u32)) {
         return Err(OreError::HashTooEasy.into());
     }
 
-    // Normalize difficulty and calculate reward rate.
+    // Normalize the difficulty and calculate the reward amount.
     //
-    // The reward double for every bit of difficulty (leading zero) on the hash. We use the normalized
+    // The reward doubles for every bit of difficulty (leading zeros) on the hash. We use the normalized
     // difficulty so the minimum accepted difficulty pays out at the base reward rate.
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
@@ -102,7 +114,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Update staking reward
+        // Calculate staking reward.
         if config.top_balance.gt(&0) {
             let staking_reward = (reward as u128)
                 .checked_mul(proof.balance.min(config.top_balance) as u128)
@@ -112,7 +124,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
             reward = reward.checked_add(staking_reward).unwrap();
         }
 
-        // Update bus stake tracker if stake is active
+        // Update bus stake tracker.
         if proof.balance.gt(&bus.top_balance) {
             bus.top_balance = proof.balance;
         }
@@ -124,7 +136,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     // should not be possible to spend ~1 hour on a given challenge and submit a hash with a large
     // difficulty value to earn an outsized reward.
     //
-    // This penalty works by halving the reward amount for every minute late the solution has been submitted.
+    // The penalty works by halving the reward amount for every minute late the solution has been submitted.
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
@@ -135,7 +147,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
             reward = reward.saturating_div(2u64.saturating_pow(halvings as u32));
         }
 
-        // Linear decay between minutes
+        // Linear decay with remainder seconds.
         let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
         if remainder_secs.gt(&0) && reward.gt(&0) {
             let penalty = reward
@@ -148,17 +160,22 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 
     // Limit payout amount to whatever is left in the bus.
     //
-    // Busses are limited 1 ORE per epoch. This is the maximum amount a miner can earn for any one hash.
-    // We still track the theoretical rewards that would have been paid out ignoring the bus limit, so the
-    // base reward rate will be updated to account for the real hashpower on the network.
+    // Busses are limited to distributing 1 ORE per epoch. This is the maximum amount a miner can earn
+    // for any given hash.
     let reward_actual = reward.min(bus.rewards);
 
     // Update balances.
+    //
+    // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
+    // base reward rate will be updated to account for the real hashpower on the network.
     bus.theoretical_rewards = bus.theoretical_rewards.checked_add(reward).unwrap();
     bus.rewards = bus.rewards.checked_sub(reward_actual).unwrap();
     proof.balance = proof.balance.checked_add(reward_actual).unwrap();
 
-    // Hash recent slot hash into the next challenge to prevent pre-mining attacks.
+    // Hash a recent slot hash into the next challenge to prevent pre-mining attacks.
+    //
+    // The slot hashes are unpredictable values. By seeding the next challenge with the most recent slot hash,
+    // miners are forced to submit their current solution before they can begin mining for the next.
     proof.last_hash = hash.h;
     proof.challenge = hashv(&[
         hash.h.as_slice(),
@@ -174,6 +191,8 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     proof.total_rewards = proof.total_rewards.saturating_add(reward);
 
     // Log the mined rewards.
+    //
+    // This data can be used by off-chain indexers to display mining stats.
     set_return_data(
         MineEvent {
             difficulty: difficulty as u64,
