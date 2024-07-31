@@ -128,13 +128,22 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
-        reward = reward.saturating_sub(
-            reward
-                .checked_mul(t.checked_sub(t_liveness).unwrap() as u64)
-                .unwrap()
-                .checked_div(ONE_MINUTE as u64)
-                .unwrap(),
-        );
+        // Halve the reward for every minute late.
+        let tardiness = t.saturating_sub(t_target) as u64;
+        let halvings = tardiness.saturating_div(ONE_MINUTE as u64);
+        if halvings.gt(&0) {
+            reward = reward.saturating_div(2u64.saturating_pow(halvings as u32));
+        }
+
+        // Linear decay between minutes
+        let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
+        if remainder_secs.gt(&0) && reward.gt(&0) {
+            let penalty = reward
+                .saturating_div(2)
+                .saturating_mul(remainder_secs)
+                .saturating_div(ONE_MINUTE as u64);
+            reward = reward.saturating_sub(penalty);
+        }
     }
 
     // Limit payout amount to whatever is left in the bus.
