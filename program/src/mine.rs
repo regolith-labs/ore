@@ -13,9 +13,9 @@ use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
-    blake3::hashv,
     clock::Clock,
     entrypoint::ProgramResult,
+    keccak::hashv,
     program_error::ProgramError,
     pubkey::Pubkey,
     sanitize::SanitizeError,

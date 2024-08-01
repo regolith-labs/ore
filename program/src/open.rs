@@ -3,9 +3,9 @@ use std::mem::size_of;
 use ore_api::{consts::*, instruction::OpenArgs, loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo,
-    blake3::hashv,
     clock::Clock,
     entrypoint::ProgramResult,
+    keccak::hashv,
     program_error::ProgramError,
     slot_hashes::SlotHash,
     system_program,
