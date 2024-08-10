@@ -13,7 +13,7 @@ use spl_token::state::Mint;
 use crate::utils::AccountDeserialize;
 
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.
-pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
+pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
@@ -58,9 +58,8 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
     let mut top_balance = 0u64;
-    for i in 0..BUS_COUNT {
-        // Parse bus account.
-        let mut bus_data = busses[i].data.borrow_mut();
+    for bus_account_info in busses.iter() {
+        let mut bus_data = bus_account_info.data.borrow_mut();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
 
         // Track top balance.
@@ -156,7 +155,7 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
 
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
-    new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
+    new_rate_smoothed.clamp(1, BUS_EPOCH_REWARDS)
 }
 
 #[cfg(test)]

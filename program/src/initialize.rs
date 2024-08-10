@@ -19,10 +19,7 @@ use spl_token::state::Mint;
 use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
 /// Initialize sets up the ORE program to begin mining.
-pub fn process_initialize<'a, 'info>(
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = InitializeArgs::try_from_bytes(data)?;
 
@@ -101,7 +98,7 @@ pub fn process_initialize<'a, 'info>(
             signer,
         )?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
-        bus_data[0] = Bus::discriminator() as u8;
+        bus_data[0] = Bus::discriminator();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
         bus.rewards = 0;
@@ -119,7 +116,7 @@ pub fn process_initialize<'a, 'info>(
         signer,
     )?;
     let mut config_data = config_info.data.borrow_mut();
-    config_data[0] = Config::discriminator() as u8;
+    config_data[0] = Config::discriminator();
     let config = Config::try_from_bytes_mut(&mut config_data)?;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
@@ -136,7 +133,7 @@ pub fn process_initialize<'a, 'info>(
         signer,
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
-    treasury_data[0] = Treasury::discriminator() as u8;
+    treasury_data[0] = Treasury::discriminator();
     drop(treasury_data);
 
     // Initialize mint.

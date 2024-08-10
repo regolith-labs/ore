@@ -7,10 +7,7 @@ use solana_program::{
 use spl_token::state::Mint;
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.
-pub fn process_upgrade<'a, 'info>(
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = StakeArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
@@ -22,7 +19,7 @@ pub fn process_upgrade<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_token_account(beneficiary_info, Some(&signer.key), &MINT_ADDRESS, true)?;
+    load_token_account(beneficiary_info, Some(signer.key), &MINT_ADDRESS, true)?;
     load_mint(mint_info, MINT_ADDRESS, true)?;
     load_mint(mint_v1_info, MINT_V1_ADDRESS, true)?;
     load_token_account(sender_info, Some(signer.key), &MINT_V1_ADDRESS, true)?;

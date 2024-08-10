@@ -12,7 +12,7 @@ use crate::{
 
 /// Errors if:
 /// - Account is not a signer.
-pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
+pub fn load_signer(info: &AccountInfo<'_>) -> Result<(), ProgramError> {
     if !info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
     }
@@ -27,11 +27,7 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 /// - Data cannot deserialize into a bus account.
 /// - Bus ID does not match the expected ID.
 /// - Expected to be writable, but is not.
-pub fn load_bus<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    id: u64,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_bus(info: &AccountInfo<'_>, id: u64, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -65,10 +61,7 @@ pub fn load_bus<'a, 'info>(
 /// - Bus ID is not in the expected range.
 /// - Address is not in set of valid bus address.
 /// - Expected to be writable, but is not.
-pub fn load_any_bus<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any_bus(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -77,7 +70,7 @@ pub fn load_any_bus<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Bus::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Bus::discriminator())) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -98,10 +91,7 @@ pub fn load_any_bus<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a config account.
 /// - Expected to be writable, but is not.
-pub fn load_config<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_config(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -114,7 +104,7 @@ pub fn load_config<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Config::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Config::discriminator())) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -131,8 +121,8 @@ pub fn load_config<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof authority does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_proof(
+    info: &AccountInfo<'_>,
     authority: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -147,7 +137,7 @@ pub fn load_proof<'a, 'info>(
     let proof_data = info.data.borrow();
     let proof = Proof::try_from_bytes(&proof_data)?;
 
-    if proof.authority.ne(&authority) {
+    if proof.authority.ne(authority) {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -164,8 +154,8 @@ pub fn load_proof<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof miner does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof_with_miner<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_proof_with_miner(
+    info: &AccountInfo<'_>,
     miner: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -180,7 +170,7 @@ pub fn load_proof_with_miner<'a, 'info>(
     let proof_data = info.data.borrow();
     let proof = Proof::try_from_bytes(&proof_data)?;
 
-    if proof.miner.ne(&miner) {
+    if proof.miner.ne(miner) {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -196,10 +186,7 @@ pub fn load_proof_with_miner<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a proof account.
 /// - Expected to be writable, but is not.
-pub fn load_any_proof<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any_proof(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -208,7 +195,7 @@ pub fn load_any_proof<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Proof::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Proof::discriminator())) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -225,10 +212,7 @@ pub fn load_any_proof<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a treasury account.
 /// - Expected to be writable, but is not.
-pub fn load_treasury<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_treasury(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -241,7 +225,7 @@ pub fn load_treasury<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Treasury::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Treasury::discriminator())) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -255,10 +239,7 @@ pub fn load_treasury<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected treasury tokens address.
 /// - Cannot load as a token account
-pub fn load_treasury_tokens<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_treasury_tokens(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
@@ -272,8 +253,8 @@ pub fn load_treasury_tokens<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a mint account.
 /// - Expected to be writable, but is not.
-pub fn load_mint<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_mint(
+    info: &AccountInfo<'_>,
     address: Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -305,8 +286,8 @@ pub fn load_mint<'a, 'info>(
 /// - Token account owner does not match the expected owner address.
 /// - Token account mint does not match the expected mint address.
 /// - Expected to be writable, but is not.
-pub fn load_token_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_token_account(
+    info: &AccountInfo<'_>,
     owner: Option<&Pubkey>,
     mint: &Pubkey,
     is_writable: bool,
@@ -322,7 +303,7 @@ pub fn load_token_account<'a, 'info>(
     let account_data = info.data.borrow();
     let account = spl_token::state::Account::unpack(&account_data)?;
 
-    if account.mint.ne(&mint) {
+    if account.mint.ne(mint) {
         return Err(ProgramError::InvalidAccountData);
     }
 
@@ -342,8 +323,8 @@ pub fn load_token_account<'a, 'info>(
 /// Errors if:
 /// - Address does not match PDA derived from provided seeds.
 /// - Cannot load as an uninitialized account.
-pub fn load_uninitialized_pda<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_uninitialized_pda(
+    info: &AccountInfo<'_>,
     seeds: &[&[u8]],
     bump: u8,
     program_id: &Pubkey,
@@ -365,10 +346,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
 /// - Owner is not the system program.
 /// - Data is not empty.
 /// - Account is not writable.
-pub fn load_system_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_system_account(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&system_program::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -387,10 +365,7 @@ pub fn load_system_account<'a, 'info>(
 /// Errors if:
 /// - Owner is not the sysvar address.
 /// - Account cannot load with the expected address.
-pub fn load_sysvar<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    key: Pubkey,
-) -> Result<(), ProgramError> {
+pub fn load_sysvar(info: &AccountInfo<'_>, key: Pubkey) -> Result<(), ProgramError> {
     if info.owner.ne(&sysvar::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -401,8 +376,8 @@ pub fn load_sysvar<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected value.
 /// - Expected to be writable, but is not.
-pub fn load_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_account(
+    info: &AccountInfo<'_>,
     key: Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -420,10 +395,7 @@ pub fn load_account<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected value.
 /// - Account is not executable.
-pub fn load_program<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    key: Pubkey,
-) -> Result<(), ProgramError> {
+pub fn load_program(info: &AccountInfo<'_>, key: Pubkey) -> Result<(), ProgramError> {
     if info.key.ne(&key) {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -437,10 +409,7 @@ pub fn load_program<'a, 'info>(
 
 /// Errors if:
 /// - Account is not writable.
-pub fn load_any<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }

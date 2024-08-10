@@ -15,7 +15,7 @@ use solana_program::{
 use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
 /// Open creates a new proof account to track a miner's state.
-pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = OpenArgs::try_from_bytes(data)?;
 
@@ -47,7 +47,7 @@ pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = Proof::discriminator() as u8;
+    proof_data[0] = Proof::discriminator();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
     proof.balance = 0;
