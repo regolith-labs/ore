@@ -1,6 +1,6 @@
 [package]
 name = "coal-program"
-description = "ORE is a fair-launch, proof-of-work, digital currency everyone can mine"
+description = "COAL is a fair-launch, proof-of-work, digital currency everyone can mine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
