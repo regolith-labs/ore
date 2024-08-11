@@ -3,16 +3,16 @@ use const_crypto::ed25519;
 use solana_program::{pubkey, pubkey::Pubkey};
 
 /// The authority allowed to initialize the program.
-pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6CbNQvPWLJQufq");
 
 /// The base reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5);
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(12);
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(16);
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
@@ -43,7 +43,7 @@ pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
 pub const MAX_SUPPLY: u64 = ONE_ORE * 21_000_000;
 
 /// The target quantity of ORE to be mined per epoch.
-pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64;
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64 * 1000;
 
 /// The maximum quantity of ORE that can be mined per epoch.
 /// Inflation rate ≈ 1 ORE / min (min 0, max 8)
@@ -57,7 +57,7 @@ pub const BUS_COUNT: usize = 8;
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
 /// than a factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 2;
+pub const SMOOTHING_FACTOR: u64 = 10;
 
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
@@ -88,13 +88,13 @@ pub const MINT_NOISE: [u8; 16] = [
 ];
 
 /// The name for token metadata.
-pub const METADATA_NAME: &str = "ORE";
+pub const METADATA_NAME: &str = "coal";
 
 /// The ticker symbol for token metadata.
-pub const METADATA_SYMBOL: &str = "ORE";
+pub const METADATA_SYMBOL: &str = "coal";
 
 /// The uri for token metdata.
-pub const METADATA_URI: &str = "https://ore.supply/metadata-v2.json";
+pub const METADATA_URI: &str = "https://coal.digital/metadata.json";
 
 /// Program id for const pda derivations
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
@@ -127,9 +127,6 @@ pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).0);
-
-/// The address of the v1 mint account.
-pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =

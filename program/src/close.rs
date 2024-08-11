@@ -1,4 +1,4 @@
-use ore_api::{loaders::*, state::Proof};
+use coal_api::{loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,

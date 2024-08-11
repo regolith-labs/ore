@@ -1,5 +1,5 @@
-use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::Proof};
-use ore_utils::spl::transfer_signed;
+use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::Proof};
+use coal_utils::spl::transfer_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
