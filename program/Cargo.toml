@@ -1,6 +1,6 @@
 [package]
 name = "ore-program"
-description = "ORE is a fair-launch, proof-of-work, digital currency everyone can mine"
+description = "ORE is a proof-of-work token everyone can mine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

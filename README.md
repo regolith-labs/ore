@@ -1,6 +1,6 @@
 # ORE
 
-**ORE is a cross-border digital currency everyone can mine.**
+**ORE is a proof-of-work token everyone can mine.**
 
 
 ## API
