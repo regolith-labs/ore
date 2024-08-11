@@ -219,9 +219,11 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
     if let Ok(Some(auth_address)) = parse_auth_address(data) {
         if proof_address.ne(&auth_address) {
+            println!("Auth failed");
             return Err(OreError::AuthFailed.into());
         }
     } else {
+        println!("Auth failed");
         return Err(OreError::AuthFailed.into());
     }
     Ok(())

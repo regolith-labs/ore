@@ -5,7 +5,6 @@ use solana_program::{pubkey, pubkey::Pubkey};
 /// The authority allowed to initialize the program.
 pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6CbNQvPWLJQufq");
 
-
 /// The base reward rate to intialize the program with.
 pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 
@@ -61,7 +60,7 @@ pub const BUS_COUNT: usize = 8;
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by mCOAL or less
 /// than a factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 2;
+pub const SMOOTHING_FACTOR: u64 = 10;
 
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
