@@ -198,6 +198,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
             difficulty: difficulty as u64,
             reward: reward_actual,
             timing: t.saturating_sub(t_liveness),
+            balance: proof.balance,
         }
         .to_bytes(),
     );
