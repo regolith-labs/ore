@@ -20,15 +20,15 @@ pub const TOLERANCE: i64 = 5;
 /// The minimum difficulty to initialize the program with.
 pub const INITIAL_MIN_DIFFICULTY: u32 = 1;
 
-/// The decimal precision of the ORE token.
-/// There are 100 billion indivisible units per ORE (called "grains").
+/// The decimal precision of the COAL token.
+/// There are 100 billion indivisible units per COAL (called "grains").
 pub const TOKEN_DECIMALS: u8 = 11;
 
-/// The decimal precision of the ORE v1 token.
+/// The decimal precision of the COAL v1 token.
 pub const TOKEN_DECIMALS_V1: u8 = 9;
 
-/// One ORE token, denominated in indivisible units.
-pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
+/// One COAL token, denominated in indivisible units.
+pub const ONE_COAL: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
@@ -40,22 +40,22 @@ pub const EPOCH_MINUTES: i64 = 2;
 pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
 
 /// The maximum token supply (21 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE * 21_000_000;
+pub const MAX_SUPPLY: u64 = ONE_COAL * 21_000_000;
 
-/// The target quantity of ORE to be mined per epoch.
-pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64 * 1000;
+/// The target quantity of COAL to be mined per epoch.
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_COAL * EPOCH_MINUTES as u64 * 1000;
 
-/// The maximum quantity of ORE that can be mined per epoch.
-/// Inflation target ≈ 1 ORE / min
+/// The maximum quantity of COAL that can be mined per epoch.
+/// Inflation rate ≈ 1 COAL / min (min 0, max 8)
 pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS * BUS_COUNT as u64;
 
-/// The quantity of ORE each bus is allowed to issue per epoch.
+/// The quantity of COAL each bus is allowed to issue per epoch.
 pub const BUS_EPOCH_REWARDS: u64 = MAX_EPOCH_REWARDS / BUS_COUNT as u64;
 
 /// The number of bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: usize = 8;
 
-/// The smoothing factor for reward rate changes. The reward rate cannot change by more or less
+/// The smoothing factor for reward rate changes. The reward rate cannot change by mCOAL or less
 /// than a factor of this constant from one epoch to the next.
 pub const SMOOTHING_FACTOR: u64 = 10;
 

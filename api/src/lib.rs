@@ -9,4 +9,4 @@ pub(crate) use coal_utils as utils;
 
 use solana_program::declare_id;
 
-declare_id!("6zZWoA4iyo1f7XsS9J6pFRmjWm3EJU55Z3ym6A4LdCis");
+declare_id!("EG67mGGTxMGuPxDLWeccczVecycmpj2SokzpWeBoGVTf");
