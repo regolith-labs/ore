@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 use drillx::Solution;
-use ore_api::{
+use coal_api::{
     consts::*,
     error::OreError,
     event::MineEvent,
@@ -59,6 +59,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         .saturating_add(EPOCH_DURATION)
         .le(&clock.unix_timestamp)
     {
+        println!("Needs reset");
         return Err(OreError::NeedsReset.into());
     }
 
@@ -218,9 +219,11 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
     if let Ok(Some(auth_address)) = parse_auth_address(data) {
         if proof_address.ne(&auth_address) {
+            println!("Auth failed");
             return Err(OreError::AuthFailed.into());
         }
     } else {
+        println!("Auth failed");
         return Err(OreError::AuthFailed.into());
     }
     Ok(())

@@ -530,6 +530,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "coal-api"
+version = "2.1.0"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "coal-utils",
+ "const-crypto",
+ "drillx",
+ "mpl-token-metadata",
+ "num_enum",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "coal-program"
+version = "2.1.0"
+dependencies = [
+ "coal-api",
+ "coal-utils",
+ "drillx",
+ "mpl-token-metadata",
+ "rand 0.8.5",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
+name = "coal-utils"
+version = "2.1.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1283,48 +1325,6 @@ name = "opaque-debug"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
-
-[[package]]
-name = "ore-api"
-version = "2.1.0"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "drillx",
- "mpl-token-metadata",
- "num_enum",
- "ore-utils",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "static_assertions",
- "thiserror",
-]
-
-[[package]]
-name = "ore-program"
-version = "2.1.0"
-dependencies = [
- "drillx",
- "mpl-token-metadata",
- "ore-api",
- "ore-utils",
- "rand 0.8.5",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
-name = "ore-utils"
-version = "2.1.0"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
 
 [[package]]
 name = "parking_lot"

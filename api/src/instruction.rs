@@ -24,7 +24,6 @@ pub enum OreInstruction {
     Reset = 4,
     Stake = 5,
     Update = 6,
-    Upgrade = 7,
 
     // Admin
     Initialize = 100,
@@ -269,31 +268,6 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
             AccountMeta::new(proof, false),
         ],
         data: OreInstruction::Update.to_vec(),
-    }
-}
-
-// Build an upgrade instruction.
-pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
-    Instruction {
-        program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(beneficiary, false),
-            AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(MINT_V1_ADDRESS, false),
-            AccountMeta::new(sender, false),
-            AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-        ],
-        data: [
-            OreInstruction::Upgrade.to_vec(),
-            UpgradeArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
     }
 }
 

@@ -1,12 +1,12 @@
 use std::mem::size_of;
 
-use ore_api::{
+use coal_api::{
     consts::*,
     instruction::*,
     loaders::*,
     state::{Bus, Config, Treasury},
 };
-use ore_utils::spl::create_ata;
+use coal_utils::spl::create_ata;
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -33,15 +33,15 @@ pub fn process_initialize<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0]], args.bus_0_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_1_info, &[BUS, &[1]], args.bus_1_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_2_info, &[BUS, &[2]], args.bus_2_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_3_info, &[BUS, &[3]], args.bus_3_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_4_info, &[BUS, &[4]], args.bus_4_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_5_info, &[BUS, &[5]], args.bus_5_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_6_info, &[BUS, &[6]], args.bus_6_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_7_info, &[BUS, &[7]], args.bus_7_bump, &ore_api::id())?;
-    load_uninitialized_pda(config_info, &[CONFIG], args.config_bump, &ore_api::id())?;
+    load_uninitialized_pda(bus_0_info, &[BUS, &[0]], args.bus_0_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_1_info, &[BUS, &[1]], args.bus_1_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_2_info, &[BUS, &[2]], args.bus_2_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_3_info, &[BUS, &[3]], args.bus_3_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_4_info, &[BUS, &[4]], args.bus_4_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_5_info, &[BUS, &[5]], args.bus_5_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_6_info, &[BUS, &[6]], args.bus_6_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_7_info, &[BUS, &[7]], args.bus_7_bump, &coal_api::id())?;
+    load_uninitialized_pda(config_info, &[CONFIG], args.config_bump, &coal_api::id())?;
     load_uninitialized_pda(
         metadata_info,
         &[
@@ -56,13 +56,13 @@ pub fn process_initialize<'a, 'info>(
         mint_info,
         &[MINT, MINT_NOISE.as_slice()],
         args.mint_bump,
-        &ore_api::id(),
+        &coal_api::id(),
     )?;
     load_uninitialized_pda(
         treasury_info,
         &[TREASURY],
         args.treasury_bump,
-        &ore_api::id(),
+        &coal_api::id(),
     )?;
     load_system_account(treasury_tokens_info, true)?;
     load_program(system_program, system_program::id())?;
@@ -94,7 +94,7 @@ pub fn process_initialize<'a, 'info>(
     for i in 0..BUS_COUNT {
         create_pda(
             bus_infos[i],
-            &ore_api::id(),
+            &coal_api::id(),
             8 + size_of::<Bus>(),
             &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
@@ -112,7 +112,7 @@ pub fn process_initialize<'a, 'info>(
     // Initialize config.
     create_pda(
         config_info,
-        &ore_api::id(),
+        &coal_api::id(),
         8 + size_of::<Config>(),
         &[CONFIG, &[args.config_bump]],
         system_program,
@@ -129,7 +129,7 @@ pub fn process_initialize<'a, 'info>(
     // Initialize treasury.
     create_pda(
         treasury_info,
-        &ore_api::id(),
+        &coal_api::id(),
         8 + size_of::<Treasury>(),
         &[TREASURY, &[args.treasury_bump]],
         system_program,

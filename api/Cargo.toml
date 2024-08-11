@@ -1,6 +1,6 @@
 [package]
-name = "ore-api"
-description = "API for interacting with the ORE program"
+name = "coal-api"
+description = "API for interacting with the coal program"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -16,7 +16,7 @@ const-crypto.workspace = true
 drillx.workspace = true
 mpl-token-metadata.workspace = true
 num_enum.workspace = true
-ore-utils.workspace = true
+coal-utils.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true

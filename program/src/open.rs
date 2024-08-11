@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::OpenArgs, loaders::*, state::Proof};
+use coal_api::{consts::*, instruction::OpenArgs, loaders::*, state::Proof};
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
@@ -31,7 +31,7 @@ pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
         proof_info,
         &[PROOF, signer.key.as_ref()],
         args.bump,
-        &ore_api::id(),
+        &coal_api::id(),
     )?;
     load_program(system_program, system_program::id())?;
     load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
@@ -39,7 +39,7 @@ pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
     // Initialize proof.
     create_pda(
         proof_info,
-        &ore_api::id(),
+        &coal_api::id(),
         8 + size_of::<Proof>(),
         &[PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,

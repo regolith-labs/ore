@@ -1,5 +1,5 @@
 [package]
-name = "ore-utils"
+name = "coal-utils"
 description = "Utils for building ORE programs"
 version.workspace = true
 edition.workspace = true

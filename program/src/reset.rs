@@ -1,4 +1,4 @@
-use ore_api::{
+use coal_api::{
     consts::*,
     error::OreError,
     loaders::*,
@@ -164,7 +164,7 @@ mod tests {
     use rand::{distributions::Uniform, Rng};
 
     use crate::calculate_new_reward_rate;
-    use ore_api::consts::{
+    use coal_api::consts::{
         BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
         TARGET_EPOCH_REWARDS,
     };
