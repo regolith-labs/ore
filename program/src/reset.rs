@@ -5,8 +5,9 @@ use coal_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar,
+    msg,
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, 
+    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
@@ -54,6 +55,27 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     // Update timestamp.
     config.last_reset_at = clock.unix_timestamp;
 
+    // Max supply check.
+    let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
+    if mint.supply.ge(&MAX_SUPPLY) {
+        return Err(OreError::MaxSupply.into());
+    }
+
+    // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
+    // The halving is done to incentivize the accumulation of the token.
+    // Halving should only occur at 10% intervals.
+    let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
+    let halving_factor = 2u64.pow((supply_percentage / 10.0) as u32);
+    let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
+    let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
+    msg!("mint.supply: {}", mint.supply);
+    msg!("supply_percentage: {}", supply_percentage);
+    msg!("halving_factor: {}", halving_factor);
+    msg!("BUS_EPOCH_REWARDS: {}", BUS_EPOCH_REWARDS);
+    msg!("adjusted_bus_epoch_rewards: {}", adjusted_bus_epoch_rewards);
+    msg!("MAX_EPOCH_REWARDS: {}", MAX_EPOCH_REWARDS);
+    msg!("adjusted_max_epoch_rewards: {}", adjusted_max_epoch_rewards);
+
     // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
@@ -74,11 +96,11 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
             total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
 
         // Reset bus account for new epoch.
-        bus.rewards = BUS_EPOCH_REWARDS;
+        bus.rewards = adjusted_bus_epoch_rewards;
         bus.theoretical_rewards = 0;
         bus.top_balance = 0;
     }
-    let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
+    let total_epoch_rewards = adjusted_max_epoch_rewards.saturating_sub(total_remaining_rewards);
 
     // Update global top balance.
     config.top_balance = top_balance;
@@ -97,12 +119,6 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
         config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
-    }
-
-    // Max supply check.
-    let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
-    if mint.supply.ge(&MAX_SUPPLY) {
-        return Err(OreError::MaxSupply.into());
     }
 
     // Fund the treasury token account.
