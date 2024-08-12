@@ -34,7 +34,7 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 pub const ONE_MINUTE: i64 = 60;
 
 /// The number of minutes in a program epoch.
-pub const EPOCH_MINUTES: i64 = 1;
+pub const EPOCH_MINUTES: i64 = 2;
 
 /// The duration of a program epoch, in seconds.
 pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
@@ -46,7 +46,7 @@ pub const MAX_SUPPLY: u64 = ONE_ORE * 21_000_000;
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64;
 
 /// The maximum quantity of ORE that can be mined per epoch.
-/// Inflation rate ≈ 1 ORE / min (min 0, max 8)
+/// Inflation target ≈ 1 ORE / min
 pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS * BUS_COUNT as u64;
 
 /// The quantity of ORE each bus is allowed to issue per epoch.
