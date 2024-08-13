@@ -68,13 +68,6 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     let halving_factor = 2u64.pow((supply_percentage / 10.0) as u32);
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
     let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
-    msg!("mint.supply: {}", mint.supply);
-    msg!("supply_percentage: {}", supply_percentage);
-    msg!("halving_factor: {}", halving_factor);
-    msg!("BUS_EPOCH_REWARDS: {}", BUS_EPOCH_REWARDS);
-    msg!("adjusted_bus_epoch_rewards: {}", adjusted_bus_epoch_rewards);
-    msg!("MAX_EPOCH_REWARDS: {}", MAX_EPOCH_REWARDS);
-    msg!("adjusted_max_epoch_rewards: {}", adjusted_max_epoch_rewards);
 
     // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
