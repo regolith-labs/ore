@@ -5,7 +5,6 @@ use coal_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    msg,
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, 
     program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
 };
@@ -65,7 +64,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     // The halving is done to incentivize the accumulation of the token.
     // Halving should only occur at 10% intervals.
     let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
-    let halving_factor = 2u64.pow((supply_percentage / 10.0) as u32);
+    let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
     let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
 
