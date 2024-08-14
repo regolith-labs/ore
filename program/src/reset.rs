@@ -62,7 +62,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
 
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
     // The halving is done to incentivize the accumulation of the token.
-    // Halving should only occur at 10% intervals.
+    // Halving should only occur at 5% intervals.
     let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
