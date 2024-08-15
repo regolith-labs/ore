@@ -180,6 +180,36 @@ pub fn mine(
     }
 }
 
+pub fn mine_ore(
+    signer: Pubkey,
+    proof_authority: Pubkey,
+    bus: Pubkey,
+    solution: Solution,
+) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &ORE_PROGRAM_ID).0;
+    Instruction {
+        program_id: ORE_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus, false),
+            AccountMeta::new_readonly(ORE_CONFIG_ADDRESS, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Mine.to_vec(),
+            MineArgs {
+                digest: solution.d,
+                nonce: solution.n,
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
 /// Builds an open instruction.
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
