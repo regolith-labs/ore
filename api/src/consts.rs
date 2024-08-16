@@ -46,7 +46,7 @@ pub const MAX_SUPPLY: u64 = ONE_COAL * 21_000_000;
 pub const EXTRACTION_MULTIPLIER: u64 = 125;
 
 /// The target quantity of COAL to be mined per epoch.
-pub const TARGET_EPOCH_REWARDS: u64 = ONE_COAL * EPOCH_MINUTES as u64 * EXTRACTION_MULTIPLIER;
+pub const TARGET_EPOCH_REWARDS: u64 = ONE_COAL * EXTRACTION_MULTIPLIER * EPOCH_MINUTES as u64;
 
 /// The maximum quantity of COAL that can be mined per epoch.
 /// Inflation rate ≈ 1 COAL / min (min 0, max 8)
@@ -60,7 +60,7 @@ pub const BUS_COUNT: usize = 8;
 
 /// The smoothing factor for reward rate changes. The reward rate cannot change by mCOAL or less
 /// than a factor of this constant from one epoch to the next.
-pub const SMOOTHING_FACTOR: u64 = 10;
+pub const SMOOTHING_FACTOR: u64 = 2;
 
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
