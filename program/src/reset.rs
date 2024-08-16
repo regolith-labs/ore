@@ -108,8 +108,10 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     }
 
     // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
-        config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
+    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) {
+        if config.min_difficulty.gt(&1) {
+            config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
+        }
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
     }
 
