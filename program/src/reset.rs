@@ -5,7 +5,12 @@ use coal_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
+    account_info::AccountInfo,
+    clock::Clock,
+    entrypoint::ProgramResult,
+    program_error::ProgramError,
+    program_pack::Pack,
+    sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
@@ -62,7 +67,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
     // The halving is done to incentivize the accumulation of the token.
     // Halving should only occur at 5% intervals.
-    let supply_percentage = ((4_250_000 * ONE_COAL) as f64 / MAX_SUPPLY as f64) * 100.0;
+    let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
     let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
