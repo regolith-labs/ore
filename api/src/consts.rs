@@ -13,7 +13,7 @@ pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5);
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(13);
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
