@@ -10,10 +10,10 @@ pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6
 pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5);
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(8);
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(13);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(12);
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
@@ -104,7 +104,7 @@ pub const METADATA_URI: &str = "https://coal.digital/metadata.json";
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
 
 /// ORE program id 
-pub const ORE_PROGRAM_ID: Pubkey = pubkey!("oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfoYkrtKWQ");
+pub const ORE_PROGRAM_ID: Pubkey = pubkey!("BfsNo4wCcmVLq9wcBYCv75L27RYGQRFF9iUv4nJRabeU");
 pub const ORE_PROGRAM_ID_BYTES: [u8; 32] = unsafe { *(&ORE_PROGRAM_ID as *const Pubkey as *const [u8; 32]) };
 
 /// The addresses of the bus accounts.

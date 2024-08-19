@@ -9,13 +9,13 @@ use coal_api::{
     loaders::*,
     state::{Bus, Config, Proof},
 };
-use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
     entrypoint::ProgramResult,
     keccak::hashv,
+    program::set_return_data,
     program_error::ProgramError,
     pubkey::Pubkey,
     sanitize::SanitizeError,
@@ -219,11 +219,9 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
     if let Ok(Some(auth_address)) = parse_auth_address(data) {
         if proof_address.ne(&auth_address) {
-            println!("Auth failed");
             return Err(OreError::AuthFailed.into());
         }
     } else {
-        println!("Auth failed");
         return Err(OreError::AuthFailed.into());
     }
     Ok(())
@@ -231,33 +229,31 @@ fn authenticate(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
 
 /// Use transaction introspection to parse the authenticated pubkey.
 fn parse_auth_address(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
-    // Start the current byte index at 0
     let mut curr = 0;
     let num_instructions = read_u16(&mut curr, data)?;
     let pc = curr;
 
-    // Iterate through the transaction instructions
+    let mut noop_count = 0;
+
     for i in 0..num_instructions as usize {
-        // Shift pointer to correct positition
         curr = pc + i * 2;
         curr = read_u16(&mut curr, data)? as usize;
 
-        // Skip accounts
         let num_accounts = read_u16(&mut curr, data)? as usize;
         curr += num_accounts * 33;
 
-        // Read the instruction program id
         let program_id = read_pubkey(&mut curr, data)?;
 
-        // Introspect on the first noop instruction
         if program_id.eq(&NOOP_PROGRAM_ID) {
-            // Retrun address read from instruction data
-            curr += 2;
-            let address = read_pubkey(&mut curr, data)?;
-            return Ok(Some(address));
+            noop_count += 1;
+            
+            if noop_count == 2 {
+                curr += 2;
+                let address = read_pubkey(&mut curr, data)?;
+                return Ok(Some(address));
+            }
         }
     }
 
-    // Default return none
     Ok(None)
 }

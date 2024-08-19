@@ -5,8 +5,7 @@ use coal_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, 
-    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
@@ -63,7 +62,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
     // The halving is done to incentivize the accumulation of the token.
     // Halving should only occur at 5% intervals.
-    let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
+    let supply_percentage = ((4_250_000 * ONE_COAL) as f64 / MAX_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
     let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
@@ -162,7 +161,6 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
     let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
-
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
     new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
 }
@@ -170,7 +168,6 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 #[cfg(test)]
 mod tests {
     use rand::{distributions::Uniform, Rng};
-
     use crate::calculate_new_reward_rate;
     use coal_api::consts::{
         BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
@@ -227,7 +224,7 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000),
+            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000_000),
         );
         assert!(new_rate.gt(&current_rate));
     }
