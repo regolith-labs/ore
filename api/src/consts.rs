@@ -50,7 +50,7 @@ pub const EXTRACTION_MULTIPLIER: u64 = 1000;
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_COAL * EXTRACTION_MULTIPLIER * EPOCH_MINUTES as u64;
 
 /// The maximum quantity of COAL that can be mined per epoch.
-/// Inflation rate ≈ 1 COAL / min (min 0, max 8)
+/// Inflation rate ≈ 1000 COAL / min (min 0, max 8)
 pub const MAX_EPOCH_REWARDS: u64 = TARGET_EPOCH_REWARDS * BUS_COUNT as u64;
 
 /// The quantity of COAL each bus is allowed to issue per epoch.
