@@ -34,7 +34,7 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 pub const ONE_MINUTE: i64 = 60;
 
 /// The number of minutes in a program epoch.
-pub const EPOCH_MINUTES: i64 = 2;
+pub const EPOCH_MINUTES: i64 = 5;
 
 /// The duration of a program epoch, in seconds.
 pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
