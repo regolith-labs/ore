@@ -9,10 +9,10 @@ pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6
 pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(8);
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * EXTRACTION_MULTIPLIER;
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(12);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * EXTRACTION_MULTIPLIER;
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
@@ -102,17 +102,30 @@ pub const METADATA_URI: &str = "https://coal.digital/metadata.json";
 /// Program id for const pda derivations
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
 
+/// ORE program id 
+pub const ORE_PROGRAM_ID: Pubkey = pubkey!("oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfoYkrtKWQ");
+pub const ORE_PROGRAM_ID_BYTES: [u8; 32] = unsafe { *(&ORE_PROGRAM_ID as *const Pubkey as *const [u8; 32]) };
+
 /// The addresses of the bus accounts.
 pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_bus_address; 8];
+pub const ORE_BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_bus_address_ore; 8];
 
 /// Function to derive const bus addresses.
 const fn const_bus_address(i: usize) -> Pubkey {
     Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[i as u8]], &PROGRAM_ID).0)
 }
 
+/// Function to derive const ore bus addresses.
+const fn const_bus_address_ore(i: usize) -> Pubkey {
+    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[i as u8]], &ORE_PROGRAM_ID_BYTES).0)
+}
+
 /// The address of the config account.
 pub const CONFIG_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
+
+pub const ORE_CONFIG_ADDRESS: Pubkey =
+Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &ORE_PROGRAM_ID_BYTES).0);
 
 /// The address of the mint metadata account.
 pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(

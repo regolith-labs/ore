@@ -5,8 +5,12 @@ use coal_api::{
     state::{Bus, Config},
 };
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, 
-    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
+    account_info::AccountInfo,
+    clock::Clock,
+    entrypoint::ProgramResult,
+    program_error::ProgramError,
+    program_pack::Pack,
+    sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
@@ -101,14 +105,16 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
+    let adjusted_base_reward_threshold = BASE_REWARD_RATE_MIN_THRESHOLD / halving_factor;
+    let adjusted_base_reward_max_threshold = BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor;
     // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    if config.base_reward_rate.le(&BASE_REWARD_RATE_MIN_THRESHOLD) {
+    if config.base_reward_rate.le(&adjusted_base_reward_threshold) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
     }
 
     // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) {
+    if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) {
         if config.min_difficulty.gt(&1) {
             config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         }
@@ -164,7 +170,6 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
     let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
     let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
-
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
     new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
 }
@@ -172,7 +177,6 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 #[cfg(test)]
 mod tests {
     use rand::{distributions::Uniform, Rng};
-
     use crate::calculate_new_reward_rate;
     use coal_api::consts::{
         BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
@@ -229,7 +233,7 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000),
+            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000_000),
         );
         assert!(new_rate.gt(&current_rate));
     }

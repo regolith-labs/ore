@@ -531,7 +531,7 @@ dependencies = [
 
 [[package]]
 name = "coal-api"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -549,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "coal-program"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "coal-api",
  "coal-utils",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "coal-utils"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "bytemuck",
  "solana-program",
