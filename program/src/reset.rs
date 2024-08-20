@@ -105,14 +105,16 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
 
+    let adjusted_base_reward_threshold = BASE_REWARD_RATE_MIN_THRESHOLD / halving_factor;
+    let adjusted_base_reward_max_threshold = BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor;
     // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    if config.base_reward_rate.le(&BASE_REWARD_RATE_MIN_THRESHOLD) {
+    if config.base_reward_rate.le(&adjusted_base_reward_threshold) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
     }
 
     // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
+    if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) && config.min_difficulty.gt(&1) {
         config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
     }

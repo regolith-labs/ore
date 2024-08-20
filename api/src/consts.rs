@@ -10,10 +10,10 @@ pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6
 pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(8);
+pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * EXTRACTION_MULTIPLIER;
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(12);
+pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * EXTRACTION_MULTIPLIER;
 
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
@@ -44,7 +44,7 @@ pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
 pub const MAX_SUPPLY: u64 = ONE_COAL * 21_000_000;
 
 /// The multiplier for the target quantity of COAL to be mined per epoch.
-pub const EXTRACTION_MULTIPLIER: u64 = 125;
+pub const EXTRACTION_MULTIPLIER: u64 = 1000;
 
 /// The target quantity of COAL to be mined per epoch.
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_COAL * EPOCH_MINUTES as u64 * EXTRACTION_MULTIPLIER;
