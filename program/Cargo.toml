@@ -19,7 +19,7 @@ no-entrypoint = []
 default = []
 
 [dependencies]
-drillx.workspace = true
+drillx_2.workspace = true
 mpl-token-metadata.workspace = true
 coal-api.workspace = true
 coal-utils.workspace = true

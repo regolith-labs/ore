@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use drillx::Solution;
+use drillx_2::Solution;
 use coal_api::{
     consts::*,
     error::OreError,
@@ -65,7 +65,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 
     // Validate the hash digest.
     //
-    // Here we use drillx to validate the provided solution is a valid hash of the challenge.
+    // Here we use drillx_2 to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
     let mut proof_data = proof_info.data.borrow_mut();
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
@@ -87,7 +87,7 @@ pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) 
 
     // Validate the hash satisfies the minimum difficulty.
     //
-    // We use drillx to get the difficulty (leading zeros) of the hash. If the hash does not have the
+    // We use drillx_2 to get the difficulty (leading zeros) of the hash. If the hash does not have the
     // minimum required difficulty, we reject it with an error.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();

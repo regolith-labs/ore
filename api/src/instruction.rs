@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use drillx::Solution;
+use drillx_2::Solution;
 use num_enum::TryFromPrimitive;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
@@ -163,6 +163,39 @@ pub fn mine(
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
             AccountMeta::new_readonly(CONFIG_ADDRESS, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(sysvar::instructions::id(), false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Mine.to_vec(),
+            MineArgs {
+                digest: solution.d,
+                nonce: solution.n,
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+
+/// Build an ORE mine instruction.
+/// TEMP: To support drillx_2.
+pub fn mine_ore(
+    signer: Pubkey,
+    proof_authority: Pubkey,
+    bus: Pubkey,
+    solution: Solution,
+) -> Instruction {
+    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &ORE_PROGRAM_ID).0;
+    Instruction {
+        program_id: ORE_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus, false),
+            AccountMeta::new_readonly(ORE_CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
