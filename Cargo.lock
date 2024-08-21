@@ -531,13 +531,13 @@ dependencies = [
 
 [[package]]
 name = "coal-api"
-version = "2.2.0"
+version = "2.3.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "coal-utils",
  "const-crypto",
- "drillx",
+ "drillx_2",
  "mpl-token-metadata",
  "num_enum",
  "solana-program",
@@ -549,11 +549,11 @@ dependencies = [
 
 [[package]]
 name = "coal-program"
-version = "2.2.0"
+version = "2.3.0"
 dependencies = [
  "coal-api",
  "coal-utils",
- "drillx",
+ "drillx_2",
  "mpl-token-metadata",
  "rand 0.8.5",
  "solana-program",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "coal-utils"
-version = "2.2.0"
+version = "2.3.0"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -763,10 +763,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "drillx"
-version = "2.0.0"
+name = "drillx_2"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c5fd3a8f11a6420d6efb1952c8c2e788627cb2c9e834537dc4b6bd036461646"
+checksum = "af4e3aca4ae86ab0d0050f50b322adab7c0e93904896a5c60bdb33324ea1d36a"
 dependencies = [
  "equix",
  "serde",
