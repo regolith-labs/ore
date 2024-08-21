@@ -69,6 +69,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     // Halving should only occur at 5% intervals.
     let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
+    let adjusted_target_rewards = TARGET_EPOCH_REWARDS / halving_factor;
     let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
     let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;
 
@@ -103,10 +104,11 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
 
     // Update base reward rate for next epoch.
     config.base_reward_rate =
-        calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards);
+        calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards, adjusted_target_rewards);
 
     let adjusted_base_reward_threshold = BASE_REWARD_RATE_MIN_THRESHOLD / halving_factor;
     let adjusted_base_reward_max_threshold = BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor;
+    let absolute_max_threshold = (BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor) * 4;    
     // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
     if config.base_reward_rate.le(&adjusted_base_reward_threshold) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
@@ -114,13 +116,14 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
     }
 
     // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) {
-        if config.min_difficulty.gt(&1) {
-            config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
-        }
+    if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) && config.min_difficulty.gt(&1) {
+        config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
+    } else if config.base_reward_rate.ge(&absolute_max_threshold) {
+        config.base_reward_rate = absolute_max_threshold;
     }
 
+    
     // Fund the treasury token account.
     let amount = MAX_SUPPLY
         .saturating_sub(mint.supply)
@@ -155,7 +158,7 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]
 /// The new rate is then smoothed by a constant factor to avoid large fluctuations. In Ore's case,
 /// the epochs are short (60 seconds) so a smoothing factor of 2 has been chosen. That is, the reward rate
 /// can at most double or halve from one epoch to the next.
-pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -> u64 {
+pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64, target_rewards: u64) -> u64 {
     // Avoid division by zero. Leave the reward rate unchanged, if detected.
     if epoch_rewards.eq(&0) {
         return current_rate;
@@ -163,7 +166,7 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
 
     // Calculate new reward rate.
     let new_rate = (current_rate as u128)
-        .saturating_mul(TARGET_EPOCH_REWARDS as u128)
+        .saturating_mul(target_rewards as u128)
         .saturating_div(epoch_rewards as u128) as u64;
 
     // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
@@ -188,14 +191,14 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_target() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_div_by_zero() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, 0);
+        let new_rate = calculate_new_reward_rate(current_rate, 0, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }
 
@@ -205,6 +208,7 @@ mod tests {
         let new_rate = calculate_new_reward_rate(
             current_rate,
             TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
+            TARGET_EPOCH_REWARDS,
         );
         assert!(new_rate.lt(&current_rate));
     }
@@ -212,7 +216,7 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_lower_edge() {
         let current_rate = BASE_REWARD_RATE_MIN_THRESHOLD;
-        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS + 1);
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS + 1, TARGET_EPOCH_REWARDS);
         assert!(new_rate.lt(&current_rate));
     }
 
@@ -223,7 +227,7 @@ mod tests {
             let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
             let actual_rewards: u64 =
                 rng.sample(Uniform::new(TARGET_EPOCH_REWARDS, MAX_EPOCH_REWARDS));
-            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards);
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_EPOCH_REWARDS);
             assert!(new_rate.lt(&current_rate));
         }
     }
@@ -234,6 +238,7 @@ mod tests {
         let new_rate = calculate_new_reward_rate(
             current_rate,
             TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000_000),
+            TARGET_EPOCH_REWARDS,
         );
         assert!(new_rate.gt(&current_rate));
     }
@@ -244,7 +249,7 @@ mod tests {
         for _ in 0..FUZZ_SIZE {
             let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
             let actual_rewards: u64 = rng.sample(Uniform::new(1, TARGET_EPOCH_REWARDS));
-            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards);
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_EPOCH_REWARDS);
             assert!(new_rate.gt(&current_rate));
         }
     }
@@ -252,26 +257,26 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_max_smooth() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, 1);
+        let new_rate = calculate_new_reward_rate(current_rate, 1, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate.saturating_mul(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_min_smooth() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, u64::MAX);
+        let new_rate = calculate_new_reward_rate(current_rate, u64::MAX, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate.saturating_div(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_max_inputs() {
-        let new_rate = calculate_new_reward_rate(BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&BUS_EPOCH_REWARDS.saturating_div(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_min_inputs() {
-        let new_rate = calculate_new_reward_rate(1, 1);
+        let new_rate = calculate_new_reward_rate(1, 1, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&1u64.saturating_mul(SMOOTHING_FACTOR)));
     }
 }
