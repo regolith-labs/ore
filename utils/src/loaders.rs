@@ -1,6 +1,7 @@
+#[cfg(feature = "spl")]
+use solana_program::program_pack::Pack;
 use solana_program::{
-    account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    system_program, sysvar,
+    account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey, system_program, sysvar,
 };
 #[cfg(feature = "spl")]
 use spl_token::state::Mint;
