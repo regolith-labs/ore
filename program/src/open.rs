@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::OpenArgs, loaders::*, state::Proof};
+use ore_api::{consts::*, instruction::OpenArgs, state::Proof};
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
@@ -12,7 +12,7 @@ use solana_program::{
     sysvar::{self, Sysvar},
 };
 
-use crate::utils::{create_pda, AccountDeserialize, Discriminator};
+use ore_utils::{create_pda, loaders::*, AccountDeserialize, Discriminator};
 
 /// Open creates a new proof account to track a miner's state.
 pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {

@@ -4,7 +4,7 @@ use solana_program::{
     system_program,
 };
 
-use crate::utils::AccountDeserialize;
+use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Close closes a proof account and returns the rent to the owner.
 pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {

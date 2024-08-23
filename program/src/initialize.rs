@@ -3,10 +3,9 @@ use std::mem::size_of;
 use ore_api::{
     consts::*,
     instruction::*,
-    loaders::*,
     state::{Bus, Config, Treasury},
 };
-use ore_utils::spl::create_ata;
+use ore_utils::{create_pda, loaders::*, spl::create_ata, AccountDeserialize, Discriminator};
 use solana_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
@@ -15,8 +14,6 @@ use solana_program::{
     system_program, {self, sysvar},
 };
 use spl_token::state::Mint;
-
-use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
 /// Initialize sets up the ORE program to begin mining.
 pub fn process_initialize<'a, 'info>(

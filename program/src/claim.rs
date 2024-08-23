@@ -4,7 +4,7 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
 
-use crate::utils::AccountDeserialize;
+use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Claim distributes claimable ORE from the treasury to a miner.
 pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {

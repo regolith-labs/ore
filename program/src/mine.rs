@@ -24,7 +24,7 @@ use solana_program::{
     sysvar::{self, Sysvar},
 };
 
-use crate::utils::AccountDeserialize;
+use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {

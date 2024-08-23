@@ -10,7 +10,7 @@ use solana_program::{
 };
 use spl_token::state::Mint;
 
-use crate::utils::AccountDeserialize;
+use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.
 pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {

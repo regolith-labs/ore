@@ -1,3 +1,4 @@
+pub mod loaders;
 #[cfg(feature = "spl")]
 pub mod spl;
 
