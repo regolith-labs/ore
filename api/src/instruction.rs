@@ -1,16 +1,14 @@
 use bytemuck::{Pod, Zeroable};
 use drillx::Solution;
 use num_enum::TryFromPrimitive;
+use ore_utils::{impl_instruction_from_bytes, impl_to_bytes};
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     system_program, sysvar,
 };
 
-use crate::{
-    consts::*,
-    utils::{impl_instruction_from_bytes, impl_to_bytes},
-};
+use crate::consts::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]

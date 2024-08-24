@@ -1,9 +1,9 @@
+use ore_utils::{loaders::*, AccountDeserialize, Discriminator};
 use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     consts::*,
     state::{Bus, Config, Proof, Treasury},
-    utils::{loaders::*, AccountDeserialize, Discriminator},
 };
 
 /// Errors if:

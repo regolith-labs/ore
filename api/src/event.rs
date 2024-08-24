@@ -1,6 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-
-use crate::utils::impl_to_bytes;
+use ore_utils::impl_to_bytes;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]

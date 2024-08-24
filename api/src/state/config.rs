@@ -1,6 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-
-use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+use ore_utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
