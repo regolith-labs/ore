@@ -9,6 +9,7 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config, Proof},
 };
+use ore_boost_api::state::{Boost, Stake};
 use ore_utils::*;
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
@@ -31,8 +32,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
+    let (required_accounts, optional_accounts) = accounts.split_at(6);
     let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
-        accounts
+        required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -127,6 +129,18 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         if proof.balance.gt(&bus.top_balance) {
             bus.top_balance = proof.balance;
         }
+    }
+
+    if !optional_accounts.is_empty() {
+        let [boost_info, stake_info] = optional_accounts else {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        };
+
+        let boost_data = boost_info.data.borrow();
+        let boost = Boost::try_from_bytes(&boost_data)?;
+
+        let stake_data = stake_info.data.borrow();
+        let stake = Stake::try_from_bytes(&stake_data)?;
     }
 
     // Apply liveness penalty.
