@@ -2,13 +2,17 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use solana_program::program::set_return_data;
+use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
+};
+use solana_program::{
+    log::{sol_log, sol_log_data},
+    program::set_return_data,
 };
 use steel::*;
 
@@ -18,8 +22,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
+    let (required_accounts, optional_accounts) = accounts.split_at(6);
     let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
-        accounts
+        required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -117,6 +122,54 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         // Update bus stake tracker.
         if proof.balance.gt(&bus.top_balance) {
             bus.top_balance = proof.balance;
+        }
+    }
+
+    // Apply boosts.
+    //
+    // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
+    // Up to 3 boosts can be applied on any given mine operation.
+    sol_log(&format!("Base: {}", reward));
+    let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
+    sol_log(optional_accounts.len().to_string().as_str());
+    for i in 0..3 {
+        sol_log(i.to_string().as_str());
+        if optional_accounts.len().gt(&(i * 2)) {
+            sol_log("booooost");
+            // Load optional accounts.
+            let boost_info = optional_accounts[i * 2].clone();
+            let stake_info = optional_accounts[i * 2 + 1].clone();
+            let boost = boost_info.to_account::<Boost>(&ore_boost_api::ID)?;
+            let stake = stake_info
+                .to_account::<Stake>(&ore_boost_api::ID)?
+                .check(|s| s.authority == proof.authority)?
+                .check(|s| s.boost == *boost_info.key)?;
+
+            // Skip if boost is applied twice.
+            if applied_boosts.contains(boost_info.key) {
+                continue;
+            }
+
+            // Record this boost has been used.
+            applied_boosts[i] = *boost_info.key;
+
+            // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
+            if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+                let multiplier = boost.multiplier.checked_sub(1).unwrap();
+                let boost_reward = (reward as u128)
+                    .checked_mul(multiplier as u128)
+                    .unwrap()
+                    .checked_mul(stake.balance as u128)
+                    .unwrap()
+                    .checked_div(boost.total_stake as u128)
+                    .unwrap() as u64;
+                reward = reward.checked_add(boost_reward).unwrap();
+                sol_log_data(&[(BoostEvent {
+                    mint: boost.mint,
+                    reward: boost_reward,
+                })
+                .to_bytes()]);
+            }
         }
     }
 
