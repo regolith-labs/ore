@@ -17,81 +17,6 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 }
 
 /// Errors if:
-/// - Owner is not SPL token program.
-/// - Address does not match the expected mint address.
-/// - Data is empty.
-/// - Data cannot deserialize into a mint account.
-/// - Expected to be writable, but is not.
-#[cfg(feature = "spl")]
-pub fn load_mint<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    address: Pubkey,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
-    if info.owner.ne(&spl_token::id()) {
-        return Err(ProgramError::InvalidAccountOwner);
-    }
-
-    if info.key.ne(&address) {
-        return Err(ProgramError::InvalidSeeds);
-    }
-
-    if info.data_is_empty() {
-        return Err(ProgramError::UninitializedAccount);
-    }
-
-    Mint::unpack(&info.data.borrow())?;
-
-    if is_writable && !info.is_writable {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    Ok(())
-}
-
-/// Errors if:
-/// - Owner is not SPL token program.
-/// - Data is empty.
-/// - Data cannot deserialize into a token account.
-/// - Token account owner does not match the expected owner address.
-/// - Token account mint does not match the expected mint address.
-/// - Expected to be writable, but is not.
-#[cfg(feature = "spl")]
-pub fn load_token_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    owner: Option<&Pubkey>,
-    mint: &Pubkey,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
-    if info.owner.ne(&spl_token::id()) {
-        return Err(ProgramError::InvalidAccountOwner);
-    }
-
-    if info.data_is_empty() {
-        return Err(ProgramError::UninitializedAccount);
-    }
-
-    let account_data = info.data.borrow();
-    let account = spl_token::state::Account::unpack(&account_data)?;
-
-    if account.mint.ne(&mint) {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    if let Some(owner) = owner {
-        if account.owner.ne(owner) {
-            return Err(ProgramError::InvalidAccountData);
-        }
-    }
-
-    if is_writable && !info.is_writable {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    Ok(())
-}
-
-/// Errors if:
 /// - Address does not match PDA derived from provided seeds.
 /// - Cannot load as an uninitialized account.
 pub fn load_uninitialized_pda<'a, 'info>(
@@ -193,6 +118,81 @@ pub fn load_any<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not SPL token program.
+/// - Address does not match the expected mint address.
+/// - Data is empty.
+/// - Data cannot deserialize into a mint account.
+/// - Expected to be writable, but is not.
+#[cfg(feature = "spl")]
+pub fn load_mint<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    address: Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&spl_token::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&address) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    Mint::unpack(&info.data.borrow())?;
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not SPL token program.
+/// - Data is empty.
+/// - Data cannot deserialize into a token account.
+/// - Token account owner does not match the expected owner address.
+/// - Token account mint does not match the expected mint address.
+/// - Expected to be writable, but is not.
+#[cfg(feature = "spl")]
+pub fn load_token_account<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    owner: Option<&Pubkey>,
+    mint: &Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&spl_token::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let account_data = info.data.borrow();
+    let account = spl_token::state::Account::unpack(&account_data)?;
+
+    if account.mint.ne(&mint) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if let Some(owner) = owner {
+        if account.owner.ne(owner) {
+            return Err(ProgramError::InvalidAccountData);
+        }
+    }
+
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
