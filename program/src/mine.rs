@@ -116,6 +116,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         // Parse optional accounts, two at a time.
         let (boost_accounts, optional_accounts) = optional_accounts.split_at(2);
         if let [boost_info, stake_info] = boost_accounts {
+            // TODO Load accounts
+
             // Only apply boost if last stake was greater than one minute ago.
             let boost_data = boost_info.data.borrow();
             let boost = Boost::try_from_bytes(&boost_data)?;
