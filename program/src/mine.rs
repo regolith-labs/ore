@@ -101,7 +101,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
-    // Apply staking multiplier.
+    // Apply boosts.
     //
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
@@ -228,6 +228,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // Busses are limited to distributing 1 ORE per epoch. This is also the maximum amount that will be paid out
     // for any given hash.
+    let mut bus_data = bus_info.data.borrow_mut();
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     let reward_actual = reward.min(bus.rewards).min(ONE_ORE);
 
     // Update balances.
