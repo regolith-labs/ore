@@ -135,7 +135,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     for i in 0..3 {
         sol_log(i.to_string().as_str());
         if optional_accounts.len().gt(&(i * 2)) {
-            sol_log("booooost");
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
