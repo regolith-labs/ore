@@ -15,7 +15,6 @@ crate-type = ["cdylib", "lib"]
 name = "ore"
 
 [features]
-no-entrypoint = []
 default = []
 
 [dependencies]

@@ -24,7 +24,6 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-#[cfg(not(feature = "no-entrypoint"))]
 solana_program::entrypoint!(process_instruction);
 
 pub fn process_instruction(
