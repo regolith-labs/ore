@@ -9,6 +9,7 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config, Proof},
 };
+use ore_utils::*;
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
@@ -23,8 +24,6 @@ use solana_program::{
     slot_hashes::SlotHash,
     sysvar::{self, Sysvar},
 };
-
-use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {

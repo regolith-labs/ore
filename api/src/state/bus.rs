@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::{account, Discriminator};
+use ore_utils::*;
 
 use super::AccountDiscriminator;
 

@@ -1,5 +1,77 @@
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult};
+use solana_program::{
+    account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey, rent::Rent,
+    sysvar::Sysvar,
+};
 
+/// Creates a new pda.
+#[inline(always)]
+pub fn create_pda<'a, 'info>(
+    target_account: &'a AccountInfo<'info>,
+    owner: &Pubkey,
+    space: usize,
+    pda_seeds: &[&[u8]],
+    system_program: &'a AccountInfo<'info>,
+    payer: &'a AccountInfo<'info>,
+) -> ProgramResult {
+    let rent = Rent::get()?;
+    if target_account.lamports().eq(&0) {
+        // If balance is zero, create account
+        solana_program::program::invoke_signed(
+            &solana_program::system_instruction::create_account(
+                payer.key,
+                target_account.key,
+                rent.minimum_balance(space),
+                space as u64,
+                owner,
+            ),
+            &[
+                payer.clone(),
+                target_account.clone(),
+                system_program.clone(),
+            ],
+            &[pda_seeds],
+        )?;
+    } else {
+        // Otherwise, if balance is nonzero:
+
+        // 1) transfer sufficient lamports for rent exemption
+        let rent_exempt_balance = rent
+            .minimum_balance(space)
+            .saturating_sub(target_account.lamports());
+        if rent_exempt_balance.gt(&0) {
+            solana_program::program::invoke(
+                &solana_program::system_instruction::transfer(
+                    payer.key,
+                    target_account.key,
+                    rent_exempt_balance,
+                ),
+                &[
+                    payer.clone(),
+                    target_account.clone(),
+                    system_program.clone(),
+                ],
+            )?;
+        }
+
+        // 2) allocate space for the account
+        solana_program::program::invoke_signed(
+            &solana_program::system_instruction::allocate(target_account.key, space as u64),
+            &[target_account.clone(), system_program.clone()],
+            &[pda_seeds],
+        )?;
+
+        // 3) assign our program as the owner
+        solana_program::program::invoke_signed(
+            &solana_program::system_instruction::assign(target_account.key, owner),
+            &[target_account.clone(), system_program.clone()],
+            &[pda_seeds],
+        )?;
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "spl")]
 #[inline(always)]
 pub fn create_ata<'info>(
     funder_info: &AccountInfo<'info>,
@@ -29,6 +101,7 @@ pub fn create_ata<'info>(
     )
 }
 
+#[cfg(feature = "spl")]
 #[inline(always)]
 pub fn transfer<'info>(
     authority_info: &AccountInfo<'info>,
@@ -55,6 +128,7 @@ pub fn transfer<'info>(
     )
 }
 
+#[cfg(feature = "spl")]
 #[inline(always)]
 pub fn transfer_signed<'info>(
     authority_info: &AccountInfo<'info>,
@@ -83,6 +157,7 @@ pub fn transfer_signed<'info>(
     )
 }
 
+#[cfg(feature = "spl")]
 #[inline(always)]
 pub fn mint_to_signed<'info>(
     mint_info: &AccountInfo<'info>,
@@ -111,6 +186,7 @@ pub fn mint_to_signed<'info>(
     )
 }
 
+#[cfg(feature = "spl")]
 #[inline(always)]
 pub fn burn<'info>(
     token_account_info: &AccountInfo<'info>,

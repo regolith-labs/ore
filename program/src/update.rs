@@ -1,5 +1,5 @@
 use ore_api::{loaders::*, state::Proof};
-use ore_utils::{loaders::*, AccountDeserialize};
+use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };

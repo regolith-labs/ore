@@ -1,10 +1,9 @@
 use ore_api::{loaders::*, state::Proof};
+use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
 };
-
-use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Close closes a proof account and returns the rent to the owner.
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
