@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+use ore_utils::{account, Discriminator};
 
 use super::AccountDiscriminator;
 
@@ -26,5 +26,4 @@ impl Discriminator for Config {
     }
 }
 
-impl_to_bytes!(Config);
-impl_account_from_bytes!(Config);
+account!(Config);

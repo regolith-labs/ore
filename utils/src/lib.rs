@@ -137,3 +137,19 @@ macro_rules! impl_instruction_from_bytes {
         }
     };
 }
+
+#[macro_export]
+macro_rules! account {
+    ($struct_name:ident) => {
+        $crate::impl_to_bytes!($struct_name);
+        $crate::impl_account_from_bytes!($struct_name);
+    };
+}
+
+#[macro_export]
+macro_rules! instruction {
+    ($struct_name:ident) => {
+        $crate::impl_to_bytes!($struct_name);
+        $crate::impl_instruction_from_bytes!($struct_name);
+    };
+}

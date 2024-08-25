@@ -1,7 +1,7 @@
 use bytemuck::{Pod, Zeroable};
 use drillx::Solution;
 use num_enum::TryFromPrimitive;
-use ore_utils::{impl_instruction_from_bytes, impl_to_bytes};
+use ore_utils::instruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -82,19 +82,12 @@ pub struct UpgradeArgs {
     pub amount: [u8; 8],
 }
 
-impl_to_bytes!(InitializeArgs);
-impl_to_bytes!(OpenArgs);
-impl_to_bytes!(MineArgs);
-impl_to_bytes!(ClaimArgs);
-impl_to_bytes!(StakeArgs);
-impl_to_bytes!(UpgradeArgs);
-
-impl_instruction_from_bytes!(InitializeArgs);
-impl_instruction_from_bytes!(OpenArgs);
-impl_instruction_from_bytes!(MineArgs);
-impl_instruction_from_bytes!(ClaimArgs);
-impl_instruction_from_bytes!(StakeArgs);
-impl_instruction_from_bytes!(UpgradeArgs);
+instruction!(InitializeArgs);
+instruction!(OpenArgs);
+instruction!(MineArgs);
+instruction!(ClaimArgs);
+instruction!(StakeArgs);
+instruction!(UpgradeArgs);
 
 /// Builds an auth instruction.
 pub fn auth(proof: Pubkey) -> Instruction {

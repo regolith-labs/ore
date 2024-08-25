@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
+use ore_utils::{account, Discriminator};
 
 use super::AccountDiscriminator;
 
@@ -15,5 +15,4 @@ impl Discriminator for Treasury {
     }
 }
 
-impl_to_bytes!(Treasury);
-impl_account_from_bytes!(Treasury);
+account!(Treasury);
