@@ -63,9 +63,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
 
         // Track top balance.
-        if bus.top_balance.gt(&top_balance) {
-            top_balance = bus.top_balance;
-        }
+        // if bus.top_balance.gt(&top_balance) {
+        //     top_balance = bus.top_balance;
+        // }
 
         // Track accumulators.
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
