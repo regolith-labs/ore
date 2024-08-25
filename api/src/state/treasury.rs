@@ -1,5 +1,8 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::{account, Discriminator};
+use ore_utils::*;
+use solana_program::pubkey::Pubkey;
+
+use crate::consts::TREASURY;
 
 use super::AccountDiscriminator;
 
@@ -9,10 +12,9 @@ use super::AccountDiscriminator;
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Treasury {}
 
-impl Discriminator for Treasury {
-    fn discriminator() -> u8 {
-        AccountDiscriminator::Treasury.into()
-    }
+/// Derive the PDA of the treasury account.
+pub fn treasury_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[TREASURY], &crate::id())
 }
 
-account!(Treasury);
+account!(AccountDiscriminator, Treasury);

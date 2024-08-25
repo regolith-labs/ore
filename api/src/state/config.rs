@@ -1,5 +1,8 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::{account, Discriminator};
+use ore_utils::*;
+use solana_program::pubkey::Pubkey;
+
+use crate::consts::CONFIG;
 
 use super::AccountDiscriminator;
 
@@ -20,10 +23,9 @@ pub struct Config {
     pub top_balance: u64,
 }
 
-impl Discriminator for Config {
-    fn discriminator() -> u8 {
-        AccountDiscriminator::Config.into()
-    }
+/// Derive the PDA of the config account.
+pub fn config_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CONFIG], &crate::id())
 }
 
-account!(Config);
+account!(AccountDiscriminator, Config);

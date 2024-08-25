@@ -1,5 +1,8 @@
 use bytemuck::{Pod, Zeroable};
 use ore_utils::*;
+use solana_program::pubkey::Pubkey;
+
+use crate::consts::BUS;
 
 use super::AccountDiscriminator;
 
@@ -22,10 +25,9 @@ pub struct Bus {
     pub top_balance: u64,
 }
 
-impl Discriminator for Bus {
-    fn discriminator() -> u8 {
-        AccountDiscriminator::Bus.into()
-    }
+/// Fetch the PDA of a bus account.
+pub fn bus_pda(id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[BUS, id.to_le_bytes().as_slice()], &crate::id())
 }
 
-account!(Bus);
+account!(AccountDiscriminator, Bus);
