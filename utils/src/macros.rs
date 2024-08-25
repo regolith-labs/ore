@@ -10,6 +10,17 @@ macro_rules! impl_to_bytes {
 }
 
 #[macro_export]
+macro_rules! impl_from_bytes {
+    ($struct_name:ident) => {
+        impl $struct_name {
+            pub fn from_bytes(data: &[u8]) -> &Self {
+                bytemuck::from_bytes::<Self>(data)
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_account_from_bytes {
     ($struct_name:ident) => {
         impl $crate::AccountDeserialize for $struct_name {
@@ -71,5 +82,13 @@ macro_rules! instruction {
     ($struct_name:ident) => {
         $crate::impl_to_bytes!($struct_name);
         $crate::impl_instruction_from_bytes!($struct_name);
+    };
+}
+
+#[macro_export]
+macro_rules! event {
+    ($struct_name:ident) => {
+        $crate::impl_to_bytes!($struct_name);
+        $crate::impl_from_bytes!($struct_name);
     };
 }

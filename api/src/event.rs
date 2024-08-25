@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::impl_to_bytes;
+use ore_utils::*;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
@@ -9,4 +9,4 @@ pub struct MineEvent {
     pub timing: i64,
 }
 
-impl_to_bytes!(MineEvent);
+event!(MineEvent);
