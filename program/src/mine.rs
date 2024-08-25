@@ -107,41 +107,30 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
-    // Apply staking multiplier.
+    // Apply boosts.
     //
-    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
-    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    let mut bus_data = bus_info.data.borrow_mut();
-    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Calculate staking reward.
-        if config.top_balance.gt(&0) {
-            let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
-            reward = reward.checked_add(staking_reward).unwrap();
-        }
-
-        // Update bus stake tracker.
-        if proof.balance.gt(&bus.top_balance) {
-            bus.top_balance = proof.balance;
+    // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
+    // Up to 3 boosts can be applied on any given mine operation.
+    // Parse optional accounts
+    for i in 0..2 {
+        // Parse optional accounts, two at a time.
+        let (boost_accounts, optional_accounts) = optional_accounts.split_at(2);
+        if let [boost_info, stake_info] = boost_accounts {
+            // Only apply boost if last stake was greater than one minute ago.
+            let boost_data = boost_info.data.borrow();
+            let boost = Boost::try_from_bytes(&boost_data)?;
+            let stake_data = stake_info.data.borrow();
+            let stake = Stake::try_from_bytes(&stake_data)?;
+            if stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+                // TODO
+            }
         }
     }
-
-    if !optional_accounts.is_empty() {
-        let [boost_info, stake_info] = optional_accounts else {
-            return Err(ProgramError::NotEnoughAccountKeys);
-        };
-
-        let boost_data = boost_info.data.borrow();
-        let boost = Boost::try_from_bytes(&boost_data)?;
-
-        let stake_data = stake_info.data.borrow();
-        let stake = Stake::try_from_bytes(&stake_data)?;
-    }
+    // if !optional_accounts.is_empty() {
+    //     let [boost_info, stake_info] = optional_accounts else {
+    //         return Err(ProgramError::NotEnoughAccountKeys);
+    //     };
+    // }
 
     // Apply liveness penalty.
     //
@@ -175,6 +164,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     //
     // Busses are limited to distributing 1 ORE per epoch. This is also the maximum amount that will be paid out
     // for any given hash.
+    let mut bus_data = bus_info.data.borrow_mut();
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     let reward_actual = reward.min(bus.rewards).min(ONE_ORE);
 
     // Update balances.
