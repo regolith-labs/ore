@@ -1,5 +1,5 @@
 use num_enum::IntoPrimitive;
-use solana_program::program_error::ProgramError;
+use ore_utils::*;
 use thiserror::Error;
 
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq, IntoPrimitive)]
@@ -23,8 +23,4 @@ pub enum OreError {
     AuthFailed = 7,
 }
 
-impl From<OreError> for ProgramError {
-    fn from(e: OreError) -> Self {
-        ProgramError::Custom(e as u32)
-    }
-}
+error!(OreError);
