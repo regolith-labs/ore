@@ -7,10 +7,7 @@ use solana_program::{
 use spl_token::state::Mint;
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.
-pub fn process_upgrade<'a, 'info>(
-    accounts: &'a [AccountInfo<'info>],
-    data: &[u8],
-) -> ProgramResult {
+pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args
     let args = StakeArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

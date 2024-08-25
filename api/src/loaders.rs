@@ -13,11 +13,7 @@ use crate::{
 /// - Data cannot deserialize into a bus account.
 /// - Bus ID does not match the expected ID.
 /// - Expected to be writable, but is not.
-pub fn load_bus<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    id: u64,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_bus(info: &AccountInfo<'_>, id: u64, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -51,10 +47,7 @@ pub fn load_bus<'a, 'info>(
 /// - Bus ID is not in the expected range.
 /// - Address is not in set of valid bus address.
 /// - Expected to be writable, but is not.
-pub fn load_any_bus<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any_bus(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -84,10 +77,7 @@ pub fn load_any_bus<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a config account.
 /// - Expected to be writable, but is not.
-pub fn load_config<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_config(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -117,8 +107,8 @@ pub fn load_config<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof authority does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_proof(
+    info: &AccountInfo<'_>,
     authority: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -150,8 +140,8 @@ pub fn load_proof<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof miner does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof_with_miner<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_proof_with_miner(
+    info: &AccountInfo<'_>,
     miner: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -182,10 +172,7 @@ pub fn load_proof_with_miner<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a proof account.
 /// - Expected to be writable, but is not.
-pub fn load_any_proof<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any_proof(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -211,10 +198,7 @@ pub fn load_any_proof<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a treasury account.
 /// - Expected to be writable, but is not.
-pub fn load_treasury<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_treasury(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -241,10 +225,7 @@ pub fn load_treasury<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected treasury tokens address.
 /// - Cannot load as a token account
-pub fn load_treasury_tokens<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_treasury_tokens(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }

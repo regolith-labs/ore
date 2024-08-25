@@ -8,7 +8,7 @@ use spl_token::state::Mint;
 
 /// Errors if:
 /// - Account is not a signer.
-pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), ProgramError> {
+pub fn load_signer(info: &AccountInfo<'_>) -> Result<(), ProgramError> {
     if !info.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
     }
@@ -19,8 +19,8 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 /// Errors if:
 /// - Address does not match PDA derived from provided seeds.
 /// - Cannot load as an uninitialized account.
-pub fn load_uninitialized_pda<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_uninitialized_pda(
+    info: &AccountInfo<'_>,
     seeds: &[&[u8]],
     bump: u8,
     program_id: &Pubkey,
@@ -42,10 +42,7 @@ pub fn load_uninitialized_pda<'a, 'info>(
 /// - Owner is not the system program.
 /// - Data is not empty.
 /// - Account is not writable.
-pub fn load_system_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_system_account(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if info.owner.ne(&system_program::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -64,10 +61,7 @@ pub fn load_system_account<'a, 'info>(
 /// Errors if:
 /// - Owner is not the sysvar address.
 /// - Account cannot load with the expected address.
-pub fn load_sysvar<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    key: Pubkey,
-) -> Result<(), ProgramError> {
+pub fn load_sysvar(info: &AccountInfo<'_>, key: Pubkey) -> Result<(), ProgramError> {
     if info.owner.ne(&sysvar::id()) {
         return Err(ProgramError::InvalidAccountOwner);
     }
@@ -78,8 +72,8 @@ pub fn load_sysvar<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected value.
 /// - Expected to be writable, but is not.
-pub fn load_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_account(
+    info: &AccountInfo<'_>,
     key: Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -97,10 +91,7 @@ pub fn load_account<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected value.
 /// - Account is not executable.
-pub fn load_program<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    key: Pubkey,
-) -> Result<(), ProgramError> {
+pub fn load_program(info: &AccountInfo<'_>, key: Pubkey) -> Result<(), ProgramError> {
     if info.key.ne(&key) {
         return Err(ProgramError::IncorrectProgramId);
     }
@@ -114,10 +105,7 @@ pub fn load_program<'a, 'info>(
 
 /// Errors if:
 /// - Account is not writable.
-pub fn load_any<'a, 'info>(
-    info: &'a AccountInfo<'info>,
-    is_writable: bool,
-) -> Result<(), ProgramError> {
+pub fn load_any(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
     if is_writable && !info.is_writable {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -132,8 +120,8 @@ pub fn load_any<'a, 'info>(
 /// - Data cannot deserialize into a mint account.
 /// - Expected to be writable, but is not.
 #[cfg(feature = "spl")]
-pub fn load_mint<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_mint(
+    info: &AccountInfo<'_>,
     address: Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -166,8 +154,8 @@ pub fn load_mint<'a, 'info>(
 /// - Token account mint does not match the expected mint address.
 /// - Expected to be writable, but is not.
 #[cfg(feature = "spl")]
-pub fn load_token_account<'a, 'info>(
-    info: &'a AccountInfo<'info>,
+pub fn load_token_account(
+    info: &AccountInfo<'_>,
     owner: Option<&Pubkey>,
     mint: &Pubkey,
     is_writable: bool,

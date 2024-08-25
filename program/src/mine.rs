@@ -27,7 +27,7 @@ use solana_program::{
 use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Mine validates hashes and increments a miner's collectable balance.
-pub fn process_mine<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = MineArgs::try_from_bytes(data)?;
 

@@ -5,10 +5,7 @@ use solana_program::{
 };
 
 /// Update changes the miner authority on a proof account.
-pub fn process_update<'a, 'info>(
-    accounts: &'a [AccountInfo<'info>],
-    _data: &[u8],
-) -> ProgramResult {
+pub fn process_update(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer, miner_info, proof_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);

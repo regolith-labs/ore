@@ -15,7 +15,7 @@ use solana_program::{
 use ore_utils::{create_pda, loaders::*, AccountDeserialize, Discriminator};
 
 /// Open creates a new proof account to track a miner's state.
-pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = OpenArgs::try_from_bytes(data)?;
 

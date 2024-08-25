@@ -6,7 +6,7 @@ use solana_program::{
 };
 
 /// Stake deposits ORE into a proof account to earn multiplier.
-pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = StakeArgs::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

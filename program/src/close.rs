@@ -7,7 +7,7 @@ use solana_program::{
 use ore_utils::{loaders::*, AccountDeserialize};
 
 /// Close closes a proof account and returns the rent to the owner.
-pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
+pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer, proof_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
