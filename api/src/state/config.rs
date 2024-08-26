@@ -4,7 +4,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::consts::CONFIG;
 
-use super::AccountDiscriminator;
+use super::OreAccount;
 
 /// Config is a singleton account which manages program global variables.
 #[repr(C)]
@@ -28,4 +28,4 @@ pub fn config_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CONFIG], &crate::id())
 }
 
-account!(AccountDiscriminator, Config);
+account!(OreAccount, Config);

@@ -1,4 +1,4 @@
-use ore_api::{consts::*, error::OreError, instruction::StakeArgs};
+use ore_api::{consts::*, error::OreError, instruction::Stake};
 use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -9,7 +9,7 @@ use spl_token::state::Mint;
 /// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.
 pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args
-    let args = StakeArgs::try_from_bytes(data)?;
+    let args = Stake::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts

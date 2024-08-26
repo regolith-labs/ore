@@ -1,18 +1,20 @@
 use bytemuck::{Pod, Zeroable};
 use drillx::Solution;
 use num_enum::TryFromPrimitive;
-use ore_utils::instruction;
+use ore_utils::*;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     system_program, sysvar,
 };
 
-use crate::consts::*;
+use crate::{
+    consts::*,
+    state::{bus_pda, config_pda, proof_pda, treasury_pda},
+};
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
-#[rustfmt::skip]
 pub enum OreInstruction {
     // User
     Claim = 0,
@@ -28,15 +30,52 @@ pub enum OreInstruction {
     Initialize = 100,
 }
 
-impl OreInstruction {
-    pub fn to_vec(&self) -> Vec<u8> {
-        vec![*self as u8]
-    }
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Claim {
+    pub amount: [u8; 8],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct InitializeArgs {
+pub struct Close {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Mine {
+    pub digest: [u8; 16],
+    pub nonce: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Open {
+    pub bump: u8,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Reset {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Stake {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Update {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Upgrade {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Initialize {
     pub bus_0_bump: u8,
     pub bus_1_bump: u8,
     pub bus_2_bump: u8,
@@ -51,43 +90,15 @@ pub struct InitializeArgs {
     pub treasury_bump: u8,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct OpenArgs {
-    pub bump: u8,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MineArgs {
-    pub digest: [u8; 16],
-    pub nonce: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimArgs {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct StakeArgs {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct UpgradeArgs {
-    pub amount: [u8; 8],
-}
-
-instruction!(InitializeArgs);
-instruction!(OpenArgs);
-instruction!(MineArgs);
-instruction!(ClaimArgs);
-instruction!(StakeArgs);
-instruction!(UpgradeArgs);
+instruction!(OreInstruction, Claim);
+instruction!(OreInstruction, Close);
+instruction!(OreInstruction, Mine);
+instruction!(OreInstruction, Open);
+instruction!(OreInstruction, Reset);
+instruction!(OreInstruction, Stake);
+instruction!(OreInstruction, Update);
+instruction!(OreInstruction, Upgrade);
+instruction!(OreInstruction, Initialize);
 
 /// Builds an auth instruction.
 pub fn auth(proof: Pubkey) -> Instruction {
@@ -100,7 +111,7 @@ pub fn auth(proof: Pubkey) -> Instruction {
 
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = proof_pda(signer).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
@@ -115,40 +126,30 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: [
-            OreInstruction::Claim.to_vec(),
-            ClaimArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: Claim {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
     }
 }
 
 /// Builds a close instruction.
 pub fn close(signer: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    let proof = proof_pda(signer).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new(proof, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
-        data: OreInstruction::Close.to_vec(),
+        data: Close {}.to_bytes(),
     }
 }
 
 /// Builds a mine instruction.
-pub fn mine(
-    signer: Pubkey,
-    proof_authority: Pubkey,
-    bus: Pubkey,
-    solution: Solution,
-) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &crate::id()).0;
+pub fn mine(signer: Pubkey, authority: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
+    let proof = proof_pda(authority).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -159,22 +160,17 @@ pub fn mine(
             AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
-        data: [
-            OreInstruction::Mine.to_vec(),
-            MineArgs {
-                digest: solution.d,
-                nonce: solution.n,
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: Mine {
+            digest: solution.d,
+            nonce: solution.n,
+        }
+        .to_bytes(),
     }
 }
 
 /// Builds an open instruction.
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    let proof_pda = proof_pda(signer);
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -185,11 +181,7 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
-        data: [
-            OreInstruction::Open.to_vec(),
-            OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
-        ]
-        .concat(),
+        data: Open { bump: proof_pda.1 }.to_bytes(),
     }
 }
 
@@ -217,13 +209,13 @@ pub fn reset(signer: Pubkey) -> Instruction {
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: OreInstruction::Reset.to_vec(),
+        data: Reset {}.to_bytes(),
     }
 }
 
 /// Build a stake instruction.
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = proof_pda(signer).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &MINT_ADDRESS,
@@ -237,21 +229,16 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: [
-            OreInstruction::Stake.to_vec(),
-            StakeArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: Stake {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
     }
 }
 
 // Build an update instruction.
 pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = proof_pda(signer).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -259,7 +246,7 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
             AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof, false),
         ],
-        data: OreInstruction::Update.to_vec(),
+        data: Update {}.to_bytes(),
     }
 }
 
@@ -276,33 +263,28 @@ pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64)
             AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: [
-            OreInstruction::Upgrade.to_vec(),
-            UpgradeArgs {
-                amount: amount.to_le_bytes(),
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: Upgrade {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
     }
 }
 
 /// Builds an initialize instruction.
 pub fn initialize(signer: Pubkey) -> Instruction {
     let bus_pdas = [
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[1]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[2]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[3]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[4]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[5]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[6]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[7]], &crate::id()),
+        bus_pda(0),
+        bus_pda(1),
+        bus_pda(2),
+        bus_pda(3),
+        bus_pda(4),
+        bus_pda(5),
+        bus_pda(6),
+        bus_pda(7),
     ];
-    let config_pda = Pubkey::find_program_address(&[CONFIG], &crate::id());
+    let config_pda = config_pda();
     let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
-    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
+    let treasury_pda = treasury_pda();
     let treasury_tokens =
         spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
     let metadata_pda = Pubkey::find_program_address(
@@ -336,25 +318,20 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
-        data: [
-            OreInstruction::Initialize.to_vec(),
-            InitializeArgs {
-                bus_0_bump: bus_pdas[0].1,
-                bus_1_bump: bus_pdas[1].1,
-                bus_2_bump: bus_pdas[2].1,
-                bus_3_bump: bus_pdas[3].1,
-                bus_4_bump: bus_pdas[4].1,
-                bus_5_bump: bus_pdas[5].1,
-                bus_6_bump: bus_pdas[6].1,
-                bus_7_bump: bus_pdas[7].1,
-                config_bump: config_pda.1,
-                metadata_bump: metadata_pda.1,
-                mint_bump: mint_pda.1,
-                treasury_bump: treasury_pda.1,
-            }
-            .to_bytes()
-            .to_vec(),
-        ]
-        .concat(),
+        data: Initialize {
+            bus_0_bump: bus_pdas[0].1,
+            bus_1_bump: bus_pdas[1].1,
+            bus_2_bump: bus_pdas[2].1,
+            bus_3_bump: bus_pdas[3].1,
+            bus_4_bump: bus_pdas[4].1,
+            bus_5_bump: bus_pdas[5].1,
+            bus_6_bump: bus_pdas[6].1,
+            bus_7_bump: bus_pdas[7].1,
+            config_bump: config_pda.1,
+            metadata_bump: metadata_pda.1,
+            mint_bump: mint_pda.1,
+            treasury_bump: treasury_pda.1,
+        }
+        .to_bytes(),
     }
 }

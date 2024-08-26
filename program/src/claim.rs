@@ -1,4 +1,4 @@
-use ore_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::Proof};
+use ore_api::{consts::*, error::OreError, instruction::*, loaders::*, state::Proof};
 use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -7,7 +7,7 @@ use solana_program::{
 /// Claim distributes claimable ORE from the treasury to a miner.
 pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
-    let args = ClaimArgs::try_from_bytes(data)?;
+    let args = Claim::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.

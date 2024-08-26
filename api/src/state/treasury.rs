@@ -4,7 +4,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::consts::TREASURY;
 
-use super::AccountDiscriminator;
+use super::OreAccount;
 
 /// Treasury is a singleton account which is the mint authority for the ORE token and the authority of
 /// the program's global token account.
@@ -17,4 +17,4 @@ pub fn treasury_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TREASURY], &crate::id())
 }
 
-account!(AccountDiscriminator, Treasury);
+account!(OreAccount, Treasury);

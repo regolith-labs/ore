@@ -149,6 +149,30 @@ pub fn load_mint(
 /// Errors if:
 /// - Owner is not SPL token program.
 /// - Data is empty.
+/// - Data cannot deserialize into a mint account.
+/// - Expected to be writable, but is not.
+#[cfg(feature = "spl")]
+pub fn load_any_mint(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
+    if info.owner.ne(&spl_token::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    Mint::unpack(&info.data.borrow())?;
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not SPL token program.
+/// - Data is empty.
 /// - Data cannot deserialize into a token account.
 /// - Token account owner does not match the expected owner address.
 /// - Token account mint does not match the expected mint address.
@@ -179,6 +203,42 @@ pub fn load_token_account(
         if account.owner.ne(owner) {
             return Err(ProgramError::InvalidAccountData);
         }
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not SPL token program.
+/// - Data is empty.
+/// - Data cannot deserialize into a token account.
+/// - Address does not match the expected associated token address.
+/// - Expected to be writable, but is not.
+#[cfg(feature = "spl")]
+pub fn load_associated_token_account(
+    info: &AccountInfo<'_>,
+    owner: &Pubkey,
+    mint: &Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&spl_token::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let account_data = info.data.borrow();
+    let _ = spl_token::state::Account::unpack(&account_data)?;
+
+    let address = spl_associated_token_account::get_associated_token_address(owner, mint);
+    if info.key.ne(&address) {
+        return Err(ProgramError::InvalidSeeds);
     }
 
     if is_writable && !info.is_writable {

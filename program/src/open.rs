@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::OpenArgs, state::Proof};
+use ore_api::{consts::*, instruction::Open, state::Proof};
 use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo,
@@ -16,7 +16,7 @@ use solana_program::{
 /// Open creates a new proof account to track a miner's state.
 pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
-    let args = OpenArgs::try_from_bytes(data)?;
+    let args = Open::try_from_bytes(data)?;
 
     // Load accounts.
     let [signer, miner_info, payer_info, proof_info, system_program, slot_hashes_info] = accounts

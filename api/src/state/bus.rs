@@ -4,7 +4,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::consts::BUS;
 
-use super::AccountDiscriminator;
+use super::OreAccount;
 
 /// Bus accounts are responsible for distributing mining rewards. There are 8 busses total
 /// to minimize write-lock contention and allow Solana to process mine instructions in parallel.
@@ -26,8 +26,8 @@ pub struct Bus {
 }
 
 /// Fetch the PDA of a bus account.
-pub fn bus_pda(id: u64) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[BUS, id.to_le_bytes().as_slice()], &crate::id())
+pub fn bus_pda(id: u8) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[BUS, &[id]], &crate::id())
 }
 
-account!(AccountDiscriminator, Bus);
+account!(OreAccount, Bus);

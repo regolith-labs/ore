@@ -5,7 +5,7 @@ use ore_api::{
     consts::*,
     error::OreError,
     event::MineEvent,
-    instruction::MineArgs,
+    instruction::Mine,
     loaders::*,
     state::{Bus, Config, Proof},
 };
@@ -28,7 +28,7 @@ use solana_program::{
 /// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
-    let args = MineArgs::try_from_bytes(data)?;
+    let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
     let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =

@@ -4,7 +4,7 @@ use solana_program::pubkey::Pubkey;
 
 use crate::consts::PROOF;
 
-use super::AccountDiscriminator;
+use super::OreAccount;
 
 /// Proof accounts track a miner's current hash, claimable rewards, and lifetime stats.
 /// Every miner is allowed one proof account which is required by the program to mine or claim rewards.
@@ -44,4 +44,4 @@ pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[PROOF, authority.as_ref()], &crate::id())
 }
 
-account!(AccountDiscriminator, Proof);
+account!(OreAccount, Proof);

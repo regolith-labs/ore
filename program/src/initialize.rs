@@ -7,18 +7,15 @@ use ore_api::{
 };
 use ore_utils::*;
 use solana_program::{
-    account_info::AccountInfo,
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
-    program_pack::Pack,
-    system_program, {self, sysvar},
+    self, account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+    program_pack::Pack, system_program, sysvar,
 };
 use spl_token::state::Mint;
 
 /// Initialize sets up the ORE program to begin mining.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
-    let args = InitializeArgs::try_from_bytes(data)?;
+    let args = Initialize::try_from_bytes(data)?;
 
     // Load accounts.
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
