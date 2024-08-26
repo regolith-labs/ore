@@ -9,7 +9,10 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config, Proof},
 };
-use ore_boost_api::state::{Boost, Stake};
+use ore_boost_api::{
+    loaders::{load_any_boost, load_stake},
+    state::{Boost, Stake},
+};
 use ore_utils::*;
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
@@ -111,28 +114,43 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     //
     // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
     // Up to 3 boosts can be applied on any given mine operation.
-    // Parse optional accounts
-    for i in 0..2 {
-        // Parse optional accounts, two at a time.
-        let (boost_accounts, optional_accounts) = optional_accounts.split_at(2);
-        if let [boost_info, stake_info] = boost_accounts {
-            // TODO Load accounts
+    let mut boosts = [Pubkey::new_from_array([0; 32]); 3];
+    for i in 0..3 {
+        if optional_accounts.len().gt(&(i * 2)) {
+            // Load optional accounts.
+            let boost_info = optional_accounts[i * 2].clone();
+            let stake_info = optional_accounts[i * 2 + 1].clone();
+            load_any_boost(&boost_info, false)?;
+            load_stake(&stake_info, &proof.authority, boost_info.key, false)?;
 
-            // Only apply boost if last stake was greater than one minute ago.
+            // Reject if boost is applied twice.
+            if boosts.contains(boost_info.key) {
+                return Err(OreError::DuplicateBoost.into());
+            }
+
+            // Record this boost has been used.
+            boosts[i] = *boost_info.key;
+
+            // Parse account data.
             let boost_data = boost_info.data.borrow();
             let boost = Boost::try_from_bytes(&boost_data)?;
             let stake_data = stake_info.data.borrow();
             let stake = Stake::try_from_bytes(&stake_data)?;
+
+            // Apply multiplier if last stake was greater than one minute ago.
             if stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
-                // TODO
+                let multiplier = boost.multiplier.checked_sub(1).unwrap();
+                let multiplier_reward = reward
+                    .checked_mul(multiplier)
+                    .unwrap()
+                    .checked_mul(stake.balance)
+                    .unwrap()
+                    .checked_div(boost.total_stake)
+                    .unwrap();
+                reward = reward.checked_add(multiplier_reward).unwrap();
             }
         }
     }
-    // if !optional_accounts.is_empty() {
-    //     let [boost_info, stake_info] = optional_accounts else {
-    //         return Err(ProgramError::NotEnoughAccountKeys);
-    //     };
-    // }
 
     // Apply liveness penalty.
     //

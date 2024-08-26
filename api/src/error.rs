@@ -21,6 +21,8 @@ pub enum OreError {
     MaxSupply = 6,
     #[error("The proof does not match the expected account")]
     AuthFailed = 7,
+    #[error("The same boost cannot be applied twice")]
+    DuplicateBoost = 8,
 }
 
 error!(OreError);
