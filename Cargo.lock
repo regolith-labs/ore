@@ -1312,6 +1312,7 @@ dependencies = [
  "num_enum",
  "ore-utils",
  "solana-program",
+ "spl-associated-token-account",
  "spl-token",
  "static_assertions",
  "thiserror",
