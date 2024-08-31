@@ -309,23 +309,24 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = WoodBus::try_from_bytes_mut(&mut bus_data)?;
-    bus.total_hash_power = bus.total_hash_power.checked_add(difficulty as u64).unwrap();
     
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {
             let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
+            .checked_mul(proof.balance.min(config.top_balance) as u128)
+            .unwrap()
+            .checked_div(config.top_balance as u128)
+            .unwrap() as u64;
             reward = reward.checked_add(staking_reward).unwrap();
         }
-
+    
         // Update bus stake tracker.
         if proof.balance.gt(&bus.top_balance) {
             bus.top_balance = proof.balance;
         }
+        // Update bus total hash power.
+        bus.total_hash_power = bus.total_hash_power.saturating_add(difficulty as u64);
     }
 
     // Apply liveness penalty.

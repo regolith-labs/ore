@@ -115,7 +115,7 @@ pub fn process_init_wood<'a, 'info>(
     let mut config_data = config_info.data.borrow_mut();
     config_data[0] = CoalConfig::discriminator() as u8;
     let config = CoalConfig::try_from_bytes_mut(&mut config_data)?;
-    config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
+    config.base_reward_rate = INITIAL_BASE_WOOD_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_balance = 0;

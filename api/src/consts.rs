@@ -6,13 +6,20 @@ use solana_program::{pubkey, pubkey::Pubkey};
 pub const INITIALIZER_ADDRESS: Pubkey = pubkey!("FJka1yJHn1SWux2X1o8VqHC8uaAWGv6CbNQvPWLJQufq");
 
 /// The base reward rate to intialize the program with.
-pub const INITIAL_BASE_REWARD_RATE: u64 = BASE_REWARD_RATE_MIN_THRESHOLD;
+pub const INITIAL_BASE_COAL_REWARD_RATE: u64 = BASE_COAL_REWARD_RATE_MIN_THRESHOLD;
+pub const INITIAL_BASE_WOOD_REWARD_RATE: u64 = BASE_WOOD_REWARD_RATE_MIN_THRESHOLD;
 
 /// The minimum allowed base reward rate, at which point the min difficulty should be increased
-pub const BASE_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * COAL_EXTRACTION_MULTIPLIER;
+pub const BASE_COAL_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * COAL_EXTRACTION_MULTIPLIER;
 
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
-pub const BASE_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * COAL_EXTRACTION_MULTIPLIER;
+pub const BASE_COAL_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * COAL_EXTRACTION_MULTIPLIER;
+
+/// The minimum allowed base reward rate, at which point the min difficulty should be increased
+pub const BASE_WOOD_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * WOOD_EXTRACTION_MULTIPLIER;
+
+/// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
+pub const BASE_WOOD_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * WOOD_EXTRACTION_MULTIPLIER;
 
 
 // When total hash power is above this threshold, wood emissions grows at a faster rate
@@ -47,24 +54,23 @@ pub const COAL_EPOCH_DURATION: i64 = ONE_MINUTE * COAL_EPOCH_MINUTES;
 pub const WOOD_EPOCH_DURATION: i64 = ONE_MINUTE * WOOD_EPOCH_MINUTES;
 /// The maximum token supply (21 million).
 pub const MAX_COAL_SUPPLY: u64 = ONE_COAL * 21_000_000;
-pub const MAX_WOOD_SUPPLY: u64 = ONE_WOOD * 21_000_000;
+
 /// The multiplier for the target quantity of COAL to be mined per epoch.
 pub const COAL_EXTRACTION_MULTIPLIER: u64 = 1000;
 pub const WOOD_EXTRACTION_MULTIPLIER: u64 = 10;
 
 /// The target quantity of COAL to be mined per epoch.
 pub const TARGET_COAL_EPOCH_REWARDS: u64 = ONE_COAL * COAL_EXTRACTION_MULTIPLIER * COAL_EPOCH_MINUTES as u64;
-/// The initial target quantity of WOOD to be mined per epoch.
-pub const TARGET_WOOD_EPOCH_REWARDS: u64 = ONE_WOOD * WOOD_EXTRACTION_MULTIPLIER * WOOD_EPOCH_MINUTES as u64;
+
+/// The propogation multiplier for WOOD emissions.
+pub const WOOD_PROPOGATION_MULTIPLIER: f64 = 1.05;
 
 /// The maximum quantity of COAL that can be mined per epoch.
 /// Inflation rate ≈ 1000 COAL / min (min 0, max 8)
 pub const MAX_COAL_EPOCH_REWARDS: u64 = TARGET_COAL_EPOCH_REWARDS * BUS_COUNT as u64;
-pub const MAX_WOOD_EPOCH_REWARDS: u64 = TARGET_WOOD_EPOCH_REWARDS * BUS_COUNT as u64;
 
 /// The quantity of COAL each bus is allowed to issue per epoch.
 pub const BUS_COAL_EPOCH_REWARDS: u64 = MAX_COAL_EPOCH_REWARDS / BUS_COUNT as u64;
-pub const BUS_WOOD_EPOCH_REWARDS: u64 = MAX_WOOD_EPOCH_REWARDS / BUS_COUNT as u64;
 
 /// The number of bus accounts, for parallelizing mine operations.
 pub const BUS_COUNT: usize = 8;
@@ -76,9 +82,6 @@ pub const SMOOTHING_FACTOR: u64 = 2;
 // Assert MAX_EPOCH_REWARDS is evenly divisible by BUS_COUNT.
 static_assertions::const_assert!(
     (MAX_COAL_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_COAL_EPOCH_REWARDS
-);
-static_assertions::const_assert!(
-    (MAX_WOOD_EPOCH_REWARDS / BUS_COUNT as u64) * BUS_COUNT as u64 == MAX_WOOD_EPOCH_REWARDS
 );
 
 /// The seed of the bus account PDA.

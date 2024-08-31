@@ -121,9 +121,9 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     config.base_reward_rate =
         calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards, adjusted_target_rewards, adjusted_bus_epoch_rewards);
 
-    let adjusted_base_reward_threshold = BASE_REWARD_RATE_MIN_THRESHOLD / halving_factor;
-    let adjusted_base_reward_max_threshold = BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor;
-    let absolute_max_threshold = adjusted_base_reward_max_threshold * 12;    
+    let adjusted_base_reward_threshold = BASE_COAL_REWARD_RATE_MIN_THRESHOLD / halving_factor;
+    let adjusted_base_reward_max_threshold = BASE_COAL_REWARD_RATE_MAX_THRESHOLD / halving_factor;
+   
     // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
     if config.base_reward_rate.le(&adjusted_base_reward_threshold) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
@@ -134,8 +134,6 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) && config.min_difficulty.gt(&1) {
         config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
-    } else if config.base_reward_rate.ge(&absolute_max_threshold) {
-        config.base_reward_rate = absolute_max_threshold;
     }
 
     
@@ -205,25 +203,11 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     // Update timestamp.
     config.last_reset_at = clock.unix_timestamp;
 
-    // Max supply check.
-    let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
-    if mint.supply.ge(&MAX_WOOD_SUPPLY) {
-        return Err(OreError::MaxSupply.into());
-    }
-
-    // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
-    // The halving is done to incentivize the accumulation of the token.
-    // Halving should only occur at 5% intervals.
-    let supply_percentage = (mint.supply as f64 / MAX_WOOD_SUPPLY as f64) * 100.0;
-    let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
-    let adjusted_target_rewards = TARGET_WOOD_EPOCH_REWARDS / halving_factor;
-    let adjusted_bus_epoch_rewards = BUS_WOOD_EPOCH_REWARDS / halving_factor;
-    let adjusted_max_epoch_rewards = MAX_WOOD_EPOCH_REWARDS / halving_factor;   
-
-    // Reset bus accounts and calculate actual rewards mined since last reset.
-    let mut total_remaining_rewards = 0u64;
-    let mut total_theoretical_rewards = 0u64;
-    let mut top_balance = 0u64;
+    // Reset bus accounts and calculate reward rates for next epoch.
+    let mut top_balance: u64 = 0u64;
+    let mut total_remaining_rewards = 0u64; 
+    let mut next_epoch_rewards = 0u64;
+    
     for i in 0..BUS_COUNT {
         // Parse bus account.
         let mut bus_data = busses[i].data.borrow_mut();
@@ -234,47 +218,40 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
             top_balance = bus.top_balance;
         }
 
-        // Track accumulators.
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
-        total_theoretical_rewards =
-            total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
 
-        // Reset bus account for new epoch.
-        bus.rewards = adjusted_bus_epoch_rewards;
-        bus.theoretical_rewards = 0;
-        bus.top_balance = 0;
+        // Bus rewards grow by 5% each epoch.
+        bus.rewards = bus.rewards.saturating_mul(WOOD_PROPOGATION_MULTIPLIER as u64).max(1);
+        next_epoch_rewards = next_epoch_rewards.saturating_add(bus.rewards);
     }
-    let total_epoch_rewards = adjusted_max_epoch_rewards.saturating_sub(total_remaining_rewards);
+
+    let total_epoch_rewards = config.total_epoch_rewards.saturating_sub(total_remaining_rewards).max(0);
+    let next_epoch_bus_rewards = next_epoch_rewards.saturating_div(BUS_COUNT as u64);
 
     // Update global top balance.
     config.top_balance = top_balance;
 
+    // Update the rewards for the next epoch.
+    config.total_epoch_rewards = next_epoch_rewards;
+
     // Update base reward rate for next epoch.
     config.base_reward_rate =
-        calculate_new_reward_rate(config.base_reward_rate, total_theoretical_rewards, adjusted_target_rewards, adjusted_bus_epoch_rewards);
+        calculate_new_reward_rate(config.base_reward_rate, total_epoch_rewards, next_epoch_rewards, next_epoch_bus_rewards);
 
-    let adjusted_base_reward_threshold = BASE_REWARD_RATE_MIN_THRESHOLD / halving_factor;
-    let adjusted_base_reward_max_threshold = BASE_REWARD_RATE_MAX_THRESHOLD / halving_factor;
-    let absolute_max_threshold = adjusted_base_reward_max_threshold * 12;    
     // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    if config.base_reward_rate.le(&adjusted_base_reward_threshold) {
+    if config.base_reward_rate.le(&BASE_WOOD_REWARD_RATE_MIN_THRESHOLD) {
         config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
     }
 
     // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&adjusted_base_reward_max_threshold) && config.min_difficulty.gt(&1) {
+    if config.base_reward_rate.ge(&BASE_WOOD_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
         config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
         config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
-    } else if config.base_reward_rate.ge(&absolute_max_threshold) {
-        config.base_reward_rate = absolute_max_threshold;
     }
 
     
     // Fund the treasury token account.
-    let amount = MAX_WOOD_SUPPLY
-        .saturating_sub(mint.supply)
-        .min(total_epoch_rewards);
     solana_program::program::invoke_signed(
         &spl_token::instruction::mint_to(
             &spl_token::id(),
@@ -282,7 +259,7 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
             treasury_tokens_info.key,
             treasury_info.key,
             &[treasury_info.key],
-            amount,
+            total_epoch_rewards,
         )?,
         &[
             token_program.clone(),
@@ -329,7 +306,7 @@ mod tests {
     use rand::{distributions::Uniform, Rng};
     use crate::calculate_new_reward_rate;
     use coal_api::consts::{
-        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COAL_EPOCH_REWARDS, MAX_COAL_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        BASE_COAL_REWARD_RATE_MIN_THRESHOLD, BUS_COAL_EPOCH_REWARDS, MAX_COAL_EPOCH_REWARDS, SMOOTHING_FACTOR,
         TARGET_COAL_EPOCH_REWARDS,
     };
 
@@ -363,7 +340,7 @@ mod tests {
 
     #[test]
     fn test_calculate_new_reward_rate_lower_edge() {
-        let current_rate = BASE_REWARD_RATE_MIN_THRESHOLD;
+        let current_rate = BASE_COAL_REWARD_RATE_MIN_THRESHOLD;
         let new_rate = calculate_new_reward_rate(current_rate, TARGET_COAL_EPOCH_REWARDS + 1, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.lt(&current_rate));
     }

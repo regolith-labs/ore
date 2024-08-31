@@ -44,7 +44,7 @@ pub struct WoodConfig {
     pub top_balance: u64,
 
     /// The current epoch emission rate for the program.
-    pub current_emission_rate: u64,
+    pub total_epoch_rewards: u64,
 }
 
 impl Discriminator for WoodConfig {
