@@ -4,10 +4,10 @@ use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
-/// CoalConfig is a singleton account which manages program coal minting variables.
+/// Config is a singleton account which manages program coal minting variables.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct CoalConfig {
+pub struct Config {
     /// The base reward rate paid out for a hash of minimum difficulty.
     pub base_reward_rate: u64,
 
@@ -21,13 +21,13 @@ pub struct CoalConfig {
     pub top_balance: u64,
 }
 
-impl Discriminator for CoalConfig {
+impl Discriminator for Config {
     fn discriminator() -> u8 {
-        AccountDiscriminator::CoalConfig.into()
+        AccountDiscriminator::Config.into()
     }
 }
 
-/// CoalConfig is a singleton account which manages program coal minting variables.
+/// Config is a singleton account which manages program coal minting variables.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct WoodConfig {
@@ -53,7 +53,7 @@ impl Discriminator for WoodConfig {
     }
 }
 
-impl_to_bytes!(CoalConfig);
-impl_account_from_bytes!(CoalConfig);
+impl_to_bytes!(Config);
+impl_account_from_bytes!(Config);
 impl_to_bytes!(WoodConfig);
 impl_account_from_bytes!(WoodConfig);

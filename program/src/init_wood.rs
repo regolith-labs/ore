@@ -4,7 +4,7 @@ use coal_api::{
     consts::*,
     instruction::*,
     loaders::*,
-    state::{CoalBus, CoalConfig},
+    state::{Bus, Config},
 };
 use coal_utils::spl::create_ata;
 use solana_program::{
@@ -89,14 +89,14 @@ pub fn process_init_wood<'a, 'info>(
         create_pda(
             bus_infos[i],
             &coal_api::id(),
-            8 + size_of::<CoalBus>(),
+            8 + size_of::<Bus>(),
             &[WOOD_BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer,
         )?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
-        bus_data[0] = CoalBus::discriminator() as u8;
-        let bus = CoalBus::try_from_bytes_mut(&mut bus_data)?;
+        bus_data[0] = Bus::discriminator() as u8;
+        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
         bus.rewards = 0;
         bus.theoretical_rewards = 0;
@@ -107,14 +107,14 @@ pub fn process_init_wood<'a, 'info>(
     create_pda(
         config_info,
         &coal_api::id(),
-        8 + size_of::<CoalConfig>(),
+        8 + size_of::<Config>(),
         &[WOOD_CONFIG, &[args.config_bump]],
         system_program,
         signer,
     )?;
     let mut config_data = config_info.data.borrow_mut();
-    config_data[0] = CoalConfig::discriminator() as u8;
-    let config = CoalConfig::try_from_bytes_mut(&mut config_data)?;
+    config_data[0] = Config::discriminator() as u8;
+    let config = Config::try_from_bytes_mut(&mut config_data)?;
     config.base_reward_rate = INITIAL_BASE_WOOD_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;

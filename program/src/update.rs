@@ -1,4 +1,4 @@
-use coal_api::{loaders::*, state::{CoalProof, WoodProof}};
+use coal_api::{loaders::*, state::{Proof, WoodProof}};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
@@ -8,7 +8,7 @@ use crate::utils::{AccountDeserialize, Discriminator};
 pub fn process_update<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     let config_info = &accounts[9];
 
-    if config_info.data.borrow()[0].eq(&(CoalProof::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(Proof::discriminator() as u8)) {
         return process_update_coal(accounts, data)
     }
 
@@ -34,7 +34,7 @@ pub fn process_update_coal<'a, 'info>(
 
     // Update the proof's miner authority.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.miner = *miner_info.key;
 
     Ok(())

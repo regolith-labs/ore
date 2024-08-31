@@ -1,4 +1,4 @@
-use coal_api::{consts::*, instruction::StakeArgs, loaders::*, state::{CoalConfig, CoalProof, WoodConfig, WoodProof}};
+use coal_api::{consts::*, instruction::StakeArgs, loaders::*, state::{Config, Proof, WoodConfig, WoodProof}};
 use coal_utils::spl::transfer;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
@@ -10,7 +10,7 @@ use crate::utils::{AccountDeserialize, Discriminator};
 pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     let config_info = &accounts[9];
 
-    if config_info.data.borrow()[0].eq(&(CoalConfig::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
         return process_stake_coal(accounts, data)
     }
 
@@ -39,7 +39,7 @@ fn process_stake_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]
 
     // Update the proof balance.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof.balance.checked_add(amount).unwrap();
 
     // Update deposit timestamp.

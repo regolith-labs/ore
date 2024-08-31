@@ -8,7 +8,7 @@ use super::AccountDiscriminator;
 /// to minimize write-lock contention and allow Solana to process mine instructions in parallel.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct CoalBus {
+pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,
 
@@ -23,9 +23,9 @@ pub struct CoalBus {
     pub top_balance: u64,
 }
 
-impl Discriminator for CoalBus {
+impl Discriminator for Bus {
     fn discriminator() -> u8 {
-        AccountDiscriminator::CoalBus.into()
+        AccountDiscriminator::Bus.into()
     }
 }
 
@@ -56,7 +56,7 @@ impl Discriminator for WoodBus {
     }
 }
 
-impl_to_bytes!(CoalBus);
-impl_account_from_bytes!(CoalBus);
+impl_to_bytes!(Bus);
+impl_account_from_bytes!(Bus);
 impl_to_bytes!(WoodBus);
 impl_account_from_bytes!(WoodBus);

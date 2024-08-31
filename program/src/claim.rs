@@ -1,4 +1,4 @@
-use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::{CoalProof, WoodProof}};
+use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::{Proof, WoodProof}};
 use coal_utils::{Discriminator, spl::transfer_signed};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -10,7 +10,7 @@ use crate::utils::AccountDeserialize;
 pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     let proof_info = &accounts[2];
 
-    if proof_info.data.borrow()[0].eq(&(CoalProof::discriminator() as u8)) {
+    if proof_info.data.borrow()[0].eq(&(Proof::discriminator() as u8)) {
         return process_claim_coal(accounts, data)
     }
 
@@ -41,7 +41,7 @@ fn process_claim_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Update miner balance.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof
         .balance
         .checked_sub(amount)

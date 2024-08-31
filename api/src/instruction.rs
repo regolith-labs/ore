@@ -24,6 +24,7 @@ pub enum OreInstruction {
     Reset = 4,
     Stake = 5,
     Update = 6,
+    OpenWood = 7,
     // Admin
     InitCoal = 100,
     InitWood = 101,

@@ -2,7 +2,7 @@ use coal_api::{
     consts::*,
     error::OreError,
     loaders::*,
-    state::{CoalConfig, WoodConfig, CoalBus, WoodBus},
+    state::{Config, WoodConfig, Bus, WoodBus},
 };
 use coal_utils::AccountDeserialize;
 use solana_program::{
@@ -20,7 +20,7 @@ use crate::utils::Discriminator;
 pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     let config_info = &accounts[9];
 
-    if config_info.data.borrow()[0].eq(&(CoalConfig::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
         return process_reset_coal(accounts, data)
     }
 
@@ -60,7 +60,7 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     // Validate enough time has passed since the last reset.
     let mut config_data = config_info.data.borrow_mut();
-    let config = CoalConfig::try_from_bytes_mut(&mut config_data)?;
+    let config = Config::try_from_bytes_mut(&mut config_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
@@ -95,7 +95,7 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     for i in 0..BUS_COUNT {
         // Parse bus account.
         let mut bus_data = busses[i].data.borrow_mut();
-        let bus = CoalBus::try_from_bytes_mut(&mut bus_data)?;
+        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
 
         // Track top balance.
         if bus.top_balance.gt(&top_balance) {

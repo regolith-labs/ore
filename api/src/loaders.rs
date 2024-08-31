@@ -6,7 +6,7 @@ use spl_token::state::Mint;
 
 use crate::{
     consts::*,
-    state::{CoalBus, CoalConfig, CoalProof, WoodBus, WoodConfig, WoodProof, Treasury},
+    state::{Bus, Config, Proof, WoodBus, WoodConfig, WoodProof, Treasury},
     utils::{AccountDeserialize, Discriminator},
 };
 
@@ -45,7 +45,7 @@ pub fn load_coal_bus<'a, 'info>(
     }
 
     let bus_data = info.data.borrow();
-    let bus = CoalBus::try_from_bytes(&bus_data)?;
+    let bus = Bus::try_from_bytes(&bus_data)?;
 
     if bus.id.ne(&id) {
         return Err(ProgramError::InvalidAccountData);
@@ -115,7 +115,7 @@ pub fn load_any_coal_bus<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(CoalBus::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Bus::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -186,7 +186,7 @@ pub fn load_coal_config<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(CoalConfig::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Config::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -250,7 +250,7 @@ pub fn load_coal_proof<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = CoalProof::try_from_bytes(&proof_data)?;
+    let proof = Proof::try_from_bytes(&proof_data)?;
 
     if proof.authority.ne(&authority) {
         return Err(ProgramError::InvalidAccountData);
@@ -316,7 +316,7 @@ pub fn load_coal_proof_with_miner<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = CoalProof::try_from_bytes(&proof_data)?;
+    let proof = Proof::try_from_bytes(&proof_data)?;
 
     if proof.miner.ne(&miner) {
         return Err(ProgramError::InvalidAccountData);
@@ -379,7 +379,7 @@ pub fn load_any_coal_proof<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(CoalProof::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Proof::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 

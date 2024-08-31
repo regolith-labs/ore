@@ -1,35 +1,14 @@
 use std::mem::size_of;
 
-use coal_api::{consts::*, instruction::OpenArgs, loaders::*, state::{CoalProof, WoodProof}};
+use coal_api::{consts::*, instruction::OpenArgs, loaders::*, state::{Proof, WoodProof}};
 use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
-    keccak::hashv,
-    program_error::ProgramError,
-    slot_hashes::SlotHash,
-    system_program,
-    sysvar::{self, Sysvar},
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, keccak::hashv, program_error::ProgramError, slot_hashes::SlotHash, system_program, sysvar::{self, Sysvar}
 };
 
 use crate::utils::{create_pda, AccountDeserialize, Discriminator};
 
-pub fn process_open<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    let proof_info = &accounts[3];
-
-    if proof_info.data.borrow()[0].eq(&(CoalProof::discriminator() as u8)) {
-        return process_open_coal(accounts, data)
-    }
-
-    if proof_info.data.borrow()[0].eq(&(WoodProof::discriminator() as u8)) {
-        return process_open_wood(accounts, data)
-    }
-
-    return Err(solana_program::program_error::ProgramError::InvalidAccountData);
-}
-
 /// Open creates a new proof account to track a miner's state.
-fn process_open_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_open_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = OpenArgs::try_from_bytes(data)?;
 
@@ -54,15 +33,15 @@ fn process_open_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
     create_pda(
         proof_info,
         &coal_api::id(),
-        8 + size_of::<CoalProof>(),
+        8 + size_of::<Proof>(),
         &[COAL_PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = CoalProof::discriminator() as u8;
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    proof_data[0] = Proof::discriminator() as u8;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
     proof.balance = 0;
     proof.challenge = hashv(&[
@@ -81,7 +60,7 @@ fn process_open_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
 }
 
 /// Open creates a new proof account to track a miner's state.
-fn process_open_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
+pub fn process_open_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = OpenArgs::try_from_bytes(data)?;
 
@@ -106,15 +85,15 @@ fn process_open_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
     create_pda(
         proof_info,
         &coal_api::id(),
-        8 + size_of::<CoalProof>(),
+        8 + size_of::<WoodProof>(),
         &[WOOD_PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = CoalProof::discriminator() as u8;
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    proof_data[0] = WoodProof::discriminator() as u8;
+    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
     proof.authority = *signer.key;
     proof.balance = 0;
     proof.challenge = hashv(&[

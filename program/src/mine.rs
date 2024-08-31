@@ -7,9 +7,10 @@ use coal_api::{
     event::MineEvent,
     instruction::MineArgs,
     loaders::*,
-    state::{CoalConfig, CoalProof, CoalBus, WoodConfig, WoodProof, WoodBus},
+    state::{Config, Proof, Bus, WoodConfig, WoodProof, WoodBus},
 };
 use coal_utils::Discriminator;
+use solana_program::msg;
 #[allow(deprecated)]
 use solana_program::{
     account_info::AccountInfo,
@@ -31,7 +32,7 @@ use crate::utils::AccountDeserialize;
 pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let config_info = &accounts[2];
 
-    if config_info.data.borrow()[0].eq(&(CoalConfig::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
         return process_mine_coal(accounts, data)
     }
 
@@ -39,7 +40,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return process_chop_wood(accounts, data)
     }
 
-    return Err(solana_program::program_error::ProgramError::InvalidAccountData);
+    return Err(ProgramError::InvalidAccountData);
 }
 
 fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
@@ -67,7 +68,7 @@ fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Validate epoch is active.
     let config_data = config_info.data.borrow();
-    let config = WoodConfig::try_from_bytes(&config_data)?;
+    let config = Config::try_from_bytes(&config_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
@@ -83,7 +84,7 @@ fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Here we use drillx_2 to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = CoalProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
@@ -128,7 +129,7 @@ fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
     let mut bus_data = bus_info.data.borrow_mut();
-    let bus = CoalBus::try_from_bytes_mut(&mut bus_data)?;
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {

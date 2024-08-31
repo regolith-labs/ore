@@ -9,7 +9,7 @@ use super::AccountDiscriminator;
 /// Every miner is allowed one proof account which is required by the program to mine or claim rewards.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct CoalProof {
+pub struct Proof {
     /// The signer authorized to use this proof.
     pub authority: Pubkey,
 
@@ -38,7 +38,7 @@ pub struct CoalProof {
     pub total_rewards: u64,
 }
 
-impl Discriminator for CoalProof {
+impl Discriminator for Proof {
     fn discriminator() -> u8 {
         AccountDiscriminator::Proof.into()
     }
@@ -81,7 +81,7 @@ impl Discriminator for WoodProof {
     }
 }
 
-impl_to_bytes!(CoalProof);
-impl_account_from_bytes!(CoalProof);
+impl_to_bytes!(Proof);
+impl_account_from_bytes!(Proof);
 impl_to_bytes!(WoodProof);
 impl_account_from_bytes!(WoodProof);

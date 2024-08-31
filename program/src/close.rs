@@ -1,4 +1,4 @@
-use coal_api::{loaders::*, state::{CoalProof, WoodProof}};
+use coal_api::{loaders::*, state::{Proof, WoodProof}};
 use coal_utils::Discriminator;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -11,7 +11,7 @@ use crate::utils::AccountDeserialize;
 pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
     let proof_info = &accounts[1];
 
-    if proof_info.data.borrow()[0].eq(&(CoalProof::discriminator() as u8)) {
+    if proof_info.data.borrow()[0].eq(&(Proof::discriminator() as u8)) {
         return process_close_coal(accounts, data)
     }
 
@@ -33,7 +33,7 @@ fn process_close_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     // Validate balance is zero.
     let proof_data = proof_info.data.borrow();
-    let proof = CoalProof::try_from_bytes(&proof_data)?;
+    let proof = Proof::try_from_bytes(&proof_data)?;
     if proof.balance.gt(&0) {
         return Err(ProgramError::InvalidAccountData);
     }
