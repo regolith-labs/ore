@@ -64,7 +64,7 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
-        .saturating_add(EPOCH_DURATION)
+        .saturating_add(COAL_EPOCH_DURATION)
         .gt(&clock.unix_timestamp)
     {
         return Ok(());
@@ -75,18 +75,18 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     // Max supply check.
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
-    if mint.supply.ge(&MAX_SUPPLY) {
+    if mint.supply.ge(&MAX_COAL_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
 
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
     // The halving is done to incentivize the accumulation of the token.
     // Halving should only occur at 5% intervals.
-    let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
+    let supply_percentage = (mint.supply as f64 / MAX_COAL_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
-    let adjusted_target_rewards = TARGET_EPOCH_REWARDS / halving_factor;
-    let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
-    let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;   
+    let adjusted_target_rewards = TARGET_COAL_EPOCH_REWARDS / halving_factor;
+    let adjusted_bus_epoch_rewards = BUS_COAL_EPOCH_REWARDS / halving_factor;
+    let adjusted_max_epoch_rewards = MAX_COAL_EPOCH_REWARDS / halving_factor;   
 
     // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
@@ -140,7 +140,7 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     
     // Fund the treasury token account.
-    let amount = MAX_SUPPLY
+    let amount = MAX_COAL_SUPPLY
         .saturating_sub(mint.supply)
         .min(total_epoch_rewards);
     solana_program::program::invoke_signed(
@@ -196,7 +196,7 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
-        .saturating_add(EPOCH_DURATION)
+        .saturating_add(WOOD_EPOCH_DURATION)
         .gt(&clock.unix_timestamp)
     {
         return Ok(());
@@ -207,18 +207,18 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     // Max supply check.
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
-    if mint.supply.ge(&MAX_SUPPLY) {
+    if mint.supply.ge(&MAX_WOOD_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
 
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%
     // The halving is done to incentivize the accumulation of the token.
     // Halving should only occur at 5% intervals.
-    let supply_percentage = (mint.supply as f64 / MAX_SUPPLY as f64) * 100.0;
+    let supply_percentage = (mint.supply as f64 / MAX_WOOD_SUPPLY as f64) * 100.0;
     let halving_factor = 2u64.pow((supply_percentage / 5.0) as u32);
-    let adjusted_target_rewards = TARGET_EPOCH_REWARDS / halving_factor;
-    let adjusted_bus_epoch_rewards = BUS_EPOCH_REWARDS / halving_factor;
-    let adjusted_max_epoch_rewards = MAX_EPOCH_REWARDS / halving_factor;   
+    let adjusted_target_rewards = TARGET_WOOD_EPOCH_REWARDS / halving_factor;
+    let adjusted_bus_epoch_rewards = BUS_WOOD_EPOCH_REWARDS / halving_factor;
+    let adjusted_max_epoch_rewards = MAX_WOOD_EPOCH_REWARDS / halving_factor;   
 
     // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
@@ -272,7 +272,7 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
 
     
     // Fund the treasury token account.
-    let amount = MAX_SUPPLY
+    let amount = MAX_WOOD_SUPPLY
         .saturating_sub(mint.supply)
         .min(total_epoch_rewards);
     solana_program::program::invoke_signed(
@@ -329,8 +329,8 @@ mod tests {
     use rand::{distributions::Uniform, Rng};
     use crate::calculate_new_reward_rate;
     use coal_api::consts::{
-        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, SMOOTHING_FACTOR,
-        TARGET_EPOCH_REWARDS,
+        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COAL_EPOCH_REWARDS, MAX_COAL_EPOCH_REWARDS, SMOOTHING_FACTOR,
+        TARGET_COAL_EPOCH_REWARDS,
     };
 
     const FUZZ_SIZE: u64 = 10_000;
@@ -338,14 +338,14 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_target() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_COAL_EPOCH_REWARDS, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_div_by_zero() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, 0, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, 0, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate));
     }   
 
@@ -354,9 +354,9 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
-            TARGET_EPOCH_REWARDS,
-            BUS_EPOCH_REWARDS
+            TARGET_COAL_EPOCH_REWARDS.saturating_add(1_000_000_000),
+            TARGET_COAL_EPOCH_REWARDS,
+            BUS_COAL_EPOCH_REWARDS
         );
         assert!(new_rate.lt(&current_rate));
     }
@@ -364,7 +364,7 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_lower_edge() {
         let current_rate = BASE_REWARD_RATE_MIN_THRESHOLD;
-        let new_rate = calculate_new_reward_rate(current_rate, TARGET_EPOCH_REWARDS + 1, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, TARGET_COAL_EPOCH_REWARDS + 1, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.lt(&current_rate));
     }
 
@@ -372,10 +372,10 @@ mod tests {
     fn test_calculate_new_reward_rate_lower_fuzz() {
         let mut rng = rand::thread_rng();
         for _ in 0..FUZZ_SIZE {
-            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
+            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_COAL_EPOCH_REWARDS));
             let actual_rewards: u64 =
-                rng.sample(Uniform::new(TARGET_EPOCH_REWARDS, MAX_EPOCH_REWARDS));
-            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+                rng.sample(Uniform::new(TARGET_COAL_EPOCH_REWARDS, MAX_COAL_EPOCH_REWARDS));
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
             assert!(new_rate.lt(&current_rate));
         }
     }
@@ -385,9 +385,9 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000_000),
-            TARGET_EPOCH_REWARDS,
-            BUS_EPOCH_REWARDS
+            TARGET_COAL_EPOCH_REWARDS.saturating_sub(1_000_000_000_000),
+            TARGET_COAL_EPOCH_REWARDS,
+            BUS_COAL_EPOCH_REWARDS
         );
         assert!(new_rate.gt(&current_rate));
     }
@@ -396,9 +396,9 @@ mod tests {
     fn test_calculate_new_reward_rate_higher_fuzz() {
         let mut rng = rand::thread_rng();
         for _ in 0..FUZZ_SIZE {
-            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_EPOCH_REWARDS));
-            let actual_rewards: u64 = rng.sample(Uniform::new(1, TARGET_EPOCH_REWARDS));
-            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+            let current_rate: u64 = rng.sample(Uniform::new(1, BUS_COAL_EPOCH_REWARDS));
+            let actual_rewards: u64 = rng.sample(Uniform::new(1, TARGET_COAL_EPOCH_REWARDS));
+            let new_rate = calculate_new_reward_rate(current_rate, actual_rewards, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
             assert!(new_rate.gt(&current_rate));
         }
     }
@@ -406,26 +406,26 @@ mod tests {
     #[test]
     fn test_calculate_new_reward_rate_max_smooth() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, 1, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, 1, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate.saturating_mul(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_min_smooth() {
         let current_rate = 1000;
-        let new_rate = calculate_new_reward_rate(current_rate, u64::MAX, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(current_rate, u64::MAX, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.eq(&current_rate.saturating_div(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_max_inputs() {
-        let new_rate = calculate_new_reward_rate(BUS_EPOCH_REWARDS, MAX_EPOCH_REWARDS, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
-        assert!(new_rate.eq(&BUS_EPOCH_REWARDS.saturating_div(SMOOTHING_FACTOR)));
+        let new_rate = calculate_new_reward_rate(BUS_COAL_EPOCH_REWARDS, MAX_COAL_EPOCH_REWARDS, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
+        assert!(new_rate.eq(&BUS_COAL_EPOCH_REWARDS.saturating_div(SMOOTHING_FACTOR)));
     }
 
     #[test]
     fn test_calculate_new_reward_rate_min_inputs() {
-        let new_rate = calculate_new_reward_rate(1, 1, TARGET_EPOCH_REWARDS, BUS_EPOCH_REWARDS);
+        let new_rate = calculate_new_reward_rate(1, 1, TARGET_COAL_EPOCH_REWARDS, BUS_COAL_EPOCH_REWARDS);
         assert!(new_rate.eq(&1u64.saturating_mul(SMOOTHING_FACTOR)));
     }
 }

@@ -4,7 +4,7 @@ use coal_api::{
     consts::*,
     instruction::*,
     loaders::*,
-    state::{CoalBus, CoalConfig, Treasury},
+    state::{CoalBus, CoalConfig},
 };
 use coal_utils::spl::create_ata;
 use solana_program::{
@@ -58,12 +58,6 @@ pub fn process_init_wood<'a, 'info>(
         args.mint_bump,
         &coal_api::id(),
     )?;
-    load_uninitialized_pda(
-        treasury_info,
-        &[TREASURY],
-        args.treasury_bump,
-        &coal_api::id(),
-    )?;
     load_system_account(treasury_tokens_info, true)?;
     load_program(system_program, system_program::id())?;
     load_program(token_program, spl_token::id())?;
@@ -96,7 +90,7 @@ pub fn process_init_wood<'a, 'info>(
             bus_infos[i],
             &coal_api::id(),
             8 + size_of::<CoalBus>(),
-            &[COAL_BUS, &[i as u8], &[bus_bumps[i]]],
+            &[WOOD_BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer,
         )?;
@@ -114,7 +108,7 @@ pub fn process_init_wood<'a, 'info>(
         config_info,
         &coal_api::id(),
         8 + size_of::<CoalConfig>(),
-        &[COAL_CONFIG, &[args.config_bump]],
+        &[WOOD_CONFIG, &[args.config_bump]],
         system_program,
         signer,
     )?;
@@ -126,25 +120,12 @@ pub fn process_init_wood<'a, 'info>(
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_balance = 0;
 
-    // Initialize treasury.
-    create_pda(
-        treasury_info,
-        &coal_api::id(),
-        8 + size_of::<Treasury>(),
-        &[TREASURY, &[args.treasury_bump]],
-        system_program,
-        signer,
-    )?;
-    let mut treasury_data = treasury_info.data.borrow_mut();
-    treasury_data[0] = Treasury::discriminator() as u8;
-    drop(treasury_data);
-
     // Initialize mint.
     create_pda(
         mint_info,
         &spl_token::id(),
         Mint::LEN,
-        &[COAL_MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
+        &[WOOD_MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
         system_program,
         signer,
     )?;
@@ -162,7 +143,7 @@ pub fn process_init_wood<'a, 'info>(
             treasury_info.clone(),
             rent_sysvar.clone(),
         ],
-        &[&[COAL_MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
+        &[&[WOOD_MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
     )?;
 
     // Initialize mint metadata.
@@ -177,9 +158,9 @@ pub fn process_init_wood<'a, 'info>(
         rent: Some(rent_sysvar),
         __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
             data: mpl_token_metadata::types::DataV2 {
-                name: METADATA_NAME.to_string(),
-                symbol: METADATA_SYMBOL.to_string(),
-                uri: METADATA_URI.to_string(),
+                name: WOOD_METADATA_NAME.to_string(),
+                symbol: WOOD_METADATA_SYMBOL.to_string(),
+                uri: WOOD_METADATA_URI.to_string(),
                 seller_fee_basis_points: 0,
                 creators: None,
                 collection: None,

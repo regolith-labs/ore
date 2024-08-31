@@ -44,6 +44,10 @@ pub struct WoodBus {
 
     /// The largest known stake balance seen by the bus this epoch.
     pub top_balance: u64,
+
+    /// The total hash power for the epoch.
+    /// This is the sum of all difficulty values across all buses for the epoch.
+    pub total_hash_power: u64,
 }
 
 impl Discriminator for WoodBus {

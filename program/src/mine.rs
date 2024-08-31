@@ -71,7 +71,7 @@ fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
-        .saturating_add(EPOCH_DURATION)
+        .saturating_add(COAL_EPOCH_DURATION)
         .le(&clock.unix_timestamp)
     {
         println!("Needs reset");
@@ -251,7 +251,7 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
-        .saturating_add(EPOCH_DURATION)
+        .saturating_add(WOOD_EPOCH_DURATION)
         .le(&clock.unix_timestamp)
     {
         println!("Needs reset");
@@ -290,8 +290,6 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(OreError::HashTooEasy.into());
     }
 
-    config.last_epoch_total_hash_power = config.last_epoch_total_hash_power.checked_add(difficulty as u64).unwrap();
-
     // Normalize the difficulty and calculate the reward amount.
     //
     // The reward doubles for every bit of difficulty (leading zeros) on the hash. We use the normalized
@@ -304,13 +302,15 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
-    // Apply staking multiplier.
+    // Increment total hash power and apply staking multiplier.
     //
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
     let mut bus_data = bus_info.data.borrow_mut();
     let bus = WoodBus::try_from_bytes_mut(&mut bus_data)?;
+    bus.total_hash_power = bus.total_hash_power.checked_add(difficulty as u64).unwrap();
+    
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {

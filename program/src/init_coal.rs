@@ -177,9 +177,9 @@ pub fn process_init_coal<'a, 'info>(
         rent: Some(rent_sysvar),
         __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
             data: mpl_token_metadata::types::DataV2 {
-                name: METADATA_NAME.to_string(),
-                symbol: METADATA_SYMBOL.to_string(),
-                uri: METADATA_URI.to_string(),
+                name: COAL_METADATA_NAME.to_string(),
+                symbol: COAL_METADATA_SYMBOL.to_string(),
+                uri: COAL_METADATA_URI.to_string(),
                 seller_fee_basis_points: 0,
                 creators: None,
                 collection: None,

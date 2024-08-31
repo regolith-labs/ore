@@ -43,9 +43,8 @@ pub struct WoodConfig {
     /// The largest known stake balance on the network from the last epoch.
     pub top_balance: u64,
 
-    /// The total hash power for the last epoch.
-    /// This is the sum of all difficulty values across all buses for the last epoch.
-    pub last_epoch_total_hash_power: u64,
+    /// The current epoch emission rate for the program.
+    pub current_emission_rate: u64,
 }
 
 impl Discriminator for WoodConfig {
