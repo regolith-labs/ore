@@ -114,7 +114,7 @@ pub fn auth(proof: Pubkey) -> Instruction {
 }
 
 /// Builds a claim instruction.
-pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+pub fn claim_coal(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
@@ -142,9 +142,50 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     }
 }
 
+pub fn claim_wood(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[WOOD_PROOF, signer.as_ref()], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &WOOD_MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(beneficiary, false),
+            AccountMeta::new(proof, false),
+            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Claim.to_vec(),
+            ClaimArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
 /// Builds a close instruction.
-pub fn close(signer: Pubkey) -> Instruction {
+pub fn close_coal(signer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        ],
+        data: OreInstruction::Close.to_vec(),
+    }
+}
+
+pub fn close_wood(signer: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[WOOD_PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -193,9 +234,9 @@ pub fn chop_wood(
     bus: Pubkey,
     solution: Solution,
 ) -> Instruction {
-    let proof = Pubkey::find_program_address(&[COAL_PROOF, proof_authority.as_ref()], &crate::id()).0;
+    let proof = Pubkey::find_program_address(&[WOOD_PROOF, proof_authority.as_ref()], &crate::id()).0;
     Instruction {
-        program_id: ORE_PROGRAM_ID,
+        program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
@@ -218,7 +259,7 @@ pub fn chop_wood(
 }
 
 /// Builds an open instruction.
-pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
+pub fn open_coal(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     let proof_pda = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
@@ -238,8 +279,28 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     }
 }
 
+pub fn open_wood(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
+    let proof_pda = Pubkey::find_program_address(&[WOOD_PROOF, signer.as_ref()], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(payer, true),
+            AccountMeta::new(proof_pda.0, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        ],
+        data: [
+            OreInstruction::Open.to_vec(),
+            OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
+        ]
+        .concat(),
+    }
+}
+
 /// Builds a reset instruction.
-pub fn reset(signer: Pubkey) -> Instruction {
+pub fn reset_coal(signer: Pubkey) -> Instruction {
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
         &COAL_MINT_ADDRESS,
@@ -266,8 +327,35 @@ pub fn reset(signer: Pubkey) -> Instruction {
     }
 }
 
+pub fn reset_wood(signer: Pubkey) -> Instruction {
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &WOOD_MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[0], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[1], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[2], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[3], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[4], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[5], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[6], false),
+            AccountMeta::new(WOOD_BUS_ADDRESSES[7], false),
+            AccountMeta::new(WOOD_CONFIG_ADDRESS, false),
+            AccountMeta::new(WOOD_MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: OreInstruction::Reset.to_vec(),
+    }
+}
+
 /// Build a stake instruction.
-pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
+pub fn stake_coal(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
@@ -294,9 +382,49 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     }
 }
 
+pub fn stake_wood(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
+    let proof = Pubkey::find_program_address(&[WOOD_PROOF, signer.as_ref()], &crate::id()).0;
+    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
+        &TREASURY_ADDRESS,
+        &WOOD_MINT_ADDRESS,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(proof, false),
+            AccountMeta::new(sender, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: [
+            OreInstruction::Stake.to_vec(),
+            StakeArgs {
+                amount: amount.to_le_bytes(),
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
 // Build an update instruction.
-pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
+pub fn update_coal(signer: Pubkey, miner: Pubkey) -> Instruction {
     let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(miner, false),
+            AccountMeta::new(proof, false),
+        ],
+        data: OreInstruction::Update.to_vec(),
+    }
+}
+
+pub fn update_wood(signer: Pubkey, miner: Pubkey) -> Instruction {
+    let proof = Pubkey::find_program_address(&[WOOD_PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
