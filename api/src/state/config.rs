@@ -4,10 +4,10 @@ use crate::utils::{impl_account_from_bytes, impl_to_bytes, Discriminator};
 
 use super::AccountDiscriminator;
 
-/// Config is a singleton account which manages program global variables.
+/// CoalConfig is a singleton account which manages program coal minting variables.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct Config {
+pub struct CoalConfig {
     /// The base reward rate paid out for a hash of minimum difficulty.
     pub base_reward_rate: u64,
 
@@ -21,11 +21,40 @@ pub struct Config {
     pub top_balance: u64,
 }
 
-impl Discriminator for Config {
+impl Discriminator for CoalConfig {
     fn discriminator() -> u8 {
-        AccountDiscriminator::Config.into()
+        AccountDiscriminator::CoalConfig.into()
     }
 }
 
-impl_to_bytes!(Config);
-impl_account_from_bytes!(Config);
+/// CoalConfig is a singleton account which manages program coal minting variables.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct WoodConfig {
+    /// The base reward rate paid out for a hash of minimum difficulty.
+    pub base_reward_rate: u64,
+
+    /// The timestamp of the last reset.
+    pub last_reset_at: i64,
+
+    /// The minimum accepted difficulty.
+    pub min_difficulty: u64,
+
+    /// The largest known stake balance on the network from the last epoch.
+    pub top_balance: u64,
+
+    /// The total hash power for the last epoch.
+    /// This is the sum of all difficulty values across all buses for the last epoch.
+    pub last_epoch_total_hash_power: u64,
+}
+
+impl Discriminator for WoodConfig {
+    fn discriminator() -> u8 {
+        AccountDiscriminator::WoodConfig.into()
+    }
+}
+
+impl_to_bytes!(CoalConfig);
+impl_account_from_bytes!(CoalConfig);
+impl_to_bytes!(WoodConfig);
+impl_account_from_bytes!(WoodConfig);

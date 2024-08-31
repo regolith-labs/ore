@@ -68,20 +68,23 @@ static_assertions::const_assert!(
 );
 
 /// The seed of the bus account PDA.
-pub const BUS: &[u8] = b"bus";
+pub const COAL_BUS: &[u8] = b"bus";
+pub const WOOD_BUS: &[u8] = b"wood_bus";
 
 /// The seed of the config account PDA.
-pub const CONFIG: &[u8] = b"config";
+pub const COAL_CONFIG: &[u8] = b"config";
+pub const WOOD_CONFIG: &[u8] = b"wood_config";
 
 /// The seed of the metadata account PDA.
 pub const METADATA: &[u8] = b"metadata";
 
 /// The seed of the mint account PDA.
-pub const MINT: &[u8] = b"mint";
+pub const COAL_MINT: &[u8] = b"mint";
+pub const WOOD_MINT: &[u8] = b"wood_mint";
 
 /// The seed of proof account PDAs.
-pub const PROOF: &[u8] = b"proof";
-
+pub const COAL_PROOF: &[u8] = b"proof";
+pub const WOOD_PROOF: &[u8] = b"wood_proof";
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
 
@@ -107,33 +110,42 @@ pub const ORE_PROGRAM_ID: Pubkey = pubkey!("oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfo
 pub const ORE_PROGRAM_ID_BYTES: [u8; 32] = unsafe { *(&ORE_PROGRAM_ID as *const Pubkey as *const [u8; 32]) };
 
 /// The addresses of the bus accounts.
-pub const BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_bus_address; 8];
-pub const ORE_BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_bus_address_ore; 8];
+pub const COAL_BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_coal_bus_address; 8];
+pub const WOOD_BUS_ADDRESSES: [Pubkey; BUS_COUNT] = array_const_fn_init![const_wood_bus_address; 8];
 
 /// Function to derive const bus addresses.
-const fn const_bus_address(i: usize) -> Pubkey {
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[i as u8]], &PROGRAM_ID).0)
+const fn const_coal_bus_address(i: usize) -> Pubkey {
+    Pubkey::new_from_array(ed25519::derive_program_address(&[COAL_BUS, &[i as u8]], &PROGRAM_ID).0)
 }
 
-/// Function to derive const ore bus addresses.
-const fn const_bus_address_ore(i: usize) -> Pubkey {
-    Pubkey::new_from_array(ed25519::derive_program_address(&[BUS, &[i as u8]], &ORE_PROGRAM_ID_BYTES).0)
+const fn const_wood_bus_address(i: usize) -> Pubkey {
+    Pubkey::new_from_array(ed25519::derive_program_address(&[WOOD_BUS, &[i as u8]], &PROGRAM_ID).0)
 }
 
 /// The address of the config account.
-pub const CONFIG_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
-
-pub const ORE_CONFIG_ADDRESS: Pubkey =
-Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &ORE_PROGRAM_ID_BYTES).0);
+pub const COAL_CONFIG_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[COAL_CONFIG], &PROGRAM_ID).0);
+pub const WOOD_CONFIG_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[WOOD_CONFIG], &PROGRAM_ID).0);
 
 /// The address of the mint metadata account.
-pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
+pub const COAL_METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
     ed25519::derive_program_address(
         &[
             METADATA,
             unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
-            unsafe { &*(&MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&COAL_MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+        ],
+        unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
+    )
+    .0,
+);
+pub const WOOD_METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
+    ed25519::derive_program_address(
+        &[
+            METADATA,
+            unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&WOOD_MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
         ],
         unsafe { &*(&mpl_token_metadata::ID as *const Pubkey as *const [u8; 32]) },
     )
@@ -141,8 +153,12 @@ pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
 );
 
 /// The address of the mint account.
-pub const MINT_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).0);
+pub const COAL_MINT_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[COAL_MINT, &MINT_NOISE], &PROGRAM_ID).0);
+
+/// The address of the mint account.
+pub const WOOD_MINT_ADDRESS: Pubkey =
+    Pubkey::new_from_array(ed25519::derive_program_address(&[WOOD_MINT, &MINT_NOISE], &PROGRAM_ID).0);
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
@@ -157,7 +173,7 @@ pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
         &[
             unsafe { &*(&TREASURY_ADDRESS as *const Pubkey as *const [u8; 32]) },
             unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
-            unsafe { &*(&MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&COAL_MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
         ],
         unsafe { &*(&spl_associated_token_account::id() as *const Pubkey as *const [u8; 32]) },
     )

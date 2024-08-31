@@ -6,7 +6,7 @@ use spl_token::state::Mint;
 
 use crate::{
     consts::*,
-    state::{Bus, Config, Proof, Treasury},
+    state::{CoalBus, CoalConfig, CoalProof, WoodBus, WoodConfig, WoodProof, Treasury},
     utils::{AccountDeserialize, Discriminator},
 };
 
@@ -21,13 +21,13 @@ pub fn load_signer<'a, 'info>(info: &'a AccountInfo<'info>) -> Result<(), Progra
 }
 
 /// Errors if:
-/// - Owner is not Ore program.
+/// - Owner is not Coal program.
 /// - Address does not match the expected bus address.
 /// - Data is empty.
-/// - Data cannot deserialize into a bus account.
+/// - Data cannot deserialize into a coal bus account.
 /// - Bus ID does not match the expected ID.
 /// - Expected to be writable, but is not.
-pub fn load_bus<'a, 'info>(
+pub fn load_coal_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
     id: u64,
     is_writable: bool,
@@ -36,7 +36,7 @@ pub fn load_bus<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
-    if info.key.ne(&BUS_ADDRESSES[id as usize]) {
+    if info.key.ne(&COAL_BUS_ADDRESSES[id as usize]) {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -45,7 +45,45 @@ pub fn load_bus<'a, 'info>(
     }
 
     let bus_data = info.data.borrow();
-    let bus = Bus::try_from_bytes(&bus_data)?;
+    let bus = CoalBus::try_from_bytes(&bus_data)?;
+
+    if bus.id.ne(&id) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Coal program.
+/// - Address does not match the expected bus address.
+/// - Data is empty.
+/// - Data cannot deserialize into a bus account.
+/// - Bus ID does not match the expected ID.
+/// - Expected to be writable, but is not.
+pub fn load_wood_bus<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    id: u64,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&WOOD_BUS_ADDRESSES[id as usize]) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let bus_data = info.data.borrow();
+    let bus = WoodBus::try_from_bytes(&bus_data)?;
 
     if bus.id.ne(&id) {
         return Err(ProgramError::InvalidAccountData);
@@ -61,11 +99,11 @@ pub fn load_bus<'a, 'info>(
 /// Errors if:
 /// - Owner is not Ore program.
 /// - Data is empty.
-/// - Data cannot deserialize into a bus account.
+/// - Data cannot deserialize into a coal bus account.
 /// - Bus ID is not in the expected range.
-/// - Address is not in set of valid bus address.
+/// - Address is not in set of valid coal bus address.
 /// - Expected to be writable, but is not.
-pub fn load_any_bus<'a, 'info>(
+pub fn load_any_coal_bus<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -77,12 +115,79 @@ pub fn load_any_bus<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Bus::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(CoalBus::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
-    if !BUS_ADDRESSES.contains(info.key) {
+    if !COAL_BUS_ADDRESSES.contains(info.key) {
         return Err(ProgramError::InvalidSeeds);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not COAL program.
+/// - Data is empty.
+/// - Data cannot deserialize into a wood bus account.
+/// - Bus ID is not in the expected range.
+/// - Address is not in set of valid wood bus address.
+/// - Expected to be writable, but is not.
+pub fn load_any_wood_bus<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    if info.data.borrow()[0].ne(&(WoodBus::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
+    }
+
+    if !WOOD_BUS_ADDRESSES.contains(info.key) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Ore program.
+/// - Address does not match the expected address.
+/// - Data is empty.
+/// - Data cannot deserialize into a coal config account.
+/// - Expected to be writable, but is not.
+pub fn load_coal_config<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.key.ne(&COAL_CONFIG_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    if info.data.borrow()[0].ne(&(CoalConfig::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
     if is_writable && !info.is_writable {
@@ -98,7 +203,7 @@ pub fn load_any_bus<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a config account.
 /// - Expected to be writable, but is not.
-pub fn load_config<'a, 'info>(
+pub fn load_wood_config<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -106,7 +211,7 @@ pub fn load_config<'a, 'info>(
         return Err(ProgramError::InvalidAccountOwner);
     }
 
-    if info.key.ne(&CONFIG_ADDRESS) {
+    if info.key.ne(&WOOD_CONFIG_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -114,7 +219,7 @@ pub fn load_config<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Config::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(WoodConfig::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -131,7 +236,7 @@ pub fn load_config<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof authority does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof<'a, 'info>(
+pub fn load_coal_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
     authority: &Pubkey,
     is_writable: bool,
@@ -145,7 +250,40 @@ pub fn load_proof<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = Proof::try_from_bytes(&proof_data)?;
+    let proof = CoalProof::try_from_bytes(&proof_data)?;
+
+    if proof.authority.ne(&authority) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a proof account.
+/// - Proof authority does not match the expected address.
+/// - Expected to be writable, but is not.
+pub fn load_wood_proof<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    authority: &Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let proof_data = info.data.borrow();
+    let proof = WoodProof::try_from_bytes(&proof_data)?;
 
     if proof.authority.ne(&authority) {
         return Err(ProgramError::InvalidAccountData);
@@ -164,7 +302,7 @@ pub fn load_proof<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof miner does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_proof_with_miner<'a, 'info>(
+pub fn load_coal_proof_with_miner<'a, 'info>(
     info: &'a AccountInfo<'info>,
     miner: &Pubkey,
     is_writable: bool,
@@ -178,7 +316,40 @@ pub fn load_proof_with_miner<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = Proof::try_from_bytes(&proof_data)?;
+    let proof = CoalProof::try_from_bytes(&proof_data)?;
+
+    if proof.miner.ne(&miner) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a proof account.
+/// - Proof miner does not match the expected address.
+/// - Expected to be writable, but is not.
+pub fn load_wood_proof_with_miner<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    miner: &Pubkey,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let proof_data = info.data.borrow();
+    let proof = WoodProof::try_from_bytes(&proof_data)?;
 
     if proof.miner.ne(&miner) {
         return Err(ProgramError::InvalidAccountData);
@@ -196,7 +367,7 @@ pub fn load_proof_with_miner<'a, 'info>(
 /// - Data is empty.
 /// - Data cannot deserialize into a proof account.
 /// - Expected to be writable, but is not.
-pub fn load_any_proof<'a, 'info>(
+pub fn load_any_coal_proof<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -208,7 +379,35 @@ pub fn load_any_proof<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(Proof::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(CoalProof::discriminator() as u8)) {
+        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
+    }
+
+    if is_writable && !info.is_writable {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+/// Errors if:
+/// - Owner is not Ore program.
+/// - Data is empty.
+/// - Data cannot deserialize into a proof account.
+/// - Expected to be writable, but is not.
+pub fn load_any_wood_proof<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.owner.ne(&crate::id()) {
+        return Err(ProgramError::InvalidAccountOwner);
+    }
+
+    if info.data_is_empty() {
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    if info.data.borrow()[0].ne(&(WoodProof::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -255,7 +454,7 @@ pub fn load_treasury<'a, 'info>(
 /// Errors if:
 /// - Address does not match the expected treasury tokens address.
 /// - Cannot load as a token account
-pub fn load_treasury_tokens<'a, 'info>(
+pub fn load_coal_treasury_tokens<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -263,7 +462,21 @@ pub fn load_treasury_tokens<'a, 'info>(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    load_token_account(info, Some(&TREASURY_ADDRESS), &MINT_ADDRESS, is_writable)
+    load_token_account(info, Some(&TREASURY_ADDRESS), &COAL_MINT_ADDRESS, is_writable)
+}
+
+/// Errors if:
+/// - Address does not match the expected treasury tokens address.
+/// - Cannot load as a token account
+pub fn load_wood_treasury_tokens<'a, 'info>(
+    info: &'a AccountInfo<'info>,
+    is_writable: bool,
+) -> Result<(), ProgramError> {
+    if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
+    load_token_account(info, Some(&TREASURY_ADDRESS), &WOOD_MINT_ADDRESS, is_writable)
 }
 
 /// Errors if:

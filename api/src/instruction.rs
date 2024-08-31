@@ -24,9 +24,9 @@ pub enum OreInstruction {
     Reset = 4,
     Stake = 5,
     Update = 6,
-
     // Admin
-    Initialize = 100,
+    InitCoal = 100,
+    InitWood = 101,
 }
 
 impl OreInstruction {
@@ -61,6 +61,13 @@ pub struct OpenArgs {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct MineArgs {
+    pub digest: [u8; 16],
+    pub nonce: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MineArgsV2 {
     pub digest: [u8; 16],
     pub nonce: [u8; 8],
 }
@@ -108,10 +115,10 @@ pub fn auth(proof: Pubkey) -> Instruction {
 
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
+        &COAL_MINT_ADDRESS,
     );
     Instruction {
         program_id: crate::id(),
@@ -137,7 +144,7 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
 
 /// Builds a close instruction.
 pub fn close(signer: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    let proof_pda = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -156,13 +163,13 @@ pub fn mine(
     bus: Pubkey,
     solution: Solution,
 ) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &crate::id()).0;
+    let proof = Pubkey::find_program_address(&[COAL_PROOF, proof_authority.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
-            AccountMeta::new_readonly(CONFIG_ADDRESS, false),
+            AccountMeta::new_readonly(COAL_CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
@@ -180,22 +187,19 @@ pub fn mine(
     }
 }
 
-
-/// Build an ORE mine instruction.
-/// TEMP: To support drillx_2.
-pub fn mine_ore(
+pub fn chop_wood(
     signer: Pubkey,
     proof_authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
 ) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, proof_authority.as_ref()], &ORE_PROGRAM_ID).0;
+    let proof = Pubkey::find_program_address(&[COAL_PROOF, proof_authority.as_ref()], &crate::id()).0;
     Instruction {
         program_id: ORE_PROGRAM_ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus, false),
-            AccountMeta::new_readonly(ORE_CONFIG_ADDRESS, false),
+            AccountMeta::new_readonly(WOOD_CONFIG_ADDRESS, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(sysvar::instructions::id(), false),
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
@@ -215,7 +219,7 @@ pub fn mine_ore(
 
 /// Builds an open instruction.
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
-    let proof_pda = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id());
+    let proof_pda = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id());
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -238,22 +242,22 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
 pub fn reset(signer: Pubkey) -> Instruction {
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
+        &COAL_MINT_ADDRESS,
     );
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(BUS_ADDRESSES[0], false),
-            AccountMeta::new(BUS_ADDRESSES[1], false),
-            AccountMeta::new(BUS_ADDRESSES[2], false),
-            AccountMeta::new(BUS_ADDRESSES[3], false),
-            AccountMeta::new(BUS_ADDRESSES[4], false),
-            AccountMeta::new(BUS_ADDRESSES[5], false),
-            AccountMeta::new(BUS_ADDRESSES[6], false),
-            AccountMeta::new(BUS_ADDRESSES[7], false),
-            AccountMeta::new(CONFIG_ADDRESS, false),
-            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[0], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[1], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[2], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[3], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[4], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[5], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[6], false),
+            AccountMeta::new(COAL_BUS_ADDRESSES[7], false),
+            AccountMeta::new(COAL_CONFIG_ADDRESS, false),
+            AccountMeta::new(COAL_MINT_ADDRESS, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
@@ -264,10 +268,10 @@ pub fn reset(signer: Pubkey) -> Instruction {
 
 /// Build a stake instruction.
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
     let treasury_tokens = spl_associated_token_account::get_associated_token_address(
         &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
+        &COAL_MINT_ADDRESS,
     );
     Instruction {
         program_id: crate::id(),
@@ -292,7 +296,7 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
 
 // Build an update instruction.
 pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
-    let proof = Pubkey::find_program_address(&[PROOF, signer.as_ref()], &crate::id()).0;
+    let proof = Pubkey::find_program_address(&[COAL_PROOF, signer.as_ref()], &crate::id()).0;
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -305,19 +309,19 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
 }
 
 /// Builds an initialize instruction.
-pub fn initialize(signer: Pubkey) -> Instruction {
+pub fn init_coal(signer: Pubkey) -> Instruction {
     let bus_pdas = [
-        Pubkey::find_program_address(&[BUS, &[0]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[1]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[2]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[3]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[4]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[5]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[6]], &crate::id()),
-        Pubkey::find_program_address(&[BUS, &[7]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[1]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[2]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[3]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[4]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[5]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[6]], &crate::id()),
+        Pubkey::find_program_address(&[COAL_BUS, &[7]], &crate::id()),
     ];
-    let config_pda = Pubkey::find_program_address(&[CONFIG], &crate::id());
-    let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
+    let config_pda = Pubkey::find_program_address(&[COAL_CONFIG], &crate::id());
+    let mint_pda = Pubkey::find_program_address(&[COAL_MINT, MINT_NOISE.as_slice()], &crate::id());
     let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
     let treasury_tokens =
         spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
@@ -353,7 +357,77 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [
-            OreInstruction::Initialize.to_vec(),
+            OreInstruction::InitCoal.to_vec(),
+            InitializeArgs {
+                bus_0_bump: bus_pdas[0].1,
+                bus_1_bump: bus_pdas[1].1,
+                bus_2_bump: bus_pdas[2].1,
+                bus_3_bump: bus_pdas[3].1,
+                bus_4_bump: bus_pdas[4].1,
+                bus_5_bump: bus_pdas[5].1,
+                bus_6_bump: bus_pdas[6].1,
+                bus_7_bump: bus_pdas[7].1,
+                config_bump: config_pda.1,
+                metadata_bump: metadata_pda.1,
+                mint_bump: mint_pda.1,
+                treasury_bump: treasury_pda.1,
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+pub fn init_wood(signer: Pubkey) -> Instruction {
+    let bus_pdas = [
+        Pubkey::find_program_address(&[WOOD_BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[1]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[2]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[3]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[4]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[5]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[6]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[7]], &crate::id()),
+    ];
+    let config_pda = Pubkey::find_program_address(&[WOOD_CONFIG], &crate::id());
+    let mint_pda = Pubkey::find_program_address(&[WOOD_MINT, MINT_NOISE.as_slice()], &crate::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
+    let treasury_tokens =
+        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
+    let metadata_pda = Pubkey::find_program_address(
+        &[
+            METADATA,
+            mpl_token_metadata::ID.as_ref(),
+            mint_pda.0.as_ref(),
+        ],
+        &mpl_token_metadata::ID,
+    );
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_pdas[0].0, false),
+            AccountMeta::new(bus_pdas[1].0, false),
+            AccountMeta::new(bus_pdas[2].0, false),
+            AccountMeta::new(bus_pdas[3].0, false),
+            AccountMeta::new(bus_pdas[4].0, false),
+            AccountMeta::new(bus_pdas[5].0, false),
+            AccountMeta::new(bus_pdas[6].0, false),
+            AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(config_pda.0, false),
+            AccountMeta::new(metadata_pda.0, false),
+            AccountMeta::new(mint_pda.0, false),
+            AccountMeta::new(treasury_pda.0, false),
+            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(mpl_token_metadata::ID, false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: [
+            OreInstruction::InitCoal.to_vec(),
             InitializeArgs {
                 bus_0_bump: bus_pdas[0].1,
                 bus_1_bump: bus_pdas[1].1,

@@ -1,6 +1,7 @@
 mod claim;
 mod close;
-mod initialize;
+mod init_coal;
+mod init_wood;
 mod mine;
 mod open;
 mod reset;
@@ -9,7 +10,8 @@ mod update;
 
 use claim::*;
 use close::*;
-use initialize::*;
+use init_coal::*;
+use init_wood::*;
 use mine::*;
 use open::*;
 use reset::*;
@@ -49,7 +51,8 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Stake => process_stake(accounts, data)?,
         OreInstruction::Update => process_update(accounts, data)?,
-        OreInstruction::Initialize => process_initialize(accounts, data)?,
+        OreInstruction::InitCoal => process_init_coal(accounts, data)?,
+        OreInstruction::InitWood => process_init_wood(accounts, data)?,
     }
 
     Ok(())

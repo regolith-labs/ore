@@ -13,8 +13,10 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum AccountDiscriminator {
-    Bus = 100,
-    Config = 101,
+    CoalBus = 100,
+    CoalConfig = 101,
     Proof = 102,
     Treasury = 103,
+    WoodBus = 104,
+    WoodConfig = 105,
 }
