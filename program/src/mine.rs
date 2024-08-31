@@ -457,7 +457,7 @@ fn parse_coal_auth_address(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError>
 }
 
 fn authenticate_wood_proof(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
-    if let Ok(Some(auth_address)) = parse_coal_auth_address(data) {
+    if let Ok(Some(auth_address)) = parse_wood_auth_address(data) {
         if proof_address.ne(&auth_address) {
             return Err(OreError::AuthFailed.into());
         }
