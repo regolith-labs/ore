@@ -96,11 +96,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
         .unwrap();
-    let base_reward = config
+    let mut reward = config
         .base_reward_rate
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
-    let mut reward = base_reward;
 
     // Apply boosts.
     //
@@ -156,7 +155,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
-                let boost_reward = (base_reward as u128)
+                let boost_reward = (reward as u128)
                     .checked_mul(multiplier as u128)
                     .unwrap()
                     .checked_mul(stake.balance as u128)
