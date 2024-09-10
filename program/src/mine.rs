@@ -105,17 +105,16 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
         .unwrap();
-    let base_reward = config
+    let mut reward = config
         .base_reward_rate
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
-    let mut reward = base_reward;
 
     // Apply boosts.
     //
     // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
     // Up to 3 boosts can be applied on any given mine operation.
-    log::sol_log(&format!("Base: {}", base_reward));
+    log::sol_log(&format!("Base: {}", reward));
     let mut boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
         if optional_accounts.len().gt(&(i * 2)) {
@@ -139,10 +138,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             let stake_data = stake_info.data.borrow();
             let stake = Stake::try_from_bytes(&stake_data)?;
 
-            // Apply multiplier if last stake was greater than one minute ago.
-            if stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+            // Apply multiplier if boost is not expired and
+            // last stake was greater than one minute ago.
+            if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
-                let boost_reward = (base_reward as u128)
+                let boost_reward = (reward as u128)
                     .checked_mul(multiplier as u128)
                     .unwrap()
                     .checked_mul(stake.balance as u128)
