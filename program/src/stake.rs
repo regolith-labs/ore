@@ -1,4 +1,4 @@
-use coal_api::{consts::*, instruction::StakeArgs, loaders::*, state::{Config, Proof, WoodConfig, WoodProof}};
+use coal_api::{consts::*, instruction::StakeArgs, loaders::*, state::{Proof, ProofV2}};
 use coal_utils::spl::transfer;
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
@@ -8,13 +8,13 @@ use solana_program::{
 use crate::utils::{AccountDeserialize, Discriminator};
 
 pub fn process_stake<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    let config_info = &accounts[9];
+    let config_info = &accounts[1];
 
-    if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(Proof::discriminator() as u8)) {
         return process_stake_coal(accounts, data)
     }
 
-    if config_info.data.borrow()[0].eq(&(WoodConfig::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(ProofV2::discriminator() as u8)) {
         return process_stake_wood(accounts, data)
     }
 
@@ -68,14 +68,14 @@ fn process_stake_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_wood_proof(proof_info, signer.key, true)?;
-    load_token_account(sender_info, Some(signer.key), &COAL_MINT_ADDRESS, true)?;
+    load_proof_v2(proof_info, signer.key, &WOOD_MINT_ADDRESS, true)?;
+    load_token_account(sender_info, Some(signer.key), &WOOD_MINT_ADDRESS, true)?;
     load_wood_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
 
     // Update the proof balance.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = ProofV2::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof.balance.checked_add(amount).unwrap();
 
     // Update deposit timestamp.

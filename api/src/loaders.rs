@@ -1,12 +1,11 @@
 use solana_program::{
-    account_info::AccountInfo, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey,
-    system_program, sysvar,
+    account_info::AccountInfo, msg, program_error::ProgramError, program_pack::Pack, pubkey::Pubkey, system_program, sysvar
 };
 use spl_token::state::Mint;
 
 use crate::{
     consts::*,
-    state::{Bus, Config, Proof, WoodBus, WoodConfig, WoodProof, Treasury},
+    state::{Bus, Config, Proof, ProofV2, WoodBus, WoodConfig, Treasury},
     utils::{AccountDeserialize, Discriminator},
 };
 
@@ -220,6 +219,7 @@ pub fn load_wood_config<'a, 'info>(
     }
 
     if info.data.borrow()[0].ne(&(WoodConfig::discriminator() as u8)) {
+        msg!("Invalid discriminator");
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -269,9 +269,10 @@ pub fn load_coal_proof<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof authority does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_wood_proof<'a, 'info>(
+pub fn load_proof_v2<'a, 'info>(
     info: &'a AccountInfo<'info>,
     authority: &Pubkey,
+    resource: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
@@ -283,7 +284,11 @@ pub fn load_wood_proof<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = WoodProof::try_from_bytes(&proof_data)?;
+    let proof = ProofV2::try_from_bytes(&proof_data)?;
+
+    if proof.resource.ne(&resource) {
+        return Err(ProgramError::InvalidAccountData);
+    }
 
     if proof.authority.ne(&authority) {
         return Err(ProgramError::InvalidAccountData);
@@ -335,9 +340,10 @@ pub fn load_coal_proof_with_miner<'a, 'info>(
 /// - Data cannot deserialize into a proof account.
 /// - Proof miner does not match the expected address.
 /// - Expected to be writable, but is not.
-pub fn load_wood_proof_with_miner<'a, 'info>(
+pub fn load_proof_v2_with_miner<'a, 'info>(
     info: &'a AccountInfo<'info>,
     miner: &Pubkey,
+    resource: &Pubkey,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
     if info.owner.ne(&crate::id()) {
@@ -349,7 +355,11 @@ pub fn load_wood_proof_with_miner<'a, 'info>(
     }
 
     let proof_data = info.data.borrow();
-    let proof = WoodProof::try_from_bytes(&proof_data)?;
+    let proof = ProofV2::try_from_bytes(&proof_data)?;
+
+    if proof.resource.ne(&resource) {
+        return Err(ProgramError::InvalidAccountData);
+    }
 
     if proof.miner.ne(&miner) {
         return Err(ProgramError::InvalidAccountData);
@@ -391,11 +401,11 @@ pub fn load_any_coal_proof<'a, 'info>(
 }
 
 /// Errors if:
-/// - Owner is not Ore program.
+/// - Owner is not Coal program.
 /// - Data is empty.
 /// - Data cannot deserialize into a proof account.
 /// - Expected to be writable, but is not.
-pub fn load_any_wood_proof<'a, 'info>(
+pub fn load_any_proof_v2<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
@@ -407,7 +417,7 @@ pub fn load_any_wood_proof<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(WoodProof::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(ProofV2::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
@@ -458,7 +468,7 @@ pub fn load_coal_treasury_tokens<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
+    if info.key.ne(&COAL_TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -472,7 +482,7 @@ pub fn load_wood_treasury_tokens<'a, 'info>(
     info: &'a AccountInfo<'info>,
     is_writable: bool,
 ) -> Result<(), ProgramError> {
-    if info.key.ne(&TREASURY_TOKENS_ADDRESS) {
+    if info.key.ne(&WOOD_TREASURY_TOKENS_ADDRESS) {
         return Err(ProgramError::InvalidSeeds);
     }
 
@@ -536,16 +546,19 @@ pub fn load_token_account<'a, 'info>(
     let account = spl_token::state::Account::unpack(&account_data)?;
 
     if account.mint.ne(&mint) {
+        msg!("Invalid mint: {:?} == {:?}", account.mint, mint);
         return Err(ProgramError::InvalidAccountData);
     }
 
     if let Some(owner) = owner {
         if account.owner.ne(owner) {
+            msg!("Invalid owner: {:?} == {:?}", account.owner, owner);
             return Err(ProgramError::InvalidAccountData);
         }
     }
 
     if is_writable && !info.is_writable {
+        msg!("Invalid writable: {:?} == {:?}", info.is_writable, is_writable);
         return Err(ProgramError::InvalidAccountData);
     }
 

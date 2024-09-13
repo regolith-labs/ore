@@ -1,4 +1,4 @@
-use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::{Proof, WoodProof}};
+use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::{Proof, ProofV2}};
 use coal_utils::{Discriminator, spl::transfer_signed};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -14,7 +14,7 @@ pub fn process_claim<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
         return process_claim_coal(accounts, data)
     }
 
-    if proof_info.data.borrow()[0].eq(&(WoodProof::discriminator() as u8)) {
+    if proof_info.data.borrow()[0].eq(&(ProofV2::discriminator() as u8)) {
         return process_claim_wood(accounts, data)
     }
 
@@ -72,15 +72,15 @@ fn process_claim_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_token_account(beneficiary_info, None, &COAL_MINT_ADDRESS, true)?;
-    load_wood_proof(proof_info, signer.key, true)?;
+    load_token_account(beneficiary_info, None, &WOOD_MINT_ADDRESS, true)?;
+    load_proof_v2(proof_info, signer.key, &WOOD_MINT_ADDRESS, true)?;
     load_treasury(treasury_info, false)?;
     load_wood_treasury_tokens(treasury_tokens_info, true)?;
     load_program(token_program, spl_token::id())?;
 
     // Update miner balance.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = ProofV2::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof
         .balance
         .checked_sub(amount)

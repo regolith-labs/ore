@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use drillx_2::Solution;
+use drillx::Solution;
 use num_enum::TryFromPrimitive;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
@@ -15,12 +15,12 @@ use crate::{
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[rustfmt::skip]
-pub enum OreInstruction {
+pub enum CoalInstruction {
     // User
     Claim = 0,
     Close = 1,
     Mine = 2,
-    Open = 3,
+    OpenCoal = 3,
     Reset = 4,
     Stake = 5,
     Update = 6,
@@ -28,9 +28,10 @@ pub enum OreInstruction {
     // Admin
     InitCoal = 100,
     InitWood = 101,
+    PatchWood = 102,
 }
 
-impl OreInstruction {
+impl CoalInstruction {
     pub fn to_vec(&self) -> Vec<u8> {
         vec![*self as u8]
     }
@@ -132,7 +133,7 @@ pub fn claim_coal(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instructi
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: [
-            OreInstruction::Claim.to_vec(),
+            CoalInstruction::Claim.to_vec(),
             ClaimArgs {
                 amount: amount.to_le_bytes(),
             }
@@ -160,7 +161,7 @@ pub fn claim_wood(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instructi
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: [
-            OreInstruction::Claim.to_vec(),
+            CoalInstruction::Claim.to_vec(),
             ClaimArgs {
                 amount: amount.to_le_bytes(),
             }
@@ -181,7 +182,7 @@ pub fn close_coal(signer: Pubkey) -> Instruction {
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
-        data: OreInstruction::Close.to_vec(),
+        data: CoalInstruction::Close.to_vec(),
     }
 }
 
@@ -194,12 +195,12 @@ pub fn close_wood(signer: Pubkey) -> Instruction {
             AccountMeta::new(proof_pda.0, false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
         ],
-        data: OreInstruction::Close.to_vec(),
+        data: CoalInstruction::Close.to_vec(),
     }
 }
 
 /// Builds a mine instruction.
-pub fn mine(
+pub fn mine_coal(
     signer: Pubkey,
     proof_authority: Pubkey,
     bus: Pubkey,
@@ -217,7 +218,7 @@ pub fn mine(
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
-            OreInstruction::Mine.to_vec(),
+            CoalInstruction::Mine.to_vec(),
             MineArgs {
                 digest: solution.d,
                 nonce: solution.n,
@@ -247,7 +248,7 @@ pub fn chop_wood(
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
-            OreInstruction::Mine.to_vec(),
+            CoalInstruction::Mine.to_vec(),
             MineArgs {
                 digest: solution.d,
                 nonce: solution.n,
@@ -273,7 +274,7 @@ pub fn open_coal(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
-            OreInstruction::Open.to_vec(),
+            CoalInstruction::OpenCoal.to_vec(),
             OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
         ]
         .concat(),
@@ -293,7 +294,7 @@ pub fn open_wood(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         ],
         data: [
-            OreInstruction::Open.to_vec(),
+            CoalInstruction::OpenWood.to_vec(),
             OpenArgs { bump: proof_pda.1 }.to_bytes().to_vec(),
         ]
         .concat(),
@@ -324,7 +325,7 @@ pub fn reset_coal(signer: Pubkey) -> Instruction {
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: OreInstruction::Reset.to_vec(),
+        data: CoalInstruction::Reset.to_vec(),
     }
 }
 
@@ -351,7 +352,7 @@ pub fn reset_wood(signer: Pubkey) -> Instruction {
             AccountMeta::new(treasury_tokens, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
-        data: OreInstruction::Reset.to_vec(),
+        data: CoalInstruction::Reset.to_vec(),
     }
 }
 
@@ -372,7 +373,7 @@ pub fn stake_coal(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: [
-            OreInstruction::Stake.to_vec(),
+            CoalInstruction::Stake.to_vec(),
             StakeArgs {
                 amount: amount.to_le_bytes(),
             }
@@ -399,7 +400,7 @@ pub fn stake_wood(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: [
-            OreInstruction::Stake.to_vec(),
+            CoalInstruction::Stake.to_vec(),
             StakeArgs {
                 amount: amount.to_le_bytes(),
             }
@@ -420,7 +421,7 @@ pub fn update_coal(signer: Pubkey, miner: Pubkey) -> Instruction {
             AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof, false),
         ],
-        data: OreInstruction::Update.to_vec(),
+        data: CoalInstruction::Update.to_vec(),
     }
 }
 
@@ -433,7 +434,7 @@ pub fn update_wood(signer: Pubkey, miner: Pubkey) -> Instruction {
             AccountMeta::new_readonly(miner, false),
             AccountMeta::new(proof, false),
         ],
-        data: OreInstruction::Update.to_vec(),
+        data: CoalInstruction::Update.to_vec(),
     }
 }
 
@@ -486,7 +487,7 @@ pub fn init_coal(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [
-            OreInstruction::InitCoal.to_vec(),
+            CoalInstruction::InitCoal.to_vec(),
             InitializeArgs {
                 bus_0_bump: bus_pdas[0].1,
                 bus_1_bump: bus_pdas[1].1,
@@ -556,7 +557,68 @@ pub fn init_wood(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: [
-            OreInstruction::InitCoal.to_vec(),
+            CoalInstruction::InitWood.to_vec(),
+            InitializeArgs {
+                bus_0_bump: bus_pdas[0].1,
+                bus_1_bump: bus_pdas[1].1,
+                bus_2_bump: bus_pdas[2].1,
+                bus_3_bump: bus_pdas[3].1,
+                bus_4_bump: bus_pdas[4].1,
+                bus_5_bump: bus_pdas[5].1,
+                bus_6_bump: bus_pdas[6].1,
+                bus_7_bump: bus_pdas[7].1,
+                config_bump: config_pda.1,
+                metadata_bump: metadata_pda.1,
+                mint_bump: mint_pda.1,
+                treasury_bump: treasury_pda.1,
+            }
+            .to_bytes()
+            .to_vec(),
+        ]
+        .concat(),
+    }
+}
+
+pub fn patch_wood(signer: Pubkey) -> Instruction {
+    let mint_pda = Pubkey::find_program_address(&[WOOD_MINT, MINT_NOISE.as_slice()], &crate::id());
+    let treasury_pda = Pubkey::find_program_address(&[TREASURY], &crate::id());
+    let metadata_pda = Pubkey::find_program_address(
+        &[
+            METADATA,
+            mpl_token_metadata::ID.as_ref(),
+            mint_pda.0.as_ref(),
+        ],
+        &mpl_token_metadata::ID,
+    );
+    let bus_pdas = [
+        Pubkey::find_program_address(&[WOOD_BUS, &[0]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[1]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[2]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[3]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[4]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[5]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[6]], &crate::id()),
+        Pubkey::find_program_address(&[WOOD_BUS, &[7]], &crate::id()),
+    ];
+    let config_pda = Pubkey::find_program_address(&[WOOD_CONFIG], &crate::id());
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(bus_pdas[0].0, false),
+            AccountMeta::new(bus_pdas[1].0, false),
+            AccountMeta::new(bus_pdas[2].0, false),
+            AccountMeta::new(bus_pdas[3].0, false),
+            AccountMeta::new(bus_pdas[4].0, false),
+            AccountMeta::new(bus_pdas[5].0, false),
+            AccountMeta::new(bus_pdas[6].0, false),
+            AccountMeta::new(bus_pdas[7].0, false),
+            AccountMeta::new(config_pda.0, false),
+            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: [
+            CoalInstruction::PatchWood.to_vec(),
             InitializeArgs {
                 bus_0_bump: bus_pdas[0].1,
                 bus_1_bump: bus_pdas[1].1,

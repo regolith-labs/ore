@@ -1,4 +1,4 @@
-use coal_api::{loaders::*, state::{Proof, WoodProof}};
+use coal_api::{consts::WOOD_MINT_ADDRESS, loaders::*, state::{Proof, ProofV2}};
 use coal_utils::Discriminator;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -15,7 +15,7 @@ pub fn process_close<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
         return process_close_coal(accounts, data)
     }
 
-    if proof_info.data.borrow()[0].eq(&(WoodProof::discriminator() as u8)) {
+    if proof_info.data.borrow()[0].eq(&(ProofV2::discriminator() as u8)) {
         return process_close_wood(accounts, data)
     }
 
@@ -55,12 +55,12 @@ fn process_close_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_wood_proof(proof_info, signer.key, true)?;
+    load_proof_v2(proof_info, signer.key, &WOOD_MINT_ADDRESS, true)?;
     load_program(system_program, system_program::id())?;
 
     // Validate balance is zero.
     let proof_data = proof_info.data.borrow();
-    let proof = WoodProof::try_from_bytes(&proof_data)?;
+    let proof = ProofV2::try_from_bytes(&proof_data)?;
     if proof.balance.gt(&0) {
         return Err(ProgramError::InvalidAccountData);
     }

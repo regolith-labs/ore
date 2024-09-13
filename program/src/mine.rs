@@ -1,13 +1,13 @@
 use std::mem::size_of;
 
-use drillx_2::Solution;
+use drillx::Solution;
 use coal_api::{
     consts::*,
     error::OreError,
     event::MineEvent,
     instruction::MineArgs,
     loaders::*,
-    state::{Config, Proof, Bus, WoodConfig, WoodProof, WoodBus},
+    state::{Config, Proof, Bus, WoodConfig, ProofV2, WoodBus},
 };
 use coal_utils::Discriminator;
 use solana_program::msg;
@@ -33,10 +33,12 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let config_info = &accounts[2];
 
     if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
+        msg!("Processing coal");
         return process_mine_coal(accounts, data)
     }
 
     if config_info.data.borrow()[0].eq(&(WoodConfig::discriminator() as u8)) {
+        msg!("Processing chop wood");
         return process_chop_wood(accounts, data)
     }
 
@@ -236,7 +238,7 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     load_signer(signer)?;
     load_any_wood_bus(bus_info, true)?;
     load_wood_config(config_info, false)?;
-    load_wood_proof_with_miner(proof_info, signer.key, true)?;
+    load_proof_v2_with_miner(proof_info, signer.key, &WOOD_MINT_ADDRESS, true)?;
     load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
     load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
 
@@ -264,7 +266,7 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Here we use drillx_2 to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = ProofV2::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
@@ -338,7 +340,7 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The penalty works by halving the reward amount for every minute late the solution has been submitted.
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
-    let t_liveness = t_target.saturating_add(TOLERANCE);
+    let t_liveness = t_target.saturating_add(WOOD_LIVENESS_TOLERANCE);
     if t.gt(&t_liveness) {
         // Halve the reward for every minute late.
         let tardiness = t.saturating_sub(t_target) as u64;
@@ -379,6 +381,7 @@ fn process_chop_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // miners are forced to submit their current solution before they can begin mining for the next.
     proof.last_hash = hash.h;
     proof.challenge = hashv(&[
+        b"wood",
         hash.h.as_slice(),
         &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
     ])

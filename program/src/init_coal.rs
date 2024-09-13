@@ -32,6 +32,7 @@ pub fn process_init_coal<'a, 'info>(
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
+    
     load_signer(signer)?;
     load_uninitialized_pda(bus_0_info, &[COAL_BUS, &[0]], args.bus_0_bump, &coal_api::id())?;
     load_uninitialized_pda(bus_1_info, &[COAL_BUS, &[1]], args.bus_1_bump, &coal_api::id())?;

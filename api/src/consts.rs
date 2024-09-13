@@ -29,6 +29,9 @@ pub const WOOD_GROWTH_THESHOLD: u64 = 500;
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
 
+/// The liveness tolerance for WOOD in seconds.
+pub const WOOD_LIVENESS_TOLERANCE: i64 = 65;
+
 /// The minimum difficulty to initialize the program with.
 pub const INITIAL_MIN_DIFFICULTY: u32 = 1;
 
@@ -187,8 +190,8 @@ pub const TREASURY_ADDRESS: Pubkey =
 /// The bump of the treasury account, for cpis.
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
 
-/// The address of the treasury token account.
-pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
+/// The address of the COAL treasury token account.
+pub const COAL_TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
     ed25519::derive_program_address(
         &[
             unsafe { &*(&TREASURY_ADDRESS as *const Pubkey as *const [u8; 32]) },
@@ -199,6 +202,20 @@ pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
     )
     .0,
 );
+
+/// The address of the WOOD treasury token account.
+pub const WOOD_TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
+    ed25519::derive_program_address(
+        &[
+            unsafe { &*(&TREASURY_ADDRESS as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&spl_token::id() as *const Pubkey as *const [u8; 32]) },
+            unsafe { &*(&WOOD_MINT_ADDRESS as *const Pubkey as *const [u8; 32]) },
+        ],
+        unsafe { &*(&spl_associated_token_account::id() as *const Pubkey as *const [u8; 32]) },
+    )
+    .0,
+);
+
 
 /// The address of the CU-optimized Solana noop program.
 pub const NOOP_PROGRAM_ID: Pubkey = pubkey!("noop8ytexvkpCuqbf6FB89BSuNemHtPRqaNC31GWivW");

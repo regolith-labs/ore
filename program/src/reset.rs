@@ -6,12 +6,7 @@ use coal_api::{
 };
 use coal_utils::AccountDeserialize;
 use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
-    program_pack::Pack,
-    sysvar::Sysvar
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, msg, program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
@@ -21,10 +16,12 @@ pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8])
     let config_info = &accounts[9];
 
     if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
+        msg!("Processing coal reset");
         return process_reset_coal(accounts, data)
     }
 
     if config_info.data.borrow()[0].eq(&(WoodConfig::discriminator() as u8)) {
+        msg!("Processing wood reset");
         return process_reset_wood(accounts, data)
     }
 
@@ -179,10 +176,15 @@ fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     load_wood_bus(bus_6_info, 6, true)?;
     load_wood_bus(bus_7_info, 7, true)?;
     load_wood_config(config_info, true)?;
+    msg!("Loaded wood config");
     load_mint(mint_info, WOOD_MINT_ADDRESS, true)?;
+    msg!("Loaded wood mint");
     load_treasury(treasury_info, true)?;
+    msg!("Loaded wood treasury");
     load_wood_treasury_tokens(treasury_tokens_info, true)?;
+    msg!("Loaded wood treasury tokens");
     load_program(token_program, spl_token::id())?;
+    msg!("Loaded wood token program");
     let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,

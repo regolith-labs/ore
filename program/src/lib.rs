@@ -7,6 +7,7 @@ mod open;
 mod reset;
 mod stake;
 mod update;
+mod patch_wood;
 
 use claim::*;
 use close::*;
@@ -17,6 +18,7 @@ use open::*;
 use reset::*;
 use stake::*;
 use update::*;
+use patch_wood::*;
 
 use coal_api::instruction::*;
 use solana_program::{
@@ -43,17 +45,18 @@ pub fn process_instruction(
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
     println!("Validated instruction data");
-    match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
-        OreInstruction::Claim => process_claim(accounts, data)?,
-        OreInstruction::Close => process_close(accounts, data)?,
-        OreInstruction::Mine => process_mine(accounts, data)?,
-        OreInstruction::Open => process_open_coal(accounts, data)?,
-        OreInstruction::OpenWood => process_open_wood(accounts, data)?,
-        OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::Stake => process_stake(accounts, data)?,
-        OreInstruction::Update => process_update(accounts, data)?,
-        OreInstruction::InitCoal => process_init_coal(accounts, data)?,
-        OreInstruction::InitWood => process_init_wood(accounts, data)?,
+    match CoalInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
+        CoalInstruction::Claim => process_claim(accounts, data)?,
+        CoalInstruction::Close => process_close(accounts, data)?,
+        CoalInstruction::Mine => process_mine(accounts, data)?,
+        CoalInstruction::OpenCoal => process_open_coal(accounts, data)?,
+        CoalInstruction::OpenWood => process_open_wood(accounts, data)?,
+        CoalInstruction::Reset => process_reset(accounts, data)?,
+        CoalInstruction::Stake => process_stake(accounts, data)?,
+        CoalInstruction::Update => process_update(accounts, data)?,
+        CoalInstruction::InitCoal => process_init_coal(accounts, data)?,
+        CoalInstruction::InitWood => process_init_wood(accounts, data)?,
+        CoalInstruction::PatchWood => process_patch_wood(accounts, data)?,
     }
 
     Ok(())

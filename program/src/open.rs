@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use coal_api::{consts::*, instruction::OpenArgs, loaders::*, state::{Proof, WoodProof}};
+use coal_api::{consts::*, instruction::OpenArgs, loaders::*, state::{Proof, ProofV2}};
 use solana_program::{
     account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, keccak::hashv, program_error::ProgramError, slot_hashes::SlotHash, system_program, sysvar::{self, Sysvar}
 };
@@ -85,18 +85,20 @@ pub fn process_open_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[
     create_pda(
         proof_info,
         &coal_api::id(),
-        8 + size_of::<WoodProof>(),
+        8 + size_of::<ProofV2>(),
         &[WOOD_PROOF, signer.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = WoodProof::discriminator() as u8;
-    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
+    proof_data[0] = ProofV2::discriminator() as u8;
+    let proof = ProofV2::try_from_bytes_mut(&mut proof_data)?;
+    proof.resource = WOOD_MINT_ADDRESS;
     proof.authority = *signer.key;
     proof.balance = 0;
     proof.challenge = hashv(&[
+        b"wood",
         signer.key.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])

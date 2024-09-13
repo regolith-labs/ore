@@ -4,7 +4,7 @@ use coal_api::{
     consts::*,
     instruction::*,
     loaders::*,
-    state::{Bus, Config},
+    state::{WoodBus, WoodConfig},
 };
 use coal_utils::spl::create_ata;
 use solana_program::{
@@ -33,28 +33,28 @@ pub fn process_init_wood<'a, 'info>(
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     load_signer(signer)?;
-    load_uninitialized_pda(bus_0_info, &[COAL_BUS, &[0]], args.bus_0_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_1_info, &[COAL_BUS, &[1]], args.bus_1_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_2_info, &[COAL_BUS, &[2]], args.bus_2_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_3_info, &[COAL_BUS, &[3]], args.bus_3_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_4_info, &[COAL_BUS, &[4]], args.bus_4_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_5_info, &[COAL_BUS, &[5]], args.bus_5_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_6_info, &[COAL_BUS, &[6]], args.bus_6_bump, &coal_api::id())?;
-    load_uninitialized_pda(bus_7_info, &[COAL_BUS, &[7]], args.bus_7_bump, &coal_api::id())?;
-    load_uninitialized_pda(config_info, &[COAL_CONFIG], args.config_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_0_info, &[WOOD_BUS, &[0]], args.bus_0_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_1_info, &[WOOD_BUS, &[1]], args.bus_1_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_2_info, &[WOOD_BUS, &[2]], args.bus_2_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_3_info, &[WOOD_BUS, &[3]], args.bus_3_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_4_info, &[WOOD_BUS, &[4]], args.bus_4_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_5_info, &[WOOD_BUS, &[5]], args.bus_5_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_6_info, &[WOOD_BUS, &[6]], args.bus_6_bump, &coal_api::id())?;
+    load_uninitialized_pda(bus_7_info, &[WOOD_BUS, &[7]], args.bus_7_bump, &coal_api::id())?;
+    load_uninitialized_pda(config_info, &[WOOD_CONFIG], args.config_bump, &coal_api::id())?;
     load_uninitialized_pda(
         metadata_info,
         &[
             METADATA,
             mpl_token_metadata::ID.as_ref(),
-            COAL_MINT_ADDRESS.as_ref(),
+            WOOD_MINT_ADDRESS.as_ref(),
         ],
         args.metadata_bump,
         &mpl_token_metadata::ID,
     )?;
     load_uninitialized_pda(
         mint_info,
-        &[COAL_MINT, MINT_NOISE.as_slice()],
+        &[WOOD_MINT, MINT_NOISE.as_slice()],
         args.mint_bump,
         &coal_api::id(),
     )?;
@@ -89,36 +89,38 @@ pub fn process_init_wood<'a, 'info>(
         create_pda(
             bus_infos[i],
             &coal_api::id(),
-            8 + size_of::<Bus>(),
+            8 + size_of::<WoodBus>(),
             &[WOOD_BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer,
         )?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
-        bus_data[0] = Bus::discriminator() as u8;
-        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        bus_data[0] = WoodBus::discriminator() as u8;
+        let bus = WoodBus::try_from_bytes_mut(&mut bus_data)?;
         bus.id = i as u64;
         bus.rewards = 0;
         bus.theoretical_rewards = 0;
         bus.top_balance = 0;
+        bus.total_hash_power = 0;
     }
 
     // Initialize config.
     create_pda(
         config_info,
         &coal_api::id(),
-        8 + size_of::<Config>(),
+        8 + size_of::<WoodConfig>(),
         &[WOOD_CONFIG, &[args.config_bump]],
         system_program,
         signer,
     )?;
     let mut config_data = config_info.data.borrow_mut();
-    config_data[0] = Config::discriminator() as u8;
-    let config = Config::try_from_bytes_mut(&mut config_data)?;
+    config_data[0] = WoodConfig::discriminator() as u8;
+    let config = WoodConfig::try_from_bytes_mut(&mut config_data)?;
     config.base_reward_rate = INITIAL_BASE_WOOD_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_balance = 0;
+    config.total_epoch_rewards = 0;
 
     // Initialize mint.
     create_pda(

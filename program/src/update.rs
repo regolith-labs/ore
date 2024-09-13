@@ -1,4 +1,4 @@
-use coal_api::{loaders::*, state::{Proof, WoodProof}};
+use coal_api::{consts::WOOD_MINT_ADDRESS, loaders::*, state::{Proof, ProofV2}};
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
 };
@@ -12,7 +12,7 @@ pub fn process_update<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]
         return process_update_coal(accounts, data)
     }
 
-    if config_info.data.borrow()[0].eq(&(WoodProof::discriminator() as u8)) {
+    if config_info.data.borrow()[0].eq(&(ProofV2::discriminator() as u8)) {
         return process_update_wood(accounts, data)
     }
 
@@ -50,11 +50,11 @@ pub fn process_update_wood<'a, 'info>(
     };
     load_signer(signer)?;
     load_any(miner_info, false)?;
-    load_wood_proof(proof_info, signer.key, true)?;
+    load_proof_v2(proof_info, signer.key, &WOOD_MINT_ADDRESS, true)?;
 
     // Update the proof's miner authority.
     let mut proof_data = proof_info.data.borrow_mut();
-    let proof = WoodProof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = ProofV2::try_from_bytes_mut(&mut proof_data)?;
     proof.miner = *miner_info.key;
 
     Ok(())
