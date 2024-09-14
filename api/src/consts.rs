@@ -21,11 +21,6 @@ pub const BASE_WOOD_REWARD_RATE_MIN_THRESHOLD: u64 = 2u64.pow(5) * WOOD_EXTRACTI
 /// The maximum allowed base reward rate, at which point the min difficulty should be decreased.
 pub const BASE_WOOD_REWARD_RATE_MAX_THRESHOLD: u64 = 2u64.pow(8) * WOOD_EXTRACTION_MULTIPLIER;
 
-
-// When total hash power is above this threshold, wood emissions grows at a faster rate
-// When total hash power is below this threshold, wood emissions decline a rate
-pub const WOOD_GROWTH_THESHOLD: u64 = 500; 
-
 /// The spam/liveness tolerance in seconds.
 pub const TOLERANCE: i64 = 5;
 
@@ -50,7 +45,7 @@ pub const ONE_MINUTE: i64 = 60;
 
 /// The number of minutes in a program epoch.
 pub const COAL_EPOCH_MINUTES: i64 = 2;
-pub const WOOD_EPOCH_MINUTES: i64 = 10;
+pub const WOOD_EPOCH_MINUTES: i64 = 5;
 
 /// The duration of a program epoch, in seconds.
 pub const COAL_EPOCH_DURATION: i64 = ONE_MINUTE * COAL_EPOCH_MINUTES;
@@ -65,8 +60,15 @@ pub const WOOD_EXTRACTION_MULTIPLIER: u64 = 10;
 /// The target quantity of COAL to be mined per epoch.
 pub const TARGET_COAL_EPOCH_REWARDS: u64 = ONE_COAL * COAL_EXTRACTION_MULTIPLIER * COAL_EPOCH_MINUTES as u64;
 
-/// The propogation multiplier for WOOD emissions.
-pub const WOOD_PROPOGATION_MULTIPLIER: f64 = 1.05;
+/// The initial quantity of WOOD to be mined per epoch and distributed to each bus.
+pub const INITIAL_WOOD_EPOCH_REWARDS: u64 = ONE_WOOD * WOOD_EXTRACTION_MULTIPLIER * WOOD_EPOCH_MINUTES as u64;
+
+/// The minimum rewards a bus can have for each epoch.
+pub const MIN_WOOD_EPOCH_REWARDS: u64 = BASE_WOOD_REWARD_RATE_MAX_THRESHOLD * WOOD_EXTRACTION_MULTIPLIER;
+
+/// WOOD propogation rate is 5% per epoch
+/// New bus rewards = remaining + (remaining rewards / WOOD_PROPOGATION_RATE)
+pub const WOOD_PROPOGATION_RATE: u64 = 20;
 
 /// The maximum quantity of COAL that can be mined per epoch.
 /// Inflation rate ≈ 1000 COAL / min (min 0, max 8)

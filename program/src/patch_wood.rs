@@ -1,8 +1,8 @@
 use std::mem::size_of;
 
 use coal_api::{
-    consts::*, instruction::InitializeArgs, loaders::{load_program, load_signer, load_sysvar}, 
-    state::{WoodBus, WoodConfig}
+    consts::*, loaders::{load_program, load_signer, load_sysvar}, 
+    state::{Bus, WoodConfig}
 };
 use solana_program::{
     self, account_info::AccountInfo, entrypoint::ProgramResult, msg, 
@@ -11,8 +11,7 @@ use solana_program::{
 
 use crate::utils::{AccountDeserialize, Discriminator};
 
-pub fn process_patch_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    let args = InitializeArgs::try_from_bytes(data)?;
+pub fn process_patch_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [payer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, system_program, rent_sysvar] =
         accounts
@@ -32,7 +31,7 @@ pub fn process_patch_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &
         last_reset_at: 0,
         min_difficulty: INITIAL_MIN_DIFFICULTY as u64,
         top_balance: 0,
-        total_epoch_rewards: 0,
+        total_epoch_rewards: INITIAL_WOOD_EPOCH_REWARDS,
     };
     let patched_config = WoodConfig::to_bytes(&config);
     // Ensure the account has enough space for the new config data
@@ -53,20 +52,19 @@ pub fn process_patch_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &
     ];
 
     for i in 0..BUS_COUNT {
-        ensure_rent_exempt(bus_infos[i], 8 + size_of::<WoodBus>(), system_program, payer)?;
-        let bus = WoodBus {
+        ensure_rent_exempt(bus_infos[i], 8 + size_of::<Bus>(), system_program, payer)?;
+        let bus = Bus {
             id: i as u64,
-            rewards: 0,
+            rewards: INITIAL_WOOD_EPOCH_REWARDS,
             theoretical_rewards: 0,
-            top_balance: 0,
-            total_hash_power: 0,        
+            top_balance: 0,      
         };
         // Ensure the account has enough space for the new bus data
-        let patched_bus = WoodBus::to_bytes(&bus);
+        let patched_bus = Bus::to_bytes(&bus);
         let required_size = 8 + patched_bus.len();
         bus_infos[i].realloc(required_size, true)?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
-        bus_data[0] = WoodBus::discriminator() as u8;
+        bus_data[0] = Bus::discriminator() as u8;
         bus_data[1..8].copy_from_slice(&[0; 7]); // Padding
         bus_data[8..8 + patched_bus.len()].copy_from_slice(&patched_bus);
     }

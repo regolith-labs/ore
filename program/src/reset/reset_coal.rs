@@ -2,34 +2,18 @@ use coal_api::{
     consts::*,
     error::OreError,
     loaders::*,
-    state::{Config, WoodConfig, Bus, WoodBus},
+    state::{Config, Bus},
 };
 use coal_utils::AccountDeserialize;
 use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, msg, program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
+    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult, program_error::ProgramError, program_pack::Pack, sysvar::Sysvar
 };
 use spl_token::state::Mint;
 
-use crate::utils::Discriminator;
-
-pub fn process_reset<'a, 'info>(accounts: &'a [AccountInfo<'info>], data: &[u8]) -> ProgramResult {
-    let config_info = &accounts[9];
-
-    if config_info.data.borrow()[0].eq(&(Config::discriminator() as u8)) {
-        msg!("Processing coal reset");
-        return process_reset_coal(accounts, data)
-    }
-
-    if config_info.data.borrow()[0].eq(&(WoodConfig::discriminator() as u8)) {
-        msg!("Processing wood reset");
-        return process_reset_wood(accounts, data)
-    }
-
-    return Err(solana_program::program_error::ProgramError::InvalidAccountData);    
-}
+use crate::calculate_new_reward_rate;
 
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.
-fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
+pub fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
@@ -157,150 +141,6 @@ fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8
     )?;
 
     Ok(())
-}
-
-fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: &[u8]) -> ProgramResult {
-    // Load accounts.
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
-        accounts
-    else {
-        return Err(ProgramError::NotEnoughAccountKeys);
-    };
-    load_signer(signer)?;
-    load_wood_bus(bus_0_info, 0, true)?;
-    load_wood_bus(bus_1_info, 1, true)?;
-    load_wood_bus(bus_2_info, 2, true)?;
-    load_wood_bus(bus_3_info, 3, true)?;
-    load_wood_bus(bus_4_info, 4, true)?;
-    load_wood_bus(bus_5_info, 5, true)?;
-    load_wood_bus(bus_6_info, 6, true)?;
-    load_wood_bus(bus_7_info, 7, true)?;
-    load_wood_config(config_info, true)?;
-    msg!("Loaded wood config");
-    load_mint(mint_info, WOOD_MINT_ADDRESS, true)?;
-    msg!("Loaded wood mint");
-    load_treasury(treasury_info, true)?;
-    msg!("Loaded wood treasury");
-    load_wood_treasury_tokens(treasury_tokens_info, true)?;
-    msg!("Loaded wood treasury tokens");
-    load_program(token_program, spl_token::id())?;
-    msg!("Loaded wood token program");
-    let busses: [&AccountInfo; BUS_COUNT] = [
-        bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
-        bus_7_info,
-    ];
-
-    // Validate enough time has passed since the last reset.
-    let mut config_data = config_info.data.borrow_mut();
-    let config = WoodConfig::try_from_bytes_mut(&mut config_data)?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    if config
-        .last_reset_at
-        .saturating_add(WOOD_EPOCH_DURATION)
-        .gt(&clock.unix_timestamp)
-    {
-        return Ok(());
-    }
-
-    // Update timestamp.
-    config.last_reset_at = clock.unix_timestamp;
-
-    // Reset bus accounts and calculate reward rates for next epoch.
-    let mut top_balance: u64 = 0u64;
-    let mut total_remaining_rewards = 0u64; 
-    let mut next_epoch_rewards = 0u64;
-    
-    for i in 0..BUS_COUNT {
-        // Parse bus account.
-        let mut bus_data = busses[i].data.borrow_mut();
-        let bus = WoodBus::try_from_bytes_mut(&mut bus_data)?;
-
-        // Track top balance.
-        if bus.top_balance.gt(&top_balance) {
-            top_balance = bus.top_balance;
-        }
-
-        total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
-
-        // Bus rewards grow by 5% each epoch.
-        bus.rewards = bus.rewards.saturating_mul(WOOD_PROPOGATION_MULTIPLIER as u64).max(1);
-        next_epoch_rewards = next_epoch_rewards.saturating_add(bus.rewards);
-    }
-
-    let total_epoch_rewards = config.total_epoch_rewards.saturating_sub(total_remaining_rewards).max(0);
-    let next_epoch_bus_rewards = next_epoch_rewards.saturating_div(BUS_COUNT as u64);
-
-    // Update global top balance.
-    config.top_balance = top_balance;
-
-    // Update the rewards for the next epoch.
-    config.total_epoch_rewards = next_epoch_rewards;
-
-    // Update base reward rate for next epoch.
-    config.base_reward_rate =
-        calculate_new_reward_rate(config.base_reward_rate, total_epoch_rewards, next_epoch_rewards, next_epoch_bus_rewards);
-
-    // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    if config.base_reward_rate.le(&BASE_WOOD_REWARD_RATE_MIN_THRESHOLD) {
-        config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
-        config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
-    }
-
-    // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&BASE_WOOD_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
-        config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
-        config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
-    }
-
-    
-    // Fund the treasury token account.
-    solana_program::program::invoke_signed(
-        &spl_token::instruction::mint_to(
-            &spl_token::id(),
-            mint_info.key,
-            treasury_tokens_info.key,
-            treasury_info.key,
-            &[treasury_info.key],
-            total_epoch_rewards,
-        )?,
-        &[
-            token_program.clone(),
-            mint_info.clone(),
-            treasury_tokens_info.clone(),
-            treasury_info.clone(),
-        ],
-        &[&[TREASURY, &[TREASURY_BUMP]]],
-    )?;
-
-    Ok(())
-}
-
-/// This function calculates what the new reward rate should be based on how many total rewards
-/// were mined in the prior epoch. The math is largely identitical to function used by the Bitcoin
-/// network to update the difficulty between each epoch.
-///
-/// new_rate = current_rate * (target_rewards / actual_rewards)
-///
-/// The new rate is then smoothed by a constant factor to avoid large fluctuations. In Ore's case,
-/// the epochs are short (60 seconds) so a smoothing factor of 2 has been chosen. That is, the reward rate
-/// can at most double or halve from one epoch to the next.
-pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64, target_rewards: u64, bus_rewards: u64) -> u64 {
-    // Avoid division by zero. Leave the reward rate unchanged, if detected.
-    if epoch_rewards.eq(&0) {
-        return current_rate;
-    }
-
-    // Calculate new reward rate.
-    let new_rate = (current_rate as u128)
-        .saturating_mul(target_rewards as u128)
-        .saturating_div(epoch_rewards as u128) as u64;
-
-    // Smooth reward rate so it cannot change by more than a constant factor from one epoch to the next.
-    let new_rate_min = current_rate.saturating_div(SMOOTHING_FACTOR);
-    let new_rate_max = current_rate.saturating_mul(SMOOTHING_FACTOR);
-    let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
-    // Prevent reward rate from dropping below 1 or exceeding target_rewards and return.
-    new_rate_smoothed.max(1).min(bus_rewards)
 }
 
 #[cfg(test)]

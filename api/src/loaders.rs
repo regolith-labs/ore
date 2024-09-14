@@ -5,7 +5,7 @@ use spl_token::state::Mint;
 
 use crate::{
     consts::*,
-    state::{Bus, Config, Proof, ProofV2, WoodBus, WoodConfig, Treasury},
+    state::{Bus, Config, Proof, ProofV2, Treasury, WoodConfig},
     utils::{AccountDeserialize, Discriminator},
 };
 
@@ -82,7 +82,7 @@ pub fn load_wood_bus<'a, 'info>(
     }
 
     let bus_data = info.data.borrow();
-    let bus = WoodBus::try_from_bytes(&bus_data)?;
+    let bus = Bus::try_from_bytes(&bus_data)?;
 
     if bus.id.ne(&id) {
         return Err(ProgramError::InvalidAccountData);
@@ -148,7 +148,7 @@ pub fn load_any_wood_bus<'a, 'info>(
         return Err(ProgramError::UninitializedAccount);
     }
 
-    if info.data.borrow()[0].ne(&(WoodBus::discriminator() as u8)) {
+    if info.data.borrow()[0].ne(&(Bus::discriminator() as u8)) {
         return Err(solana_program::program_error::ProgramError::InvalidAccountData);
     }
 
