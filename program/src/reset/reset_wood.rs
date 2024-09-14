@@ -27,17 +27,12 @@ pub fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: 
     load_wood_bus(bus_5_info, 5, true)?;
     load_wood_bus(bus_6_info, 6, true)?;
     load_wood_bus(bus_7_info, 7, true)?;
-    msg!("Loaded WOOD bus accounts");
     load_wood_config(config_info, true)?;
-    msg!("Loaded WOOD config account");
     load_mint(mint_info, WOOD_MINT_ADDRESS, true)?;
-    msg!("Loaded WOOD mint account");
     load_treasury(treasury_info, true)?;
-    msg!("Loaded WOOD treasury account");
     load_wood_treasury_tokens(treasury_tokens_info, true)?;
-    msg!("Loaded WOOD treasury tokens account");
     load_program(token_program, spl_token::id())?;
-    msg!("Loaded WOOD treasury tokens account");
+
     let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
@@ -78,7 +73,7 @@ pub fn process_reset_wood<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: 
         total_theoretical_rewards = total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
 
         // Bus rewards grow by 5% each epoch.
-        bus.rewards = bus.rewards.saturating_add(bus.rewards.saturating_div(WOOD_PROPOGATION_RATE)).max(1);
+        bus.rewards = bus.rewards.saturating_add(bus.rewards.saturating_div(WOOD_PROPOGATION_RATE)).max(MIN_WOOD_EPOCH_REWARDS);
         next_epoch_rewards = next_epoch_rewards.saturating_add(bus.rewards);
     }
 
