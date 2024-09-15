@@ -4,7 +4,7 @@ use thiserror::Error;
 
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
-pub enum OreError {
+pub enum CoalError {
     #[error("The epoch has ended and needs reset")]
     NeedsReset = 0,
     #[error("The provided hash is invalid")]
@@ -23,8 +23,8 @@ pub enum OreError {
     AuthFailed = 7,
 }
 
-impl From<OreError> for ProgramError {
-    fn from(e: OreError) -> Self {
+impl From<CoalError> for ProgramError {
+    fn from(e: CoalError) -> Self {
         ProgramError::Custom(e as u32)
     }
 }

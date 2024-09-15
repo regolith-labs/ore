@@ -1,6 +1,6 @@
 use coal_api::{
     consts::*,
-    error::OreError,
+    error::CoalError,
     loaders::*,
     state::{Config, Bus},
 };
@@ -57,7 +57,7 @@ pub fn process_reset_coal<'a, 'info>(accounts: &'a [AccountInfo<'info>], _data: 
     // Max supply check.
     let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
     if mint.supply.ge(&MAX_COAL_SUPPLY) {
-        return Err(OreError::MaxSupply.into());
+        return Err(CoalError::MaxSupply.into());
     }
 
     // For each 5% of total supply, reduce the BUS_EPOCH_REWARDS and MAX_EPOCH_REWARDS by 50%

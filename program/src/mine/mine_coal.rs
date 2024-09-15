@@ -3,7 +3,7 @@ use std::mem::size_of;
 use drillx::Solution;
 use coal_api::{
     consts::*,
-    error::OreError,
+    error::CoalError,
     event::MineEvent,
     instruction::MineArgs,
     loaders::*,
@@ -59,7 +59,7 @@ pub fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult
         .le(&clock.unix_timestamp)
     {
         println!("Needs reset");
-        return Err(OreError::NeedsReset.into());
+        return Err(CoalError::NeedsReset.into());
     }
 
     // Validate the hash digest.
@@ -70,7 +70,7 @@ pub fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
-        return Err(OreError::HashInvalid.into());
+        return Err(CoalError::HashInvalid.into());
     }
 
     // Reject spam transactions.
@@ -81,7 +81,7 @@ pub fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
-        return Err(OreError::Spam.into());
+        return Err(CoalError::Spam.into());
     }
 
     // Validate the hash satisfies the minimum difficulty.
@@ -91,7 +91,7 @@ pub fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
     if difficulty.lt(&(config.min_difficulty as u32)) {
-        return Err(OreError::HashTooEasy.into());
+        return Err(CoalError::HashTooEasy.into());
     }
 
     // Normalize the difficulty and calculate the reward amount.
@@ -219,10 +219,10 @@ pub fn process_mine_coal(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult
 fn authenticate_coal_proof(data: &[u8], proof_address: &Pubkey) -> ProgramResult {
     if let Ok(Some(auth_address)) = parse_coal_auth_address(data) {
         if proof_address.ne(&auth_address) {
-            return Err(OreError::AuthFailed.into());
+            return Err(CoalError::AuthFailed.into());
         }
     } else {
-        return Err(OreError::AuthFailed.into());
+        return Err(CoalError::AuthFailed.into());
     }
     Ok(())
 }

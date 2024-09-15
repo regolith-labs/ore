@@ -1,4 +1,4 @@
-use coal_api::{consts::*, error::OreError, instruction::ClaimArgs, loaders::*, state::ProofV2};
+use coal_api::{consts::*, error::CoalError, instruction::ClaimArgs, loaders::*, state::ProofV2};
 use coal_utils::spl::transfer_signed;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -30,7 +30,7 @@ pub fn process_claim_wood(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
     proof.balance = proof
         .balance
         .checked_sub(amount)
-        .ok_or(OreError::ClaimTooLarge)?;
+        .ok_or(CoalError::ClaimTooLarge)?;
 
     // Transfer tokens from treasury to beneficiary.
     transfer_signed(
