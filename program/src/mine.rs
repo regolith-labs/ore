@@ -46,8 +46,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
-    // let config_data = config_info.data.borrow();
-    // let config = Config::try_from_bytes(&config_data)?;
     let clock = Clock::get()?;
     if config
         .last_reset_at
@@ -61,8 +59,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // Here we use drillx to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
-    // let mut proof_data = proof_info.data.borrow_mut();
-    // let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
@@ -106,52 +102,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Calculate staking reward.
-        if config.top_balance.gt(&0) {
-            let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
-            reward = reward.checked_add(staking_reward).unwrap();
-        }
-
-        // Update bus stake tracker.
-        if proof.balance.gt(&bus.top_balance) {
-            bus.top_balance = proof.balance;
-        }
-    }
-
-    // Apply boosts.
-    //
-    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
-    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Calculate staking reward.
-        if config.top_balance.gt(&0) {
-            let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
-            reward = reward.checked_add(staking_reward).unwrap();
-        }
-
-        // Update bus stake tracker.
-        if proof.balance.gt(&bus.top_balance) {
-            bus.top_balance = proof.balance;
-        }
-    }
-
-    // Apply boosts.
-    //
-    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
-    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    // let mut bus_data = bus_info.data.borrow_mut();
-    // let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {
