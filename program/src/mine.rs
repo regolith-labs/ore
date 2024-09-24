@@ -148,9 +148,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             load_any_boost(&boost_info, false)?;
             load_stake(&stake_info, &proof.authority, boost_info.key, false)?;
 
-            // Reject if boost is applied twice.
+            // Skip if boost is applied twice.
             if boosts.contains(boost_info.key) {
-                return Err(OreError::DuplicateBoost.into());
+                continue;
             }
 
             // Record this boost has been used.
@@ -162,8 +162,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             let stake_data = stake_info.data.borrow();
             let stake = Stake::try_from_bytes(&stake_data)?;
 
-            // Apply multiplier if boost is not expired and
-            // last stake was greater than one minute ago.
+            // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
                 let boost_reward = (reward as u128)
