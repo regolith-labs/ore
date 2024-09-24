@@ -106,8 +106,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    let mut bus_data = bus_info.data.borrow_mut();
-    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {
