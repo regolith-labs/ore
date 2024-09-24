@@ -110,6 +110,30 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
+    // Apply staking multiplier.
+    //
+    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
+    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
+    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
+    let mut bus_data = bus_info.data.borrow_mut();
+    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
+        // Calculate staking reward.
+        if config.top_balance.gt(&0) {
+            let staking_reward = (reward as u128)
+                .checked_mul(proof.balance.min(config.top_balance) as u128)
+                .unwrap()
+                .checked_div(config.top_balance as u128)
+                .unwrap() as u64;
+            reward = reward.checked_add(staking_reward).unwrap();
+        }
+
+        // Update bus stake tracker.
+        if proof.balance.gt(&bus.top_balance) {
+            bus.top_balance = proof.balance;
+        }
+    }
+
     // Apply boosts.
     //
     // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.

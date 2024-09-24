@@ -56,16 +56,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Reset bus accounts and calculate actual rewards mined since last reset.
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
-    // let mut top_balance = 0u64;
+    let mut top_balance = 0u64;
     for i in 0..BUS_COUNT {
         // Parse bus account.
         let mut bus_data = busses[i].data.borrow_mut();
         let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
 
         // Track top balance.
-        // if bus.top_balance.gt(&top_balance) {
-        //     top_balance = bus.top_balance;
-        // }
+        if bus.top_balance.gt(&top_balance) {
+            top_balance = bus.top_balance;
+        }
 
         // Track accumulators.
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
@@ -80,7 +80,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
 
     // Update global top balance.
-    config.top_balance = 0; // top_balance;
+    config.top_balance = top_balance;
 
     // Update base reward rate for next epoch.
     config.base_reward_rate =
