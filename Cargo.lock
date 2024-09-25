@@ -1317,16 +1317,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ore-utils"
-version = "2.1.9"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "parking_lot"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
