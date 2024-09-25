@@ -1,5 +1,5 @@
 use bytemuck::{Pod, Zeroable};
-use ore_utils::*;
+use steel::*;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]

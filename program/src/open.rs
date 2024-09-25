@@ -1,7 +1,6 @@
 use std::mem::size_of;
 
 use ore_api::{consts::*, instruction::Open, state::Proof};
-use ore_utils::*;
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
@@ -12,6 +11,7 @@ use solana_program::{
     system_program,
     sysvar::{self, Sysvar},
 };
+use steel::*;
 
 /// Open creates a new proof account to track a miner's state.
 pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {

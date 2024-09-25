@@ -1294,11 +1294,11 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "num_enum",
- "ore-utils",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
+ "steel",
  "thiserror",
 ]
 
@@ -1309,21 +1309,11 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "ore-api",
- "ore-utils",
  "rand 0.8.5",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
-]
-
-[[package]]
-name = "ore-utils"
-version = "2.1.9"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
+ "steel",
 ]
 
 [[package]]
@@ -2218,6 +2208,18 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "steel"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97b09eae425248a8afcef3cf3300dfa548791194fa9fe519dadd5c57d7964dbc"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
 
 [[package]]
 name = "strsim"
