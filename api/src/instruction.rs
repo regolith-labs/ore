@@ -1,6 +1,6 @@
 use bytemuck::{Pod, Zeroable};
 use num_enum::TryFromPrimitive;
-use ore_utils::*;
+use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]

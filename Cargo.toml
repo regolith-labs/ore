@@ -20,11 +20,11 @@ drillx = { version = "2.0.0", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 ore-api = { path = "api", version = "2.1.9" }
-ore-utils = { path = "utils", features = ["spl"], version = "2.1.9" }
 solana-program = "^1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
+steel = { features = ["spl"], version = "0.1.0" }
 thiserror = "1.0.57"
 
 

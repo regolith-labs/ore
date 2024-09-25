@@ -21,10 +21,10 @@ default = []
 drillx.workspace = true
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
-ore-utils.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
+steel.workspace = true
 
 [dev-dependencies]
 rand = "0.8.5"
