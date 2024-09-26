@@ -1,5 +1,3 @@
-use bytemuck::{Pod, Zeroable};
-use solana_program::pubkey::Pubkey;
 use steel::*;
 
 use crate::consts::CONFIG;

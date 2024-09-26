@@ -19,28 +19,25 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let args = Open::try_from_bytes(data)?;
 
     // Load accounts.
-    let [signer, miner_info, payer_info, proof_info, system_program, slot_hashes_info] = accounts
+    let [signer_info, miner_info, payer_info, proof_info, system_program, slot_hashes_info] =
+        accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any(miner_info, false)?;
-    load_signer(payer_info)?;
-    load_uninitialized_pda(
-        proof_info,
-        &[PROOF, signer.key.as_ref()],
-        args.bump,
-        &ore_api::id(),
-    )?;
-    load_program(system_program, system_program::id())?;
-    load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
+    signer_info.is_signer()?;
+    payer_info.is_signer()?;
+    proof_info
+        .is_empty_pda(&[PROOF, signer_info.key.as_ref()], args.bump, &ore_api::ID)?
+        .is_writable()?;
+    system_program.is_program(&system_program::ID)?;
+    slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Initialize proof.
     create_pda(
         proof_info,
         &ore_api::id(),
         8 + size_of::<Proof>(),
-        &[PROOF, signer.key.as_ref(), &[args.bump]],
+        &[PROOF, signer_info.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
@@ -48,10 +45,10 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let mut proof_data = proof_info.data.borrow_mut();
     proof_data[0] = Proof::discriminator() as u8;
     let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.authority = *signer.key;
+    proof.authority = *signer_info.key;
     proof.balance = 0;
     proof.challenge = hashv(&[
-        signer.key.as_ref(),
+        signer_info.key.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;

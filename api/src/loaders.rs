@@ -192,34 +192,23 @@ pub fn load_any_proof(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), P
     Ok(())
 }
 
-/// Errors if:
-/// - Owner is not Ore program.
-/// - Address does not match the expected address.
-/// - Data is empty.
-/// - Data cannot deserialize into a treasury account.
-/// - Expected to be writable, but is not.
-pub fn load_treasury(info: &AccountInfo<'_>, is_writable: bool) -> Result<(), ProgramError> {
-    if info.owner.ne(&crate::id()) {
-        return Err(ProgramError::InvalidAccountOwner);
+pub trait OreAccountInfoValidation {
+    fn is_config(&self) -> Result<&Self, ProgramError>;
+    fn is_treasury(&self) -> Result<&Self, ProgramError>;
+}
+
+impl<'a> OreAccountInfoValidation for AccountInfo<'a> {
+    fn is_config(&self) -> Result<&Self, ProgramError> {
+        self.has_address(&CONFIG_ADDRESS)?
+            .has_owner(&crate::ID)?
+            .is_type::<Treasury>()
     }
 
-    if info.key.ne(&TREASURY_ADDRESS) {
-        return Err(ProgramError::InvalidSeeds);
+    fn is_treasury(&self) -> Result<&Self, ProgramError> {
+        self.has_address(&TREASURY_ADDRESS)?
+            .has_owner(&crate::ID)?
+            .is_type::<Treasury>()
     }
-
-    if info.data_is_empty() {
-        return Err(ProgramError::UninitializedAccount);
-    }
-
-    if info.data.borrow()[0].ne(&(Treasury::discriminator() as u8)) {
-        return Err(solana_program::program_error::ProgramError::InvalidAccountData);
-    }
-
-    if is_writable && !info.is_writable {
-        return Err(ProgramError::InvalidAccountData);
-    }
-
-    Ok(())
 }
 
 /// Errors if:

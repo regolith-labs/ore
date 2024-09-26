@@ -16,12 +16,12 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
+    signer.is_signer()?;
     load_token_account(beneficiary_info, None, &MINT_ADDRESS, true)?;
     load_proof(proof_info, signer.key, true)?;
-    load_treasury(treasury_info, false)?;
+    treasury_info.is_treasury()?;
     load_treasury_tokens(treasury_tokens_info, true)?;
-    load_program(token_program, spl_token::id())?;
+    token_program.has_address(&spl_token::ID)?;
 
     // Update miner balance.
     let mut proof_data = proof_info.data.borrow_mut();

@@ -8,12 +8,12 @@ use steel::*;
 /// Close closes a proof account and returns the rent to the owner.
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer, proof_info, system_program] = accounts else {
+    let [signer_info, proof_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_proof(proof_info, signer.key, true)?;
-    load_program(system_program, system_program::id())?;
+    signer_info.is_signer()?;
+    load_proof(proof_info, signer_info.key, true)?;
+    system_program.is_program(&system_program::ID)?;
 
     // Validate balance is zero.
     let proof_data = proof_info.data.borrow();
@@ -27,7 +27,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     proof_info.realloc(0, true)?;
 
     // Send remaining lamports to signer.
-    **signer.lamports.borrow_mut() += proof_info.lamports();
+    **signer_info.lamports.borrow_mut() += proof_info.lamports();
     **proof_info.lamports.borrow_mut() = 0;
 
     Ok(())

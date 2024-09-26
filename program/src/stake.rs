@@ -12,14 +12,15 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer, proof_info, sender_info, treasury_tokens_info, token_program] = accounts else {
+    let [signer_info, proof_info, sender_info, treasury_tokens_info, token_program] = accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_proof(proof_info, signer.key, true)?;
-    load_token_account(sender_info, Some(signer.key), &MINT_ADDRESS, true)?;
+    signer_info.is_signer()?;
+    load_proof(proof_info, signer_info.key, true)?;
+    load_token_account(sender_info, Some(signer_info.key), &MINT_ADDRESS, true)?;
     load_treasury_tokens(treasury_tokens_info, true)?;
-    load_program(token_program, spl_token::id())?;
+    token_program.is_program(&spl_token::ID)?;
 
     // Update the proof balance.
     let mut proof_data = proof_info.data.borrow_mut();
@@ -32,7 +33,7 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
 
     // Transfer tokens from signer to treasury.
     transfer(
-        signer,
+        signer_info,
         sender_info,
         treasury_tokens_info,
         token_program,

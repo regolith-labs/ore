@@ -14,12 +14,12 @@ use steel::*;
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
+    let [signer_info, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
+    signer_info.is_signer()?;
     load_bus(bus_0_info, 0, true)?;
     load_bus(bus_1_info, 1, true)?;
     load_bus(bus_2_info, 2, true)?;
@@ -28,11 +28,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     load_bus(bus_5_info, 5, true)?;
     load_bus(bus_6_info, 6, true)?;
     load_bus(bus_7_info, 7, true)?;
-    load_config(config_info, true)?;
+    config_info.is_config()?.is_writable()?;
     load_mint(mint_info, MINT_ADDRESS, true)?;
-    load_treasury(treasury_info, true)?;
+    treasury_info.is_treasury()?.is_writable()?;
     load_treasury_tokens(treasury_tokens_info, true)?;
-    load_program(token_program, spl_token::id())?;
+    token_program.is_program(&spl_token::ID)?;
     let busses: [&AccountInfo; BUS_COUNT] = [
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,

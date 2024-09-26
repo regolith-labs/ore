@@ -13,17 +13,22 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts
-    let [signer, beneficiary_info, mint_info, mint_v1_info, sender_info, treasury_info, token_program] =
+    let [signer_info, beneficiary_info, mint_info, mint_v1_info, sender_info, treasury_info, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_token_account(beneficiary_info, Some(&signer.key), &MINT_ADDRESS, true)?;
+    signer_info.is_signer()?;
+    load_token_account(
+        beneficiary_info,
+        Some(&signer_info.key),
+        &MINT_ADDRESS,
+        true,
+    )?;
     load_mint(mint_info, MINT_ADDRESS, true)?;
     load_mint(mint_v1_info, MINT_V1_ADDRESS, true)?;
-    load_token_account(sender_info, Some(signer.key), &MINT_V1_ADDRESS, true)?;
-    load_program(token_program, spl_token::id())?;
+    load_token_account(sender_info, Some(signer_info.key), &MINT_V1_ADDRESS, true)?;
+    token_program.is_program(&spl_token::ID)?;
 
     // Burn v1 tokens
     solana_program::program::invoke(
@@ -31,15 +36,15 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             &spl_token::id(),
             sender_info.key,
             mint_v1_info.key,
-            signer.key,
-            &[signer.key],
+            signer_info.key,
+            &[signer_info.key],
             amount,
         )?,
         &[
             token_program.clone(),
             sender_info.clone(),
             mint_v1_info.clone(),
-            signer.clone(),
+            signer_info.clone(),
         ],
     )?;
 

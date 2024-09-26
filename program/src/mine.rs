@@ -26,7 +26,7 @@ use solana_program::{
 use steel::*;
 
 /// Mine validates hashes and increments a miner's collectable balance.
-pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = Mine::try_from_bytes(data)?;
 
@@ -36,12 +36,12 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any_bus(bus_info, true)?;
-    load_config(config_info, false)?;
+    signer.is_signer()?;
+    bus_info.is_type::<Bus>()?.is_writable()?;
+    config_info.is_config()?;
     load_proof_with_miner(proof_info, signer.key, true)?;
-    load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
-    load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
+    instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Authenticate the proof account.
     //

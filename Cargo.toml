@@ -28,3 +28,5 @@ steel = { features = ["spl"], version = "0.1.0" }
 thiserror = "1.0.57"
 
 
+[patch.crates-io]
+steel = { path = "../steel/lib" }

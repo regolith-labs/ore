@@ -1,5 +1,3 @@
-use bytemuck::{Pod, Zeroable};
-use solana_program::pubkey::Pubkey;
 use steel::*;
 
 use crate::consts::BUS;
@@ -28,6 +26,27 @@ pub struct Bus {
 /// Fetch the PDA of a bus account.
 pub fn bus_pda(id: u8) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[BUS, &[id]], &crate::id())
+}
+
+impl<'a> From<&'a [u8]> for &'a Bus {
+    fn from(value: &'a [u8]) -> &'a Bus {
+        Bus::try_from_bytes(value).unwrap()
+    }
+}
+
+impl<'a> From<*const u8> for &'a Bus {
+    fn from(value: *const u8) -> &'a Bus {
+        unsafe {
+            if Bus::discriminator().ne(&value.add(0).read()) {
+                panic!("");
+            }
+            bytemuck::try_from_bytes::<Bus>(std::slice::from_raw_parts(
+                value.add(8),
+                std::mem::size_of::<Bus>(),
+            ))
+            .expect("")
+        }
+    }
 }
 
 account!(OreAccount, Bus);

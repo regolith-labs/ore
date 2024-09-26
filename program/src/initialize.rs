@@ -18,23 +18,22 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     let args = Initialize::try_from_bytes(data)?;
 
     // Load accounts.
-    let [signer, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
+    let [signer_info, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_uninitialized_pda(bus_0_info, &[BUS, &[0]], args.bus_0_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_1_info, &[BUS, &[1]], args.bus_1_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_2_info, &[BUS, &[2]], args.bus_2_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_3_info, &[BUS, &[3]], args.bus_3_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_4_info, &[BUS, &[4]], args.bus_4_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_5_info, &[BUS, &[5]], args.bus_5_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_6_info, &[BUS, &[6]], args.bus_6_bump, &ore_api::id())?;
-    load_uninitialized_pda(bus_7_info, &[BUS, &[7]], args.bus_7_bump, &ore_api::id())?;
-    load_uninitialized_pda(config_info, &[CONFIG], args.config_bump, &ore_api::id())?;
-    load_uninitialized_pda(
-        metadata_info,
+    signer_info.is_signer()?.has_address(&INITIALIZER_ADDRESS)?;
+    bus_0_info.is_empty_pda(&[BUS, &[0]], args.bus_0_bump, &ore_api::ID)?;
+    bus_1_info.is_empty_pda(&[BUS, &[1]], args.bus_1_bump, &ore_api::ID)?;
+    bus_2_info.is_empty_pda(&[BUS, &[2]], args.bus_2_bump, &ore_api::ID)?;
+    bus_3_info.is_empty_pda(&[BUS, &[3]], args.bus_3_bump, &ore_api::ID)?;
+    bus_4_info.is_empty_pda(&[BUS, &[4]], args.bus_4_bump, &ore_api::ID)?;
+    bus_5_info.is_empty_pda(&[BUS, &[5]], args.bus_5_bump, &ore_api::ID)?;
+    bus_6_info.is_empty_pda(&[BUS, &[6]], args.bus_6_bump, &ore_api::ID)?;
+    bus_7_info.is_empty_pda(&[BUS, &[7]], args.bus_7_bump, &ore_api::ID)?;
+    config_info.is_empty_pda(&[CONFIG], args.config_bump, &ore_api::id())?;
+    metadata_info.is_empty_pda(
         &[
             METADATA,
             mpl_token_metadata::ID.as_ref(),
@@ -43,29 +42,14 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         args.metadata_bump,
         &mpl_token_metadata::ID,
     )?;
-    load_uninitialized_pda(
-        mint_info,
-        &[MINT, MINT_NOISE.as_slice()],
-        args.mint_bump,
-        &ore_api::id(),
-    )?;
-    load_uninitialized_pda(
-        treasury_info,
-        &[TREASURY],
-        args.treasury_bump,
-        &ore_api::id(),
-    )?;
-    load_system_account(treasury_tokens_info, true)?;
-    load_program(system_program, system_program::id())?;
-    load_program(token_program, spl_token::id())?;
-    load_program(associated_token_program, spl_associated_token_account::id())?;
-    load_program(metadata_program, mpl_token_metadata::ID)?;
-    load_sysvar(rent_sysvar, sysvar::rent::id())?;
-
-    // Check signer.
-    if signer.key.ne(&INITIALIZER_ADDRESS) {
-        return Err(ProgramError::MissingRequiredSignature);
-    }
+    mint_info.is_empty_pda(&[MINT, MINT_NOISE.as_slice()], args.mint_bump, &ore_api::ID)?;
+    treasury_info.is_empty_pda(&[TREASURY], args.treasury_bump, &ore_api::ID)?;
+    treasury_tokens_info.is_empty()?;
+    system_program.is_program(&system_program::ID)?;
+    token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    metadata_program.is_program(&mpl_token_metadata::ID)?;
+    rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
 
     // Initialize bus accounts.
     let bus_infos = [
@@ -89,7 +73,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
             8 + size_of::<Bus>(),
             &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
-            signer,
+            signer_info,
         )?;
         let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
         bus_data[0] = Bus::discriminator() as u8;
@@ -107,7 +91,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         8 + size_of::<Config>(),
         &[CONFIG, &[args.config_bump]],
         system_program,
-        signer,
+        signer_info,
     )?;
     let mut config_data = config_info.data.borrow_mut();
     config_data[0] = Config::discriminator() as u8;
@@ -124,7 +108,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         8 + size_of::<Treasury>(),
         &[TREASURY, &[args.treasury_bump]],
         system_program,
-        signer,
+        signer_info,
     )?;
     let mut treasury_data = treasury_info.data.borrow_mut();
     treasury_data[0] = Treasury::discriminator() as u8;
@@ -137,7 +121,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         Mint::LEN,
         &[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
         system_program,
-        signer,
+        signer_info,
     )?;
     solana_program::program::invoke_signed(
         &spl_token::instruction::initialize_mint(
@@ -162,8 +146,8 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         metadata: metadata_info,
         mint: mint_info,
         mint_authority: treasury_info,
-        payer: signer,
-        update_authority: (signer, true),
+        payer: signer_info,
+        update_authority: (signer_info, true),
         system_program,
         rent: Some(rent_sysvar),
         __args: mpl_token_metadata::instructions::CreateMetadataAccountV3InstructionArgs {
@@ -184,7 +168,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
 
     // Initialize treasury token account.
     create_ata(
-        signer,
+        signer_info,
         treasury_info,
         treasury_tokens_info,
         mint_info,

@@ -10,8 +10,8 @@ pub fn process_update(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     let [signer, miner_info, proof_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any(miner_info, false)?;
+    signer.is_signer()?;
+    // load_any(miner_info, false)?;
     load_proof(proof_info, signer.key, true)?;
 
     // Update the proof's miner authority.
