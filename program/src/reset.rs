@@ -4,7 +4,6 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config},
 };
-use solana_program::clock::Clock;
 use steel::*;
 
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.

@@ -1,7 +1,4 @@
 use ore_api::state::Proof;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-};
 use steel::*;
 
 /// Update changes the miner authority on a proof account.

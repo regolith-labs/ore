@@ -1,8 +1,4 @@
 use ore_api::{consts::*, instruction::Stake, loaders::*, state::Proof};
-use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, sysvar::Sysvar,
-};
 use steel::*;
 
 /// Stake deposits ORE into a proof account to earn multiplier.

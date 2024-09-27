@@ -11,12 +11,7 @@ use ore_api::{
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
     keccak::hashv,
-    program_error::ProgramError,
-    pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,

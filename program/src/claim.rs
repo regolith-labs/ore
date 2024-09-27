@@ -1,7 +1,4 @@
 use ore_api::{consts::*, error::OreError, instruction::*, loaders::*, state::Proof};
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-};
 use steel::*;
 
 /// Claim distributes claimable ORE from the treasury to a miner.
