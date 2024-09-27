@@ -13,7 +13,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .is_writable()?
         .to_account::<Proof>(&ore_api::ID)?
         .check(|p| p.authority == *signer_info.key)?
-        .check(|p| p.balance > 0)?;
+        .check(|p| p.balance == 0)?;
     system_program.is_program(&system_program::ID)?;
 
     // Realloc data to zero.
