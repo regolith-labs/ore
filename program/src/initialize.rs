@@ -23,49 +23,49 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     };
     signer_info.is_signer()?.has_address(&INITIALIZER_ADDRESS)?;
     bus_0_info
-        .has_seeds(&[BUS, &[0]], args.bus_0_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[0]], args.bus_0_bump, &ore_api::ID)?;
     bus_1_info
-        .has_seeds(&[BUS, &[1]], args.bus_1_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[1]], args.bus_1_bump, &ore_api::ID)?;
     bus_2_info
-        .has_seeds(&[BUS, &[2]], args.bus_2_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[2]], args.bus_2_bump, &ore_api::ID)?;
     bus_3_info
-        .has_seeds(&[BUS, &[3]], args.bus_3_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[3]], args.bus_3_bump, &ore_api::ID)?;
     bus_4_info
-        .has_seeds(&[BUS, &[4]], args.bus_4_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[4]], args.bus_4_bump, &ore_api::ID)?;
     bus_5_info
-        .has_seeds(&[BUS, &[5]], args.bus_5_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[5]], args.bus_5_bump, &ore_api::ID)?;
     bus_6_info
-        .has_seeds(&[BUS, &[6]], args.bus_6_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[6]], args.bus_6_bump, &ore_api::ID)?;
     bus_7_info
-        .has_seeds(&[BUS, &[7]], args.bus_7_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[BUS, &[7]], args.bus_7_bump, &ore_api::ID)?;
     config_info
-        .has_seeds(&[CONFIG], args.config_bump, &ore_api::ID)?
-        .is_empty()?;
-    metadata_info
-        .has_seeds(
-            &[
-                METADATA,
-                mpl_token_metadata::ID.as_ref(),
-                MINT_ADDRESS.as_ref(),
-            ],
-            args.metadata_bump,
-            &mpl_token_metadata::ID,
-        )?
-        .is_empty()?;
-    mint_info
-        .has_seeds(&[MINT, MINT_NOISE.as_slice()], args.mint_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[CONFIG], args.config_bump, &ore_api::ID)?;
+    metadata_info.is_empty()?.has_seeds(
+        &[
+            METADATA,
+            mpl_token_metadata::ID.as_ref(),
+            MINT_ADDRESS.as_ref(),
+        ],
+        args.metadata_bump,
+        &mpl_token_metadata::ID,
+    )?;
+    mint_info.is_empty()?.has_seeds(
+        &[MINT, MINT_NOISE.as_slice()],
+        args.mint_bump,
+        &ore_api::ID,
+    )?;
     treasury_info
-        .has_seeds(&[TREASURY], args.treasury_bump, &ore_api::ID)?
-        .is_empty()?;
+        .is_empty()?
+        .has_seeds(&[TREASURY], args.treasury_bump, &ore_api::ID)?;
     treasury_tokens_info.is_empty()?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
