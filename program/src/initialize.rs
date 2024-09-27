@@ -1,5 +1,3 @@
-use std::mem::size_of;
-
 use ore_api::{
     consts::*,
     instruction::*,
@@ -91,17 +89,14 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         args.bus_7_bump,
     ];
     for i in 0..BUS_COUNT {
-        create_pda(
+        create_account::<Bus>(
             bus_infos[i],
             &ore_api::id(),
-            8 + size_of::<Bus>(),
             &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer_info,
         )?;
-        let mut bus_data = bus_infos[i].try_borrow_mut_data()?;
-        bus_data[0] = Bus::discriminator() as u8;
-        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+        let bus = bus_infos[i].to_account_mut::<Bus>(&ore_api::ID)?;
         bus.id = i as u64;
         bus.rewards = 0;
         bus.theoretical_rewards = 0;
@@ -109,37 +104,30 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     }
 
     // Initialize config.
-    create_pda(
+    create_account::<Config>(
         config_info,
         &ore_api::id(),
-        8 + size_of::<Config>(),
         &[CONFIG, &[args.config_bump]],
         system_program,
         signer_info,
     )?;
-    let mut config_data = config_info.data.borrow_mut();
-    config_data[0] = Config::discriminator() as u8;
-    let config = Config::try_from_bytes_mut(&mut config_data)?;
+    let config = config_info.to_account_mut::<Config>(&ore_api::ID)?;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
     config.top_balance = 0;
 
     // Initialize treasury.
-    create_pda(
+    create_account::<Treasury>(
         treasury_info,
         &ore_api::id(),
-        8 + size_of::<Treasury>(),
         &[TREASURY, &[args.treasury_bump]],
         system_program,
         signer_info,
     )?;
-    let mut treasury_data = treasury_info.data.borrow_mut();
-    treasury_data[0] = Treasury::discriminator() as u8;
-    drop(treasury_data);
 
     // Initialize mint.
-    create_pda(
+    allocate_account(
         mint_info,
         &spl_token::id(),
         Mint::LEN,
@@ -191,7 +179,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
 
     // Initialize treasury token account.
-    create_ata(
+    create_associated_token_account(
         signer_info,
         treasury_info,
         treasury_tokens_info,

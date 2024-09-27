@@ -34,18 +34,15 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Initialize proof.
-    create_pda(
+    create_account::<Proof>(
         proof_info,
-        &ore_api::id(),
-        8 + size_of::<Proof>(),
+        &ore_api::ID,
         &[PROOF, signer_info.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = Proof::discriminator() as u8;
-    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    let proof = proof_info.to_account_mut::<Proof>(&ore_api::ID)?;
     proof.authority = *signer_info.key;
     proof.balance = 0;
     proof.challenge = hashv(&[
