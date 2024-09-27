@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::Open, state::Proof};
+use ore_api::prelude::*;
 use solana_program::{keccak::hashv, slot_hashes::SlotHash};
 use steel::*;
 

@@ -1,4 +1,4 @@
-use ore_api::{consts::*, instruction::Stake, loaders::*, state::Proof};
+use ore_api::prelude::*;
 use steel::*;
 
 /// Stake deposits ORE into a proof account to earn multiplier.

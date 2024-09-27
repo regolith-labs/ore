@@ -1,4 +1,4 @@
-use ore_api::{consts::*, error::OreError, instruction::Stake, loaders::OreAccountInfoValidation};
+use ore_api::prelude::*;
 use steel::*;
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.

@@ -1,4 +1,4 @@
-use ore_api::state::Proof;
+use ore_api::prelude::*;
 use steel::*;
 
 /// Close closes a proof account and returns the rent to the owner.

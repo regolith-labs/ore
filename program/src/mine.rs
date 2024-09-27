@@ -1,14 +1,7 @@
 use std::mem::size_of;
 
 use drillx::Solution;
-use ore_api::{
-    consts::*,
-    error::OreError,
-    event::MineEvent,
-    instruction::Mine,
-    loaders::OreAccountInfoValidation,
-    state::{Bus, Config, Proof},
-};
+use ore_api::prelude::*;
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{

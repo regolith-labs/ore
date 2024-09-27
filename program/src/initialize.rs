@@ -1,8 +1,4 @@
-use ore_api::{
-    consts::*,
-    instruction::*,
-    state::{Bus, Config, Treasury},
-};
+use ore_api::prelude::*;
 use solana_program::program_pack::Pack;
 use spl_token::state::Mint;
 use steel::*;

@@ -1,4 +1,4 @@
-use ore_api::{consts::*, error::OreError, instruction::*, loaders::*, state::Proof};
+use ore_api::prelude::*;
 use steel::*;
 
 /// Claim distributes claimable ORE from the treasury to a miner.

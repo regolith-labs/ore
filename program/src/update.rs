@@ -1,4 +1,4 @@
-use ore_api::state::Proof;
+use ore_api::prelude::*;
 use steel::*;
 
 /// Update changes the miner authority on a proof account.
