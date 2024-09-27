@@ -1,12 +1,7 @@
 use std::mem::size_of;
 
 use ore_api::{consts::*, instruction::Open, state::Proof};
-use solana_program::{
-    keccak::hashv,
-    slot_hashes::SlotHash,
-    system_program,
-    sysvar::{self, Sysvar},
-};
+use solana_program::{keccak::hashv, slot_hashes::SlotHash};
 use steel::*;
 
 /// Open creates a new proof account to track a miner's state.
@@ -38,7 +33,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         system_program,
         payer_info,
     )?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    let clock = Clock::get()?;
     let proof = proof_info.to_account_mut::<Proof>(&ore_api::ID)?;
     proof.authority = *signer_info.key;
     proof.balance = 0;

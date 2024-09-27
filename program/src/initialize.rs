@@ -3,10 +3,7 @@ use ore_api::{
     instruction::*,
     state::{Bus, Config, Treasury},
 };
-use solana_program::{
-    self, account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    program_pack::Pack, system_program, sysvar,
-};
+use solana_program::program_pack::Pack;
 use spl_token::state::Mint;
 use steel::*;
 

@@ -28,7 +28,7 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     proof.balance = proof.balance.checked_add(amount).unwrap();
 
     // Update deposit timestamp.
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    let clock = Clock::get()?;
     proof.last_stake_at = clock.unix_timestamp;
 
     // Transfer tokens from signer to treasury.

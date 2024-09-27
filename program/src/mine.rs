@@ -16,7 +16,6 @@ use solana_program::{
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
-    sysvar::{self, Sysvar},
 };
 use steel::*;
 
@@ -51,7 +50,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Validate epoch is active.
     // let config_data = config_info.data.borrow();
     // let config = Config::try_from_bytes(&config_data)?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    let clock = Clock::get()?;
     if config
         .last_reset_at
         .saturating_add(EPOCH_DURATION)

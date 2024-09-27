@@ -1,5 +1,4 @@
 use ore_api::state::Proof;
-use solana_program::system_program;
 use steel::*;
 
 /// Close closes a proof account and returns the rent to the owner.
