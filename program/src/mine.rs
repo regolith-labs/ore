@@ -30,17 +30,17 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
-    let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
+    let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer.is_signer()?;
+    signer_info.is_signer()?;
     let bus = bus_info.to_account_mut::<Bus>(&ore_api::ID)?;
     let config = config_info.to_account::<Config>(&ore_api::ID)?;
     let proof = proof_info
         .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.authority.eq(signer.key))?;
+        .check_mut(|p| p.miner == *signer_info.key)?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 

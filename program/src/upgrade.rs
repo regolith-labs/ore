@@ -22,8 +22,8 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     beneficiary_info
         .is_writable()?
         .to_token_account()?
-        .check(|t| t.owner.eq(signer_info.key))?
-        .check(|t| t.mint.eq(&MINT_ADDRESS))?;
+        .check(|t| t.owner == *signer_info.key)?
+        .check(|t| t.mint == MINT_ADDRESS)?;
     mint_info
         .is_writable()?
         .has_address(&MINT_ADDRESS)?
@@ -35,8 +35,8 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     sender_info
         .is_writable()?
         .to_token_account()?
-        .check(|t| t.owner.eq(signer_info.key))?
-        .check(|t| t.mint.eq(&MINT_V1_ADDRESS))?;
+        .check(|t| t.owner == *signer_info.key)?
+        .check(|t| t.mint == MINT_V1_ADDRESS)?;
     token_program.is_program(&spl_token::ID)?;
 
     // Burn v1 tokens

@@ -11,19 +11,19 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer, beneficiary_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
+    let [signer_info, beneficiary_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer.is_signer()?;
+    signer_info.is_signer()?;
     beneficiary_info
         .is_writable()?
         .to_token_account()?
-        .check(|t| t.mint.eq(&MINT_ADDRESS))?;
+        .check(|t| t.mint == MINT_ADDRESS)?;
     let proof = proof_info
         .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.authority == *signer.key)?;
+        .check_mut(|p| p.authority == *signer_info.key)?;
     treasury_info.is_treasury()?;
     treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
     token_program.is_program(&spl_token::ID)?;
