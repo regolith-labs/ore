@@ -20,10 +20,6 @@ pub fn auth(proof: Pubkey) -> Instruction {
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -31,7 +27,7 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(beneficiary, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: Claim {
@@ -95,10 +91,6 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
         program_id: crate::id(),
         accounts: vec![
@@ -114,7 +106,7 @@ pub fn reset(signer: Pubkey) -> Instruction {
             AccountMeta::new(CONFIG_ADDRESS, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: Reset {}.to_bytes(),
@@ -124,17 +116,13 @@ pub fn reset(signer: Pubkey) -> Instruction {
 /// Build a stake instruction.
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
         program_id: crate::id(),
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(proof, false),
             AccountMeta::new(sender, false),
-            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: Stake {
@@ -193,8 +181,6 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     let config_pda = config_pda();
     let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
     let treasury_pda = treasury_pda();
-    let treasury_tokens =
-        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
     let metadata_pda = Pubkey::find_program_address(
         &[
             METADATA,
@@ -219,7 +205,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new(metadata_pda.0, false),
             AccountMeta::new(mint_pda.0, false),
             AccountMeta::new(treasury_pda.0, false),
-            AccountMeta::new(treasury_tokens, false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
             AccountMeta::new_readonly(system_program::id(), false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(spl_associated_token_account::id(), false),
