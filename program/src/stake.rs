@@ -19,8 +19,8 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     sender_info
         .is_writable()?
         .to_token_account()?
-        .check(|t| t.owner.eq(signer_info.key))?
-        .check(|t| t.mint.eq(&MINT_ADDRESS))?;
+        .check(|t| t.owner == *signer_info.key)?
+        .check(|t| t.mint == MINT_ADDRESS)?;
     treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
     token_program.is_program(&spl_token::ID)?;
 
