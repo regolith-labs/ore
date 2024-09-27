@@ -6,6 +6,7 @@ use ore_api::{
     error::OreError,
     event::MineEvent,
     instruction::Mine,
+    loaders::OreAccountInfoValidation,
     state::{Bus, Config, Proof},
 };
 use solana_program::program::set_return_data;
@@ -32,7 +33,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     };
     signer_info.is_signer()?;
     let bus = bus_info.to_account_mut::<Bus>(&ore_api::ID)?;
-    let config = config_info.to_account::<Config>(&ore_api::ID)?;
+    let config = config_info
+        .is_config()?
+        .to_account::<Config>(&ore_api::ID)?;
     let proof = proof_info
         .to_account_mut::<Proof>(&ore_api::ID)?
         .check_mut(|p| p.miner == *signer_info.key)?;

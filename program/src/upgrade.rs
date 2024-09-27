@@ -1,4 +1,4 @@
-use ore_api::{consts::*, error::OreError, instruction::Stake};
+use ore_api::{consts::*, error::OreError, instruction::Stake, loaders::OreAccountInfoValidation};
 use steel::*;
 
 /// Upgrade allows a user to migrate a v1 token to a v2 token at a 1:1 exchange rate.
@@ -32,6 +32,7 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .to_token_account()?
         .check(|t| t.owner == *signer_info.key)?
         .check(|t| t.mint == MINT_V1_ADDRESS)?;
+    treasury_info.is_treasury()?;
     token_program.is_program(&spl_token::ID)?;
 
     // Burn v1 tokens

@@ -39,7 +39,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let bus_7 = bus_7_info
         .to_account_mut::<Bus>(&ore_api::ID)?
         .check_mut(|b| b.id == 7)?;
-    let config = config_info.to_account_mut::<Config>(&ore_api::ID)?;
+    let config = config_info
+        .is_config()?
+        .to_account_mut::<Config>(&ore_api::ID)?;
     let mint = mint_info
         .has_address(&MINT_ADDRESS)?
         .is_writable()?
