@@ -22,10 +22,11 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     };
     signer_info.is_signer()?;
     payer_info.is_signer()?;
-    proof_info
-        .has_seeds(&[PROOF, signer_info.key.as_ref()], args.bump, &ore_api::ID)?
-        .is_empty()?
-        .is_writable()?;
+    proof_info.is_empty()?.is_writable()?.has_seeds(
+        &[PROOF, signer_info.key.as_ref()],
+        args.bump,
+        &ore_api::ID,
+    )?;
     system_program.is_program(&system_program::ID)?;
     slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
