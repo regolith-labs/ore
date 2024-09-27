@@ -24,32 +24,41 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     signer_info.is_signer()?.has_address(&INITIALIZER_ADDRESS)?;
     bus_0_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[0]], args.bus_0_bump, &ore_api::ID)?;
     bus_1_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[1]], args.bus_1_bump, &ore_api::ID)?;
     bus_2_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[2]], args.bus_2_bump, &ore_api::ID)?;
     bus_3_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[3]], args.bus_3_bump, &ore_api::ID)?;
     bus_4_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[4]], args.bus_4_bump, &ore_api::ID)?;
     bus_5_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[5]], args.bus_5_bump, &ore_api::ID)?;
     bus_6_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[6]], args.bus_6_bump, &ore_api::ID)?;
     bus_7_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[BUS, &[7]], args.bus_7_bump, &ore_api::ID)?;
     config_info
         .is_empty()?
+        .is_writable()?
         .has_seeds(&[CONFIG], args.config_bump, &ore_api::ID)?;
-    metadata_info.is_empty()?.has_seeds(
+    metadata_info.is_empty()?.is_writable()?.has_seeds(
         &[
             METADATA,
             mpl_token_metadata::ID.as_ref(),
@@ -58,15 +67,17 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         args.metadata_bump,
         &mpl_token_metadata::ID,
     )?;
-    mint_info.is_empty()?.has_seeds(
+    mint_info.is_empty()?.is_writable()?.has_seeds(
         &[MINT, MINT_NOISE.as_slice()],
         args.mint_bump,
         &ore_api::ID,
     )?;
-    treasury_info
-        .is_empty()?
-        .has_seeds(&[TREASURY], args.treasury_bump, &ore_api::ID)?;
-    treasury_tokens_info.is_empty()?;
+    treasury_info.is_empty()?.is_writable()?.has_seeds(
+        &[TREASURY],
+        args.treasury_bump,
+        &ore_api::ID,
+    )?;
+    treasury_tokens_info.is_empty()?.is_writable()?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
