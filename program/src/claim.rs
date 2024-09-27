@@ -17,15 +17,18 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer.is_signer()?;
-    load_token_account(beneficiary_info, None, &MINT_ADDRESS, true)?;
-    load_proof(proof_info, signer.key, true)?;
+    beneficiary_info
+        .is_writable()?
+        .to_token_account()?
+        .check(|t| t.mint.eq(&MINT_ADDRESS))?;
+    let proof = proof_info
+        .to_account_mut::<Proof>(&ore_api::ID)?
+        .check_mut(|p| p.authority == *signer.key)?;
     treasury_info.is_treasury()?;
-    load_treasury_tokens(treasury_tokens_info, true)?;
-    token_program.has_address(&spl_token::ID)?;
+    treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
+    token_program.is_program(&spl_token::ID)?;
 
     // Update miner balance.
-    let mut proof_data = proof_info.data.borrow_mut();
-    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     proof.balance = proof
         .balance
         .checked_sub(amount)

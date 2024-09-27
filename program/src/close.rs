@@ -1,4 +1,4 @@
-use ore_api::{loaders::*, state::Proof};
+use ore_api::state::Proof;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     system_program,
@@ -12,16 +12,12 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    load_proof(proof_info, signer_info.key, true)?;
+    proof_info
+        .is_writable()?
+        .to_account::<Proof>(&ore_api::ID)?
+        .check(|p| p.authority == *signer_info.key)?
+        .check(|p| p.balance > 0)?;
     system_program.is_program(&system_program::ID)?;
-
-    // Validate balance is zero.
-    let proof_data = proof_info.data.borrow();
-    let proof = Proof::try_from_bytes(&proof_data)?;
-    if proof.balance.gt(&0) {
-        return Err(ProgramError::InvalidAccountData);
-    }
-    drop(proof_data);
 
     // Realloc data to zero.
     proof_info.realloc(0, true)?;

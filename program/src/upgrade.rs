@@ -19,15 +19,24 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    load_token_account(
-        beneficiary_info,
-        Some(&signer_info.key),
-        &MINT_ADDRESS,
-        true,
-    )?;
-    load_mint(mint_info, MINT_ADDRESS, true)?;
-    load_mint(mint_v1_info, MINT_V1_ADDRESS, true)?;
-    load_token_account(sender_info, Some(signer_info.key), &MINT_V1_ADDRESS, true)?;
+    beneficiary_info
+        .is_writable()?
+        .to_token_account()?
+        .check(|t| t.owner.eq(signer_info.key))?
+        .check(|t| t.mint.eq(&MINT_ADDRESS))?;
+    mint_info
+        .is_writable()?
+        .has_address(&MINT_ADDRESS)?
+        .to_mint()?;
+    mint_v1_info
+        .is_writable()?
+        .has_address(&MINT_V1_ADDRESS)?
+        .to_mint()?;
+    sender_info
+        .is_writable()?
+        .to_token_account()?
+        .check(|t| t.owner.eq(signer_info.key))?
+        .check(|t| t.mint.eq(&MINT_V1_ADDRESS))?;
     token_program.is_program(&spl_token::ID)?;
 
     // Burn v1 tokens

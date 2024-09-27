@@ -1,9 +1,6 @@
 use drillx::Solution;
-use solana_program::{
-    instruction::{AccountMeta, Instruction},
-    pubkey::Pubkey,
-    system_program, sysvar,
-};
+use solana_program::{system_program, sysvar};
+use steel::*;
 
 use crate::{
     consts::*,

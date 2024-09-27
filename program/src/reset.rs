@@ -4,11 +4,7 @@ use ore_api::{
     loaders::*,
     state::{Bus, Config},
 };
-use solana_program::{
-    account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
-    program_error::ProgramError, program_pack::Pack, sysvar::Sysvar,
-};
-use spl_token::state::Mint;
+use solana_program::clock::Clock;
 use steel::*;
 
 /// Reset tops up the bus balances, updates the base reward rate, and sets up the ORE program for the next epoch.
@@ -20,27 +16,42 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    load_bus(bus_0_info, 0, true)?;
-    load_bus(bus_1_info, 1, true)?;
-    load_bus(bus_2_info, 2, true)?;
-    load_bus(bus_3_info, 3, true)?;
-    load_bus(bus_4_info, 4, true)?;
-    load_bus(bus_5_info, 5, true)?;
-    load_bus(bus_6_info, 6, true)?;
-    load_bus(bus_7_info, 7, true)?;
-    config_info.is_config()?.is_writable()?;
-    load_mint(mint_info, MINT_ADDRESS, true)?;
+    let bus_0 = bus_0_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 0)?;
+    let bus_1 = bus_1_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 1)?;
+    let bus_2 = bus_2_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 2)?;
+    let bus_3 = bus_3_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 3)?;
+    let bus_4 = bus_4_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 4)?;
+    let bus_5 = bus_5_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 5)?;
+    let bus_6 = bus_6_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 6)?;
+    let bus_7 = bus_7_info
+        .to_account_mut::<Bus>(&ore_api::ID)?
+        .check_mut(|b| b.id == 7)?;
+    let config = config_info.to_account_mut::<Config>(&ore_api::ID)?;
+    let mint = mint_info
+        .has_address(&MINT_ADDRESS)?
+        .is_writable()?
+        .to_mint()?;
     treasury_info.is_treasury()?.is_writable()?;
-    load_treasury_tokens(treasury_tokens_info, true)?;
+    treasury_tokens_info.is_treasury_tokens()?.is_writable()?;
     token_program.is_program(&spl_token::ID)?;
-    let busses: [&AccountInfo; BUS_COUNT] = [
-        bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
-        bus_7_info,
-    ];
 
     // Validate enough time has passed since the last reset.
-    let mut config_data = config_info.data.borrow_mut();
-    let config = Config::try_from_bytes_mut(&mut config_data)?;
+    // let mut config_data = config_info.data.borrow_mut();
+    // let config = Config::try_from_bytes_mut(&mut config_data)?;
     let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
     if config
         .last_reset_at
@@ -54,14 +65,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     config.last_reset_at = clock.unix_timestamp;
 
     // Reset bus accounts and calculate actual rewards mined since last reset.
+    let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
     let mut top_balance = 0u64;
-    for i in 0..BUS_COUNT {
-        // Parse bus account.
-        let mut bus_data = busses[i].data.borrow_mut();
-        let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
-
+    for bus in busses {
         // Track top balance.
         if bus.top_balance.gt(&top_balance) {
             top_balance = bus.top_balance;
@@ -99,7 +107,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Max supply check.
-    let mint = Mint::unpack(&mint_info.data.borrow()).expect("Failed to parse mint");
     if mint.supply.ge(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }

@@ -1,7 +1,5 @@
 use steel::*;
 
-use crate::consts::BUS;
-
 use super::OreAccount;
 
 /// Bus accounts are responsible for distributing mining rewards. There are 8 busses total
@@ -21,32 +19,6 @@ pub struct Bus {
 
     /// The largest known stake balance seen by the bus this epoch.
     pub top_balance: u64,
-}
-
-/// Fetch the PDA of a bus account.
-pub fn bus_pda(id: u8) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[BUS, &[id]], &crate::id())
-}
-
-impl<'a> From<&'a [u8]> for &'a Bus {
-    fn from(value: &'a [u8]) -> &'a Bus {
-        Bus::try_from_bytes(value).unwrap()
-    }
-}
-
-impl<'a> From<*const u8> for &'a Bus {
-    fn from(value: *const u8) -> &'a Bus {
-        unsafe {
-            if Bus::discriminator().ne(&value.add(0).read()) {
-                panic!("");
-            }
-            bytemuck::try_from_bytes::<Bus>(std::slice::from_raw_parts(
-                value.add(8),
-                std::mem::size_of::<Bus>(),
-            ))
-            .expect("")
-        }
-    }
 }
 
 account!(OreAccount, Bus);
