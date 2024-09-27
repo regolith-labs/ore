@@ -1,5 +1,4 @@
 use drillx::Solution;
-use solana_program::{system_program, sysvar};
 use steel::*;
 
 use crate::{
