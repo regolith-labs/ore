@@ -95,7 +95,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     for i in 0..BUS_COUNT {
         create_account::<Bus>(
             bus_infos[i],
-            &ore_api::id(),
+            &ore_api::ID,
             &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer_info,
@@ -110,7 +110,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     // Initialize config.
     create_account::<Config>(
         config_info,
-        &ore_api::id(),
+        &ore_api::ID,
         &[CONFIG, &[args.config_bump]],
         system_program,
         signer_info,
@@ -124,7 +124,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     // Initialize treasury.
     create_account::<Treasury>(
         treasury_info,
-        &ore_api::id(),
+        &ore_api::ID,
         &[TREASURY, &[args.treasury_bump]],
         system_program,
         signer_info,
@@ -133,7 +133,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     // Initialize mint.
     allocate_account(
         mint_info,
-        &spl_token::id(),
+        &spl_token::ID,
         Mint::LEN,
         &[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
         system_program,
@@ -141,7 +141,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     )?;
     solana_program::program::invoke_signed(
         &spl_token::instruction::initialize_mint(
-            &spl_token::id(),
+            &spl_token::ID,
             mint_info.key,
             treasury_info.key,
             None,
