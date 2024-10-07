@@ -51,18 +51,29 @@ pub fn close(signer: Pubkey) -> Instruction {
 }
 
 /// Builds a mine instruction.
-pub fn mine(signer: Pubkey, authority: Pubkey, bus: Pubkey, solution: Solution) -> Instruction {
+pub fn mine(
+    signer: Pubkey,
+    authority: Pubkey,
+    bus: Pubkey,
+    solution: Solution,
+    boost_accounts: Vec<Pubkey>,
+) -> Instruction {
     let proof = proof_pda(authority).0;
+    let required_accounts = vec![
+        AccountMeta::new(signer, true),
+        AccountMeta::new(bus, false),
+        AccountMeta::new_readonly(CONFIG_ADDRESS, false),
+        AccountMeta::new(proof, false),
+        AccountMeta::new_readonly(sysvar::instructions::id(), false),
+        AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+    ];
+    let optional_accounts = boost_accounts
+        .into_iter()
+        .map(|pk| AccountMeta::new_readonly(pk, false))
+        .collect();
     Instruction {
         program_id: crate::id(),
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(bus, false),
-            AccountMeta::new_readonly(CONFIG_ADDRESS, false),
-            AccountMeta::new(proof, false),
-            AccountMeta::new_readonly(sysvar::instructions::id(), false),
-            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
-        ],
+        accounts: [required_accounts, optional_accounts].concat(),
         data: Mine {
             digest: solution.d,
             nonce: solution.n,
