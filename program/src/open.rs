@@ -1,16 +1,7 @@
 use std::mem::size_of;
 
-use ore_api::{consts::*, instruction::Open, state::Proof};
-use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
-    keccak::hashv,
-    program_error::ProgramError,
-    slot_hashes::SlotHash,
-    system_program,
-    sysvar::{self, Sysvar},
-};
+use ore_api::prelude::*;
+use solana_program::{keccak::hashv, slot_hashes::SlotHash};
 use steel::*;
 
 /// Open creates a new proof account to track a miner's state.
@@ -19,39 +10,35 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let args = Open::try_from_bytes(data)?;
 
     // Load accounts.
-    let [signer, miner_info, payer_info, proof_info, system_program, slot_hashes_info] = accounts
+    let [signer_info, miner_info, payer_info, proof_info, system_program, slot_hashes_info] =
+        accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any(miner_info, false)?;
-    load_signer(payer_info)?;
-    load_uninitialized_pda(
-        proof_info,
-        &[PROOF, signer.key.as_ref()],
+    signer_info.is_signer()?;
+    payer_info.is_signer()?;
+    proof_info.is_empty()?.is_writable()?.has_seeds(
+        &[PROOF, signer_info.key.as_ref()],
         args.bump,
-        &ore_api::id(),
+        &ore_api::ID,
     )?;
-    load_program(system_program, system_program::id())?;
-    load_sysvar(slot_hashes_info, sysvar::slot_hashes::id())?;
+    system_program.is_program(&system_program::ID)?;
+    slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Initialize proof.
-    create_pda(
+    create_account::<Proof>(
         proof_info,
-        &ore_api::id(),
-        8 + size_of::<Proof>(),
-        &[PROOF, signer.key.as_ref(), &[args.bump]],
+        &ore_api::ID,
+        &[PROOF, signer_info.key.as_ref(), &[args.bump]],
         system_program,
         payer_info,
     )?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
-    let mut proof_data = proof_info.data.borrow_mut();
-    proof_data[0] = Proof::discriminator() as u8;
-    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
-    proof.authority = *signer.key;
+    let clock = Clock::get()?;
+    let proof = proof_info.to_account_mut::<Proof>(&ore_api::ID)?;
+    proof.authority = *signer_info.key;
     proof.balance = 0;
     proof.challenge = hashv(&[
-        signer.key.as_ref(),
+        signer_info.key.as_ref(),
         &slot_hashes_info.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;

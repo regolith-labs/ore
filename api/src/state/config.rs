@@ -1,8 +1,4 @@
-use bytemuck::{Pod, Zeroable};
-use solana_program::pubkey::Pubkey;
 use steel::*;
-
-use crate::consts::CONFIG;
 
 use super::OreAccount;
 
@@ -21,11 +17,6 @@ pub struct Config {
 
     /// The largest known stake balance on the network from the last epoch.
     pub top_balance: u64,
-}
-
-/// Derive the PDA of the config account.
-pub fn config_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[CONFIG], &crate::id())
 }
 
 account!(OreAccount, Config);

@@ -1,4 +1,3 @@
-use bytemuck::{Pod, Zeroable};
 use steel::*;
 
 #[repr(C)]

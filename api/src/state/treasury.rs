@@ -1,8 +1,4 @@
-use bytemuck::{Pod, Zeroable};
-use solana_program::pubkey::Pubkey;
 use steel::*;
-
-use crate::consts::TREASURY;
 
 use super::OreAccount;
 
@@ -11,10 +7,5 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Treasury {}
-
-/// Derive the PDA of the treasury account.
-pub fn treasury_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[TREASURY], &crate::id())
-}
 
 account!(OreAccount, Treasury);

@@ -1,47 +1,38 @@
 use std::mem::size_of;
 
 use drillx::Solution;
-use ore_api::{
-    consts::*,
-    error::OreError,
-    event::MineEvent,
-    instruction::Mine,
-    loaders::*,
-    state::{Bus, Config, Proof},
-};
+use ore_api::prelude::*;
 use solana_program::program::set_return_data;
 #[allow(deprecated)]
 use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
     keccak::hashv,
-    program_error::ProgramError,
-    pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
-    sysvar::{self, Sysvar},
 };
 use steel::*;
 
 /// Mine validates hashes and increments a miner's collectable balance.
-pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
-    let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
+    let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any_bus(bus_info, true)?;
-    load_config(config_info, false)?;
-    load_proof_with_miner(proof_info, signer.key, true)?;
-    load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
-    load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
+    signer_info.is_signer()?;
+    let bus = bus_info.to_account_mut::<Bus>(&ore_api::ID)?;
+    let config = config_info
+        .is_config()?
+        .to_account::<Config>(&ore_api::ID)?;
+    let proof = proof_info
+        .to_account_mut::<Proof>(&ore_api::ID)?
+        .check_mut(|p| p.miner == *signer_info.key)?;
+    instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Authenticate the proof account.
     //
@@ -50,9 +41,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
-    let config_data = config_info.data.borrow();
-    let config = Config::try_from_bytes(&config_data)?;
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    // let config_data = config_info.data.borrow();
+    // let config = Config::try_from_bytes(&config_data)?;
+    let clock = Clock::get()?;
     if config
         .last_reset_at
         .saturating_add(EPOCH_DURATION)
@@ -65,8 +56,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     //
     // Here we use drillx to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
-    let mut proof_data = proof_info.data.borrow_mut();
-    let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
+    // let mut proof_data = proof_info.data.borrow_mut();
+    // let proof = Proof::try_from_bytes_mut(&mut proof_data)?;
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
@@ -110,8 +101,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    let mut bus_data = bus_info.data.borrow_mut();
-    let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
+    // let mut bus_data = bus_info.data.borrow_mut();
+    // let bus = Bus::try_from_bytes_mut(&mut bus_data)?;
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {

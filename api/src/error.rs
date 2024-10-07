@@ -1,6 +1,4 @@
-use num_enum::IntoPrimitive;
 use steel::*;
-use thiserror::Error;
 
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq, IntoPrimitive)]
 #[repr(u32)]
