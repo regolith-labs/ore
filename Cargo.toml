@@ -26,7 +26,3 @@ spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" 
 static_assertions = "1.1.0"
 steel = { features = ["spl"], version = "1.0" }
 thiserror = "1.0.57"
-
-
-[patch.crates-io]
-steel = { path = "../steel/lib" }
