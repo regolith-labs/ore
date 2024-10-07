@@ -46,8 +46,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     token_program.is_program(&spl_token::ID)?;
 
     // Validate enough time has passed since the last reset.
-    // let mut config_data = config_info.data.borrow_mut();
-    // let config = Config::try_from_bytes_mut(&mut config_data)?;
     let clock = Clock::get()?;
     if config
         .last_reset_at
