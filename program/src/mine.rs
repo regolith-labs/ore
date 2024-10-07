@@ -226,7 +226,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Update lifetime stats.
     proof.total_hashes = proof.total_hashes.saturating_add(1);
-    proof.total_rewards = proof.total_rewards.saturating_add(reward);
+    proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
     // Log the mined rewards.
     //
