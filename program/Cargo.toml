@@ -26,6 +26,7 @@ ore-utils.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
+base64 = "0.22.1"
 
 [dev-dependencies]
 rand = "0.8.5"

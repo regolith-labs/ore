@@ -1,10 +1,11 @@
 use std::mem::size_of;
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use drillx::Solution;
 use ore_api::{
     consts::*,
     error::OreError,
-    event::MineEvent,
+    event::{BoostEvent, MineEvent},
     instruction::Mine,
     loaders::*,
     state::{Bus, Config, Proof},
@@ -27,7 +28,10 @@ use solana_program::{
     slot_hashes::SlotHash,
     sysvar::{self, Sysvar},
 };
-use solana_program::{log, program::set_return_data};
+use solana_program::{
+    log::{self, sol_log},
+    program::set_return_data,
+};
 
 /// Mine validates hashes and increments a miner's collectable balance.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -149,8 +153,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Up to 3 boosts can be applied on any given mine operation.
     log::sol_log(&format!("Base: {}", reward));
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
+    sol_log(optional_accounts.len().to_string().as_str());
     for i in 0..3 {
+        sol_log(i.to_string().as_str());
         if optional_accounts.len().gt(&(i * 2)) {
+            sol_log("booooost");
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
@@ -177,6 +184,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                 Stake::try_from_bytes(&stake_data)?
             };
 
+            sol_log(format!("expires at: {}", boost.expires_at).as_str());
+            sol_log(format!("t: {}", t).as_str());
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
@@ -187,8 +196,14 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                     .unwrap()
                     .checked_div(boost.total_stake as u128)
                     .unwrap() as u64;
-                log::sol_log(&format!("Boost: {}", boost_reward));
                 reward = reward.checked_add(boost_reward).unwrap();
+                let boost_event = BoostEvent {
+                    mint: boost.mint,
+                    reward: boost_reward,
+                };
+                let boost_event = boost_event.to_bytes();
+                let boost_event = BASE64_STANDARD.encode(boost_event);
+                sol_log(format!("Boost event: {:}", boost_event).as_str());
             }
         }
     }
