@@ -151,13 +151,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     //
     // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
     // Up to 3 boosts can be applied on any given mine operation.
-    log::sol_log(&format!("Base: {}", reward));
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
-    sol_log(optional_accounts.len().to_string().as_str());
     for i in 0..3 {
-        sol_log(i.to_string().as_str());
         if optional_accounts.len().gt(&(i * 2)) {
-            sol_log("booooost");
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
@@ -184,10 +180,10 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                 Stake::try_from_bytes(&stake_data)?
             };
 
-            sol_log(format!("expires at: {}", boost.expires_at).as_str());
-            sol_log(format!("t: {}", t).as_str());
+            let not_expired = boost.expires_at.gt(&t);
+            let settled = stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t);
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
-            if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+            if not_expired && settled {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
                 let boost_reward = (reward as u128)
                     .checked_mul(multiplier as u128)
@@ -207,6 +203,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             }
         }
     }
+    // Log base reward after boost rewards for parsing.
+    log::sol_log(&format!("Base: {}", reward));
 
     // Apply liveness penalty.
     //
