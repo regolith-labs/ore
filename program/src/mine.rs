@@ -1,56 +1,43 @@
 use std::mem::size_of;
 
-use base64::{prelude::BASE64_STANDARD, Engine};
 use drillx::Solution;
-use ore_api::{
-    consts::*,
-    error::OreError,
-    event::{BoostEvent, MineEvent},
-    instruction::Mine,
-    loaders::*,
-    state::{Bus, Config, Proof},
-};
-use ore_boost_api::{
-    loaders::{load_any_boost, load_stake},
-    state::{Boost, Stake},
-};
-use ore_utils::{load_signer, load_sysvar};
+use ore_api::prelude::*;
+use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
-    account_info::AccountInfo,
-    clock::Clock,
-    entrypoint::ProgramResult,
     keccak::hashv,
-    program_error::ProgramError,
-    pubkey::Pubkey,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
-    sysvar::{self, Sysvar},
 };
 use solana_program::{
-    log::{self, sol_log},
+    log::{sol_log, sol_log_data},
     program::set_return_data,
 };
+use steel::*;
 
 /// Mine validates hashes and increments a miner's collectable balance.
-pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
     let (required_accounts, optional_accounts) = accounts.split_at(6);
-    let [signer, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
+    let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    load_signer(signer)?;
-    load_any_bus(bus_info, true)?;
-    load_config(config_info, false)?;
-    load_proof_with_miner(proof_info, signer.key, true)?;
-    load_sysvar(instructions_sysvar, sysvar::instructions::id())?;
-    load_sysvar(slot_hashes_sysvar, sysvar::slot_hashes::id())?;
+    signer_info.is_signer()?;
+    let bus = bus_info.to_account_mut::<Bus>(&ore_api::ID)?;
+    let config = config_info
+        .is_config()?
+        .to_account::<Config>(&ore_api::ID)?;
+    let proof = proof_info
+        .to_account_mut::<Proof>(&ore_api::ID)?
+        .check_mut(|p| p.miner == *signer_info.key)?;
+    instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Authenticate the proof account.
     //
@@ -59,12 +46,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
     // Validate epoch is active.
-    let config_data = config_info.data.borrow();
-    let config = {
-        use ore_utils::AccountDeserialize;
-        Config::try_from_bytes(&config_data)?
-    };
-    let clock = Clock::get().or(Err(ProgramError::InvalidAccountData))?;
+    let clock = Clock::get()?;
     if config
         .last_reset_at
         .saturating_add(EPOCH_DURATION)
@@ -77,11 +59,6 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     //
     // Here we use drillx to validate the provided solution is a valid hash of the challenge.
     // If invalid, we return an error.
-    let mut proof_data = proof_info.data.borrow_mut();
-    let proof = {
-        use ore_utils::AccountDeserialize;
-        Proof::try_from_bytes_mut(&mut proof_data)?
-    };
     let solution = Solution::new(args.digest, args.nonce);
     if !solution.is_valid(&proof.challenge) {
         return Err(OreError::HashInvalid.into());
@@ -125,11 +102,6 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
     // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
     // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    let mut bus_data = bus_info.data.borrow_mut();
-    let bus = {
-        use ore_utils::AccountDeserialize;
-        Bus::try_from_bytes_mut(&mut bus_data)?
-    };
     if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
         // Calculate staking reward.
         if config.top_balance.gt(&0) {
@@ -157,8 +129,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
-            load_any_boost(&boost_info, false)?;
-            load_stake(&stake_info, &proof.authority, boost_info.key, false)?;
+            let boost = boost_info.to_account::<Boost>(&ore_boost_api::ID)?;
+            let stake = stake_info
+                .to_account::<Stake>(&ore_boost_api::ID)?
+                .check(|s| s.authority == proof.authority)?
+                .check(|s| s.boost == *boost_info.key)?;
 
             // Skip if boost is applied twice.
             if applied_boosts.contains(boost_info.key) {
@@ -168,22 +143,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             // Record this boost has been used.
             applied_boosts[i] = *boost_info.key;
 
-            // Parse account data.
-            let boost_data = boost_info.data.borrow();
-            let boost = {
-                use ore_boost_api::ore_utils::AccountDeserialize;
-                Boost::try_from_bytes(&boost_data)?
-            };
-            let stake_data = stake_info.data.borrow();
-            let stake = {
-                use ore_boost_api::ore_utils::AccountDeserialize;
-                Stake::try_from_bytes(&stake_data)?
-            };
-
-            let not_expired = boost.expires_at.gt(&t);
-            let settled = stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t);
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
-            if not_expired && settled {
+            if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
                 let boost_reward = (reward as u128)
                     .checked_mul(multiplier as u128)
@@ -193,18 +154,19 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                     .checked_div(boost.total_stake as u128)
                     .unwrap() as u64;
                 reward = reward.checked_add(boost_reward).unwrap();
-                let boost_event = BoostEvent {
+
+                // Log event
+                sol_log_data(&[(BoostEvent {
                     mint: boost.mint,
                     reward: boost_reward,
-                };
-                let boost_event = boost_event.to_bytes();
-                let boost_event = BASE64_STANDARD.encode(boost_event);
-                sol_log(format!("Boost event: {:}", boost_event).as_str());
+                })
+                .to_bytes()]);
             }
         }
     }
-    // Log base reward after boost rewards for parsing.
-    log::sol_log(&format!("Base: {}", reward));
+    // Log base reward after boost rewards.
+    // Parser looks for base reward first, and then for the variable number of boost rewards.
+    sol_log(&format!("Base: {}", reward));
 
     // Apply liveness penalty.
     //
@@ -264,7 +226,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Update lifetime stats.
     proof.total_hashes = proof.total_hashes.saturating_add(1);
-    proof.total_rewards = proof.total_rewards.saturating_add(reward);
+    proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
     // Log the mined rewards.
     //

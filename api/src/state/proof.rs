@@ -1,8 +1,4 @@
-use bytemuck::{Pod, Zeroable};
-use ore_utils::*;
-use solana_program::pubkey::Pubkey;
-
-use crate::consts::PROOF;
+use steel::*;
 
 use super::OreAccount;
 
@@ -37,11 +33,6 @@ pub struct Proof {
 
     /// The total lifetime rewards distributed to this miner.
     pub total_rewards: u64,
-}
-
-/// Derive the PDA of a proof account.
-pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[PROOF, authority.as_ref()], &crate::id())
 }
 
 account!(OreAccount, Proof);

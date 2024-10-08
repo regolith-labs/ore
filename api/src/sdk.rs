@@ -1,9 +1,5 @@
 use drillx::Solution;
-use solana_program::{
-    instruction::{AccountMeta, Instruction},
-    pubkey::Pubkey,
-    system_program, sysvar,
-};
+use steel::*;
 
 use crate::{
     consts::*,
@@ -23,19 +19,15 @@ pub fn auth(proof: Pubkey) -> Instruction {
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(beneficiary, false),
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Claim {
             amount: amount.to_le_bytes(),
@@ -48,11 +40,11 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
 pub fn close(signer: Pubkey) -> Instruction {
     let proof = proof_pda(signer).0;
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(proof, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::ID, false),
         ],
         data: Close {}.to_bytes(),
     }
@@ -67,22 +59,21 @@ pub fn mine(
     boost_accounts: Vec<Pubkey>,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
-    let accounts = vec![
+    let required_accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(bus, false),
         AccountMeta::new_readonly(CONFIG_ADDRESS, false),
         AccountMeta::new(proof, false),
-        AccountMeta::new_readonly(sysvar::instructions::id(), false),
-        AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+        AccountMeta::new_readonly(sysvar::instructions::ID, false),
+        AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
     ];
-    let boost_accounts = boost_accounts
+    let optional_accounts = boost_accounts
         .into_iter()
         .map(|pk| AccountMeta::new_readonly(pk, false))
         .collect();
-    let accounts = [accounts, boost_accounts].concat();
     Instruction {
-        program_id: crate::id(),
-        accounts,
+        program_id: crate::ID,
+        accounts: [required_accounts, optional_accounts].concat(),
         data: Mine {
             digest: solution.d,
             nonce: solution.n,
@@ -95,14 +86,14 @@ pub fn mine(
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     let proof_pda = proof_pda(signer);
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new_readonly(miner, false),
             AccountMeta::new(payer, true),
             AccountMeta::new(proof_pda.0, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::ID, false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
         ],
         data: Open { bump: proof_pda.1 }.to_bytes(),
     }
@@ -110,12 +101,8 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
 
 /// Builds a reset instruction.
 pub fn reset(signer: Pubkey) -> Instruction {
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(BUS_ADDRESSES[0], false),
@@ -129,8 +116,8 @@ pub fn reset(signer: Pubkey) -> Instruction {
             AccountMeta::new(CONFIG_ADDRESS, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Reset {}.to_bytes(),
     }
@@ -139,18 +126,14 @@ pub fn reset(signer: Pubkey) -> Instruction {
 /// Build a stake instruction.
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
-    let treasury_tokens = spl_associated_token_account::get_associated_token_address(
-        &TREASURY_ADDRESS,
-        &MINT_ADDRESS,
-    );
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(proof, false),
             AccountMeta::new(sender, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Stake {
             amount: amount.to_le_bytes(),
@@ -163,7 +146,7 @@ pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
 pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
     let proof = proof_pda(signer).0;
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new_readonly(miner, false),
@@ -176,7 +159,7 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
 // Build an upgrade instruction.
 pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(beneficiary, false),
@@ -184,7 +167,7 @@ pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64)
             AccountMeta::new(MINT_V1_ADDRESS, false),
             AccountMeta::new(sender, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Upgrade {
             amount: amount.to_le_bytes(),
@@ -206,10 +189,8 @@ pub fn initialize(signer: Pubkey) -> Instruction {
         bus_pda(7),
     ];
     let config_pda = config_pda();
-    let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::id());
+    let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::ID);
     let treasury_pda = treasury_pda();
-    let treasury_tokens =
-        spl_associated_token_account::get_associated_token_address(&treasury_pda.0, &mint_pda.0);
     let metadata_pda = Pubkey::find_program_address(
         &[
             METADATA,
@@ -219,7 +200,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
         &mpl_token_metadata::ID,
     );
     Instruction {
-        program_id: crate::id(),
+        program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(bus_pdas[0].0, false),
@@ -234,12 +215,12 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new(metadata_pda.0, false),
             AccountMeta::new(mint_pda.0, false),
             AccountMeta::new(treasury_pda.0, false),
-            AccountMeta::new(treasury_tokens, false),
-            AccountMeta::new_readonly(system_program::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::ID, false),
         ],
         data: Initialize {
             bus_0_bump: bus_pdas[0].1,

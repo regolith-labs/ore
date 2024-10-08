@@ -19,27 +19,16 @@ use update::*;
 use upgrade::*;
 
 use ore_api::instruction::*;
-use solana_program::{
-    self, account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
-};
-
-solana_program::entrypoint!(process_instruction);
+use steel::*;
 
 pub fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     data: &[u8],
 ) -> ProgramResult {
-    if program_id.ne(&ore_api::id()) {
-        return Err(ProgramError::IncorrectProgramId);
-    }
+    let (ix, data) = parse_instruction(&ore_api::ID, program_id, data)?;
 
-    let (tag, data) = data
-        .split_first()
-        .ok_or(ProgramError::InvalidInstructionData)?;
-
-    match OreInstruction::try_from(*tag).or(Err(ProgramError::InvalidInstructionData))? {
+    match ix {
         OreInstruction::Claim => process_claim(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
@@ -53,3 +42,5 @@ pub fn process_instruction(
 
     Ok(())
 }
+
+entrypoint!(process_instruction);

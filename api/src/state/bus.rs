@@ -1,8 +1,4 @@
-use bytemuck::{Pod, Zeroable};
-use ore_utils::*;
-use solana_program::pubkey::Pubkey;
-
-use crate::consts::BUS;
+use steel::*;
 
 use super::OreAccount;
 
@@ -23,11 +19,6 @@ pub struct Bus {
 
     /// The largest known stake balance seen by the bus this epoch.
     pub top_balance: u64,
-}
-
-/// Fetch the PDA of a bus account.
-pub fn bus_pda(id: u8) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[BUS, &[id]], &crate::id())
 }
 
 account!(OreAccount, Bus);

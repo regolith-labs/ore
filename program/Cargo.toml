@@ -22,11 +22,10 @@ drillx.workspace = true
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
 ore-boost-api.workspace = true
-ore-utils.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
 spl-associated-token-account.workspace = true
-base64 = "0.22.1"
+steel.workspace = true
 
 [dev-dependencies]
 rand = "0.8.5"
