@@ -6,6 +6,7 @@ pub struct MineEvent {
     pub difficulty: u64,
     pub reward: u64,
     pub timing: i64,
+    pub balance: u64,
 }
 
 #[repr(C)]
