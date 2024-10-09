@@ -27,13 +27,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let bus = bus_info.is_bus()?.to_account_mut::<Bus>(&ore_api::ID)?;
+    let bus = bus_info.is_bus()?.as_account_mut::<Bus>(&ore_api::ID)?;
     let config = config_info
         .is_config()?
-        .to_account::<Config>(&ore_api::ID)?;
+        .as_account::<Config>(&ore_api::ID)?;
     let proof = proof_info
-        .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.miner == *signer_info.key)?;
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut(|p| p.miner == *signer_info.key)?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
@@ -129,11 +129,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
-            let boost = boost_info.to_account::<Boost>(&ore_boost_api::ID)?;
+            let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
             let stake = stake_info
-                .to_account::<Stake>(&ore_boost_api::ID)?
-                .check(|s| s.authority == proof.authority)?
-                .check(|s| s.boost == *boost_info.key)?;
+                .as_account::<Stake>(&ore_boost_api::ID)?
+                .assert(|s| s.authority == proof.authority)?
+                .assert(|s| s.boost == *boost_info.key)?;
 
             // Skip if boost is applied twice.
             if applied_boosts.contains(boost_info.key) {

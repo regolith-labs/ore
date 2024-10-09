@@ -14,13 +14,13 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     };
     signer_info.is_signer()?;
     let proof = proof_info
-        .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.authority == *signer_info.key)?;
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *signer_info.key)?;
     sender_info
         .is_writable()?
-        .to_token_account()?
-        .check(|t| t.owner == *signer_info.key)?
-        .check(|t| t.mint == MINT_ADDRESS)?;
+        .as_token_account()?
+        .assert(|t| t.owner == *signer_info.key)?
+        .assert(|t| t.mint == MINT_ADDRESS)?;
     treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
     token_program.is_program(&spl_token::ID)?;
 
