@@ -36,9 +36,7 @@ pub struct Mine {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Open {
-    pub bump: u8,
-}
+pub struct Open {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -62,20 +60,7 @@ pub struct Upgrade {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Initialize {
-    pub bus_0_bump: u8,
-    pub bus_1_bump: u8,
-    pub bus_2_bump: u8,
-    pub bus_3_bump: u8,
-    pub bus_4_bump: u8,
-    pub bus_5_bump: u8,
-    pub bus_6_bump: u8,
-    pub bus_7_bump: u8,
-    pub config_bump: u8,
-    pub metadata_bump: u8,
-    pub mint_bump: u8,
-    pub treasury_bump: u8,
-}
+pub struct Initialize {}
 
 instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Close);
