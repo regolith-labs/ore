@@ -20,7 +20,7 @@ drillx = { version = "2.0.0", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 ore-api = { path = "api", version = "2.1.9" }
-ore-boost-api = { path = "../ore-boost/api", version = "0.1.0" }
+ore-boost-api = "0.2"
 solana-program = "^1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
