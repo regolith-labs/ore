@@ -6,12 +6,20 @@ use crate::{
 };
 
 pub trait OreAccountInfoValidation {
+    fn is_bus(&self) -> Result<&Self, ProgramError>;
     fn is_config(&self) -> Result<&Self, ProgramError>;
     fn is_treasury(&self) -> Result<&Self, ProgramError>;
     fn is_treasury_tokens(&self) -> Result<&Self, ProgramError>;
 }
 
 impl OreAccountInfoValidation for AccountInfo<'_> {
+    fn is_bus(&self) -> Result<&Self, ProgramError> {
+        if !BUS_ADDRESSES.contains(self.key) {
+            return Err(ProgramError::InvalidSeeds);
+        }
+        Ok(self)
+    }
+
     fn is_config(&self) -> Result<&Self, ProgramError> {
         self.has_address(&CONFIG_ADDRESS)?
             .is_type::<Config>(&crate::ID)
