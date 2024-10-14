@@ -123,6 +123,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
     // Up to 3 boosts can be applied on any given mine operation.
+    let base_reward = reward;
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
         if optional_accounts.len().gt(&(i * 2)) {
@@ -146,7 +147,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
-                let boost_reward = (reward as u128)
+                let boost_reward = (base_reward as u128)
                     .checked_mul(multiplier as u128)
                     .unwrap()
                     .checked_mul(stake.balance as u128)
@@ -166,7 +167,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     }
     // Log base reward after boost rewards.
     // Parser looks for base reward first, and then for the variable number of boost rewards.
-    sol_log(&format!("Base: {}", reward));
+    sol_log(&format!("Base: {}", base_reward));
 
     // Apply liveness penalty.
     //
