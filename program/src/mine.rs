@@ -119,8 +119,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Apply boosts.
     //
-    // Boosts are incentives that can multiply a miner's rewards by staking tokens in the ORE Boosts program.
-    // Up to 3 boosts can be applied on any given mine operation.
+    // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
+    // on any given mine operation.
     let base_reward = reward;
     let mut boost_events: Vec<BoostEvent> = vec![];
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
