@@ -14,7 +14,7 @@ use solana_program::{
 };
 use steel::*;
 
-/// Mine validates hashes and increments a miner's collectable balance.
+/// Mine validates hashes and increments a miner's claimable balance.
 pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = Mine::try_from_bytes(data)?;
@@ -176,14 +176,14 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         // Halve the reward for every minute late.
-        let tardiness = t.saturating_sub(t_target) as u64;
-        let halvings = tardiness.saturating_div(ONE_MINUTE as u64);
-        if halvings.gt(&0) {
-            reward = reward.saturating_div(2u64.saturating_pow(halvings as u32));
+        let secs_late = t.saturating_sub(t_target) as u64;
+        let mins_late = secs_late.saturating_div(ONE_MINUTE as u64);
+        if mins_late.gt(&0) {
+            reward = reward.saturating_div(2u64.saturating_pow(mins_late as u32));
         }
 
         // Linear decay with remainder seconds.
-        let remainder_secs = tardiness.saturating_sub(halvings.saturating_mul(ONE_MINUTE as u64));
+        let remainder_secs = secs_late.saturating_sub(mins_late.saturating_mul(ONE_MINUTE as u64));
         if remainder_secs.gt(&0) && reward.gt(&0) {
             let penalty = reward
                 .saturating_div(2)
@@ -195,8 +195,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Apply bus limit.
     //
-    // Busses are limited to distributing 1 ORE per epoch, so the payout amount must be capped to whatever is
-    // left in the bus. This represents the maximum amount that will be paid out for any given hash.
+    // Busses are limited to distributing 1 ORE per epoch. The payout amount must be capped to whatever is
+    // left in the selected bus. This limits the maximum amount that will be paid out for any given hash to 1 ORE.
     let reward_actual = reward.min(bus.rewards).min(ONE_ORE);
 
     // Update balances.
@@ -226,7 +226,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Log boost events.
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
-    // These logs can be used by pool operators to attribute which rewards came from stakers.
+    // These logs can be used by pool operators to calculate staker rewards.
     for mut event in boost_events.into_iter() {
         event.reward = (event.reward as u128)
             .checked_mul(reward_actual as u128)
@@ -239,7 +239,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Log mining event.
     //
-    // These logs can be used by off-chain indexers to display mining stats.
+    // These logs can be used by pool operators to calculate miner rewards.
     set_return_data(
         MineEvent {
             difficulty: difficulty as u64,
@@ -258,7 +258,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 /// transaction, then there is a financial incentive to mine across multiple keypairs and submit as many hashes
 /// as possible in the same transaction to minimize fee / hash.
 ///
-/// This is prevented by forcing every transaction to declare upfront the proof account that will be used for mining.
+/// We prevent this by forcing every transaction to declare upfront the proof account that will be used for mining.
 /// The authentication process includes passing the 32 byte pubkey address as instruction data to a CU-optimized noop
 /// program. We parse this address through transaction introspection and use it to ensure the same proof account is
 /// used for every `mine` instruction in a given transaction.
@@ -295,7 +295,7 @@ fn parse_auth_address(data: &[u8]) -> Result<Option<Pubkey>, SanitizeError> {
 
         // Introspect on the first noop instruction
         if program_id.eq(&NOOP_PROGRAM_ID) {
-            // Retrun address read from instruction data
+            // Return address read from instruction data
             curr += 2;
             let address = read_pubkey(&mut curr, data)?;
             return Ok(Some(address));
