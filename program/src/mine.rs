@@ -6,13 +6,11 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
+    log::{sol_log, sol_log_data},
+    program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
-};
-use solana_program::{
-    log::{sol_log, sol_log_data},
-    program::set_return_data,
 };
 use steel::*;
 
