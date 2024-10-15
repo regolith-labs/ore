@@ -55,8 +55,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Reject spam transactions.
     //
-    // If a miner attempts to submit solutions too frequently, we reject with an error. In general,
-    // miners are limited to 1 hash per epoch on average.
+    // Miners are rate limited to approximately 1 hash per minute. If a miner attempts to submit
+    // solutions more frequently than this, reject with an error.
     let t: i64 = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
