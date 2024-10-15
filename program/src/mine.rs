@@ -201,20 +201,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // left in the bus. This represents the maximum amount that will be paid out for any given hash.
     let reward_actual = reward.min(bus.rewards).min(ONE_ORE);
 
-    // Log boost events.
-    //
-    // The boost rewards are first scaled down to account for penalties and bus limits.
-    // These logs can be used by pool operators to attribute staking yield to stakers.
-    for mut event in boost_events.into_iter() {
-        event.reward = (event.reward as u128)
-            .checked_mul(reward_actual as u128)
-            .unwrap()
-            .checked_div(reward_pre_penalty as u128)
-            .unwrap() as u64;
-        sol_log_data(&[event.to_bytes()]);
-    }
-    sol_log(&format!("Base: {}", reward_actual));
-
     // Update balances.
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
@@ -239,9 +225,23 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
-    // Log the mined rewards.
+    // Log boost events.
     //
-    // This data can be used by off-chain indexers to display mining stats.
+    // The boost rewards are scaled down before logging to account for penalties and bus limits.
+    // These logs can be used by pool operators to attribute which rewards came from stakers.
+    for mut event in boost_events.into_iter() {
+        event.reward = (event.reward as u128)
+            .checked_mul(reward_actual as u128)
+            .unwrap()
+            .checked_div(reward_pre_penalty as u128)
+            .unwrap() as u64;
+        sol_log_data(&[event.to_bytes()]);
+    }
+    sol_log(&format!("Base: {}", reward_actual));
+
+    // Log mining event.
+    //
+    // These logs can be used by off-chain indexers to display mining stats.
     set_return_data(
         MineEvent {
             difficulty: difficulty as u64,
