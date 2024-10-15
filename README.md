@@ -1,6 +1,6 @@
 # ORE
 
-**ORE is a proof-of-work token everyone can mine.**
+**ORE is a cryptocurrency everyone can mine.**
 
 
 ## API
