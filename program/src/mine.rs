@@ -53,15 +53,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(OreError::NeedsReset.into());
     }
 
-    // Validate the hash digest.
-    //
-    // Here we use drillx to validate the provided solution is a valid hash of the challenge.
-    // If invalid, we return an error.
-    let solution = Solution::new(args.digest, args.nonce);
-    if !solution.is_valid(&proof.challenge) {
-        return Err(OreError::HashInvalid.into());
-    }
-
     // Reject spam transactions.
     //
     // If a miner attempts to submit solutions too frequently, we reject with an error. In general,
@@ -71,6 +62,15 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
         return Err(OreError::Spam.into());
+    }
+
+    // Validate the hash digest.
+    //
+    // Here we use drillx to validate the provided solution is a valid hash of the challenge.
+    // If invalid, we return an error.
+    let solution = Solution::new(args.digest, args.nonce);
+    if !solution.is_valid(&proof.challenge) {
+        return Err(OreError::HashInvalid.into());
     }
 
     // Validate the hash satisfies the minimum difficulty.
