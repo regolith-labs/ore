@@ -156,7 +156,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
                     .checked_div(boost.total_stake as u128)
                     .unwrap() as u64;
                 reward = reward.checked_add(boost_reward).unwrap();
-                // push boost event
+
+                // Push boost event
                 boost_events.push(BoostEvent {
                     mint: boost.mint,
                     reward: boost_reward,
@@ -165,7 +166,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         }
     }
 
-    let reward_before_penalties = reward;
     // Apply liveness penalty.
     //
     // The liveness penalty exists to ensure there is no "invisible" hashpower on the network. It
@@ -174,6 +174,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The penalty works by halving the reward amount for every minute late the solution has been submitted.
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
+    let reward_pre_penalty = reward;
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         // Halve the reward for every minute late.
@@ -194,19 +195,22 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         }
     }
 
-    // Limit payout amount to whatever is left in the bus.
+    // Apply bus limit.
     //
-    // Busses are limited to distributing 1 ORE per epoch. This is also the maximum amount that will be paid out
-    // for any given hash.
+    // Busses are limited to distributing 1 ORE per epoch, so the payout amount must be capped to whatever is
+    // left in the bus. This represents the maximum amount that will be paid out for any given hash.
     let reward_actual = reward.min(bus.rewards).min(ONE_ORE);
 
-    // Scale boost rewards by the limitted actual rewards.
+    // Log boost events.
+    //
+    // The boost rewards are first scaled down to account for penalties and bus limits.
+    // These logs can be used by pool operators to attribute staking yield to stakers.
     for mut event in boost_events.into_iter() {
-        // scale boost reward
-        let scaled =
-            (reward_actual as u128) * (event.reward as u128) / (reward_before_penalties as u128);
-        event.reward = scaled as u64;
-        // log
+        event.reward = (event.reward as u128)
+            .checked_mul(reward_actual as u128)
+            .unwrap()
+            .checked_div(reward_pre_penalty as u128)
+            .unwrap() as u64;
         sol_log_data(&[event.to_bytes()]);
     }
     sol_log(&format!("Base: {}", reward_actual));
@@ -230,10 +234,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     ])
     .0;
 
-    // Update time trackers.
+    // Update stats.
     proof.last_hash_at = t.max(t_target);
-
-    // Update lifetime stats.
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
