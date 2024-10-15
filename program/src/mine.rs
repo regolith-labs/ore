@@ -147,25 +147,30 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
-                let multiplier = boost.multiplier.checked_sub(1).unwrap();
-                let boost_reward = (base_reward as u128)
-                    .checked_mul(multiplier as u128)
-                    .unwrap()
+                // compute multiplier
+                let multiplier = boost.multiplier.checked_sub(1).unwrap() as u128;
+                let multiplier = multiplier
                     .checked_mul(stake.balance as u128)
                     .unwrap()
                     .checked_div(boost.total_stake as u128)
                     .unwrap() as u64;
+                // apply geometric sum to rewards
+                let boost_reward = reward.checked_mul(multiplier).unwrap();
                 reward = reward.checked_add(boost_reward).unwrap();
                 // push boost event
                 boost_events.push(BoostEvent {
                     mint: boost.mint,
-                    reward: boost_reward,
+                    reward: base_reward.checked_mul(multiplier).unwrap(),
                 });
             }
         }
     }
 
-    let reward_before_penalties = reward;
+    // Scale the boost rewards proportionally by the geometric sum.
+    for event in boost_events.iter_mut() {
+        let scaled = (reward as u128) * (event.reward as u128) / (base_reward as u128);
+        event.reward = scaled as u64;
+    }
     // Apply liveness penalty.
     //
     // The liveness penalty exists to ensure there is no "invisible" hashpower on the network. It
@@ -174,6 +179,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The penalty works by halving the reward amount for every minute late the solution has been submitted.
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
+    let reward_before_penalties = reward;
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t.gt(&t_liveness) {
         // Halve the reward for every minute late.
