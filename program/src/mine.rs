@@ -168,9 +168,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     }
 
     // Scale the boost rewards proportionally by the geometric sum.
+    let diff_from_boosts = reward.checked_div(base_reward).unwrap();
+    let boost_denominator: u64 = boost_events.iter().map(|be| be.reward).sum();
+    let geometric_diff = diff_from_boosts.checked_sub(boost_denominator).unwrap();
     for event in boost_events.iter_mut() {
-        let scaled = (reward as u128) * (event.reward as u128) / (base_reward as u128);
-        event.reward = scaled as u64;
+        let scalar =
+            (geometric_diff as u128) * (event.reward as u128) / (boost_denominator as u128);
+        event.reward += scalar as u64;
     }
     // Apply liveness penalty.
     //
