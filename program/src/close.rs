@@ -11,16 +11,15 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     proof_info
         .is_writable()?
         .as_account::<Proof>(&ore_api::ID)?
-        .assert(|p| p.authority == *signer_info.key)?
+        .assert_with_err(
+            |p| p.authority == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?
         .assert(|p| p.balance == 0)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Realloc data to zero.
-    proof_info.realloc(0, true)?;
-
-    // Send remaining lamports to signer.
-    **signer_info.lamports.borrow_mut() += proof_info.lamports();
-    **proof_info.lamports.borrow_mut() = 0;
+    // Return rent to signer.
+    close_account(proof_info, signer_info)?;
 
     Ok(())
 }

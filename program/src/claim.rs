@@ -20,7 +20,10 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
         .assert_with_msg(|t| t.mint == MINT_ADDRESS, "Invalid mint")?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut(|p| p.authority == *signer_info.key)?;
+        .assert_mut_with_err(
+            |p| p.authority == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     treasury_info.is_treasury()?;
     treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
     token_program.is_program(&spl_token::ID)?;

@@ -20,6 +20,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
+    let clock = Clock::get()?;
+    let t: i64 = clock.unix_timestamp;
     let (required_accounts, optional_accounts) = accounts.split_at(6);
     let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         required_accounts
@@ -30,10 +32,17 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let bus = bus_info.is_bus()?.as_account_mut::<Bus>(&ore_api::ID)?;
     let config = config_info
         .is_config()?
-        .as_account::<Config>(&ore_api::ID)?;
+        .as_account::<Config>(&ore_api::ID)?
+        .assert_with_err(
+            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            OreError::NeedsReset.into(),
+        )?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut(|p| p.miner == *signer_info.key)?;
+        .assert_mut_with_err(
+            |p| p.miner == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
@@ -43,21 +52,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // in the transaction must use the same proof account.
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
-    // Validate epoch is active.
-    let clock = Clock::get()?;
-    if config
-        .last_reset_at
-        .saturating_add(EPOCH_DURATION)
-        .le(&clock.unix_timestamp)
-    {
-        return Err(OreError::NeedsReset.into());
-    }
-
     // Reject spam transactions.
     //
     // Miners are rate limited to approximately 1 hash per minute. If a miner attempts to submit
     // solutions more frequently than this, reject with an error.
-    let t: i64 = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {

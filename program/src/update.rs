@@ -10,7 +10,10 @@ pub fn process_update(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     signer_info.is_signer()?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut(|p| p.authority == *signer_info.key)?;
+        .assert_mut_with_err(
+            |p| p.authority == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
 
     // Update the proof's miner authority.
     proof.miner = *miner_info.key;

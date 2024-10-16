@@ -15,7 +15,10 @@ pub fn process_stake(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     signer_info.is_signer()?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut(|p| p.authority == *signer_info.key)?;
+        .assert_mut_with_err(
+            |p| p.authority == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     sender_info
         .is_writable()?
         .as_token_account()?
