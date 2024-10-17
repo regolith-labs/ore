@@ -117,11 +117,12 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         }
     }
 
-    // Apply boosts.
+    // Compute boosts.
     //
     // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
     // on any given mine operation.
-    let base_reward = reward;
+    let mut boost_sum: u128 = 0;
+    let mut boost_product: u128 = 0;
     let mut boost_events: Vec<BoostEvent> = vec![];
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
@@ -146,22 +147,37 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
             if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
-                let boost_reward = (base_reward as u128)
+                let boost_reward = (reward as u128)
                     .checked_mul(multiplier as u128)
                     .unwrap()
                     .checked_mul(stake.balance as u128)
                     .unwrap()
                     .checked_div(boost.total_stake as u128)
-                    .unwrap() as u64;
-                reward = reward.checked_add(boost_reward).unwrap();
-
+                    .unwrap();
+                // sum for denominator
+                boost_sum = boost_sum.checked_add(boost_reward).unwrap();
+                // multiply for total rewards
+                boost_product = boost_product.checked_mul(boost_reward).unwrap();
                 // Push boost event
                 boost_events.push(BoostEvent {
                     mint: boost.mint,
-                    reward: boost_reward,
+                    reward: boost_reward as u64,
                 });
             }
         }
+    }
+
+    // Apply boosts.
+    //
+    // Add the product of the boost rewards to the total reward.
+    // Scale each boost reward by their proportional contribution to the product.
+    reward += boost_product as u64;
+    for b in boost_events.iter_mut() {
+        let scaled = boost_product
+            .checked_mul(b.reward as u128)
+            .and_then(|mul| mul.checked_div(boost_sum))
+            .unwrap();
+        b.reward = scaled as u64;
     }
 
     // Apply liveness penalty.
