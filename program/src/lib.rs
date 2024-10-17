@@ -34,6 +34,7 @@ pub fn process_instruction(
         OreInstruction::Mine => process_mine(accounts, data)?,
         OreInstruction::Open => process_open(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
+        #[allow(deprecated)]
         OreInstruction::Stake => process_stake(accounts, data)?,
         OreInstruction::Update => process_update(accounts, data)?,
         OreInstruction::Upgrade => process_upgrade(accounts, data)?,

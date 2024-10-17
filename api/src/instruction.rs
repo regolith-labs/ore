@@ -9,6 +9,7 @@ pub enum OreInstruction {
     Mine = 2,
     Open = 3,
     Reset = 4,
+    #[deprecated(since = "2.3.0", note = "Please stake with boosts program")]
     Stake = 5,
     Update = 6,
     Upgrade = 7,
@@ -44,6 +45,7 @@ pub struct Open {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Reset {}
 
+#[deprecated(since = "2.3.0", note = "Please stake with boosts program")]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Stake {
