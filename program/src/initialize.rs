@@ -79,10 +79,10 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     for i in 0..BUS_COUNT {
         create_account::<Bus>(
             bus_infos[i],
-            &ore_api::ID,
-            &[BUS, &[i as u8]],
             system_program,
             signer_info,
+            &ore_api::ID,
+            &[BUS, &[i as u8]],
         )?;
         let bus = bus_infos[i].as_account_mut::<Bus>(&ore_api::ID)?;
         bus.id = i as u64;
@@ -94,10 +94,10 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Initialize config.
     create_account::<Config>(
         config_info,
-        &ore_api::ID,
-        &[CONFIG],
         system_program,
         signer_info,
+        &ore_api::ID,
+        &[CONFIG],
     )?;
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
@@ -108,22 +108,23 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Initialize treasury.
     create_account::<Treasury>(
         treasury_info,
-        &ore_api::ID,
-        &[TREASURY],
         system_program,
         signer_info,
+        &ore_api::ID,
+        &[TREASURY],
     )?;
 
     // Initialize mint.
-    allocate_account(
+    allocate_account_with_bump(
         mint_info,
-        &spl_token::ID,
-        Mint::LEN,
-        &[MINT, MINT_NOISE.as_slice()],
         system_program,
         signer_info,
+        Mint::LEN,
+        &spl_token::ID,
+        &[MINT, MINT_NOISE.as_slice()],
+        MINT_BUMP,
     )?;
-    initialize_mint_signed(
+    initialize_mint_signed_with_bump(
         mint_info,
         treasury_info,
         None,
@@ -131,6 +132,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         rent_sysvar,
         TOKEN_DECIMALS,
         &[MINT, MINT_NOISE.as_slice()],
+        MINT_BUMP,
     )?;
 
     // Initialize mint metadata.

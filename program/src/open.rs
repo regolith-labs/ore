@@ -24,10 +24,10 @@ pub fn process_open(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     // Initialize proof.
     create_account::<Proof>(
         proof_info,
-        &ore_api::ID,
-        &[PROOF, signer_info.key.as_ref()],
         system_program,
         payer_info,
+        &ore_api::ID,
+        &[PROOF, signer_info.key.as_ref()],
     )?;
     let clock = Clock::get()?;
     let proof = proof_info.as_account_mut::<Proof>(&ore_api::ID)?;
