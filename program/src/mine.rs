@@ -219,6 +219,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
+    let last_hash_at_submission = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
@@ -235,7 +236,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .unwrap() as u64;
         sol_log_data(&[event.to_bytes()]);
     }
-    sol_log(&format!("Base: {}", reward_actual));
+    sol_log(format!("Hash: {}", last_hash_at_submission).as_str());
+    sol_log(format!("Base: {}", reward_actual).as_str());
 
     // Log mining event.
     //
