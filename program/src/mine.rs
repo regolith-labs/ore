@@ -6,7 +6,6 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    log::{sol_log, sol_log_data},
     program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
@@ -216,7 +215,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
-    sol_log(format!("Last hash at: {}", proof.last_hash_at).as_str());
+    let prev_last_hash_at = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
@@ -234,10 +233,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     }
     set_return_data(
         MineEvent {
-            difficulty: difficulty as u64,
-            reward: reward_actual,
-            timing: t.saturating_sub(t_liveness),
             balance: proof.balance,
+            difficulty: difficulty as u64,
+            last_hash_at: prev_last_hash_at,
+            timing: t.saturating_sub(t_liveness),
+            reward: reward_actual,
             boost_1: boost_rewards[0],
             boost_2: boost_rewards[1],
             boost_3: boost_rewards[2],
