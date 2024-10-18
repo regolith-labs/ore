@@ -6,8 +6,7 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    log::{sol_log, sol_log_data},
-    program::set_return_data,
+    log::sol_log,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
@@ -33,13 +32,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let config = config_info
         .is_config()?
         .as_account::<Config>(&ore_api::ID)?
-        .assert_with_err(
+        .assert_err(
             |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
             OreError::NeedsReset.into(),
         )?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut_with_err(
+        .assert_mut_err(
             |p| p.miner == *signer_info.key,
             ProgramError::MissingRequiredSignature,
         )?;
@@ -231,21 +230,19 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .unwrap()
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
-        sol_log_data(&[event.to_bytes()]);
+        event.log();
     }
     sol_log(&format!("Base: {}", reward_actual));
 
     // Log mining event.
     //
     // These logs can be used by pool operators to calculate miner rewards.
-    set_return_data(
-        MineEvent {
-            difficulty: difficulty as u64,
-            reward: reward_actual,
-            timing: t.saturating_sub(t_liveness),
-        }
-        .to_bytes(),
-    );
+    MineEvent {
+        difficulty: difficulty as u64,
+        reward: reward_actual,
+        timing: t.saturating_sub(t_liveness),
+    }
+    .log_return();
 
     Ok(())
 }

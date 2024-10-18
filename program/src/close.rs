@@ -11,7 +11,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     proof_info
         .is_writable()?
         .as_account::<Proof>(&ore_api::ID)?
-        .assert_with_err(
+        .assert_err(
             |p| p.authority == *signer_info.key,
             ProgramError::MissingRequiredSignature,
         )?

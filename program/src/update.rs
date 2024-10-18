@@ -10,7 +10,7 @@ pub fn process_update(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     signer_info.is_signer()?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut_with_err(
+        .assert_mut_err(
             |p| p.authority == *signer_info.key,
             ProgramError::MissingRequiredSignature,
         )?;
