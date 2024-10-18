@@ -219,29 +219,24 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
-    let last_hash_at_submission = proof.last_hash_at;
+    sol_log(format!("Last hash at: {}", proof.last_hash_at).as_str());
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
-    // Log boost events.
+    // Log events.
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
-    // These logs can be used by pool operators to calculate staker rewards.
-    for mut event in boost_events.into_iter() {
-        event.reward = (event.reward as u128)
+    // These logs can be used by pool operators to calculate miner and staker rewards.
+    sol_log(format!("Base: {}", reward_actual).as_str());
+    for mut e in boost_events.into_iter() {
+        e.reward = (e.reward as u128)
             .checked_mul(reward_actual as u128)
             .unwrap()
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
-        sol_log_data(&[event.to_bytes()]);
+        sol_log_data(&[e.to_bytes()]);
     }
-    sol_log(format!("Hash: {}", last_hash_at_submission).as_str());
-    sol_log(format!("Base: {}", reward_actual).as_str());
-
-    // Log mining event.
-    //
-    // These logs can be used by pool operators to calculate miner rewards.
     set_return_data(
         MineEvent {
             difficulty: difficulty as u64,
