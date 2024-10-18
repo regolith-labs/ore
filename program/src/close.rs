@@ -19,7 +19,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     system_program.is_program(&system_program::ID)?;
 
     // Return rent to signer.
-    close_account(proof_info, signer_info)?;
+    proof_info.close(signer_info)?;
 
     Ok(())
 }
