@@ -14,7 +14,6 @@
 - [`Close`](program/src/close.rs) – Closes a proof account returns the rent to the owner.
 - [`Open`](program/src/open.rs) – Opens a new proof account for a miner.
 - [`Mine`](program/src/mine.rs) – Verifies a hash and increments a miner's claimable balance.
-- [`Stake`](program/src/stake.rs) – Stakes ORE with a miner to increase their multiplier.
 - [`Reset`](program/src/reset.rs) – Resets the program for a new epoch.
 - [`Update`](program/src/update.rs) – Updates a proof account's miner authority.
 - [`Upgrade`](program/src/upgrade.rs) – Migrates ORE v1 tokens to ORE v2, one-for-one.
