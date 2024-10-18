@@ -242,6 +242,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             difficulty: difficulty as u64,
             reward: reward_actual,
             timing: t.saturating_sub(t_liveness),
+            balance: proof.balance,
         }
         .to_bytes(),
     );
