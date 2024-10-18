@@ -157,7 +157,9 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
 }
 
 // Build an upgrade instruction.
+#[deprecated(since = "2.4.0", note = "v1 tokens are no longer eligable to upgrade")]
 pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
+    #[allow(deprecated)]
     Instruction {
         program_id: crate::ID,
         accounts: vec![

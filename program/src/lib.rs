@@ -36,6 +36,7 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Stake => process_stake(accounts, data)?,
         OreInstruction::Update => process_update(accounts, data)?,
+        #[allow(deprecated)]
         OreInstruction::Upgrade => process_upgrade(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
     }
