@@ -6,7 +6,6 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    log::{sol_log, sol_log_data},
     program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
@@ -122,7 +121,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
     // on any given mine operation.
     let base_reward = reward;
-    let mut boost_events: Vec<BoostEvent> = vec![];
+    let mut boost_rewards = [0u64; 3];
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
         if optional_accounts.len().gt(&(i * 2)) {
@@ -156,10 +155,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
                 reward = reward.checked_add(boost_reward).unwrap();
 
                 // Push boost event
-                boost_events.push(BoostEvent {
-                    mint: boost.mint,
-                    reward: boost_reward,
-                });
+                boost_rewards[i] = boost_reward;
             }
         }
     }
@@ -219,30 +215,32 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
-    sol_log(format!("Last hash at: {}", proof.last_hash_at).as_str());
+    let prev_last_hash_at = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
-    // Log events.
+    // Log data.
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
-    // These logs can be used by pool operators to calculate miner and staker rewards.
-    sol_log(format!("Base: {}", reward_actual).as_str());
-    for mut e in boost_events.into_iter() {
-        e.reward = (e.reward as u128)
+    // This return data can be used by pool operators to calculate miner and staker rewards.
+    for i in 0..3 {
+        boost_rewards[i] = (boost_rewards[i] as u128)
             .checked_mul(reward_actual as u128)
             .unwrap()
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
-        sol_log_data(&[e.to_bytes()]);
     }
     set_return_data(
         MineEvent {
-            difficulty: difficulty as u64,
-            reward: reward_actual,
-            timing: t.saturating_sub(t_liveness),
             balance: proof.balance,
+            difficulty: difficulty as u64,
+            last_hash_at: prev_last_hash_at,
+            timing: t.saturating_sub(t_liveness),
+            reward: reward_actual,
+            boost_1: boost_rewards[0],
+            boost_2: boost_rewards[1],
+            boost_3: boost_rewards[2],
         }
         .to_bytes(),
     );
