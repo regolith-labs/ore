@@ -1,0 +1,975 @@
+{
+  "version": "2.3.0",
+  "name": "ore_api",
+  "instructions": [
+    {
+      "name": "Claim",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "beneficiary",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "beneficiary"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "treasury"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury_tokens"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "token_program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "Close",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "system_program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "Mine",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "bus",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus"
+          ]
+        },
+        {
+          "name": "config",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "config"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof"
+          ]
+        },
+        {
+          "name": "instructionsSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "instructions_sysvar"
+          ]
+        },
+        {
+          "name": "slotHashesSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "slot_hashes_sysvar"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "Open",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "miner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "miner"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "payer"
+          ]
+        },
+        {
+          "name": "proofPda",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof_pda"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "system_program"
+          ]
+        },
+        {
+          "name": "slotHashesSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "slot_hashes_sysvar"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "Reset",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "bus0",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_0"
+          ]
+        },
+        {
+          "name": "bus1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_1"
+          ]
+        },
+        {
+          "name": "bus2",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_2"
+          ]
+        },
+        {
+          "name": "bus3",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_3"
+          ]
+        },
+        {
+          "name": "bus4",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_4"
+          ]
+        },
+        {
+          "name": "bus5",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_5"
+          ]
+        },
+        {
+          "name": "bus6",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_6"
+          ]
+        },
+        {
+          "name": "bus7",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_7"
+          ]
+        },
+        {
+          "name": "config",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "config"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "mint"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury_tokens"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "token_program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "Stake",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof"
+          ]
+        },
+        {
+          "name": "sender",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "sender"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury_tokens"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "token_program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "Update",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "miner",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "miner"
+          ]
+        },
+        {
+          "name": "proof",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "proof"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    },
+    {
+      "name": "Upgrade",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "beneficiary",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "beneficiary"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "mint"
+          ]
+        },
+        {
+          "name": "mintV1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "mint_v1"
+          ]
+        },
+        {
+          "name": "sender",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "sender"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "token_program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
+      "name": "Initialize",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "signer"
+          ]
+        },
+        {
+          "name": "bus0",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_0"
+          ]
+        },
+        {
+          "name": "bus1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_1"
+          ]
+        },
+        {
+          "name": "bus2",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_2"
+          ]
+        },
+        {
+          "name": "bus3",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_3"
+          ]
+        },
+        {
+          "name": "bus4",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_4"
+          ]
+        },
+        {
+          "name": "bus5",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_5"
+          ]
+        },
+        {
+          "name": "bus6",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_6"
+          ]
+        },
+        {
+          "name": "bus7",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bus_7"
+          ]
+        },
+        {
+          "name": "config",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "config"
+          ]
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "metadata"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "mint"
+          ]
+        },
+        {
+          "name": "treasury",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury"
+          ]
+        },
+        {
+          "name": "treasuryTokens",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "treasury_tokens"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "system_program"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "token_program"
+          ]
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "associated_token_program"
+          ]
+        },
+        {
+          "name": "metadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "metadata_program"
+          ]
+        },
+        {
+          "name": "rentSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "rent_sysvar"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 100
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Bus",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "rewards",
+            "type": "u64"
+          },
+          {
+            "name": "theoreticalRewards",
+            "type": "u64"
+          },
+          {
+            "name": "topBalance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "baseRewardRate",
+            "type": "u64"
+          },
+          {
+            "name": "lastResetAt",
+            "type": "i64"
+          },
+          {
+            "name": "minDifficulty",
+            "type": "u64"
+          },
+          {
+            "name": "topBalance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "challenge",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "lastHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "lastHashAt",
+            "type": "i64"
+          },
+          {
+            "name": "lastStakeAt",
+            "type": "i64"
+          },
+          {
+            "name": "miner",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalHashes",
+            "type": "u64"
+          },
+          {
+            "name": "totalRewards",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "Claim",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Close",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "Mine",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "digest",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Open",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Reset",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "Stake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    },
+    {
+      "name": "Upgrade",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Initialize",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bus0Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus1Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus2Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus3Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus4Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus5Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus6Bump",
+            "type": "u8"
+          },
+          {
+            "name": "bus7Bump",
+            "type": "u8"
+          },
+          {
+            "name": "configBump",
+            "type": "u8"
+          },
+          {
+            "name": "metadataBump",
+            "type": "u8"
+          },
+          {
+            "name": "mintBump",
+            "type": "u8"
+          },
+          {
+            "name": "treasuryBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Treasury",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "NeedsReset",
+      "msg": "The epoch has ended and needs reset"
+    },
+    {
+      "code": 1,
+      "name": "HashInvalid",
+      "msg": "The provided hash is invalid"
+    },
+    {
+      "code": 2,
+      "name": "HashTooEasy",
+      "msg": "The provided hash did not satisfy the minimum required difficulty"
+    },
+    {
+      "code": 3,
+      "name": "ClaimTooLarge",
+      "msg": "The claim amount cannot be greater than the claimable rewards"
+    },
+    {
+      "code": 4,
+      "name": "ClockInvalid",
+      "msg": "The clock time is invalid"
+    },
+    {
+      "code": 5,
+      "name": "Spam",
+      "msg": "You are trying to submit too soon"
+    },
+    {
+      "code": 6,
+      "name": "MaxSupply",
+      "msg": "The maximum supply has been reached"
+    },
+    {
+      "code": 7,
+      "name": "AuthFailed",
+      "msg": "The proof does not match the expected account"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfoYkrtKWQ",
+    "binaryVersion": "0.4.2",
+    "libVersion": "0.4.2"
+  }
+}
