@@ -1,5 +1,6 @@
 .DS_Store
 .cargo
+clients/js/dist
 node_modules
 target
 test-ledger
