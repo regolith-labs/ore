@@ -1,0 +1,504 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      '@codama/nodes-from-anchor':
+        specifier: ^1.0.0
+        version: 1.0.0
+      '@codama/renderers-js':
+        specifier: ^1.0.1
+        version: 1.0.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)
+      '@codama/renderers-rust':
+        specifier: ^1.0.3
+        version: 1.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)
+      '@iarna/toml':
+        specifier: ^2.2.5
+        version: 2.2.5
+      '@metaplex-foundation/shank-js':
+        specifier: ^0.1.7
+        version: 0.1.7
+      codama:
+        specifier: ^1.0.0
+        version: 1.0.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+      zx:
+        specifier: ^8.1.9
+        version: 8.1.9
+
+packages:
+
+  '@codama/errors@1.0.0':
+    resolution: {integrity: sha512-XSdkNbCNJukhKO5TFJ5cFP7TfddxZwqHV7N/XyMbZ0meVPN1ymT94/d/9b8R+bvKuflj/SXImv527tGZWz6pGA==}
+    hasBin: true
+
+  '@codama/node-types@1.0.0':
+    resolution: {integrity: sha512-UAc+0jprwHFOqtAPqqA//PkrnlUzuqs+N5E36bHhLV0m5qWMlqrfmPg/ffBwMYFJsLFWsRsisALrqPy7ARkUow==}
+
+  '@codama/nodes-from-anchor@1.0.0':
+    resolution: {integrity: sha512-urqFOV5K1oKBptgIFFLCPWrUsEeZsonml12ieP26ozX12aglGlN0tsxNsCvxJulRIjUxuONbH6xzv7uKt0xSYQ==}
+
+  '@codama/nodes@1.0.0':
+    resolution: {integrity: sha512-btcnjDaOpEFvVq3uVzlQK4G2OxxyK3P9HkXw423GZaqYQzeSr1pDdTKjyVyg+QO578CGqIMySVlJ2UAdHVMytw==}
+
+  '@codama/renderers-core@1.0.0':
+    resolution: {integrity: sha512-WYvOylIzcR0WOc7GlUvGi5ym8IwmslwyV8zfj7FR646bMqaROirFJc+naGEbZ1lMykOyxcackTKL0eDB7954Qw==}
+
+  '@codama/renderers-js@1.0.1':
+    resolution: {integrity: sha512-RwTJM5L4ZuKZ9TUdr1K5PODr7Ji0lsqcqQGXQ71Hg+ZHQ+F4jj3RPvoWHxYm5tYMuqRajQxqL/W49kxqEtc96w==}
+
+  '@codama/renderers-rust@1.0.3':
+    resolution: {integrity: sha512-S2n+bq92q5YZ01Z+8klNNbvgVErKsJzUYWN0Y0rPymx2vwkHfTkeQHEOuckb/kzHJm9QGXrzkDtSDBy5EDS1Wg==}
+
+  '@codama/validators@1.0.0':
+    resolution: {integrity: sha512-jSfU5IrcGTvcqsJSBSzD3Ochig+hKKg2NKsT/vUfQ4jAw2cQrVUP5f4dMXyX779JYfHLHCwZnBYvgEdgi9gBZQ==}
+
+  '@codama/visitors-core@1.0.0':
+    resolution: {integrity: sha512-tDIfURVPf7ZokCFLOpKL6Au0ORiza1sPT4zmRSEjCC7iZp0Vb5K5FrdtUL13Wb+6jNM191e5GUFOmULRoavWug==}
+
+  '@codama/visitors@1.0.0':
+    resolution: {integrity: sha512-JncE6wRJLxt0imlj+loGH6dLPEMK7ozlv9YjWgCQgUYUI7is66OFwhWP5SFO0iEFlVjtOzZLXVQwoe9LSDz8Gg==}
+
+  '@iarna/toml@2.2.5':
+    resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
+
+  '@metaplex-foundation/rustbin@0.3.5':
+    resolution: {integrity: sha512-m0wkRBEQB/8krwMwKBvFugufZtYwMXiGHud2cTDAv+aGXK4M90y0Hx67/wpu+AqqoQfdV8VM9YezUOHKD+Z5kA==}
+
+  '@metaplex-foundation/shank-js@0.1.7':
+    resolution: {integrity: sha512-tSAipn8Ho1UxlMC3jwJ5Opl+Y3lRm60VTkgRDfvzydb57lXW5G+K5MrZhEmhrFUuRYziV+e34CTo+ybpMp1Eqg==}
+
+  '@noble/hashes@1.5.0':
+    resolution: {integrity: sha512-1j6kQFb7QRru7eKN3ZDvRcP13rugwdxZqCjbiAVZfIJwgj2A65UmT4TgARXGlXgnRkORLTDTrO19ZErt7+QXgA==}
+    engines: {node: ^14.21.3 || >=16}
+
+  '@solana/codecs-core@2.0.0-rc.1':
+    resolution: {integrity: sha512-bauxqMfSs8EHD0JKESaNmNuNvkvHSuN3bbWAF5RjOfDu2PugxHrvRebmYauvSumZ3cTfQ4HJJX6PG5rN852qyQ==}
+    peerDependencies:
+      typescript: '>=5'
+
+  '@solana/codecs-numbers@2.0.0-rc.1':
+    resolution: {integrity: sha512-J5i5mOkvukXn8E3Z7sGIPxsThRCgSdgTWJDQeZvucQ9PT6Y3HiVXJ0pcWiOWAoQ3RX8e/f4I3IC+wE6pZiJzDQ==}
+    peerDependencies:
+      typescript: '>=5'
+
+  '@solana/codecs-strings@2.0.0-rc.1':
+    resolution: {integrity: sha512-9/wPhw8TbGRTt6mHC4Zz1RqOnuPTqq1Nb4EyuvpZ39GW6O2t2Q7Q0XxiB3+BdoEjwA2XgPw6e2iRfvYgqty44g==}
+    peerDependencies:
+      fastestsmallesttextencoderdecoder: ^1.0.22
+      typescript: '>=5'
+
+  '@solana/errors@2.0.0-rc.1':
+    resolution: {integrity: sha512-ejNvQ2oJ7+bcFAYWj225lyRkHnixuAeb7RQCixm+5mH4n1IA4Qya/9Bmfy5RAAHQzxK43clu3kZmL5eF9VGtYQ==}
+    hasBin: true
+    peerDependencies:
+      typescript: '>=5'
+
+  '@types/fs-extra@11.0.4':
+    resolution: {integrity: sha512-yTbItCNreRooED33qjunPthRcSjERP1r4MqCZc7wv0u2sUkzTFp45tgUfS5+r7FrZPdmCCNflLhVSP/o+SemsQ==}
+
+  '@types/jsonfile@6.1.4':
+    resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
+
+  '@types/node@22.7.9':
+    resolution: {integrity: sha512-jrTfRC7FM6nChvU7X2KqcrgquofrWLFDeYC1hKfwNWomVvrn7JIksqf344WN2X/y8xrgqBd2dJATZV4GbatBfg==}
+
+  a-sync-waterfall@1.0.1:
+    resolution: {integrity: sha512-RYTOHHdWipFUliRFMCS4X2Yn2X8M87V/OpSqWzKKOGhzqyUxzyVmhHDH9sAvG+ZuQf/TAOFsLCpMw09I1ufUnA==}
+
+  ansi-colors@4.1.3:
+    resolution: {integrity: sha512-/6w/C21Pm1A7aZitlI5Ni/2J6FFQN8i1Cvz3kHABAAbw93v/NlvKdVOqz7CCWz/3iv/JplRSEEZ83XION15ovw==}
+    engines: {node: '>=6'}
+
+  asap@2.0.6:
+    resolution: {integrity: sha512-BSHWgDSAiKs50o2Re8ppvp3seVHXSRM44cdSsT9FfNEUUZLOGWVCsiWaRPWM1Znn+mqZ1OfVZ3z3DWEzSp7hRA==}
+
+  call-bind@1.0.7:
+    resolution: {integrity: sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==}
+    engines: {node: '>= 0.4'}
+
+  chalk@5.3.0:
+    resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
+    engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
+
+  codama@1.0.0:
+    resolution: {integrity: sha512-ttJ9n2THpqTD8fP8reec+Y2j4ZTBuonDJk8SiKuS6enZBXd67JF3b+GFKM2S5a0xtxN5Evof5aBlY3JyC+jujQ==}
+
+  commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
+
+  commander@5.1.0:
+    resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
+    engines: {node: '>= 6'}
+
+  debug@4.3.7:
+    resolution: {integrity: sha512-Er2nc/H7RrMXZBFCEim6TCmMk02Z8vLC2Rbi1KEBggpo0fS6l0S1nnapwmIi3yW/+GOJap1Krg4w0Hg80oCqgQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
+  define-data-property@1.1.4:
+    resolution: {integrity: sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==}
+    engines: {node: '>= 0.4'}
+
+  es-define-property@1.0.0:
+    resolution: {integrity: sha512-jxayLKShrEqqzJ0eumQbVhTYQM27CfT1T35+gCgDFoL82JLsXqTJ76zv6A0YLOgEnLUMvLzsDsGIrl8NFpT2gQ==}
+    engines: {node: '>= 0.4'}
+
+  es-errors@1.3.0:
+    resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
+    engines: {node: '>= 0.4'}
+
+  fastestsmallesttextencoderdecoder@1.0.22:
+    resolution: {integrity: sha512-Pb8d48e+oIuY4MaM64Cd7OW1gt4nxCHs7/ddPPZ/Ic3sg8yVGM7O9wDvZ7us6ScaUupzM+pfBolwtYhN1IxBIw==}
+
+  function-bind@1.1.2:
+    resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  get-intrinsic@1.2.4:
+    resolution: {integrity: sha512-5uYhsJH8VJBTv7oslg4BznJYhDoRI6waYCxMmCdnTrcCrHA/fCFKoTFz2JKKE0HdDFUF7/oQuhzumXJK7paBRQ==}
+    engines: {node: '>= 0.4'}
+
+  gopd@1.0.1:
+    resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
+
+  has-property-descriptors@1.0.2:
+    resolution: {integrity: sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==}
+
+  has-proto@1.0.3:
+    resolution: {integrity: sha512-SJ1amZAJUiZS+PhsVLf5tGydlaVB8EdFpaSO4gmiUKUOxk8qzn5AIy4ZeJUmh22znIdk/uMAUT2pl3FxzVUH+Q==}
+    engines: {node: '>= 0.4'}
+
+  has-symbols@1.0.3:
+    resolution: {integrity: sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==}
+    engines: {node: '>= 0.4'}
+
+  hasown@2.0.2:
+    resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
+    engines: {node: '>= 0.4'}
+
+  isarray@2.0.5:
+    resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
+
+  json-stable-stringify@1.1.1:
+    resolution: {integrity: sha512-SU/971Kt5qVQfJpyDveVhQ/vya+5hvrjClFOcr8c0Fq5aODJjMwutrOfCU+eCnVD5gpx1Q3fEqkyom77zH1iIg==}
+    engines: {node: '>= 0.4'}
+
+  jsonify@0.0.1:
+    resolution: {integrity: sha512-2/Ki0GcmuqSrgFyelQq9M05y7PS0mEwuIzrf3f1fPqkVDVRvZrPZtVSMHxdgo8Aq0sxAOb/cr2aqqA3LeWHVPg==}
+
+  ms@2.1.3:
+    resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  nunjucks@3.2.4:
+    resolution: {integrity: sha512-26XRV6BhkgK0VOxfbU5cQI+ICFUtMLixv1noZn1tGU38kQH5A5nmmbk/O45xdyBhD1esk47nKrY0mvQpZIhRjQ==}
+    engines: {node: '>= 6.9.0'}
+    hasBin: true
+    peerDependencies:
+      chokidar: ^3.3.0
+    peerDependenciesMeta:
+      chokidar:
+        optional: true
+
+  object-keys@1.1.1:
+    resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
+    engines: {node: '>= 0.4'}
+
+  prettier@3.3.3:
+    resolution: {integrity: sha512-i2tDNA0O5IrMO757lfrdQZCc2jPNDVntV0m/+4whiDfWaTKfMNgR7Qz0NAeGz/nRqF4m5/6CLzbP4/liHt12Ew==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  semver@7.6.3:
+    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  set-function-length@1.2.2:
+    resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
+    engines: {node: '>= 0.4'}
+
+  text-table@0.2.0:
+    resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
+
+  toml@3.0.0:
+    resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
+
+  typescript@5.6.3:
+    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  undici-types@6.19.8:
+    resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
+
+  zx@8.1.9:
+    resolution: {integrity: sha512-UHuLHphHmsBYKkAchkSrEN4nzDyagafqC9HUxtc1J7eopaScW6H9dsLJ1lmkAntnLtDTGoM8fa+jrJrXiIfKFA==}
+    engines: {node: '>= 12.17.0'}
+    hasBin: true
+
+snapshots:
+
+  '@codama/errors@1.0.0':
+    dependencies:
+      '@codama/node-types': 1.0.0
+      chalk: 5.3.0
+      commander: 12.1.0
+
+  '@codama/node-types@1.0.0': {}
+
+  '@codama/nodes-from-anchor@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/visitors': 1.0.0
+      '@noble/hashes': 1.5.0
+
+  '@codama/nodes@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/node-types': 1.0.0
+
+  '@codama/renderers-core@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/visitors-core': 1.0.0
+
+  '@codama/renderers-js@1.0.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/nodes-from-anchor': 1.0.0
+      '@codama/renderers-core': 1.0.0
+      '@codama/visitors-core': 1.0.0
+      '@solana/codecs-strings': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)
+      nunjucks: 3.2.4
+      prettier: 3.3.3
+    transitivePeerDependencies:
+      - chokidar
+      - fastestsmallesttextencoderdecoder
+      - typescript
+
+  '@codama/renderers-rust@1.0.3(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/renderers-core': 1.0.0
+      '@codama/visitors-core': 1.0.0
+      '@solana/codecs-strings': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)
+      nunjucks: 3.2.4
+    transitivePeerDependencies:
+      - chokidar
+      - fastestsmallesttextencoderdecoder
+      - typescript
+
+  '@codama/validators@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/visitors-core': 1.0.0
+
+  '@codama/visitors-core@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      json-stable-stringify: 1.1.1
+
+  '@codama/visitors@1.0.0':
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/visitors-core': 1.0.0
+
+  '@iarna/toml@2.2.5': {}
+
+  '@metaplex-foundation/rustbin@0.3.5':
+    dependencies:
+      debug: 4.3.7
+      semver: 7.6.3
+      text-table: 0.2.0
+      toml: 3.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@metaplex-foundation/shank-js@0.1.7':
+    dependencies:
+      '@metaplex-foundation/rustbin': 0.3.5
+      ansi-colors: 4.1.3
+      debug: 4.3.7
+    transitivePeerDependencies:
+      - supports-color
+
+  '@noble/hashes@1.5.0': {}
+
+  '@solana/codecs-core@2.0.0-rc.1(typescript@5.6.3)':
+    dependencies:
+      '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
+      typescript: 5.6.3
+
+  '@solana/codecs-numbers@2.0.0-rc.1(typescript@5.6.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.6.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
+      typescript: 5.6.3
+
+  '@solana/codecs-strings@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)':
+    dependencies:
+      '@solana/codecs-core': 2.0.0-rc.1(typescript@5.6.3)
+      '@solana/codecs-numbers': 2.0.0-rc.1(typescript@5.6.3)
+      '@solana/errors': 2.0.0-rc.1(typescript@5.6.3)
+      fastestsmallesttextencoderdecoder: 1.0.22
+      typescript: 5.6.3
+
+  '@solana/errors@2.0.0-rc.1(typescript@5.6.3)':
+    dependencies:
+      chalk: 5.3.0
+      commander: 12.1.0
+      typescript: 5.6.3
+
+  '@types/fs-extra@11.0.4':
+    dependencies:
+      '@types/jsonfile': 6.1.4
+      '@types/node': 22.7.9
+    optional: true
+
+  '@types/jsonfile@6.1.4':
+    dependencies:
+      '@types/node': 22.7.9
+    optional: true
+
+  '@types/node@22.7.9':
+    dependencies:
+      undici-types: 6.19.8
+    optional: true
+
+  a-sync-waterfall@1.0.1: {}
+
+  ansi-colors@4.1.3: {}
+
+  asap@2.0.6: {}
+
+  call-bind@1.0.7:
+    dependencies:
+      es-define-property: 1.0.0
+      es-errors: 1.3.0
+      function-bind: 1.1.2
+      get-intrinsic: 1.2.4
+      set-function-length: 1.2.2
+
+  chalk@5.3.0: {}
+
+  codama@1.0.0:
+    dependencies:
+      '@codama/errors': 1.0.0
+      '@codama/nodes': 1.0.0
+      '@codama/validators': 1.0.0
+      '@codama/visitors': 1.0.0
+
+  commander@12.1.0: {}
+
+  commander@5.1.0: {}
+
+  debug@4.3.7:
+    dependencies:
+      ms: 2.1.3
+
+  define-data-property@1.1.4:
+    dependencies:
+      es-define-property: 1.0.0
+      es-errors: 1.3.0
+      gopd: 1.0.1
+
+  es-define-property@1.0.0:
+    dependencies:
+      get-intrinsic: 1.2.4
+
+  es-errors@1.3.0: {}
+
+  fastestsmallesttextencoderdecoder@1.0.22: {}
+
+  function-bind@1.1.2: {}
+
+  get-intrinsic@1.2.4:
+    dependencies:
+      es-errors: 1.3.0
+      function-bind: 1.1.2
+      has-proto: 1.0.3
+      has-symbols: 1.0.3
+      hasown: 2.0.2
+
+  gopd@1.0.1:
+    dependencies:
+      get-intrinsic: 1.2.4
+
+  has-property-descriptors@1.0.2:
+    dependencies:
+      es-define-property: 1.0.0
+
+  has-proto@1.0.3: {}
+
+  has-symbols@1.0.3: {}
+
+  hasown@2.0.2:
+    dependencies:
+      function-bind: 1.1.2
+
+  isarray@2.0.5: {}
+
+  json-stable-stringify@1.1.1:
+    dependencies:
+      call-bind: 1.0.7
+      isarray: 2.0.5
+      jsonify: 0.0.1
+      object-keys: 1.1.1
+
+  jsonify@0.0.1: {}
+
+  ms@2.1.3: {}
+
+  nunjucks@3.2.4:
+    dependencies:
+      a-sync-waterfall: 1.0.1
+      asap: 2.0.6
+      commander: 5.1.0
+
+  object-keys@1.1.1: {}
+
+  prettier@3.3.3: {}
+
+  semver@7.6.3: {}
+
+  set-function-length@1.2.2:
+    dependencies:
+      define-data-property: 1.1.4
+      es-errors: 1.3.0
+      function-bind: 1.1.2
+      get-intrinsic: 1.2.4
+      gopd: 1.0.1
+      has-property-descriptors: 1.0.2
+
+  text-table@0.2.0: {}
+
+  toml@3.0.0: {}
+
+  typescript@5.6.3: {}
+
+  undici-types@6.19.8:
+    optional: true
+
+  zx@8.1.9:
+    optionalDependencies:
+      '@types/fs-extra': 11.0.4
+      '@types/node': 22.7.9

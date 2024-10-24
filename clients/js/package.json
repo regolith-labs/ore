@@ -1,0 +1,66 @@
+{
+  "name": "@regolith-labs/ore",
+  "version": "0.1.0",
+  "description": "JavaScript client for the ORE program",
+  "sideEffects": false,
+  "module": "./dist/src/index.mjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/types/index.d.ts",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/src/index.mjs",
+      "require": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "./dist/src",
+    "./dist/types"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
+    "build:docs": "typedoc",
+    "test": "ava",
+    "lint": "eslint --ext js,ts,tsx src",
+    "lint:fix": "eslint --fix --ext js,ts,tsx src",
+    "format": "prettier --check src test",
+    "format:fix": "prettier --write src test",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@solana/web3.js": "2.0.0-rc.1"
+  },
+  "devDependencies": {
+    "@ava/typescript": "^4.1.0",
+    "@solana/web3.js": "2.0.0-rc.1",
+    "@solana/webcrypto-ed25519-polyfill": "2.0.0-rc.1",
+    "@types/node": "^20",
+    "@typescript-eslint/eslint-plugin": "^8.11.0",
+    "@typescript-eslint/parser": "^8.11.0",
+    "ava": "^6.1.3",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.1.2",
+    "typedoc": "^0.26.10",
+    "typescript": "^5.5.3"
+  },
+  "ava": {
+    "nodeArguments": [
+      "--no-warnings"
+    ],
+    "typescript": {
+      "compile": false,
+      "rewritePaths": {
+        "test/": "dist/test/"
+      }
+    }
+  },
+  "packageManager": "pnpm@9.1.0"
+}

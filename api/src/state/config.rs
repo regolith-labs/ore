@@ -1,10 +1,11 @@
+use shank::ShankAccount;
 use steel::*;
 
 use super::OreAccount;
 
 /// Config is a singleton account which manages program global variables.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Config {
     /// The base reward rate paid out for a hash of minimum difficulty.
     pub base_reward_rate: u64,
