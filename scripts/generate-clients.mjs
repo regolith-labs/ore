@@ -146,3 +146,10 @@ codama.accept(
     prettierOptions: require(path.join(jsClient, '.prettierrc.json')),
   })
 );
+
+// Output Codama IDL to a file.
+const { writeFileSync } = require("fs");
+writeFileSync(
+  path.join(__dirname, '..', 'api', 'idl.codama.json'),
+  codama.getJson()
+);
