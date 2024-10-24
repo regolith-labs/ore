@@ -124,7 +124,7 @@ pub fn reset(signer: Pubkey) -> Instruction {
 }
 
 /// Build a stake instruction.
-#[deprecated(since = "2.3.0", note = "Please stake with the boost program")]
+#[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
     #[allow(deprecated)]
