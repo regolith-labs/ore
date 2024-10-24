@@ -1,3 +1,4 @@
+use shank::ShankAccount;
 use steel::*;
 
 use super::OreAccount;
@@ -5,7 +6,7 @@ use super::OreAccount;
 /// Bus accounts are responsible for distributing mining rewards. There are 8 busses total
 /// to minimize write-lock contention and allow Solana to process mine instructions in parallel.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, ShankAccount, Zeroable)]
 pub struct Bus {
     /// The ID of the bus account.
     pub id: u64,
