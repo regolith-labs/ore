@@ -56,6 +56,7 @@ pub enum OreInstruction {
     #[account(2, writable, name="sender", desc="sender")]
     #[account(3, writable, name="treasury_tokens", desc="treasury_tokens")]
     #[account(4, name="token_program", desc="token_program")]
+    #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
     Stake = 5,
 
     #[account(0, writable, signer, name="signer", desc="signer")]
@@ -122,6 +123,7 @@ pub struct Open {
 #[derive(Clone, Copy, Debug, Pod, ShankType, Zeroable)]
 pub struct Reset {}
 
+#[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, ShankType, Zeroable)]
 pub struct Stake {
