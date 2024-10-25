@@ -3,7 +3,7 @@ resolver = "2"
 members = ["api", "program"]
 
 [workspace.package]
-version = "2.4.0"
+version = "2.5.0"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
@@ -20,10 +20,10 @@ drillx = { version = "2.0.0", features = ["solana"] }
 mpl-token-metadata = "4.1.2"
 num_enum = "0.7.2"
 ore-api = { path = "api", version = "2.1.9" }
-ore-boost-api = "0.2"
+ore-boost-api = "0.3"
 solana-program = "^1.18"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
-steel = { features = ["spl"], version = "1.0" }
+steel = { features = ["spl"], version = "2.0" }
 thiserror = "1.0.57"

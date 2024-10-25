@@ -6,7 +6,6 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
@@ -19,6 +18,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
+    let clock = Clock::get()?;
+    let t: i64 = clock.unix_timestamp;
     let (required_accounts, optional_accounts) = accounts.split_at(6);
     let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         required_accounts
@@ -26,13 +27,20 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let bus = bus_info.is_bus()?.to_account_mut::<Bus>(&ore_api::ID)?;
+    let bus = bus_info.is_bus()?.as_account_mut::<Bus>(&ore_api::ID)?;
     let config = config_info
         .is_config()?
-        .to_account::<Config>(&ore_api::ID)?;
+        .as_account::<Config>(&ore_api::ID)?
+        .assert_err(
+            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            OreError::NeedsReset.into(),
+        )?;
     let proof = proof_info
-        .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.miner == *signer_info.key)?;
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut_err(
+            |p| p.miner == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
@@ -42,21 +50,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // in the transaction must use the same proof account.
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
-    // Validate epoch is active.
-    let clock = Clock::get()?;
-    if config
-        .last_reset_at
-        .saturating_add(EPOCH_DURATION)
-        .le(&clock.unix_timestamp)
-    {
-        return Err(OreError::NeedsReset.into());
-    }
-
     // Reject spam transactions.
     //
     // Miners are rate limited to approximately 1 hash per minute. If a miner attempts to submit
     // solutions more frequently than this, reject with an error.
-    let t: i64 = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
@@ -106,11 +103,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
-            let boost = boost_info.to_account::<Boost>(&ore_boost_api::ID)?;
+            let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
             let stake = stake_info
-                .to_account::<Stake>(&ore_boost_api::ID)?
-                .check(|s| s.authority == proof.authority)?
-                .check(|s| s.boost == *boost_info.key)?;
+                .as_account::<Stake>(&ore_boost_api::ID)?
+                .assert(|s| s.authority == proof.authority)?
+                .assert(|s| s.boost == *boost_info.key)?;
 
             // Skip if boost is applied twice.
             if applied_boosts.contains(boost_info.key) {
@@ -209,19 +206,17 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
     }
-    set_return_data(
-        MineEvent {
-            balance: proof.balance,
-            difficulty: difficulty as u64,
-            last_hash_at: prev_last_hash_at,
-            timing: t.saturating_sub(t_liveness),
-            reward: reward_actual,
-            boost_1: boost_rewards[0],
-            boost_2: boost_rewards[1],
-            boost_3: boost_rewards[2],
-        }
-        .to_bytes(),
-    );
+    MineEvent {
+        balance: proof.balance,
+        difficulty: difficulty as u64,
+        last_hash_at: prev_last_hash_at,
+        timing: t.saturating_sub(t_liveness),
+        reward: reward_actual,
+        boost_1: boost_rewards[0],
+        boost_2: boost_rewards[1],
+        boost_3: boost_rewards[2],
+    }
+    .log_return();
 
     Ok(())
 }

@@ -16,41 +16,32 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     signer_info.is_signer()?;
     beneficiary_info
         .is_writable()?
-        .to_token_account()?
-        .check(|t| t.owner == *signer_info.key)?
-        .check(|t| t.mint == MINT_ADDRESS)?;
+        .as_token_account()?
+        .assert(|t| t.owner == *signer_info.key)?
+        .assert(|t| t.mint == MINT_ADDRESS)?;
     let mint = mint_info
         .is_writable()?
         .has_address(&MINT_ADDRESS)?
-        .to_mint()?;
+        .as_mint()?;
     mint_v1_info
         .is_writable()?
         .has_address(&MINT_V1_ADDRESS)?
-        .to_mint()?;
+        .as_mint()?;
     sender_info
         .is_writable()?
-        .to_token_account()?
-        .check(|t| t.owner == *signer_info.key)?
-        .check(|t| t.mint == MINT_V1_ADDRESS)?;
+        .as_token_account()?
+        .assert(|t| t.owner == *signer_info.key)?
+        .assert(|t| t.mint == MINT_V1_ADDRESS)?;
     treasury_info.is_treasury()?;
     token_program.is_program(&spl_token::ID)?;
 
     // Burn v1 tokens
-    solana_program::program::invoke(
-        &spl_token::instruction::burn(
-            &spl_token::id(),
-            sender_info.key,
-            mint_v1_info.key,
-            signer_info.key,
-            &[signer_info.key],
-            amount,
-        )?,
-        &[
-            token_program.clone(),
-            sender_info.clone(),
-            mint_v1_info.clone(),
-            signer_info.clone(),
-        ],
+    burn(
+        sender_info,
+        mint_v1_info,
+        signer_info,
+        token_program,
+        amount,
     )?;
 
     // Account for decimals change.
@@ -69,7 +60,7 @@ pub fn process_upgrade(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         treasury_info,
         token_program,
         amount_to_mint,
-        &[&[TREASURY, &[TREASURY_BUMP]]],
+        &[TREASURY],
     )?;
 
     Ok(())

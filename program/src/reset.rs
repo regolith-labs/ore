@@ -11,36 +11,36 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     };
     signer_info.is_signer()?;
     let bus_0 = bus_0_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 0)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 0)?;
     let bus_1 = bus_1_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 1)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 1)?;
     let bus_2 = bus_2_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 2)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 2)?;
     let bus_3 = bus_3_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 3)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 3)?;
     let bus_4 = bus_4_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 4)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 4)?;
     let bus_5 = bus_5_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 5)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 5)?;
     let bus_6 = bus_6_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 6)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 6)?;
     let bus_7 = bus_7_info
-        .to_account_mut::<Bus>(&ore_api::ID)?
-        .check_mut(|b| b.id == 7)?;
+        .as_account_mut::<Bus>(&ore_api::ID)?
+        .assert_mut(|b| b.id == 7)?;
     let config = config_info
         .is_config()?
-        .to_account_mut::<Config>(&ore_api::ID)?;
+        .as_account_mut::<Config>(&ore_api::ID)?;
     let mint = mint_info
         .has_address(&MINT_ADDRESS)?
         .is_writable()?
-        .to_mint()?;
+        .as_mint()?;
     treasury_info.is_treasury()?.is_writable()?;
     treasury_tokens_info.is_treasury_tokens()?.is_writable()?;
     token_program.is_program(&spl_token::ID)?;
@@ -109,22 +109,13 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let amount = MAX_SUPPLY
         .saturating_sub(mint.supply)
         .min(total_epoch_rewards);
-    solana_program::program::invoke_signed(
-        &spl_token::instruction::mint_to(
-            &spl_token::id(),
-            mint_info.key,
-            treasury_tokens_info.key,
-            treasury_info.key,
-            &[treasury_info.key],
-            amount,
-        )?,
-        &[
-            token_program.clone(),
-            mint_info.clone(),
-            treasury_tokens_info.clone(),
-            treasury_info.clone(),
-        ],
-        &[&[TREASURY, &[TREASURY_BUMP]]],
+    mint_to_signed(
+        mint_info,
+        treasury_tokens_info,
+        treasury_info,
+        token_program,
+        amount,
+        &[TREASURY],
     )?;
 
     Ok(())

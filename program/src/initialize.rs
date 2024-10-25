@@ -4,10 +4,7 @@ use spl_token::state::Mint;
 use steel::*;
 
 /// Initialize sets up the ORE program to begin mining.
-pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    // Parse args.
-    let args = Initialize::try_from_bytes(data)?;
-
+pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info, bus_7_info, config_info, metadata_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, metadata_program, rent_sysvar] =
         accounts
@@ -18,58 +15,55 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     bus_0_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[0]], args.bus_0_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[0]], &ore_api::ID)?;
     bus_1_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[1]], args.bus_1_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[1]], &ore_api::ID)?;
     bus_2_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[2]], args.bus_2_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[2]], &ore_api::ID)?;
     bus_3_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[3]], args.bus_3_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[3]], &ore_api::ID)?;
     bus_4_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[4]], args.bus_4_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[4]], &ore_api::ID)?;
     bus_5_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[5]], args.bus_5_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[5]], &ore_api::ID)?;
     bus_6_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[6]], args.bus_6_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[6]], &ore_api::ID)?;
     bus_7_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[BUS, &[7]], args.bus_7_bump, &ore_api::ID)?;
+        .has_seeds(&[BUS, &[7]], &ore_api::ID)?;
     config_info
         .is_empty()?
         .is_writable()?
-        .has_seeds(&[CONFIG], args.config_bump, &ore_api::ID)?;
+        .has_seeds(&[CONFIG], &ore_api::ID)?;
     metadata_info.is_empty()?.is_writable()?.has_seeds(
         &[
             METADATA,
             mpl_token_metadata::ID.as_ref(),
             MINT_ADDRESS.as_ref(),
         ],
-        args.metadata_bump,
         &mpl_token_metadata::ID,
     )?;
-    mint_info.is_empty()?.is_writable()?.has_seeds(
-        &[MINT, MINT_NOISE.as_slice()],
-        args.mint_bump,
-        &ore_api::ID,
-    )?;
-    treasury_info.is_empty()?.is_writable()?.has_seeds(
-        &[TREASURY],
-        args.treasury_bump,
-        &ore_api::ID,
-    )?;
+    mint_info
+        .is_empty()?
+        .is_writable()?
+        .has_seeds(&[MINT, MINT_NOISE.as_slice()], &ore_api::ID)?;
+    treasury_info
+        .is_empty()?
+        .is_writable()?
+        .has_seeds(&[TREASURY], &ore_api::ID)?;
     treasury_tokens_info.is_empty()?.is_writable()?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -82,25 +76,15 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
         bus_7_info,
     ];
-    let bus_bumps = [
-        args.bus_0_bump,
-        args.bus_1_bump,
-        args.bus_2_bump,
-        args.bus_3_bump,
-        args.bus_4_bump,
-        args.bus_5_bump,
-        args.bus_6_bump,
-        args.bus_7_bump,
-    ];
     for i in 0..BUS_COUNT {
         create_account::<Bus>(
             bus_infos[i],
-            &ore_api::ID,
-            &[BUS, &[i as u8], &[bus_bumps[i]]],
             system_program,
             signer_info,
+            &ore_api::ID,
+            &[BUS, &[i as u8]],
         )?;
-        let bus = bus_infos[i].to_account_mut::<Bus>(&ore_api::ID)?;
+        let bus = bus_infos[i].as_account_mut::<Bus>(&ore_api::ID)?;
         bus.id = i as u64;
         bus.rewards = 0;
         bus.theoretical_rewards = 0;
@@ -110,12 +94,12 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     // Initialize config.
     create_account::<Config>(
         config_info,
-        &ore_api::ID,
-        &[CONFIG, &[args.config_bump]],
         system_program,
         signer_info,
+        &ore_api::ID,
+        &[CONFIG],
     )?;
-    let config = config_info.to_account_mut::<Config>(&ore_api::ID)?;
+    let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
@@ -124,36 +108,31 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
     // Initialize treasury.
     create_account::<Treasury>(
         treasury_info,
-        &ore_api::ID,
-        &[TREASURY, &[args.treasury_bump]],
         system_program,
         signer_info,
+        &ore_api::ID,
+        &[TREASURY],
     )?;
 
     // Initialize mint.
-    allocate_account(
+    allocate_account_with_bump(
         mint_info,
-        &spl_token::ID,
-        Mint::LEN,
-        &[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]],
         system_program,
         signer_info,
+        Mint::LEN,
+        &spl_token::ID,
+        &[MINT, MINT_NOISE.as_slice()],
+        MINT_BUMP,
     )?;
-    solana_program::program::invoke_signed(
-        &spl_token::instruction::initialize_mint(
-            &spl_token::ID,
-            mint_info.key,
-            treasury_info.key,
-            None,
-            TOKEN_DECIMALS,
-        )?,
-        &[
-            token_program.clone(),
-            mint_info.clone(),
-            treasury_info.clone(),
-            rent_sysvar.clone(),
-        ],
-        &[&[MINT, MINT_NOISE.as_slice(), &[args.mint_bump]]],
+    initialize_mint_signed_with_bump(
+        mint_info,
+        treasury_info,
+        None,
+        token_program,
+        rent_sysvar,
+        TOKEN_DECIMALS,
+        &[MINT, MINT_NOISE.as_slice()],
+        MINT_BUMP,
     )?;
 
     // Initialize mint metadata.
@@ -180,7 +159,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
             collection_details: None,
         },
     }
-    .invoke_signed(&[&[TREASURY, &[args.treasury_bump]]])?;
+    .invoke_signed(&[&[TREASURY, &[TREASURY_BUMP]]])?;
 
     // Initialize treasury token account.
     create_associated_token_account(
