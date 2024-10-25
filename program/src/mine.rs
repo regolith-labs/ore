@@ -207,10 +207,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
     }
-
-    // Log mining event.
-    //
-    // These logs can be used by pool operators to calculate miner rewards.
     MineEvent {
         balance: proof.balance,
         difficulty: difficulty as u64,
