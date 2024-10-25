@@ -6,7 +6,7 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    log::sol_log,
+    program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
@@ -92,34 +92,12 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
-    // Apply staking multiplier.
-    //
-    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
-    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Calculate staking reward.
-        if config.top_balance.gt(&0) {
-            let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
-            reward = reward.checked_add(staking_reward).unwrap();
-        }
-
-        // Update bus stake tracker.
-        if proof.balance.gt(&bus.top_balance) {
-            bus.top_balance = proof.balance;
-        }
-    }
-
     // Apply boosts.
     //
     // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
     // on any given mine operation.
     let base_reward = reward;
-    let mut boost_events: Vec<BoostEvent> = vec![];
+    let mut boost_rewards = [0u64; 3];
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
         if optional_accounts.len().gt(&(i * 2)) {
@@ -153,10 +131,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
                 reward = reward.checked_add(boost_reward).unwrap();
 
                 // Push boost event
-                boost_events.push(BoostEvent {
-                    mint: boost.mint,
-                    reward: boost_reward,
-                });
+                boost_rewards[i] = boost_reward;
             }
         }
     }
@@ -216,31 +191,35 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
+    let prev_last_hash_at = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
-    // Log boost events.
+    // Log data.
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
-    // These logs can be used by pool operators to calculate staker rewards.
-    for mut event in boost_events.into_iter() {
-        event.reward = (event.reward as u128)
+    // This return data can be used by pool operators to calculate miner and staker rewards.
+    for i in 0..3 {
+        boost_rewards[i] = (boost_rewards[i] as u128)
             .checked_mul(reward_actual as u128)
             .unwrap()
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
-        event.log();
     }
-    sol_log(&format!("Base: {}", reward_actual));
 
     // Log mining event.
     //
     // These logs can be used by pool operators to calculate miner rewards.
     MineEvent {
+        balance: proof.balance,
         difficulty: difficulty as u64,
-        reward: reward_actual,
+        last_hash_at: prev_last_hash_at,
         timing: t.saturating_sub(t_liveness),
+        reward: reward_actual,
+        boost_1: boost_rewards[0],
+        boost_2: boost_rewards[1],
+        boost_3: boost_rewards[2],
     }
     .log_return();
 
