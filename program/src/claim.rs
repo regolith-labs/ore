@@ -16,11 +16,14 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     signer_info.is_signer()?;
     beneficiary_info
         .is_writable()?
-        .to_token_account()?
-        .check(|t| t.mint == MINT_ADDRESS)?;
+        .as_token_account()?
+        .assert(|t| t.mint == MINT_ADDRESS)?;
     let proof = proof_info
-        .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.authority == *signer_info.key)?;
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut_err(
+            |p| p.authority == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     treasury_info.is_treasury()?;
     treasury_tokens_info.is_writable()?.is_treasury_tokens()?;
     token_program.is_program(&spl_token::ID)?;
@@ -38,7 +41,7 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
         beneficiary_info,
         token_program,
         amount,
-        &[&[TREASURY, &[TREASURY_BUMP]]],
+        &[TREASURY],
     )?;
 
     Ok(())

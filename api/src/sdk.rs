@@ -83,6 +83,7 @@ pub fn mine(
 }
 
 /// Builds an open instruction.
+#[allow(deprecated)]
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     let proof_pda = proof_pda(signer);
     Instruction {
@@ -124,8 +125,10 @@ pub fn reset(signer: Pubkey) -> Instruction {
 }
 
 /// Build a stake instruction.
+#[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
+    #[allow(deprecated)]
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -179,6 +182,7 @@ pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64)
 }
 
 /// Builds an initialize instruction.
+#[allow(deprecated)]
 pub fn initialize(signer: Pubkey) -> Instruction {
     let bus_pdas = [
         bus_pda(0),

@@ -128,6 +128,9 @@ pub const METADATA_ADDRESS: Pubkey = Pubkey::new_from_array(
 pub const MINT_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).0);
 
+/// The bump of the mint account.
+pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).1;
+
 /// The address of the v1 mint account.
 pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
 

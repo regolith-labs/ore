@@ -6,8 +6,6 @@ use ore_boost_api::state::{Boost, Stake};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
-    log::{sol_log, sol_log_data},
-    program::set_return_data,
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
@@ -20,6 +18,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let args = Mine::try_from_bytes(data)?;
 
     // Load accounts.
+    let clock = Clock::get()?;
+    let t: i64 = clock.unix_timestamp;
     let (required_accounts, optional_accounts) = accounts.split_at(6);
     let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         required_accounts
@@ -27,13 +27,20 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let bus = bus_info.is_bus()?.to_account_mut::<Bus>(&ore_api::ID)?;
+    let bus = bus_info.is_bus()?.as_account_mut::<Bus>(&ore_api::ID)?;
     let config = config_info
         .is_config()?
-        .to_account::<Config>(&ore_api::ID)?;
+        .as_account::<Config>(&ore_api::ID)?
+        .assert_err(
+            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            OreError::NeedsReset.into(),
+        )?;
     let proof = proof_info
-        .to_account_mut::<Proof>(&ore_api::ID)?
-        .check_mut(|p| p.miner == *signer_info.key)?;
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut_err(
+            |p| p.miner == *signer_info.key,
+            ProgramError::MissingRequiredSignature,
+        )?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
@@ -43,21 +50,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // in the transaction must use the same proof account.
     authenticate(&instructions_sysvar.data.borrow(), proof_info.key)?;
 
-    // Validate epoch is active.
-    let clock = Clock::get()?;
-    if config
-        .last_reset_at
-        .saturating_add(EPOCH_DURATION)
-        .le(&clock.unix_timestamp)
-    {
-        return Err(OreError::NeedsReset.into());
-    }
-
     // Reject spam transactions.
     //
     // Miners are rate limited to approximately 1 hash per minute. If a miner attempts to submit
     // solutions more frequently than this, reject with an error.
-    let t: i64 = clock.unix_timestamp;
     let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
     let t_spam = t_target.saturating_sub(TOLERANCE);
     if t.lt(&t_spam) {
@@ -95,45 +91,23 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
 
-    // Apply staking multiplier.
-    //
-    // If user has greater than or equal to the max stake on the network, they receive 2x multiplier.
-    // Any stake less than this will receives between 1x and 2x multipler. The multipler is only active
-    // if the miner's last stake deposit was more than one minute ago to protect against flash loan attacks.
-    if proof.balance.gt(&0) && proof.last_stake_at.saturating_add(ONE_MINUTE).lt(&t) {
-        // Calculate staking reward.
-        if config.top_balance.gt(&0) {
-            let staking_reward = (reward as u128)
-                .checked_mul(proof.balance.min(config.top_balance) as u128)
-                .unwrap()
-                .checked_div(config.top_balance as u128)
-                .unwrap() as u64;
-            reward = reward.checked_add(staking_reward).unwrap();
-        }
-
-        // Update bus stake tracker.
-        if proof.balance.gt(&bus.top_balance) {
-            bus.top_balance = proof.balance;
-        }
-    }
-
     // Apply boosts.
     //
     // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
     // on any given mine operation.
     let base_reward = reward;
-    let mut boost_events: Vec<BoostEvent> = vec![];
+    let mut boost_rewards = [0u64; 3];
     let mut applied_boosts = [Pubkey::new_from_array([0; 32]); 3];
     for i in 0..3 {
         if optional_accounts.len().gt(&(i * 2)) {
             // Load optional accounts.
             let boost_info = optional_accounts[i * 2].clone();
             let stake_info = optional_accounts[i * 2 + 1].clone();
-            let boost = boost_info.to_account::<Boost>(&ore_boost_api::ID)?;
+            let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
             let stake = stake_info
-                .to_account::<Stake>(&ore_boost_api::ID)?
-                .check(|s| s.authority == proof.authority)?
-                .check(|s| s.boost == *boost_info.key)?;
+                .as_account::<Stake>(&ore_boost_api::ID)?
+                .assert(|s| s.authority == proof.authority)?
+                .assert(|s| s.boost == *boost_info.key)?;
 
             // Skip if boost is applied twice.
             if applied_boosts.contains(boost_info.key) {
@@ -156,10 +130,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
                 reward = reward.checked_add(boost_reward).unwrap();
 
                 // Push boost event
-                boost_events.push(BoostEvent {
-                    mint: boost.mint,
-                    reward: boost_reward,
-                });
+                boost_rewards[i] = boost_reward;
             }
         }
     }
@@ -219,32 +190,33 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     .0;
 
     // Update stats.
-    sol_log(format!("Last hash at: {}", proof.last_hash_at).as_str());
+    let prev_last_hash_at = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes = proof.total_hashes.saturating_add(1);
     proof.total_rewards = proof.total_rewards.saturating_add(reward_actual);
 
-    // Log events.
+    // Log data.
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
-    // These logs can be used by pool operators to calculate miner and staker rewards.
-    sol_log(format!("Base: {}", reward_actual).as_str());
-    for mut e in boost_events.into_iter() {
-        e.reward = (e.reward as u128)
+    // This return data can be used by pool operators to calculate miner and staker rewards.
+    for i in 0..3 {
+        boost_rewards[i] = (boost_rewards[i] as u128)
             .checked_mul(reward_actual as u128)
             .unwrap()
             .checked_div(reward_pre_penalty as u128)
             .unwrap() as u64;
-        sol_log_data(&[e.to_bytes()]);
     }
-    set_return_data(
-        MineEvent {
-            difficulty: difficulty as u64,
-            reward: reward_actual,
-            timing: t.saturating_sub(t_liveness),
-        }
-        .to_bytes(),
-    );
+    MineEvent {
+        balance: proof.balance,
+        difficulty: difficulty as u64,
+        last_hash_at: prev_last_hash_at,
+        timing: t.saturating_sub(t_liveness),
+        reward: reward_actual,
+        boost_1: boost_rewards[0],
+        boost_2: boost_rewards[1],
+        boost_3: boost_rewards[2],
+    }
+    .log_return();
 
     Ok(())
 }
