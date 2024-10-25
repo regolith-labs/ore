@@ -17,7 +17,7 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     beneficiary_info
         .is_writable()?
         .as_token_account()?
-        .assert_msg(|t| t.mint == MINT_ADDRESS, "Invalid mint")?;
+        .assert(|t| t.mint == MINT_ADDRESS)?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut_err(
