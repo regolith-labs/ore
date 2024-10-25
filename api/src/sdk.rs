@@ -83,6 +83,7 @@ pub fn mine(
 }
 
 /// Builds an open instruction.
+#[allow(deprecated)]
 pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
     let proof_pda = proof_pda(signer);
     Instruction {
@@ -95,7 +96,7 @@ pub fn open(signer: Pubkey, miner: Pubkey, payer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(solana_program::system_program::ID, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
         ],
-        data: Open {}.to_bytes(),
+        data: Open { bump: proof_pda.1 }.to_bytes(),
     }
 }
 
@@ -179,6 +180,7 @@ pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64)
 }
 
 /// Builds an initialize instruction.
+#[allow(deprecated)]
 pub fn initialize(signer: Pubkey) -> Instruction {
     let bus_pdas = [
         bus_pda(0),
@@ -224,6 +226,20 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
             AccountMeta::new_readonly(sysvar::rent::ID, false),
         ],
-        data: Initialize {}.to_bytes(),
+        data: Initialize {
+            bus_0_bump: bus_pdas[0].1,
+            bus_1_bump: bus_pdas[1].1,
+            bus_2_bump: bus_pdas[2].1,
+            bus_3_bump: bus_pdas[3].1,
+            bus_4_bump: bus_pdas[4].1,
+            bus_5_bump: bus_pdas[5].1,
+            bus_6_bump: bus_pdas[6].1,
+            bus_7_bump: bus_pdas[7].1,
+            config_bump: config_pda.1,
+            metadata_bump: metadata_pda.1,
+            mint_bump: mint_pda.1,
+            treasury_bump: treasury_pda.1,
+        }
+        .to_bytes(),
     }
 }
