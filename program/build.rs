@@ -1,7 +1,7 @@
 use std::env;
 use std::path::PathBuf;
 
-use include_idl::compress_idl;
+use solana_include_idl::compress_idl;
 
 /// Build script to compress the IDL file to a zip file when building the program.
 ///

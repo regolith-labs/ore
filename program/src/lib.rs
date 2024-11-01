@@ -18,8 +18,8 @@ use stake::*;
 use update::*;
 use upgrade::*;
 
-use include_idl::{include_idl, parse::IdlType};
 use ore_api::instruction::*;
+use solana_include_idl::{include_idl, parse::IdlType};
 use steel::*;
 
 // Include the compressed IDL in an ELF section on the program binary.

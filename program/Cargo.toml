@@ -20,7 +20,7 @@ default = []
 
 [dependencies]
 drillx.workspace = true
-include-idl = { version = "^0", git = "https://github.com/nifty-oss/asset.git" }
+solana-include-idl = "0.1"
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
 ore-boost-api.workspace = true
@@ -33,4 +33,4 @@ steel.workspace = true
 rand = "0.8.5"
 
 [build-dependencies]
-include-idl = { version = "^0", git = "https://github.com/nifty-oss/asset.git", features = ["shrink"] }
+solana-include-idl = { version = "0.1", features = ["shrink"] }

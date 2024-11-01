@@ -1033,14 +1033,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "include-idl"
-version = "0.1.0"
-source = "git+https://github.com/nifty-oss/asset.git#dccaaad3be97b9141e09972beb477b9464245ec1"
-dependencies = [
- "flate2",
-]
-
-[[package]]
 name = "indexmap"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1368,11 +1360,11 @@ name = "ore-program"
 version = "2.5.0"
 dependencies = [
  "drillx",
- "include-idl",
  "mpl-token-metadata",
  "ore-api",
  "ore-boost-api",
  "rand 0.8.5",
+ "solana-include-idl",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -1894,6 +1886,15 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn 2.0.79",
+]
+
+[[package]]
+name = "solana-include-idl"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "754cc8fce28c62e67593ef317d715567b4610abfce1fa9ffa1d94f6eed8ad701"
+dependencies = [
+ "flate2",
 ]
 
 [[package]]
