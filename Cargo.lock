@@ -1035,7 +1035,7 @@ dependencies = [
 [[package]]
 name = "include-idl"
 version = "0.1.0"
-source = "git+https://github.com/nifty-oss/asset.git#67a46795fd8060920925e07457e808e8a205c48b"
+source = "git+https://github.com/nifty-oss/asset.git#dccaaad3be97b9141e09972beb477b9464245ec1"
 dependencies = [
  "flate2",
 ]
