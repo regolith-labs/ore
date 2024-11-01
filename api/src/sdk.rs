@@ -125,10 +125,10 @@ pub fn reset(signer: Pubkey) -> Instruction {
 }
 
 /// Build a stake instruction.
+#[allow(deprecated)]
 #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
 pub fn stake(signer: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
-    #[allow(deprecated)]
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -160,6 +160,8 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
 }
 
 // Build an upgrade instruction.
+#[allow(deprecated)]
+#[deprecated(since = "2.6.0", note = "v1 tokens are no longer eligable to upgrade")]
 pub fn upgrade(signer: Pubkey, beneficiary: Pubkey, sender: Pubkey, amount: u64) -> Instruction {
     Instruction {
         program_id: crate::ID,

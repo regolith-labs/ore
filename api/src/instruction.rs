@@ -12,6 +12,7 @@ pub enum OreInstruction {
     #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
     Stake = 5,
     Update = 6,
+    #[deprecated(since = "2.6.0", note = "v1 tokens are no longer eligable to upgrade")]
     Upgrade = 7,
 
     // Admin
@@ -57,6 +58,7 @@ pub struct Stake {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Update {}
 
+#[deprecated(since = "2.6.0", note = "v1 tokens are no longer eligable to upgrade")]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Upgrade {

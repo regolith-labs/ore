@@ -16,7 +16,6 @@
 - [`Mine`](program/src/mine.rs) – Verifies a hash and increments a miner's claimable balance.
 - [`Reset`](program/src/reset.rs) – Resets the program for a new epoch.
 - [`Update`](program/src/update.rs) – Updates a proof account's miner authority.
-- [`Upgrade`](program/src/upgrade.rs) – Migrates ORE v1 tokens to ORE v2, one-for-one.
 - [`Initialize`](program/src/initialize.rs) – Initializes the program and creates the global accounts.
 
 ## State
