@@ -1,0 +1,1730 @@
+{
+    "kind": "rootNode",
+    "standard": "codama",
+    "version": "1.0.0",
+    "program": {
+      "kind": "programNode",
+      "name": "ore",
+      "publicKey": "oreV2ZymfyeXgNgBdqMkumTqqAprVqgBWQfoYkrtKWQ",
+      "version": "2.3.0",
+      "origin": "shank",
+      "docs": [],
+      "accounts": [
+        {
+          "kind": "accountNode",
+          "name": "bus",
+          "size": 32,
+          "docs": [],
+          "data": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "discriminator",
+                "defaultValueStrategy": "omitted",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "defaultValue": { "kind": "numberValueNode", "number": 100 }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "id",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "rewards",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "theoreticalRewards",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "topBalance",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "pda": { "kind": "pdaLinkNode", "name": "bus" },
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "accountNode",
+          "name": "config",
+          "size": 32,
+          "docs": [],
+          "data": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "discriminator",
+                "defaultValueStrategy": "omitted",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "defaultValue": { "kind": "numberValueNode", "number": 101 }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "baseRewardRate",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "lastResetAt",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "i64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "minDifficulty",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "topBalance",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "pda": { "kind": "pdaLinkNode", "name": "config" },
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "accountNode",
+          "name": "proof",
+          "size": 168,
+          "docs": [],
+          "data": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "discriminator",
+                "defaultValueStrategy": "omitted",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "defaultValue": { "kind": "numberValueNode", "number": 102 }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "authority",
+                "docs": [],
+                "type": { "kind": "publicKeyTypeNode" }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "balance",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "challenge",
+                "docs": [],
+                "type": {
+                  "kind": "fixedSizeTypeNode",
+                  "size": 32,
+                  "type": { "kind": "bytesTypeNode" }
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "lastHash",
+                "docs": [],
+                "type": {
+                  "kind": "fixedSizeTypeNode",
+                  "size": 32,
+                  "type": { "kind": "bytesTypeNode" }
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "lastHashAt",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "i64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "lastStakeAt",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "i64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "miner",
+                "docs": [],
+                "type": { "kind": "publicKeyTypeNode" }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "totalHashes",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "totalRewards",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                }
+              }
+            ]
+          },
+          "pda": { "kind": "pdaLinkNode", "name": "proof" },
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "accountNode",
+          "name": "treasury",
+          "docs": [],
+          "data": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "discriminator",
+                "defaultValueStrategy": "omitted",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u64",
+                  "endian": "le"
+                },
+                "defaultValue": { "kind": "numberValueNode", "number": 103 }
+              }
+            ]
+          },
+          "pda": { "kind": "pdaLinkNode", "name": "treasury" },
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        }
+      ],
+      "instructions": [
+        {
+          "kind": "instructionNode",
+          "name": "claim",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "beneficiary",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["beneficiary"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proof",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasury",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasuryTokens",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury_tokens"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "tokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["token_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "identifier": "splToken"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 0 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "count": { "kind": "fixedCountNode", "value": 8 }
+              }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "close",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proof",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "systemProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["system_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "11111111111111111111111111111111",
+                "identifier": "splSystem"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 1 }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "mine",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "config",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["config"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proof",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "instructionsSysvar",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["instructions_sysvar"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "Sysvar1nstructions1111111111111111111111111"
+              }
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "slotHashesSysvar",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["slot_hashes_sysvar"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "SysvarS1otHashes111111111111111111111111111"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 2 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "digest",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "count": { "kind": "fixedCountNode", "value": 16 }
+              }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "nonce",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "count": { "kind": "fixedCountNode", "value": 8 }
+              }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "open",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "miner",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["miner"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "payer",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["payer"],
+              "defaultValue": { "kind": "payerValueNode" }
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proofPda",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof_pda"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "systemProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["system_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "11111111111111111111111111111111",
+                "identifier": "splSystem"
+              }
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "slotHashesSysvar",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["slot_hashes_sysvar"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "SysvarS1otHashes111111111111111111111111111"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 3 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "reset",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus0",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_0"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus1",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_1"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus2",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_2"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus3",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_3"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus4",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_4"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus5",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_5"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus6",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_6"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus7",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_7"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "config",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["config"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "mint",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["mint"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasury",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasuryTokens",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury_tokens"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "tokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["token_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "identifier": "splToken"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 4 }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "stake",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proof",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "sender",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["sender"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasuryTokens",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury_tokens"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "tokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["token_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "identifier": "splToken"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 5 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "count": { "kind": "fixedCountNode", "value": 8 }
+              }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "update",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "miner",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["miner"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "proof",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["proof"]
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 6 }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "upgrade",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": true,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "beneficiary",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["beneficiary"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "mint",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["mint"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "mintV1",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["mint_v1"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "sender",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["sender"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasury",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "tokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["token_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "identifier": "splToken"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 7 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "amount",
+              "docs": [],
+              "type": {
+                "kind": "arrayTypeNode",
+                "item": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                },
+                "count": { "kind": "fixedCountNode", "value": 8 }
+              }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        },
+        {
+          "kind": "instructionNode",
+          "name": "initialize",
+          "docs": [],
+          "optionalAccountStrategy": "programId",
+          "accounts": [
+            {
+              "kind": "instructionAccountNode",
+              "name": "signer",
+              "isWritable": false,
+              "isSigner": true,
+              "isOptional": false,
+              "docs": ["signer"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus0",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_0"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus1",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_1"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus2",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_2"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus3",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_3"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus4",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_4"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus5",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_5"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus6",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_6"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "bus7",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["bus_7"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "config",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["config"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "metadata",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["metadata"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "mint",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["mint"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasury",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "treasuryTokens",
+              "isWritable": true,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["treasury_tokens"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "systemProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["system_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "11111111111111111111111111111111",
+                "identifier": "splSystem"
+              }
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "tokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["token_program"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                "identifier": "splToken"
+              }
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "associatedTokenProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["associated_token_program"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "metadataProgram",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["metadata_program"]
+            },
+            {
+              "kind": "instructionAccountNode",
+              "name": "rentSysvar",
+              "isWritable": false,
+              "isSigner": false,
+              "isOptional": false,
+              "docs": ["rent_sysvar"],
+              "defaultValue": {
+                "kind": "publicKeyValueNode",
+                "publicKey": "SysvarRent111111111111111111111111111111111"
+              }
+            }
+          ],
+          "arguments": [
+            {
+              "kind": "instructionArgumentNode",
+              "name": "discriminator",
+              "defaultValueStrategy": "omitted",
+              "docs": [],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u8",
+                "endian": "le"
+              },
+              "defaultValue": { "kind": "numberValueNode", "number": 100 }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus0Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus1Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus2Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus3Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus4Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus5Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus6Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "bus7Bump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "configBump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "metadataBump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "mintBump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            },
+            {
+              "kind": "instructionArgumentNode",
+              "name": "treasuryBump",
+              "docs": [],
+              "type": { "kind": "numberTypeNode", "format": "u8", "endian": "le" }
+            }
+          ],
+          "discriminators": [
+            {
+              "kind": "fieldDiscriminatorNode",
+              "name": "discriminator",
+              "offset": 0
+            }
+          ]
+        }
+      ],
+      "definedTypes": [
+        {
+          "kind": "definedTypeNode",
+          "name": "claim",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "amount",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  },
+                  "count": { "kind": "fixedCountNode", "value": 8 }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "close",
+          "docs": [],
+          "type": { "kind": "structTypeNode", "fields": [] }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "mine",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "digest",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  },
+                  "count": { "kind": "fixedCountNode", "value": 16 }
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "nonce",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  },
+                  "count": { "kind": "fixedCountNode", "value": 8 }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "open",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "reset",
+          "docs": [],
+          "type": { "kind": "structTypeNode", "fields": [] }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "stake",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "amount",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  },
+                  "count": { "kind": "fixedCountNode", "value": 8 }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "update",
+          "docs": [],
+          "type": { "kind": "structTypeNode", "fields": [] }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "upgrade",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "amount",
+                "docs": [],
+                "type": {
+                  "kind": "arrayTypeNode",
+                  "item": {
+                    "kind": "numberTypeNode",
+                    "format": "u8",
+                    "endian": "le"
+                  },
+                  "count": { "kind": "fixedCountNode", "value": 8 }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "definedTypeNode",
+          "name": "initialize",
+          "docs": [],
+          "type": {
+            "kind": "structTypeNode",
+            "fields": [
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus0Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus1Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus2Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus3Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus4Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus5Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus6Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "bus7Bump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "configBump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "metadataBump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "mintBump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              },
+              {
+                "kind": "structFieldTypeNode",
+                "name": "treasuryBump",
+                "docs": [],
+                "type": {
+                  "kind": "numberTypeNode",
+                  "format": "u8",
+                  "endian": "le"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "pdas": [
+        {
+          "kind": "pdaNode",
+          "name": "bus",
+          "docs": [],
+          "seeds": [
+            {
+              "kind": "constantPdaSeedNode",
+              "type": { "kind": "stringTypeNode", "encoding": "utf8" },
+              "value": { "kind": "stringValueNode", "string": "bus" }
+            },
+            {
+              "kind": "variablePdaSeedNode",
+              "name": "id",
+              "docs": ["The ID of the bus account."],
+              "type": {
+                "kind": "numberTypeNode",
+                "format": "u64",
+                "endian": "le"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "pdaNode",
+          "name": "config",
+          "docs": [],
+          "seeds": [
+            {
+              "kind": "constantPdaSeedNode",
+              "type": { "kind": "stringTypeNode", "encoding": "utf8" },
+              "value": { "kind": "stringValueNode", "string": "config" }
+            }
+          ]
+        },
+        {
+          "kind": "pdaNode",
+          "name": "proof",
+          "docs": [],
+          "seeds": [
+            {
+              "kind": "constantPdaSeedNode",
+              "type": { "kind": "stringTypeNode", "encoding": "utf8" },
+              "value": { "kind": "stringValueNode", "string": "proof" }
+            },
+            {
+              "kind": "variablePdaSeedNode",
+              "name": "authority",
+              "docs": ["The signer authorized to use this proof."],
+              "type": { "kind": "publicKeyTypeNode" }
+            }
+          ]
+        },
+        {
+          "kind": "pdaNode",
+          "name": "treasury",
+          "docs": [],
+          "seeds": [
+            {
+              "kind": "constantPdaSeedNode",
+              "type": { "kind": "stringTypeNode", "encoding": "utf8" },
+              "value": { "kind": "stringValueNode", "string": "treasury" }
+            }
+          ]
+        }
+      ],
+      "errors": [
+        {
+          "kind": "errorNode",
+          "name": "needsReset",
+          "code": 0,
+          "message": "The epoch has ended and needs reset",
+          "docs": ["NeedsReset: The epoch has ended and needs reset"]
+        },
+        {
+          "kind": "errorNode",
+          "name": "hashInvalid",
+          "code": 1,
+          "message": "The provided hash is invalid",
+          "docs": ["HashInvalid: The provided hash is invalid"]
+        },
+        {
+          "kind": "errorNode",
+          "name": "hashTooEasy",
+          "code": 2,
+          "message": "The provided hash did not satisfy the minimum required difficulty",
+          "docs": [
+            "HashTooEasy: The provided hash did not satisfy the minimum required difficulty"
+          ]
+        },
+        {
+          "kind": "errorNode",
+          "name": "claimTooLarge",
+          "code": 3,
+          "message": "The claim amount cannot be greater than the claimable rewards",
+          "docs": [
+            "ClaimTooLarge: The claim amount cannot be greater than the claimable rewards"
+          ]
+        },
+        {
+          "kind": "errorNode",
+          "name": "clockInvalid",
+          "code": 4,
+          "message": "The clock time is invalid",
+          "docs": ["ClockInvalid: The clock time is invalid"]
+        },
+        {
+          "kind": "errorNode",
+          "name": "spam",
+          "code": 5,
+          "message": "You are trying to submit too soon",
+          "docs": ["Spam: You are trying to submit too soon"]
+        },
+        {
+          "kind": "errorNode",
+          "name": "maxSupply",
+          "code": 6,
+          "message": "The maximum supply has been reached",
+          "docs": ["MaxSupply: The maximum supply has been reached"]
+        },
+        {
+          "kind": "errorNode",
+          "name": "authFailed",
+          "code": 7,
+          "message": "The proof does not match the expected account",
+          "docs": ["AuthFailed: The proof does not match the expected account"]
+        }
+      ]
+    },
+    "additionalPrograms": []
+  }
+  

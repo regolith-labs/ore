@@ -9,6 +9,7 @@ documentation.workspace = true
 repository.workspace = true
 readme.workspace = true
 keywords.workspace = true
+build = "build.rs"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -19,6 +20,7 @@ default = []
 
 [dependencies]
 drillx.workspace = true
+solana-include-idl = "0.1"
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
 ore-boost-api.workspace = true
@@ -29,3 +31,6 @@ steel.workspace = true
 
 [dev-dependencies]
 rand = "0.8.5"
+
+[build-dependencies]
+solana-include-idl = { version = "0.1", features = ["shrink"] }
