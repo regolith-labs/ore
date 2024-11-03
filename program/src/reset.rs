@@ -62,13 +62,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
     let mut total_remaining_rewards = 0u64;
     let mut total_theoretical_rewards = 0u64;
-    let mut top_balance = 0u64;
     for bus in busses {
-        // Track top balance.
-        if bus.top_balance.gt(&top_balance) {
-            top_balance = bus.top_balance;
-        }
-
         // Track accumulators.
         total_remaining_rewards = total_remaining_rewards.saturating_add(bus.rewards);
         total_theoretical_rewards =
@@ -77,12 +71,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Reset bus account for new epoch.
         bus.rewards = BUS_EPOCH_REWARDS;
         bus.theoretical_rewards = 0;
-        bus.top_balance = 0;
     }
     let total_epoch_rewards = MAX_EPOCH_REWARDS.saturating_sub(total_remaining_rewards);
-
-    // Update global top balance.
-    config.top_balance = top_balance;
 
     // Update base reward rate for next epoch.
     config.base_reward_rate =

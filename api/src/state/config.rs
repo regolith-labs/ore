@@ -16,6 +16,7 @@ pub struct Config {
     pub min_difficulty: u64,
 
     /// The largest known stake balance on the network from the last epoch.
+    #[deprecated(since = "2.6.1", note = "Top balance is no longer tracked or used")]
     pub top_balance: u64,
 }
 

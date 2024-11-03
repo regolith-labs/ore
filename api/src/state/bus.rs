@@ -18,6 +18,7 @@ pub struct Bus {
     pub theoretical_rewards: u64,
 
     /// The largest known stake balance seen by the bus this epoch.
+    #[deprecated(since = "2.6.1", note = "Top balance is no longer tracked or used")]
     pub top_balance: u64,
 }
 

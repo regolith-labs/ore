@@ -88,7 +88,6 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         bus.id = i as u64;
         bus.rewards = 0;
         bus.theoretical_rewards = 0;
-        bus.top_balance = 0;
     }
 
     // Initialize config.
@@ -103,7 +102,6 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
-    config.top_balance = 0;
 
     // Initialize treasury.
     create_account::<Treasury>(
