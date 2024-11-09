@@ -81,7 +81,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_theoretical_rewards.saturating_add(bus.theoretical_rewards);
 
         // Reset bus account for new epoch.
+        // TODO Top up bus rewards counters.
         // TODO Handle max supply case
+        // TODO What if this is not divisible by BUS_COUNT?
         // bus.rewards = target_epoch_rewards;
         bus.theoretical_rewards = 0;
     }
@@ -112,8 +114,19 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .saturating_sub(mint.supply)
         .min(total_epoch_rewards);
 
-    // TODO Top up bus rewards counters.
-    // TODO What if this is not divisible by BUS_COUNT?
+    // Adjust curve down 90%
+    if mint.supply > config.next_emmissions_rate_update {
+        config.target_emmissions_rate = config
+            .target_emmissions_rate
+            .checked_mul(9)
+            .unwrap()
+            .checked_div(10)
+            .unwrap();
+        config.next_emmissions_rate_update = config
+            .next_emmissions_rate_update
+            .checked_add(config.target_emmissions_rate * 60 * 24 * 365 * 2)
+            .unwrap();
+    }
 
     // Fund the treasury token account.
     mint_to_signed(
