@@ -118,7 +118,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             applied_boosts[i] = *boost_info.key;
 
             // Apply multiplier if boost is not expired and last stake at was more than one minute ago.
-            if boost.expires_at.gt(&t) && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t) {
+            if boost.expires_at.gt(&t)
+                && boost.total_stake.gt(&0)
+                && stake.last_stake_at.saturating_add(ONE_MINUTE).le(&t)
+            {
                 let multiplier = boost.multiplier.checked_sub(1).unwrap();
                 let boost_reward = (base_reward as u128)
                     .checked_mul(multiplier as u128)
