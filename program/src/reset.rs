@@ -175,6 +175,41 @@ pub(crate) fn calculate_new_reward_rate(
     new_rate_smoothed.max(1).min(bus_epoch_rewards)
 }
 
+pub(crate) fn get_target_emissions_rate(current_supply: u64) -> u64 {
+    match current_supply {
+        n if n < ONE_ORE * 525_600 => ONE_ORE,
+        n if n < ONE_ORE * 998_640 => ONE_ORE,
+        n if n < ONE_ORE * 1_424_376 => ONE_ORE,
+        n if n < ONE_ORE * 1_807_538 => ONE_ORE,
+        n if n < ONE_ORE * 1_424_376 => ONE_ORE,
+        n if n < ONE_ORE * 2_152_385 => ONE_ORE,
+        n if n < ONE_ORE * 2_462_746 => ONE_ORE,
+        n if n < ONE_ORE * 2_742_071 => ONE_ORE,
+        n if n < ONE_ORE * 2_993_464 => ONE_ORE,
+        n if n < ONE_ORE * 3_219_718 => ONE_ORE,
+        n if n < ONE_ORE * 3_423_346 => ONE_ORE,
+        n if n < ONE_ORE * 3_606_612 => ONE_ORE,
+        n if n < ONE_ORE * 3_771_550 => ONE_ORE,
+        n if n < ONE_ORE * 3_919_995 => ONE_ORE,
+        n if n < ONE_ORE * 4_053_596 => ONE_ORE,
+        n if n < ONE_ORE * 4_173_836 => ONE_ORE,
+        n if n < ONE_ORE * 4_282_053 => ONE_ORE,
+        n if n < ONE_ORE * 4_379_447 => ONE_ORE,
+        n if n < ONE_ORE * 4_467_103 => ONE_ORE,
+        n if n < ONE_ORE * 4_545_992 => ONE_ORE,
+        n if n < ONE_ORE * 4_616_993 => ONE_ORE,
+        n if n < ONE_ORE * 4_680_894 => ONE_ORE,
+        n if n < ONE_ORE * 4_738_404 => ONE_ORE,
+        n if n < ONE_ORE * 4_790_164 => ONE_ORE,
+        n if n < ONE_ORE * 4_836_748 => ONE_ORE,
+        n if n < ONE_ORE * 4_878_673 => ONE_ORE,
+        n if n < ONE_ORE * 4_916_406 => ONE_ORE,
+        n if n < ONE_ORE * 4_950_365 => ONE_ORE,
+        n if n < ONE_ORE * 4_980_928 => ONE_ORE,
+        _ => 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use rand::{distributions::Uniform, Rng};
