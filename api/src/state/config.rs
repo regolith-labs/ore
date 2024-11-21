@@ -15,11 +15,8 @@ pub struct Config {
     /// The minimum accepted difficulty.
     pub min_difficulty: u64,
 
-    /// ORE / min
+    /// The target emissions rate in ORE/min.
     pub target_emmissions_rate: u64,
-
-    ///
-    pub next_emmissions_rate_update: u64,
 }
 
 account!(OreAccount, Config);
