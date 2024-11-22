@@ -39,8 +39,8 @@ pub const EPOCH_MINUTES: i64 = 5;
 /// The duration of a program epoch, in seconds.
 pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
 
-/// The maximum token supply (21 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE * 21_000_000;
+/// The maximum token supply (5 million).
+pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 
 /// The target quantity of ORE to be mined per epoch.
 pub const TARGET_EPOCH_REWARDS: u64 = ONE_ORE * EPOCH_MINUTES as u64;
