@@ -158,8 +158,8 @@ pub(crate) fn calculate_new_reward_rate(
     new_rate_smoothed.max(1).min(target_epoch_rewards)
 }
 
-/// This function calculates what the target emissions rate (ORE / min) should be based on
-/// the current supply. It is designed to reduce emissions by 10% approximately every 12 months.
+/// This function calculates the target emissions rate (ORE / min) based on the current supply.
+/// It is designed to reduce emissions by 10% approximately every 12 months with a hardcap at 5 million ORE.
 pub(crate) fn get_target_emissions_rate(current_supply: u64) -> u64 {
     match current_supply {
         n if n < ONE_ORE * 525_600 => 100_000_000_000, // Year ~1
