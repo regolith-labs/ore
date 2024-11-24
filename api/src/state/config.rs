@@ -15,8 +15,8 @@ pub struct Config {
     /// The minimum accepted difficulty.
     pub min_difficulty: u64,
 
-    /// The largest known stake balance on the network from the last epoch.
-    pub top_balance: u64,
+    /// The target emissions rate in ORE/min.
+    pub target_emmissions_rate: u64,
 }
 
 account!(OreAccount, Config);
