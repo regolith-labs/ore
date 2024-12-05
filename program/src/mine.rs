@@ -149,13 +149,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let net_reward = gross_penalized_reward.min(bus.rewards).min(ONE_ORE);
 
     // Scale the base and boost rewards to account for penalties.
-    let scaled_base_reward = net_reward.checked_mul(base_reward).unwrap().checked_div(gross_reward).unwrap();
-    let scaled_boost_reward = net_reward.checked_sub(scaled_base_reward).unwrap();
+    let net_base_reward = net_reward.checked_mul(base_reward).unwrap().checked_div(gross_reward).unwrap();
+    let net_boost_reward = net_reward.checked_sub(net_base_reward).unwrap();
 
     // Split the boost rewards between miner and staker.
-    let net_staker_boost_reward = scaled_base_reward.checked_div(2).unwrap();
-    let net_miner_boost_reward = scaled_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
-    let net_miner_reward = scaled_base_reward.checked_add(net_miner_boost_reward).unwrap();
+    let net_staker_boost_reward = net_base_reward.checked_div(2).unwrap();
+    let net_miner_boost_reward = net_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
+    let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
 
     // Update bus balances.
     //
