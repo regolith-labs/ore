@@ -23,6 +23,7 @@ pub struct Proof {
     pub last_hash_at: i64,
 
     /// The last time stake was deposited into this account.
+    #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
     pub last_stake_at: i64,
 
     /// The keypair which has permission to submit hashes for mining.
