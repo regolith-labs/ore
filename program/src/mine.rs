@@ -106,9 +106,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             let multiplier = boost.multiplier.checked_sub(1).unwrap();
             boost_reward = (base_reward as u128)
                 .checked_mul(multiplier as u128)
+                .unwrap()
+                .checked_div(1000) // TODO Create const for denominator
                 .unwrap() as u64;
-
-            // TODO Add denominator to boost multiplier for precision.
         }
     }
 
@@ -153,7 +153,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let net_boost_reward = net_reward.checked_sub(net_base_reward).unwrap();
 
     // Split the boost rewards between miner and staker.
-    let net_staker_boost_reward = net_base_reward.checked_div(2).unwrap();
+    let net_staker_boost_reward = net_boost_reward.checked_div(2).unwrap();
     let net_miner_boost_reward = net_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
     let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
 
@@ -199,22 +199,15 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
     // This return data can be used by pool operators to calculate miner and staker rewards.
-    // for i in 0..3 {
-    //     boost_rewards[i] = (boost_rewards[i] as u128)
-    //         .checked_mul(reward_actual as u128)
-    //         .unwrap()
-    //         .checked_div(reward_pre_penalty as u128)
-    //         .unwrap() as u64;
-    // }
     MineEvent {
         balance: proof.balance,
         difficulty: difficulty as u64,
         last_hash_at: prev_last_hash_at,
         timing: t.saturating_sub(t_liveness),
-        reward: 0, // TODO
-        boost_1: 0,
-        boost_2: 0,
-        boost_3: 0,
+        net_reward,
+        net_base_reward,
+        net_miner_boost_reward,
+        net_staker_boost_reward,
     }
     .log_return();
 
