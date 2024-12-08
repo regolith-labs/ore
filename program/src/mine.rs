@@ -2,7 +2,7 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use ore_boost_api::state::Boost;
+use ore_boost_api::{consts::BOOST_DENOMINATOR, state::Boost};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
@@ -107,7 +107,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             boost_reward = (base_reward as u128)
                 .checked_mul(multiplier as u128)
                 .unwrap()
-                .checked_div(1000) // TODO Create const for denominator
+                .checked_div(BOOST_DENOMINATOR as u128)
                 .unwrap() as u64;
         }
     }
