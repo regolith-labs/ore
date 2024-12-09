@@ -150,7 +150,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Scale the base and boost rewards to account for penalties.
     let net_base_reward = if gross_reward > 0 {
-        net_reward.checked_mul(base_reward).unwrap().checked_div(gross_reward).unwrap()
+        (net_reward as u128)
+            .checked_mul(base_reward as u128)
+            .unwrap()
+            .checked_div(gross_reward as u128)
+            .unwrap() as u64
     } else {
         0
     };
