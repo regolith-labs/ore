@@ -3,7 +3,6 @@ use std::mem::size_of;
 use drillx::Solution;
 use ore_api::prelude::*;
 use ore_boost_api::{consts::BOOST_DENOMINATOR, state::Boost};
-use solana_program::log::sol_log;
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
@@ -98,6 +97,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // on any given mine operation.
     let mut boost_reward = 0;
     if let [boost_info, _boost_proof_info] = optional_accounts {
+        // Load boost account.
         let boost = boost_info
             .as_account::<Boost>(&ore_boost_api::ID)?
             .assert(|b| b.proof == *proof_info.key)?;
