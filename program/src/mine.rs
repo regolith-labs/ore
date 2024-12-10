@@ -186,7 +186,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         if let [boost_info, boost_proof_info] = optional_accounts {
             sol_log("F");
             let boost_proof = boost_proof_info
-                .as_account_mut::<Proof>(&ore_boost_api::ID)?
+                .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
             sol_log("G");
             boost_proof.balance = boost_proof.balance.checked_add(net_staker_boost_reward).unwrap();
