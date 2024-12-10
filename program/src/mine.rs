@@ -105,6 +105,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .assert(|b| b.proof == *proof_info.key)?;
 
         // Apply multiplier if boost is unlocked and not expired.
+        sol_log(format!("X {} {} {}", boost.expires_at, t, boost.locked).as_str());
         if boost.expires_at > t && boost.locked == 0 {
             sol_log("C");
             let multiplier = boost.multiplier.checked_sub(1).unwrap();
