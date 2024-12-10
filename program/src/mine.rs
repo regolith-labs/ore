@@ -96,25 +96,20 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
     // on any given mine operation.
-    sol_log("A");
     let mut boost_reward = 0;
     if let [boost_info, _boost_proof_info] = optional_accounts {
-        sol_log("B");
         let boost = boost_info
             .as_account::<Boost>(&ore_boost_api::ID)?
             .assert(|b| b.proof == *proof_info.key)?;
 
         // Apply multiplier if boost is unlocked and not expired.
-        sol_log(format!("X {} {} {}", boost.expires_at, t, boost.locked).as_str());
         if boost.expires_at > t && boost.locked == 0 {
-            sol_log("C");
             let multiplier = boost.multiplier.checked_sub(1).unwrap();
             boost_reward = (base_reward as u128)
                 .checked_mul(multiplier as u128)
                 .unwrap()
                 .checked_div(BOOST_DENOMINATOR as u128)
                 .unwrap() as u64;
-            sol_log(format!("D {}", boost_reward).as_str());
         }
     }
 
@@ -182,17 +177,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     proof.balance = proof.balance.checked_add(net_miner_reward).unwrap();
 
     // Update staker balances.
-    sol_log(format!("E {}", net_staker_boost_reward).as_str());
     if net_staker_boost_reward > 0 {
         if let [boost_info, boost_proof_info] = optional_accounts {
-            sol_log("F");
             let boost_proof = boost_proof_info
                 .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
-            sol_log("G");
             boost_proof.balance = boost_proof.balance.checked_add(net_staker_boost_reward).unwrap();
             boost_proof.total_rewards = boost_proof.total_rewards.checked_add(net_staker_boost_reward).unwrap();
-            sol_log("H");
         }
     }
 
