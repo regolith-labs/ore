@@ -125,11 +125,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let gross_reward = base_reward.checked_add(boost_reward).unwrap();
     let mut gross_penalized_reward = gross_reward;
     let t_liveness = t_target.saturating_add(TOLERANCE);
-    if t.gt(&t_liveness) {
+    if t > t_liveness {
         // Halve the reward for every minute late.
         let secs_late = t.saturating_sub(t_target) as u64;
         let mins_late = secs_late.saturating_div(ONE_MINUTE as u64);
-        if mins_late.gt(&0) {
+        if mins_late > 0 {
             gross_penalized_reward = gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
         }
 
@@ -210,6 +210,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
     // This return data can be used by pool operators to calculate miner and staker rewards.
     sol_log(format!("Difficulty {}", difficulty).as_str());
+    sol_log(format!("Timing {}", t.saturating_sub(t_liveness)).as_str());
     sol_log(format!("A {}", base_reward).as_str());
     sol_log(format!("B {}", boost_reward).as_str());
     sol_log(format!("C {}", gross_reward).as_str());
