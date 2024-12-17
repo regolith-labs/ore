@@ -106,9 +106,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             && boost.locked == 0
             && boost.reserved_for == *proof_info.key
         {
-            let multiplier = boost.multiplier.checked_sub(1).unwrap();
             boost_reward = (base_reward as u128)
-                .checked_mul(multiplier as u128)
+                .checked_mul(boost.multiplier as u128)
                 .unwrap()
                 .checked_div(BOOST_DENOMINATOR as u128)
                 .unwrap() as u64;
