@@ -211,6 +211,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // This return data can be used by pool operators to calculate miner and staker rewards.
     sol_log(format!("Difficulty {}", difficulty).as_str());
     sol_log(format!("Timing {}", t.saturating_sub(t_liveness)).as_str());
+    sol_log(format!("T {}", t).as_str());
+    sol_log(format!("T_LIVENESS {}", t_liveness).as_str());
+    sol_log(format!("T_TARGET {}", t_target).as_str());
+    sol_log(format!("LAST_HASH_AT {}", proof.last_hash_at).as_str());
     sol_log(format!("A {}", base_reward).as_str());
     sol_log(format!("B {}", boost_reward).as_str());
     sol_log(format!("C {}", gross_reward).as_str());
