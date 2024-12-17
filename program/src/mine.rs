@@ -209,6 +209,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
     // This return data can be used by pool operators to calculate miner and staker rewards.
+    sol_log(format!("Difficulty {}", difficulty).as_str());
     sol_log(format!("A {}", base_reward).as_str());
     sol_log(format!("B {}", boost_reward).as_str());
     sol_log(format!("C {}", gross_reward).as_str());
