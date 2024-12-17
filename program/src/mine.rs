@@ -93,17 +93,18 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Apply boosts.
     //
-    // Boosts are staking incentives that can multiply a miner's rewards. Up to 3 boosts can be applied
-    // on any given mine operation.
+    // Boosts are staking incentives that can multiply a miner's rewards. The boost rewards are
+    // split between the miner and staker.
     let mut boost_reward = 0;
     if let [boost_info, _boost_proof_info] = optional_accounts {
         // Load boost account.
-        let boost = boost_info
-            .as_account::<Boost>(&ore_boost_api::ID)?
-            .assert(|b| b.proof == *proof_info.key)?;
+        let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
 
-        // Apply multiplier if boost is unlocked and not expired.
-        if boost.expires_at > t && boost.locked == 0 {
+        // Apply multiplier if boost is reserved for this miner, unlocked, not expired.
+        if boost.expires_at > t
+            && boost.locked == 0
+            && boost.reserved_for == *proof_info.key
+        {
             let multiplier = boost.multiplier.checked_sub(1).unwrap();
             boost_reward = (base_reward as u128)
                 .checked_mul(multiplier as u128)
