@@ -57,6 +57,7 @@ pub fn mine(
     bus: Pubkey,
     solution: Solution,
     boost: Option<Pubkey>,
+    reservation: Option<Pubkey>,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
     let mut accounts = vec![
@@ -70,6 +71,9 @@ pub fn mine(
     if let Some(boost) = boost {
         accounts.push(AccountMeta::new_readonly(boost, false));
         accounts.push(AccountMeta::new(proof_pda(boost).0, false));
+    }
+    if let Some(reservation) = reservation {
+        accounts.push(AccountMeta::new_readonly(reservation, false));
     }
     Instruction {
         program_id: crate::ID,
