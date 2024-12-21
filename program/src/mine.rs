@@ -2,7 +2,7 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use ore_boost_api::{consts::BOOST_DENOMINATOR, state::Boost};
+use ore_boost_api::{consts::BOOST_DENOMINATOR, state::{Boost, Reservation}};
 use solana_program::log::sol_log;
 #[allow(deprecated)]
 use solana_program::{
@@ -97,14 +97,17 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Boosts are staking incentives that can multiply a miner's rewards. The boost rewards are
     // split between the miner and staker.
     let mut boost_reward = 0;
-    if let [boost_info, _boost_proof_info] = optional_accounts {
-        // Load boost account.
+    if let [boost_info, _boost_proof_info, reservation_info] = optional_accounts {
+        // Load boost accounts.
         let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
+        reservation_info
+            .as_account::<Reservation>(&ore_boost_api::ID)?
+            .assert(|r| r.authority == *proof_info.key)?
+            .assert(|r| r.boost == *boost_info.key)?
+            .assert(|r| r.ts == proof.last_hash_at)?;
 
-        // Apply multiplier if boost is reserved for this miner, unlocked, not expired.
-        if boost.expires_at > t
-            && boost.locked == 0
-            && boost.reserved_for == *proof_info.key
+        // Apply multiplier if boost is unlocked and not expired.
+        if boost.expires_at > t && boost.locked == 0
         {
             boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
