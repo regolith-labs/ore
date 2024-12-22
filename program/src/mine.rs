@@ -182,7 +182,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Update staker balances.
     if net_staker_boost_reward > 0 {
-        if let [boost_info, boost_proof_info] = optional_accounts {
+        if let [boost_info, boost_proof_info, _reservation_info] = optional_accounts {
             let boost_proof = boost_proof_info
                 .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
