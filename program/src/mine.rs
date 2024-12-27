@@ -181,11 +181,15 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     proof.balance = proof.balance.checked_add(net_miner_reward).unwrap();
 
     // Update staker balances.
+    sol_log("1");
     if net_staker_boost_reward > 0 {
+        sol_log("2");
         if let [boost_info, boost_proof_info, _reservation_info] = optional_accounts {
+            sol_log("3");
             let boost_proof = boost_proof_info
                 .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
+            sol_log("4");
             boost_proof.balance = boost_proof.balance.checked_add(net_staker_boost_reward).unwrap();
             boost_proof.total_rewards = boost_proof.total_rewards.checked_add(net_staker_boost_reward).unwrap();
         }
