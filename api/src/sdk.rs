@@ -56,7 +56,7 @@ pub fn mine(
     authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
-    boost_keys: Option<[Pubkey; 2]>,
+    boost_keys: Option<(Pubkey, Pubkey)>,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
     let mut accounts = vec![
@@ -67,7 +67,7 @@ pub fn mine(
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
         AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
     ];
-    if let Some([boost_address, reservation_address]) = boost_keys {
+    if let Some((boost_address, reservation_address)) = boost_keys {
         accounts.push(AccountMeta::new_readonly(boost_address, false));
         accounts.push(AccountMeta::new(proof_pda(boost_address).0, false));
         accounts.push(AccountMeta::new_readonly(reservation_address, false));
