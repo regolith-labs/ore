@@ -212,22 +212,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The boost rewards are scaled down before logging to account for penalties and bus limits.
     // This return data can be used by pool operators to calculate miner and staker rewards.
-    sol_log(format!("Difficulty {}", difficulty).as_str());
-    sol_log(format!("Timing {}", t.saturating_sub(t_liveness)).as_str());
-    sol_log(format!("T {}", t).as_str());
-    sol_log(format!("T_LIVENESS {}", t_liveness).as_str());
-    sol_log(format!("T_TARGET {}", t_target).as_str());
-    sol_log(format!("LAST_HASH_AT {}", proof.last_hash_at).as_str());
-    sol_log(format!("A {}", base_reward).as_str());
-    sol_log(format!("B {}", boost_reward).as_str());
-    sol_log(format!("C {}", gross_reward).as_str());
-    sol_log(format!("D {}", gross_penalized_reward).as_str());
-    sol_log(format!("E {}", net_reward).as_str());
-    sol_log(format!("F {}", net_base_reward).as_str());
-    sol_log(format!("G {}", net_boost_reward).as_str());
-    sol_log(format!("H {}", net_staker_boost_reward).as_str());
-    sol_log(format!("I {}", net_miner_boost_reward).as_str());
-    sol_log(format!("J {}", net_miner_reward).as_str());
     MineEvent {
         balance: proof.balance,
         difficulty: difficulty as u64,
