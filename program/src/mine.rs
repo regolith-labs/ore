@@ -3,7 +3,6 @@ use std::mem::size_of;
 use drillx::Solution;
 use ore_api::prelude::*;
 use ore_boost_api::{consts::BOOST_DENOMINATOR, state::{Boost, Reservation}};
-use solana_program::log::sol_log;
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
