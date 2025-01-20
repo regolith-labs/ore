@@ -56,10 +56,10 @@ pub fn mine(
     authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
-    boost_accounts: Vec<Pubkey>,
+    boost_keys: Option<(Pubkey, Pubkey)>,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
-    let required_accounts = vec![
+    let mut accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(bus, false),
         AccountMeta::new_readonly(CONFIG_ADDRESS, false),
@@ -67,13 +67,14 @@ pub fn mine(
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
         AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
     ];
-    let optional_accounts = boost_accounts
-        .into_iter()
-        .map(|pk| AccountMeta::new_readonly(pk, false))
-        .collect();
+    if let Some((boost_address, reservation_address)) = boost_keys {
+        accounts.push(AccountMeta::new_readonly(boost_address, false));
+        accounts.push(AccountMeta::new(proof_pda(boost_address).0, false));
+        accounts.push(AccountMeta::new_readonly(reservation_address, false));
+    }
     Instruction {
         program_id: crate::ID,
-        accounts: [required_accounts, optional_accounts].concat(),
+        accounts,
         data: Mine {
             digest: solution.d,
             nonce: solution.n,

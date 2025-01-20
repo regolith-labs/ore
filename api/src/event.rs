@@ -7,10 +7,10 @@ pub struct MineEvent {
     pub difficulty: u64,
     pub last_hash_at: i64,
     pub timing: i64,
-    pub reward: u64,
-    pub boost_1: u64,
-    pub boost_2: u64,
-    pub boost_3: u64,
+    pub net_reward: u64,
+    pub net_base_reward: u64,
+    pub net_miner_boost_reward: u64,
+    pub net_staker_boost_reward: u64,
 }
 
 event!(MineEvent);
