@@ -169,6 +169,16 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let net_miner_boost_reward = net_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
     let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
 
+    // Checksum on rewards
+    assert!(
+        net_reward == net_base_reward
+            .checked_add(net_miner_boost_reward)
+            .unwrap()
+            .checked_add(net_staker_boost_reward)
+            .unwrap(),
+        "Rewards checksum failed"
+    );
+
     // Update bus balances.
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
