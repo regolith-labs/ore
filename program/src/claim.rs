@@ -29,9 +29,10 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     token_program.is_program(&spl_token::ID)?;
 
     // Update miner balance.
+    let filtered_amount = amount.min(proof.balance);
     proof.balance = proof
         .balance
-        .checked_sub(amount)
+        .checked_sub(filtered_amount)
         .ok_or(OreError::ClaimTooLarge)?;
 
     // Transfer tokens from treasury to beneficiary.
@@ -40,7 +41,7 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
         treasury_tokens_info,
         beneficiary_info,
         token_program,
-        amount,
+        filtered_amount,
         &[TREASURY],
     )?;
 
