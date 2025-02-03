@@ -77,7 +77,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         bus_7_info,
     ];
     for i in 0..BUS_COUNT {
-        create_account::<Bus>(
+        create_program_account::<Bus>(
             bus_infos[i],
             system_program,
             signer_info,
@@ -92,7 +92,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     // Initialize config.
-    create_account::<Config>(
+    create_program_account::<Config>(
         config_info,
         system_program,
         signer_info,
@@ -105,7 +105,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
 
     // Initialize treasury.
-    create_account::<Treasury>(
+    create_program_account::<Treasury>(
         treasury_info,
         system_program,
         signer_info,

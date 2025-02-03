@@ -22,7 +22,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Initialize proof.
-    create_account::<Proof>(
+    create_program_account::<Proof>(
         proof_info,
         system_program,
         payer_info,
