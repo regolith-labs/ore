@@ -1268,6 +1268,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-api"
+version = "3.0.0"
+source = "git+https://github.com/regolith-labs/ore?branch=rebase-worker#25aabc578b98ee59c45251d871b2f264b047dc7b"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "drillx",
+ "mpl-token-metadata",
+ "num_enum",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "static_assertions",
+ "steel",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "ore-boost-api"
 version = "1.2.0"
 dependencies = [
@@ -1275,7 +1294,7 @@ dependencies = [
  "bytemuck",
  "const-crypto",
  "num_enum",
- "ore-api",
+ "ore-api 3.0.0 (git+https://github.com/regolith-labs/ore?branch=rebase-worker)",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
@@ -1290,7 +1309,7 @@ version = "3.0.0"
 dependencies = [
  "drillx",
  "mpl-token-metadata",
- "ore-api",
+ "ore-api 3.0.0",
  "ore-boost-api",
  "rand 0.8.5",
  "solana-include-idl",
