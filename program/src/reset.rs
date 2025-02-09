@@ -144,7 +144,7 @@ pub(crate) fn calculate_new_reward_rate(current_rate: u64, epoch_rewards: u64) -
     let new_rate_smoothed = new_rate.min(new_rate_max).max(new_rate_min);
 
     // Prevent reward rate from dropping below 1 or exceeding BUS_EPOCH_REWARDS and return.
-    new_rate_smoothed.max(1).min(BUS_EPOCH_REWARDS)
+    new_rate_smoothed.clamp(1, BUS_EPOCH_REWARDS)
 }
 
 #[cfg(test)]

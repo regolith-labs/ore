@@ -2,7 +2,10 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use ore_boost_api::{consts::BOOST_DENOMINATOR, state::{Boost, Reservation}};
+use ore_boost_api::{
+    consts::BOOST_DENOMINATOR,
+    state::{Boost, Reservation},
+};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
@@ -131,7 +134,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         let secs_late = t.saturating_sub(t_target) as u64;
         let mins_late = secs_late.saturating_div(ONE_MINUTE as u64);
         if mins_late > 0 {
-            gross_penalized_reward = gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
+            gross_penalized_reward =
+                gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
         }
 
         // Linear decay with remainder seconds.
@@ -165,16 +169,19 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Split the boost rewards between miner and staker.
     let net_staker_boost_reward = net_boost_reward.checked_div(2).unwrap();
-    let net_miner_boost_reward = net_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
+    let net_miner_boost_reward = net_boost_reward
+        .checked_sub(net_staker_boost_reward)
+        .unwrap();
     let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
 
     // Checksum on rewards. Should never fail.
     assert!(
-        net_reward == net_base_reward
-            .checked_add(net_miner_boost_reward)
-            .unwrap()
-            .checked_add(net_staker_boost_reward)
-            .unwrap(),
+        net_reward
+            == net_base_reward
+                .checked_add(net_miner_boost_reward)
+                .unwrap()
+                .checked_add(net_staker_boost_reward)
+                .unwrap(),
         "Rewards checksum failed"
     );
 
@@ -182,7 +189,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
     // base reward rate will be updated to account for the real hashpower on the network.
-    bus.theoretical_rewards = bus.theoretical_rewards.checked_add(gross_penalized_reward).unwrap();
+    bus.theoretical_rewards = bus
+        .theoretical_rewards
+        .checked_add(gross_penalized_reward)
+        .unwrap();
     bus.rewards = bus.rewards.checked_sub(net_reward).unwrap();
 
     // Update miner balances.
@@ -194,8 +204,14 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             let boost_proof = boost_proof_info
                 .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
-            boost_proof.balance = boost_proof.balance.checked_add(net_staker_boost_reward).unwrap();
-            boost_proof.total_rewards = boost_proof.total_rewards.checked_add(net_staker_boost_reward).unwrap();
+            boost_proof.balance = boost_proof
+                .balance
+                .checked_add(net_staker_boost_reward)
+                .unwrap();
+            boost_proof.total_rewards = boost_proof
+                .total_rewards
+                .checked_add(net_staker_boost_reward)
+                .unwrap();
         }
     }
 
