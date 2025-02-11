@@ -19,10 +19,7 @@ use update::*;
 use upgrade::*;
 
 use ore_api::instruction::*;
-// use solana_include_idl::{include_idl, parse::IdlType};
 use steel::*;
-
-// include_idl!(IdlType::Codama, concat!(env!("OUT_DIR"), "/codama.idl.zip"));
 
 #[allow(deprecated)]
 pub fn process_instruction(
