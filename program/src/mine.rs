@@ -105,9 +105,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             .assert(|r| r.boost == *boost_info.key)?
             .assert(|r| r.ts == proof.last_hash_at)?;
 
-        // Apply multiplier if boost is unlocked and not expired.
-        if boost.expires_at > t && boost.locked == 0
-        {
+        // Apply multiplier if boost is not expired.
+        if boost.expires_at > t {
             boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
                 .unwrap()
