@@ -98,21 +98,21 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let mut boost_reward = 0;
     if let [boost_info, _boost_proof_info, reservation_info] = optional_accounts {
         // Load boost accounts.
-        let boost = boost_info
-            .as_account::<Boost>(&ore_boost_api::ID)?
-            .assert(|b| b.expires_at > t)?;
+        let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
         reservation_info
             .as_account::<Reservation>(&ore_boost_api::ID)?
             .assert(|r| r.authority == *proof_info.key)?
             .assert(|r| r.boost == *boost_info.key)?
             .assert(|r| r.ts == proof.last_hash_at)?;
 
-        // Apply multiplier.
-        boost_reward = (base_reward as u128)
+        // Apply multiplier if boost is not expired.
+        if boost.expires_at > t {
+            boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
                 .unwrap()
                 .checked_div(BOOST_DENOMINATOR as u128)
                 .unwrap() as u64;
+        }
     }
 
     // Apply liveness penalty.
