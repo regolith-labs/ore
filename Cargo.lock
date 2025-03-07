@@ -3113,3 +3113,8 @@ dependencies = [
  "quote",
  "syn 2.0.98",
 ]
+
+[[patch.unused]]
+name = "steel"
+version = "4.0.0"
+source = "git+https://github.com/regolith-labs/steel.git?branch=hardhat/numeric#5f21f61d1eb1a7b8de464f2b85e9d150f0a862e7"

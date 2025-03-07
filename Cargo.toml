@@ -28,3 +28,6 @@ spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] 
 static_assertions = "1.1.0"
 steel = { features = ["spl"], version = "3.0" }
 thiserror = "1.0.57"
+
+[patch.crates-io]
+steel = { git = "https://github.com/regolith-labs/steel.git", branch = "hardhat/numeric" }
