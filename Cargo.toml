@@ -26,7 +26,7 @@ solana-program = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
-steel = { features = ["spl"], version = "3.0" }
+steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
 
 [patch.crates-io]

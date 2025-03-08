@@ -98,13 +98,13 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Max supply check.
-    if mint.supply.ge(&MAX_SUPPLY) {
+    if mint.supply().ge(&MAX_SUPPLY) {
         return Err(OreError::MaxSupply.into());
     }
 
     // Fund the treasury token account.
     let amount = MAX_SUPPLY
-        .saturating_sub(mint.supply)
+        .saturating_sub(mint.supply())
         .min(total_epoch_rewards);
     mint_to_signed(
         mint_info,
