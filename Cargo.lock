@@ -1286,19 +1286,19 @@ dependencies = [
 [[package]]
 name = "ore-boost-api"
 version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0a9faab35b67977d3e45d8e40a938f0515e527ced34aa51668d3399c833619b"
+source = "git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3#7f7e818905b2ae71f63f0aeb5b85294f46affd6c"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
+ "fixed",
  "num_enum",
  "ore-api 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
  "static_assertions",
- "steel 3.0.3",
+ "steel 4.0.0",
  "thiserror 1.0.69",
 ]
 

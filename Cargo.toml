@@ -31,3 +31,4 @@ thiserror = "1.0.57"
 
 [patch.crates-io]
 steel = { git = "https://github.com/regolith-labs/steel.git", branch = "hardhat/numeric" }
+ore-boost-api = { git = "https://github.com/regolith-labs/ore-boost.git", branch = "hardhat/boost-v3" }

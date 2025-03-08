@@ -3,7 +3,7 @@ use std::mem::size_of;
 use drillx::Solution;
 use ore_api::prelude::*;
 use ore_boost_api::{
-    consts::BOOST_DENOMINATOR,
+    consts::DENOMINATOR_MULTIPLIER,
     state::{Boost, Config as BoostConfig},
 };
 #[allow(deprecated)]
@@ -111,7 +111,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
             boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
                 .unwrap()
-                .checked_div(BOOST_DENOMINATOR as u128)
+                .checked_div(DENOMINATOR_MULTIPLIER as u128)
                 .unwrap() as u64;
         }
     }
