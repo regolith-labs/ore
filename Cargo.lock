@@ -2804,7 +2804,8 @@ dependencies = [
 [[package]]
 name = "steel"
 version = "4.0.0"
-source = "git+https://github.com/regolith-labs/steel.git?branch=hardhat/numeric#7080b36ef45c445e5b8b143db6ba2b13eb8093e7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21be30219d8df5a7c09a52a8a25ec5a681476f849db44e053cfd288a3d412281"
 dependencies = [
  "bytemuck",
  "fixed",
