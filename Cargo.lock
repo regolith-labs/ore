@@ -1247,24 +1247,6 @@ dependencies = [
 [[package]]
 name = "ore-api"
 version = "3.1.0"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "drillx",
- "mpl-token-metadata",
- "num_enum",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "static_assertions",
- "steel 4.0.0",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ore-api"
-version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e39a43365aa90e4987c735cbb5b5d11ac67ed0253e9f4adb527c1f52bfd1033"
 dependencies = [
@@ -1283,6 +1265,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-api"
+version = "3.2.0-boostv3"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "drillx",
+ "mpl-token-metadata",
+ "num_enum",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "static_assertions",
+ "steel 4.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "ore-boost-api"
 version = "1.4.0"
 source = "git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3#b19186fb6001fd3090e3cbf8950deb5b7ba3f0df"
@@ -1292,7 +1292,7 @@ dependencies = [
  "const-crypto",
  "fixed",
  "num_enum",
- "ore-api 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ore-api 3.1.0",
  "ore-boost-api 1.4.0 (git+https://github.com/regolith-labs/ore-boost.git?rev=d6d8d14)",
  "solana-program",
  "spl-associated-token-account",
@@ -1311,7 +1311,7 @@ dependencies = [
  "bytemuck",
  "const-crypto",
  "num_enum",
- "ore-api 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ore-api 3.1.0",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
@@ -1322,11 +1322,11 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "3.1.0"
+version = "3.2.0-boostv3"
 dependencies = [
  "drillx",
  "mpl-token-metadata",
- "ore-api 3.1.0",
+ "ore-api 3.2.0-boostv3",
  "ore-boost-api 1.4.0 (git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3)",
  "rand 0.8.5",
  "solana-program",
