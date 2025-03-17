@@ -1283,17 +1283,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "ore-boost-api"
-version = "1.4.0"
-source = "git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3#b19186fb6001fd3090e3cbf8950deb5b7ba3f0df"
+name = "ore-api"
+version = "3.2.0-boostv3"
+source = "git+https://github.com/regolith-labs/ore.git?branch=hardhat/boost-v3#aade7f637d4ae96b583bd467d3adde14a674cfd1"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
- "fixed",
+ "drillx",
+ "mpl-token-metadata",
  "num_enum",
- "ore-api 3.1.0",
- "ore-boost-api 1.4.0 (git+https://github.com/regolith-labs/ore-boost.git?rev=d6d8d14)",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
@@ -1305,13 +1304,33 @@ dependencies = [
 [[package]]
 name = "ore-boost-api"
 version = "1.4.0"
-source = "git+https://github.com/regolith-labs/ore-boost.git?rev=d6d8d14#d6d8d14abb4d085376ea92b7697907ff01be817b"
+source = "git+https://github.com/regolith-labs/ore-boost.git?rev=06690d6#06690d6d5abec8db33bc09e800f8972d06397009"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
  "num_enum",
  "ore-api 3.1.0",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "static_assertions",
+ "steel 4.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "ore-boost-api"
+version = "3.0.0"
+source = "git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3#ce47d8723a944211fe9d63c537798d4f57129670"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "fixed",
+ "num_enum",
+ "ore-api 3.2.0-boostv3 (git+https://github.com/regolith-labs/ore.git?branch=hardhat/boost-v3)",
+ "ore-boost-api 1.4.0",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
@@ -1327,7 +1346,7 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "ore-api 3.2.0-boostv3",
- "ore-boost-api 1.4.0 (git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3)",
+ "ore-boost-api 3.0.0",
  "rand 0.8.5",
  "solana-program",
  "spl-associated-token-account",
