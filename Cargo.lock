@@ -1246,9 +1246,27 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "3.1.0"
+version = "3.2.0-boostv3"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "drillx",
+ "mpl-token-metadata",
+ "num_enum",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "static_assertions",
+ "steel",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "ore-api"
+version = "3.2.0-boostv3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e39a43365aa90e4987c735cbb5b5d11ac67ed0253e9f4adb527c1f52bfd1033"
+checksum = "06956691f3138fabb379f1e991c94eb9f924715efaafbd1af8df07fc451c8ea6"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1260,82 +1278,46 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token 4.0.2",
  "static_assertions",
- "steel 3.0.3",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ore-api"
-version = "3.2.0-boostv3"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "drillx",
- "mpl-token-metadata",
- "num_enum",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "static_assertions",
- "steel 4.0.0",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ore-api"
-version = "3.2.0-boostv3"
-source = "git+https://github.com/regolith-labs/ore.git?branch=hardhat/boost-v3#aade7f637d4ae96b583bd467d3adde14a674cfd1"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "drillx",
- "mpl-token-metadata",
- "num_enum",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "static_assertions",
- "steel 4.0.0",
+ "steel",
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "ore-boost-api"
-version = "1.4.0"
-source = "git+https://github.com/regolith-labs/ore-boost.git?rev=06690d6#06690d6d5abec8db33bc09e800f8972d06397009"
+version = "1.5.0-boostv3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c423e9bcedb910473119e3a6ee8fa81e73875f3f15df92fc7e0de045091d6fd3"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
  "num_enum",
- "ore-api 3.1.0",
+ "ore-api 3.2.0-boostv3 (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
  "static_assertions",
- "steel 4.0.0",
+ "steel",
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "ore-boost-api"
 version = "3.0.0"
-source = "git+https://github.com/regolith-labs/ore-boost.git?branch=hardhat/boost-v3#ce47d8723a944211fe9d63c537798d4f57129670"
+source = "git+https://github.com/regolith-labs/ore-boost.git?rev=924105c#924105c494d950a2e2c3322972d18d6da83a5384"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
  "fixed",
  "num_enum",
- "ore-api 3.2.0-boostv3 (git+https://github.com/regolith-labs/ore.git?branch=hardhat/boost-v3)",
- "ore-boost-api 1.4.0",
+ "ore-api 3.2.0-boostv3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ore-boost-api 1.5.0-boostv3",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
  "static_assertions",
- "steel 4.0.0",
+ "steel",
  "thiserror 1.0.69",
 ]
 
@@ -1351,7 +1333,7 @@ dependencies = [
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
- "steel 4.0.0",
+ "steel",
 ]
 
 [[package]]
@@ -2805,20 +2787,6 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
-
-[[package]]
-name = "steel"
-version = "3.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9d10099e049ce7d440acbca65250428b32835332583dd1d7c9b750befbea994"
-dependencies = [
- "bytemuck",
- "num_enum",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "thiserror 1.0.69",
-]
 
 [[package]]
 name = "steel"
