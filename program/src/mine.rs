@@ -102,12 +102,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     if let [boost_info, _boost_proof_info, boost_config_info] = optional_accounts {
         // Load boost accounts.
         let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-        let boost_config = boost_config_info
-            .as_account::<BoostConfig>(&ore_boost_api::ID)?
-            .assert(|c| c.current == *boost_info.key)?;
+        let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
 
-        // Apply multiplier if boost is not expired, and config rotation was less than one minute ago
-        if t < boost_config.ts + ROTATION_DURATION && t < boost.expires_at {
+        // Apply multiplier if boost is active, not expired, and last rotation was less than one minute ago
+        if boost_config.current == *boost_info.key
+            && t < boost_config.ts + ROTATION_DURATION
+            && t < boost.expires_at
+        {
             boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
                 .unwrap()
