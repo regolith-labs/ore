@@ -3,7 +3,7 @@ resolver = "2"
 members = ["api", "program"]
 
 [workspace.package]
-version = "3.2.0-boostv3"
+version = "3.2.0"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
@@ -30,4 +30,4 @@ steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
 
 [patch.crates-io]
-# ore-boost-api = { git = "https://github.com/regolith-labs/ore-boost.git", branch = "hardhat/boost-v3" }
+

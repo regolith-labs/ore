@@ -29,6 +29,3 @@ steel.workspace = true
 
 [dev-dependencies]
 rand = "0.8.5"
-
-[patch.crates-io]
-steel = { git = "https://github.com/regolith-labs/ore-boost.git", branch = "hardhat/boost-v3" }
