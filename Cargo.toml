@@ -16,6 +16,7 @@ keywords = ["solana", "crypto", "mining"]
 [workspace.dependencies]
 array-const-fn-init = "0.1.1"
 bytemuck = "1.14.3"
+bytemuck_derive = "1.7.0"
 const-crypto = "0.1.0"
 drillx = { version = "2.2", features = ["solana"] }
 mpl-token-metadata = "5.1"
