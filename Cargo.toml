@@ -32,3 +32,8 @@ thiserror = "1.0.57"
 
 [patch.crates-io]
 
+[profile.release]
+overflow-checks = true
+
+[profile.dev]
+overflow-checks = true
