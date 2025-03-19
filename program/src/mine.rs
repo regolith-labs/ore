@@ -2,7 +2,10 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use ore_boost_api::{consts::BOOST_DENOMINATOR, state::{Boost, Reservation}};
+use ore_boost_api::{
+    consts::{DENOMINATOR_MULTIPLIER, ROTATION_DURATION},
+    state::{Boost, Config as BoostConfig},
+};
 #[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
@@ -96,21 +99,20 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Boosts are staking incentives that can multiply a miner's rewards. The boost rewards are
     // split between the miner and staker.
     let mut boost_reward = 0;
-    if let [boost_info, _boost_proof_info, reservation_info] = optional_accounts {
+    if let [boost_info, _boost_proof_info, boost_config_info] = optional_accounts {
         // Load boost accounts.
         let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-        reservation_info
-            .as_account::<Reservation>(&ore_boost_api::ID)?
-            .assert(|r| r.authority == *proof_info.key)?
-            .assert(|r| r.boost == *boost_info.key)?
-            .assert(|r| r.ts == proof.last_hash_at)?;
+        let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
 
-        // Apply multiplier if boost is not expired.
-        if boost.expires_at > t {
+        // Apply multiplier if boost is active, not expired, and last rotation was less than one minute ago
+        if boost_config.current == *boost_info.key
+            && t < boost_config.ts + ROTATION_DURATION
+            && t < boost.expires_at
+        {
             boost_reward = (base_reward as u128)
                 .checked_mul(boost.multiplier as u128)
                 .unwrap()
-                .checked_div(BOOST_DENOMINATOR as u128)
+                .checked_div(DENOMINATOR_MULTIPLIER as u128)
                 .unwrap() as u64;
         }
     }
@@ -131,7 +133,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         let secs_late = t.saturating_sub(t_target) as u64;
         let mins_late = secs_late.saturating_div(ONE_MINUTE as u64);
         if mins_late > 0 {
-            gross_penalized_reward = gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
+            gross_penalized_reward =
+                gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
         }
 
         // Linear decay with remainder seconds.
@@ -165,16 +168,19 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Split the boost rewards between miner and staker.
     let net_staker_boost_reward = net_boost_reward.checked_div(2).unwrap();
-    let net_miner_boost_reward = net_boost_reward.checked_sub(net_staker_boost_reward).unwrap();
+    let net_miner_boost_reward = net_boost_reward
+        .checked_sub(net_staker_boost_reward)
+        .unwrap();
     let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
 
     // Checksum on rewards. Should never fail.
     assert!(
-        net_reward == net_base_reward
-            .checked_add(net_miner_boost_reward)
-            .unwrap()
-            .checked_add(net_staker_boost_reward)
-            .unwrap(),
+        net_reward
+            == net_base_reward
+                .checked_add(net_miner_boost_reward)
+                .unwrap()
+                .checked_add(net_staker_boost_reward)
+                .unwrap(),
         "Rewards checksum failed"
     );
 
@@ -182,7 +188,10 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
     // base reward rate will be updated to account for the real hashpower on the network.
-    bus.theoretical_rewards = bus.theoretical_rewards.checked_add(gross_penalized_reward).unwrap();
+    bus.theoretical_rewards = bus
+        .theoretical_rewards
+        .checked_add(gross_penalized_reward)
+        .unwrap();
     bus.rewards = bus.rewards.checked_sub(net_reward).unwrap();
 
     // Update miner balances.
@@ -190,12 +199,18 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Update staker balances.
     if net_staker_boost_reward > 0 {
-        if let [boost_info, boost_proof_info, _reservation_info] = optional_accounts {
+        if let [boost_info, boost_proof_info, _boost_config_info] = optional_accounts {
             let boost_proof = boost_proof_info
                 .as_account_mut::<Proof>(&ore_api::ID)?
                 .assert_mut(|p| p.authority == *boost_info.key)?;
-            boost_proof.balance = boost_proof.balance.checked_add(net_staker_boost_reward).unwrap();
-            boost_proof.total_rewards = boost_proof.total_rewards.checked_add(net_staker_boost_reward).unwrap();
+            boost_proof.balance = boost_proof
+                .balance
+                .checked_add(net_staker_boost_reward)
+                .unwrap();
+            boost_proof.total_rewards = boost_proof
+                .total_rewards
+                .checked_add(net_staker_boost_reward)
+                .unwrap();
         }
     }
 
