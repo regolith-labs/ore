@@ -3,10 +3,11 @@ resolver = "2"
 members = ["api", "program"]
 
 [workspace.package]
-version = "2.8.0"
+version = "3.3.0"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
+description = "Liquid digial gold everyone can mine"
 documentation = "https://docs.rs/ore-api/latest/ore_api/"
 repository = "https://github.com/regolith-labs/ore"
 readme = "./README.md"
@@ -15,15 +16,24 @@ keywords = ["solana", "crypto", "mining"]
 [workspace.dependencies]
 array-const-fn-init = "0.1.1"
 bytemuck = "1.14.3"
+bytemuck_derive = "1.7.0"
 const-crypto = "0.1.0"
-drillx = { version = "2.0.0", features = ["solana"] }
-mpl-token-metadata = "4.1.2"
+drillx = { version = "2.2", features = ["solana"] }
+mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
-ore-api = { path = "api", version = "2.1.9" }
-ore-boost-api = "0.3"
-solana-program = "^1.18"
+ore-api = { path = "api" }
+ore-boost-api = { version = "3.0", git = "https://github.com/regolith-labs/ore-boost.git", rev = "924105c" }
+solana-program = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
-spl-associated-token-account = { version = "^2.3", features = [ "no-entrypoint" ] } 
+spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
-steel = { features = ["spl"], version = "2.0" }
+steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
+
+[patch.crates-io]
+
+[profile.release]
+overflow-checks = true
+
+[profile.dev]
+overflow-checks = true

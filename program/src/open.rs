@@ -22,7 +22,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     slot_hashes_info.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Initialize proof.
-    create_account::<Proof>(
+    create_program_account::<Proof>(
         proof_info,
         system_program,
         payer_info,
@@ -40,7 +40,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     .0;
     proof.last_hash = [0; 32];
     proof.last_hash_at = clock.unix_timestamp;
-    proof.last_stake_at = clock.unix_timestamp;
     proof.miner = *miner_info.key;
     proof.total_hashes = 0;
     proof.total_rewards = 0;

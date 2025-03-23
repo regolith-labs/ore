@@ -21,7 +21,7 @@ pub const TOLERANCE: i64 = 5;
 pub const INITIAL_MIN_DIFFICULTY: u32 = 1;
 
 /// The decimal precision of the ORE token.
-/// There are 100 billion indivisible units per ORE (called "grains").
+/// There are 100 billion indivisible units per ORE (called "grams").
 pub const TOKEN_DECIMALS: u8 = 11;
 
 /// The decimal precision of the ORE v1 token.
@@ -34,7 +34,7 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 pub const ONE_MINUTE: i64 = 60;
 
 /// The number of minutes in a program epoch.
-pub const EPOCH_MINUTES: i64 = 5;
+pub const EPOCH_MINUTES: i64 = 15;
 
 /// The duration of a program epoch, in seconds.
 pub const EPOCH_DURATION: i64 = ONE_MINUTE * EPOCH_MINUTES;
@@ -79,7 +79,7 @@ pub const METADATA_NAME: &str = "ORE";
 pub const METADATA_SYMBOL: &str = "ORE";
 
 /// The uri for token metdata.
-pub const METADATA_URI: &str = "https://ore.supply/metadata-v2.json";
+pub const METADATA_URI: &str = "https://ore.supply/assets/metadata.json";
 
 /// Program id for const pda derivations
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
@@ -115,10 +115,6 @@ pub const MINT_ADDRESS: Pubkey =
 
 /// The bump of the mint account.
 pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).1;
-
-/// The address of the v1 mint account.
-#[deprecated(since = "2.6.0", note = "v1 tokens are no longer eligable to upgrade")]
-pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
