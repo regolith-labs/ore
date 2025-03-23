@@ -22,9 +22,8 @@ pub struct Proof {
     /// The last time this account provided a hash.
     pub last_hash_at: i64,
 
-    /// The last time stake was deposited into this account.
-    #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
-    pub last_stake_at: i64,
+    /// Buffer for possible future use.
+    pub _buffer: [u8; 8],
 
     /// The keypair which has permission to submit hashes for mining.
     pub miner: Pubkey,

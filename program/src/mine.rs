@@ -6,7 +6,6 @@ use ore_boost_api::{
     consts::{DENOMINATOR_MULTIPLIER, ROTATION_DURATION},
     state::{Boost, Config as BoostConfig},
 };
-#[allow(deprecated)]
 use solana_program::{
     keccak::hashv,
     sanitize::SanitizeError,

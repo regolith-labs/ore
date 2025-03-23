@@ -1,7 +1,6 @@
 pub mod consts;
 pub mod error;
 pub mod event;
-#[allow(deprecated)]
 pub mod instruction;
 pub mod loaders;
 pub mod sdk;

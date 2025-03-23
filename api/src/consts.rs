@@ -131,10 +131,6 @@ pub const MINT_ADDRESS: Pubkey =
 /// The bump of the mint account.
 pub const MINT_BUMP: u8 = ed25519::derive_program_address(&[MINT, &MINT_NOISE], &PROGRAM_ID).1;
 
-/// The address of the v1 mint account.
-#[deprecated(since = "2.6.0", note = "v1 tokens are no longer eligable to upgrade")]
-pub const MINT_V1_ADDRESS: Pubkey = pubkey!("oreoN2tQbHXVaZsr3pf66A48miqcBXCDJozganhEJgz");
-
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);

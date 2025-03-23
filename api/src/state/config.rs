@@ -15,9 +15,8 @@ pub struct Config {
     /// The minimum accepted difficulty.
     pub min_difficulty: u64,
 
-    /// The largest known stake balance on the network from the last epoch.
-    #[deprecated(since = "2.4.0", note = "Please stake with the boost program")]
-    pub top_balance: u64,
+    /// Buffer for possible future use.
+    pub _buffer: [u8; 8],
 }
 
 account!(OreAccount, Config);
