@@ -553,4 +553,75 @@ mod tests {
         assert_eq!(config.target_emmissions_rate, 5_233_476_327);
         assert_eq!(ONE_ORE, amount_to_mint);
     }
+
+    #[allow(deprecated)]
+    #[test]
+    fn test_process_epoch_zero_emissions() {
+        let mut config = Config {
+            base_reward_rate: 1024,
+            last_reset_at: 0,
+            min_difficulty: 1,
+            target_emmissions_rate: 5_233_476_327,
+        };
+        let bus_0 = &mut Bus {
+            id: 0,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_1 = &mut Bus {
+            id: 1,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_2 = &mut Bus {
+            id: 2,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_3 = &mut Bus {
+            id: 3,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_4 = &mut Bus {
+            id: 4,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_5 = &mut Bus {
+            id: 5,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_6 = &mut Bus {
+            id: 6,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_7 = &mut Bus {
+            id: 7,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
+        let clock = Clock::default();
+        let mint = Mint::V0(spl_token::state::Mint {
+            mint_authority: COption::None,
+            supply: ONE_ORE * 5_000_000,
+            decimals: TOKEN_DECIMALS,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        });
+
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        assert!(amount_to_mint.is_err());
+    }
 }
