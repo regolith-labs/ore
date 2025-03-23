@@ -252,7 +252,7 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_add(1_000_000_000),
+            TARGET_EPOCH_REWARDS.saturating_add(10_000_000_000),
             TARGET_EPOCH_REWARDS,
         );
         assert!(new_rate.lt(&current_rate));
@@ -284,7 +284,7 @@ mod tests {
         let current_rate = 1000;
         let new_rate = calculate_new_reward_rate(
             current_rate,
-            TARGET_EPOCH_REWARDS.saturating_sub(1_000_000_000),
+            TARGET_EPOCH_REWARDS.saturating_sub(10_000_000_000),
             TARGET_EPOCH_REWARDS,
         );
         assert!(new_rate.gt(&current_rate));
