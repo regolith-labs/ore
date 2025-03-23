@@ -21,7 +21,7 @@ pub const TOLERANCE: i64 = 5;
 pub const INITIAL_MIN_DIFFICULTY: u32 = 1;
 
 /// The decimal precision of the ORE token.
-/// There are 100 billion indivisible units per ORE (called "grains").
+/// There are 100 billion indivisible units per ORE (called "grams").
 pub const TOKEN_DECIMALS: u8 = 11;
 
 /// The decimal precision of the ORE v1 token.
