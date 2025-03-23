@@ -56,61 +56,60 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Max supply check.
-    if mint.supply.ge(&MAX_SUPPLY) {
+    if mint.supply() >= MAX_SUPPLY {
         return Err(OreError::MaxSupply.into());
     }
 
-    // Update timestamp.
-    config.last_reset_at = clock.unix_timestamp;
-
-    // Adjust emissions curve based on current supply.
-    config.target_emmissions_rate = get_target_emissions_rate(mint.supply);
-
-    // Calculate target rewards to distribute in coming epoch (emissions rate multiplied by epoch duration).
-    let target_epoch_rewards = config
-        .target_emmissions_rate
-        .checked_mul(EPOCH_MINUTES as u64)
-        .unwrap();
-
-    // Reset bus counters and calculate theoretical rewards mined in the last epoch.
+    // Process epoch.
     let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
-    let mut amount_to_mint = 0u64;
-    let mut remaining_supply = MAX_SUPPLY.saturating_sub(mint.supply);
-    let mut theoretical_epoch_rewards = 0u64;
-    for bus in busses {
-        // Reset theoretical rewards.
-        theoretical_epoch_rewards = theoretical_epoch_rewards
-            .checked_add(bus.theoretical_rewards)
-            .unwrap();
-        bus.theoretical_rewards = 0;
+    let amount_to_mint = config.process_epoch(busses, &clock, &mint);
 
-        // Reset bus rewards.
-        let topup_amount = target_epoch_rewards
-            .saturating_sub(bus.rewards)
-            .min(remaining_supply);
-        remaining_supply = remaining_supply.checked_sub(topup_amount).unwrap();
-        amount_to_mint = amount_to_mint.checked_add(topup_amount).unwrap();
-        bus.rewards = bus.rewards.checked_add(topup_amount).unwrap();
-    }
+    // Update timestamp.
+    // config.last_reset_at = clock.unix_timestamp;
 
-    // Update base reward rate for next epoch.
-    config.base_reward_rate = calculate_new_reward_rate(
-        config.base_reward_rate,
-        theoretical_epoch_rewards,
-        target_epoch_rewards,
-    );
+    // // Adjust emissions curve based on current supply.
+    // config.target_emmissions_rate = get_target_emissions_rate(mint.supply());
 
-    // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    if config.base_reward_rate.le(&BASE_REWARD_RATE_MIN_THRESHOLD) {
-        config.min_difficulty = config.min_difficulty.checked_add(1).unwrap();
-        config.base_reward_rate = config.base_reward_rate.checked_mul(2).unwrap();
-    }
+    // // Calculate target rewards to distribute in coming epoch (emissions rate multiplied by epoch duration).
+    // let target_epoch_rewards = config.target_emmissions_rate * EPOCH_MINUTES as u64;
 
-    // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    if config.base_reward_rate.ge(&BASE_REWARD_RATE_MAX_THRESHOLD) && config.min_difficulty.gt(&1) {
-        config.min_difficulty = config.min_difficulty.checked_sub(1).unwrap();
-        config.base_reward_rate = config.base_reward_rate.checked_div(2).unwrap();
-    }
+    // // Reset bus counters and calculate theoretical rewards mined in the last epoch.
+    // let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
+    // let mut amount_to_mint = 0u64;
+    // let mut remaining_supply = MAX_SUPPLY.saturating_sub(mint.supply());
+    // let mut theoretical_epoch_rewards = 0u64;
+    // for bus in busses {
+    //     // Reset theoretical rewards.
+    //     theoretical_epoch_rewards += bus.theoretical_rewards;
+    //     bus.theoretical_rewards = 0;
+
+    //     // Reset bus rewards.
+    //     let topup_amount = target_epoch_rewards
+    //         .saturating_sub(bus.rewards)
+    //         .min(remaining_supply);
+    //     remaining_supply -= topup_amount;
+    //     amount_to_mint += topup_amount;
+    //     bus.rewards += topup_amount;
+    // }
+
+    // // Update base reward rate for next epoch.
+    // config.base_reward_rate = calculate_new_reward_rate(
+    //     config.base_reward_rate,
+    //     theoretical_epoch_rewards,
+    //     target_epoch_rewards,
+    // );
+
+    // // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
+    // if config.base_reward_rate < BASE_REWARD_RATE_MIN_THRESHOLD {
+    //     config.min_difficulty += 1;
+    //     config.base_reward_rate *= 2;
+    // }
+
+    // // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
+    // if config.base_reward_rate >= BASE_REWARD_RATE_MAX_THRESHOLD && config.min_difficulty > 1 {
+    //     config.min_difficulty -= 1;
+    //     config.base_reward_rate /= 2;
+    // }
 
     // Fund the treasury token account.
     mint_to_signed(
@@ -123,6 +122,62 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     )?;
 
     Ok(())
+}
+
+trait EpochProcessor {
+    fn process_epoch(&mut self, busses: [&mut Bus; 8], clock: &Clock, mint: &Mint) -> u64;
+}
+
+impl EpochProcessor for Config {
+    fn process_epoch(&mut self, busses: [&mut Bus; 8], clock: &Clock, mint: &Mint) -> u64 {
+        // Update timestamp.
+        self.last_reset_at = clock.unix_timestamp;
+
+        // Adjust emissions curve based on current supply.
+        self.target_emmissions_rate = get_target_emissions_rate(mint.supply());
+
+        // Calculate target rewards to distribute in coming epoch (emissions rate multiplied by epoch duration).
+        let target_epoch_rewards = self.target_emmissions_rate * EPOCH_MINUTES as u64;
+
+        // Reset bus counters and calculate theoretical rewards mined in the last epoch.
+        let mut amount_to_mint = 0u64;
+        let mut remaining_supply = MAX_SUPPLY.saturating_sub(mint.supply());
+        let mut theoretical_epoch_rewards = 0u64;
+        for bus in busses {
+            // Reset theoretical rewards.
+            theoretical_epoch_rewards += bus.theoretical_rewards;
+            bus.theoretical_rewards = 0;
+
+            // Reset bus rewards.
+            let topup_amount = target_epoch_rewards
+                .saturating_sub(bus.rewards)
+                .min(remaining_supply);
+            remaining_supply -= topup_amount;
+            amount_to_mint += topup_amount;
+            bus.rewards += topup_amount;
+        }
+
+        // Update base reward rate for next epoch.
+        self.base_reward_rate = calculate_new_reward_rate(
+            self.base_reward_rate,
+            theoretical_epoch_rewards,
+            target_epoch_rewards,
+        );
+
+        // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
+        if self.base_reward_rate < BASE_REWARD_RATE_MIN_THRESHOLD {
+            self.min_difficulty += 1;
+            self.base_reward_rate *= 2;
+        }
+
+        // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
+        if self.base_reward_rate >= BASE_REWARD_RATE_MAX_THRESHOLD && self.min_difficulty > 1 {
+            self.min_difficulty -= 1;
+            self.base_reward_rate /= 2;
+        }
+
+        amount_to_mint
+    }
 }
 
 /// This function calculates what the new reward rate should be based on how many total rewards
@@ -198,10 +253,16 @@ pub(crate) fn get_target_emissions_rate(current_supply: u64) -> u64 {
 #[cfg(test)]
 mod tests {
     use rand::{distributions::Uniform, Rng};
+    use solana_program::program_option::COption;
+    use steel::{Clock, Mint};
 
-    use crate::calculate_new_reward_rate;
-    use ore_api::consts::{
-        BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COUNT, EPOCH_MINUTES, ONE_ORE, SMOOTHING_FACTOR,
+    use crate::{calculate_new_reward_rate, reset::EpochProcessor};
+    use ore_api::{
+        consts::{
+            BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COUNT, EPOCH_DURATION, EPOCH_MINUTES, ONE_ORE,
+            SMOOTHING_FACTOR, TOKEN_DECIMALS,
+        },
+        state::{Bus, Config},
     };
 
     const FUZZ_SIZE: u64 = 10_000;
@@ -306,5 +367,227 @@ mod tests {
     fn test_calculate_new_reward_rate_min_inputs() {
         let new_rate = calculate_new_reward_rate(1, 1, TARGET_EPOCH_REWARDS);
         assert!(new_rate.eq(&1u64.saturating_mul(SMOOTHING_FACTOR)));
+    }
+
+    #[allow(deprecated)]
+    #[test]
+    fn test_process_epoch_simple() {
+        let mut config = Config {
+            base_reward_rate: 1024,
+            last_reset_at: 0,
+            min_difficulty: 1,
+            target_emmissions_rate: ONE_ORE,
+        };
+        let bus_0 = &mut Bus {
+            id: 0,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_1 = &mut Bus {
+            id: 1,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_2 = &mut Bus {
+            id: 2,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_3 = &mut Bus {
+            id: 3,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_4 = &mut Bus {
+            id: 4,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_5 = &mut Bus {
+            id: 5,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_6 = &mut Bus {
+            id: 6,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_7 = &mut Bus {
+            id: 7,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
+        let clock = Clock::default();
+        let mint = Mint::V0(spl_token::state::Mint {
+            mint_authority: COption::None,
+            supply: ONE_ORE * 100,
+            decimals: TOKEN_DECIMALS,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        });
+
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        assert_eq!(config.target_emmissions_rate, ONE_ORE);
+        assert_eq!(
+            ONE_ORE * EPOCH_MINUTES as u64 * BUS_COUNT as u64,
+            amount_to_mint
+        );
+    }
+
+    #[allow(deprecated)]
+    #[test]
+    fn test_process_epoch_emissions_boundary() {
+        let mut config = Config {
+            base_reward_rate: 1024,
+            last_reset_at: 0,
+            min_difficulty: 1,
+            target_emmissions_rate: ONE_ORE,
+        };
+        let bus_0 = &mut Bus {
+            id: 0,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_1 = &mut Bus {
+            id: 1,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_2 = &mut Bus {
+            id: 2,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_3 = &mut Bus {
+            id: 3,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_4 = &mut Bus {
+            id: 4,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_5 = &mut Bus {
+            id: 5,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_6 = &mut Bus {
+            id: 6,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_7 = &mut Bus {
+            id: 7,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
+        let clock = Clock::default();
+        let mint = Mint::V0(spl_token::state::Mint {
+            mint_authority: COption::None,
+            supply: ONE_ORE * 525_600,
+            decimals: TOKEN_DECIMALS,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        });
+
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        assert_eq!(config.target_emmissions_rate, 90_000_000_000);
+        assert_eq!(
+            90_000_000_000 * EPOCH_MINUTES as u64 * BUS_COUNT as u64,
+            amount_to_mint
+        );
+    }
+
+    #[allow(deprecated)]
+    #[test]
+    fn test_process_epoch_max_supply() {
+        let mut config = Config {
+            base_reward_rate: 1024,
+            last_reset_at: 0,
+            min_difficulty: 1,
+            target_emmissions_rate: 5_233_476_327,
+        };
+        let bus_0 = &mut Bus {
+            id: 0,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_1 = &mut Bus {
+            id: 1,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_2 = &mut Bus {
+            id: 2,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_3 = &mut Bus {
+            id: 3,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_4 = &mut Bus {
+            id: 4,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_5 = &mut Bus {
+            id: 5,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_6 = &mut Bus {
+            id: 6,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let bus_7 = &mut Bus {
+            id: 7,
+            rewards: 0,
+            theoretical_rewards: 0,
+            top_balance: 0,
+        };
+        let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
+        let clock = Clock::default();
+        let mint = Mint::V0(spl_token::state::Mint {
+            mint_authority: COption::None,
+            supply: ONE_ORE * 4_999_999,
+            decimals: TOKEN_DECIMALS,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        });
+
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        assert_eq!(config.target_emmissions_rate, 5_233_476_327);
+        assert_eq!(ONE_ORE, amount_to_mint);
     }
 }
