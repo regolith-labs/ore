@@ -55,61 +55,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Ok(());
     }
 
-    // Max supply check.
-    if mint.supply() >= MAX_SUPPLY {
-        return Err(OreError::MaxSupply.into());
-    }
-
     // Process epoch.
     let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
-    let amount_to_mint = config.process_epoch(busses, &clock, &mint);
-
-    // Update timestamp.
-    // config.last_reset_at = clock.unix_timestamp;
-
-    // // Adjust emissions curve based on current supply.
-    // config.target_emmissions_rate = get_target_emissions_rate(mint.supply());
-
-    // // Calculate target rewards to distribute in coming epoch (emissions rate multiplied by epoch duration).
-    // let target_epoch_rewards = config.target_emmissions_rate * EPOCH_MINUTES as u64;
-
-    // // Reset bus counters and calculate theoretical rewards mined in the last epoch.
-    // let busses = [bus_0, bus_1, bus_2, bus_3, bus_4, bus_5, bus_6, bus_7];
-    // let mut amount_to_mint = 0u64;
-    // let mut remaining_supply = MAX_SUPPLY.saturating_sub(mint.supply());
-    // let mut theoretical_epoch_rewards = 0u64;
-    // for bus in busses {
-    //     // Reset theoretical rewards.
-    //     theoretical_epoch_rewards += bus.theoretical_rewards;
-    //     bus.theoretical_rewards = 0;
-
-    //     // Reset bus rewards.
-    //     let topup_amount = target_epoch_rewards
-    //         .saturating_sub(bus.rewards)
-    //         .min(remaining_supply);
-    //     remaining_supply -= topup_amount;
-    //     amount_to_mint += topup_amount;
-    //     bus.rewards += topup_amount;
-    // }
-
-    // // Update base reward rate for next epoch.
-    // config.base_reward_rate = calculate_new_reward_rate(
-    //     config.base_reward_rate,
-    //     theoretical_epoch_rewards,
-    //     target_epoch_rewards,
-    // );
-
-    // // If base reward rate is too low, increment min difficulty by 1 and double base reward rate.
-    // if config.base_reward_rate < BASE_REWARD_RATE_MIN_THRESHOLD {
-    //     config.min_difficulty += 1;
-    //     config.base_reward_rate *= 2;
-    // }
-
-    // // If base reward rate is too high, decrement min difficulty by 1 and halve base reward rate.
-    // if config.base_reward_rate >= BASE_REWARD_RATE_MAX_THRESHOLD && config.min_difficulty > 1 {
-    //     config.min_difficulty -= 1;
-    //     config.base_reward_rate /= 2;
-    // }
+    let amount_to_mint = config.process_epoch(busses, &clock, &mint)?;
 
     // Fund the treasury token account.
     mint_to_signed(
@@ -125,11 +73,26 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 }
 
 trait EpochProcessor {
-    fn process_epoch(&mut self, busses: [&mut Bus; 8], clock: &Clock, mint: &Mint) -> u64;
+    fn process_epoch(
+        &mut self,
+        busses: [&mut Bus; 8],
+        clock: &Clock,
+        mint: &Mint,
+    ) -> Result<u64, ProgramError>;
 }
 
 impl EpochProcessor for Config {
-    fn process_epoch(&mut self, busses: [&mut Bus; 8], clock: &Clock, mint: &Mint) -> u64 {
+    fn process_epoch(
+        &mut self,
+        busses: [&mut Bus; 8],
+        clock: &Clock,
+        mint: &Mint,
+    ) -> Result<u64, ProgramError> {
+        // Max supply check.
+        if mint.supply() >= MAX_SUPPLY {
+            return Err(OreError::MaxSupply.into());
+        }
+
         // Update timestamp.
         self.last_reset_at = clock.unix_timestamp;
 
@@ -176,7 +139,7 @@ impl EpochProcessor for Config {
             self.base_reward_rate /= 2;
         }
 
-        amount_to_mint
+        Ok(amount_to_mint)
     }
 }
 
@@ -259,8 +222,8 @@ mod tests {
     use crate::{calculate_new_reward_rate, reset::EpochProcessor};
     use ore_api::{
         consts::{
-            BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COUNT, EPOCH_DURATION, EPOCH_MINUTES, ONE_ORE,
-            SMOOTHING_FACTOR, TOKEN_DECIMALS,
+            BASE_REWARD_RATE_MIN_THRESHOLD, BUS_COUNT, EPOCH_MINUTES, ONE_ORE, SMOOTHING_FACTOR,
+            TOKEN_DECIMALS,
         },
         state::{Bus, Config},
     };
@@ -436,7 +399,7 @@ mod tests {
             freeze_authority: COption::None,
         });
 
-        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint).unwrap();
         assert_eq!(config.target_emmissions_rate, ONE_ORE);
         assert_eq!(
             ONE_ORE * EPOCH_MINUTES as u64 * BUS_COUNT as u64,
@@ -511,7 +474,7 @@ mod tests {
             freeze_authority: COption::None,
         });
 
-        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint).unwrap();
         assert_eq!(config.target_emmissions_rate, 90_000_000_000);
         assert_eq!(
             90_000_000_000 * EPOCH_MINUTES as u64 * BUS_COUNT as u64,
@@ -586,7 +549,7 @@ mod tests {
             freeze_authority: COption::None,
         });
 
-        let amount_to_mint = config.process_epoch(busses, &clock, &mint);
+        let amount_to_mint = config.process_epoch(busses, &clock, &mint).unwrap();
         assert_eq!(config.target_emmissions_rate, 5_233_476_327);
         assert_eq!(ONE_ORE, amount_to_mint);
     }
