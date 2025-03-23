@@ -8,6 +8,7 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
+    let clock = Clock::get()?;
     let [signer_info, beneficiary_info, proof_info, treasury_info, treasury_tokens_info, token_program] =
         accounts
     else {
@@ -33,6 +34,9 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
         .balance
         .checked_sub(amount)
         .ok_or(OreError::ClaimTooLarge)?;
+
+    // Update last claim timestamp.
+    proof.last_claim_at = clock.unix_timestamp;
 
     // Transfer tokens from treasury to beneficiary.
     transfer_signed(

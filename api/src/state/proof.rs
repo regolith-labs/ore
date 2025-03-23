@@ -19,11 +19,11 @@ pub struct Proof {
     /// The last hash the miner provided.
     pub last_hash: [u8; 32],
 
-    /// The last time this account provided a hash.
+    /// Timestamp of the last time this account provided a hash.
     pub last_hash_at: i64,
 
-    /// Buffer for possible future use.
-    pub _buffer: [u8; 8],
+    /// Timestamp of the last claim.
+    pub last_claim_at: i64,
 
     /// The keypair which has permission to submit hashes for mining.
     pub miner: Pubkey,
