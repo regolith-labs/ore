@@ -47,7 +47,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Load boost accounts.
     let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-    let boost_config = boost_config_info
+    boost_config_info
         .as_account::<BoostConfig>(&ore_boost_api::ID)?
         .assert(|c| c.current == *boost_info.key)?
         .assert(|c| clock.unix_timestamp < c.ts + ROTATION_DURATION)?;
