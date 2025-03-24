@@ -54,7 +54,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     boost_config_info
         .as_account::<BoostConfig>(&ore_boost_api::ID)?
         .assert(|c| c.current == *boost_info.key)?
-        .assert(|c| clock.unix_timestamp < c.ts + ROTATION_DURATION)?;
+        .assert(|c| t < c.ts + ROTATION_DURATION)?;
     let boost_proof = boost_proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *boost_info.key)?;
