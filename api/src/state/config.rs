@@ -15,8 +15,8 @@ pub struct Config {
     /// The minimum accepted difficulty.
     pub min_difficulty: u64,
 
-    /// Buffer for possible future use.
-    pub _buffer: [u8; 8],
+    /// The target emissions rate in ORE/min.
+    pub target_emmissions_rate: u64,
 }
 
 account!(OreAccount, Config);
