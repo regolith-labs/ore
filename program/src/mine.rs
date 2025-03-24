@@ -22,8 +22,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
     let t: i64 = clock.unix_timestamp;
-    let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar, boost_info, boost_proof_info, boost_config_info] =
-        accounts
+    let (required_accounts, boost_accounts) = accounts.split_at(6);
+    let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
+        required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -46,6 +47,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Load boost accounts.
+    let [boost_info, boost_proof_info, boost_config_info] = boost_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
     let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
     boost_config_info
         .as_account::<BoostConfig>(&ore_boost_api::ID)?
