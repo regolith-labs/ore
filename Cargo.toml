@@ -29,6 +29,7 @@ spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] 
 static_assertions = "1.1.0"
 steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
+rand = "0.8.5"
 
 [patch.crates-io]
 
