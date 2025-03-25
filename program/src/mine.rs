@@ -122,29 +122,16 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // should not be possible to spend ~1 hour on a given challenge and submit a hash with a large
     // difficulty value to earn an outsized reward.
     //
-    // The penalty works by halving the reward amount for every minute late the solution has been submitted.
-    // This ultimately drives the reward to zero given enough time (10-20 minutes).
+    // The penalty works by decaying the reward to zero over a 60 second period after the target time.
     let gross_reward = base_reward.checked_add(boost_reward).unwrap();
     let mut gross_penalized_reward = gross_reward;
     let t_liveness = t_target.saturating_add(TOLERANCE);
     if t > t_liveness {
-        // Halve the reward for every minute late.
-        let secs_late = t.saturating_sub(t_target) as u64;
-        let mins_late = secs_late.saturating_div(ONE_MINUTE as u64);
-        if mins_late > 0 {
-            gross_penalized_reward =
-                gross_reward.saturating_div(2u64.saturating_pow(mins_late as u32));
-        }
-
-        // Linear decay with remainder seconds.
-        let remainder_secs = secs_late.saturating_sub(mins_late.saturating_mul(ONE_MINUTE as u64));
-        if remainder_secs > 0 && gross_penalized_reward > 0 {
-            let penalty = gross_penalized_reward
-                .saturating_div(2)
-                .saturating_mul(remainder_secs)
-                .saturating_div(ONE_MINUTE as u64);
-            gross_penalized_reward = gross_penalized_reward.saturating_sub(penalty);
-        }
+        let secs_late = t.saturating_sub(t_target).min(ONE_MINUTE) as u64;
+        let penalty = gross_reward
+            .saturating_mul(secs_late)
+            .saturating_div(ONE_MINUTE as u64);
+        gross_penalized_reward = gross_penalized_reward.saturating_sub(penalty);
     }
 
     // Apply bus limit.
