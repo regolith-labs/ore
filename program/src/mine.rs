@@ -34,7 +34,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .is_config()?
         .as_account::<Config>(&ore_api::ID)?
         .assert_err(
-            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            |c| t < c.last_reset_at + EPOCH_DURATION,
             OreError::NeedsReset.into(),
         )?;
     let proof = proof_info
