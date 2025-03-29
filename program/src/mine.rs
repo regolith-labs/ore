@@ -51,10 +51,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-    boost_config_info
-        .as_account::<BoostConfig>(&ore_boost_api::ID)?
-        .assert(|c| c.current == *boost_info.key)?
-        .assert(|c| t < c.ts + ROTATION_DURATION)?;
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
     let boost_proof = boost_proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *boost_info.key)?;
@@ -101,10 +98,15 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
         .unwrap();
-    let base_reward = config
+    let mut base_reward = config
         .base_reward_rate
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
+
+    // Nullify base reward if boost is invalid.
+    if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
+        base_reward = 0;
+    }
 
     // Apply boosts.
     //
