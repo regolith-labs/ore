@@ -3,7 +3,7 @@ use std::mem::size_of;
 use drillx::Solution;
 use ore_api::prelude::*;
 use ore_boost_api::{
-    consts::{DENOMINATOR_MULTIPLIER, ROTATION_DURATION},
+    consts::{DENOMINATOR_BPS, ROTATION_DURATION},
     state::{Boost, Config as BoostConfig},
 };
 use solana_program::{
@@ -66,9 +66,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // Miners are rate limited to approximately 1 hash per minute. If a miner attempts to submit
     // solutions more frequently than this, reject with an error.
-    let t_target = proof.last_hash_at.saturating_add(ONE_MINUTE);
-    let t_spam = t_target.saturating_sub(TOLERANCE);
-    if t.lt(&t_spam) {
+    let t_target = proof.last_hash_at + ONE_MINUTE;
+    let t_spam = t_target - TOLERANCE;
+    if t < t_spam {
         return Err(OreError::Spam.into());
     }
 
@@ -87,51 +87,33 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // minimum required difficulty, we reject it with an error.
     let hash = solution.to_hash();
     let difficulty = hash.difficulty();
-    if difficulty.lt(&(config.min_difficulty as u32)) {
+    if difficulty < config.min_difficulty as u32 {
         return Err(OreError::HashTooEasy.into());
     }
 
-    // Normalize the difficulty and calculate the reward amount.
+    // Normalize the difficulty and calculate the gross reward amount.
     //
     // The reward doubles for every bit of difficulty (leading zeros) on the hash. We use the normalized
     // difficulty so the minimum accepted difficulty pays out at the base reward rate.
-    let normalized_difficulty = difficulty
-        .checked_sub(config.min_difficulty as u32)
-        .unwrap();
-    let mut base_reward = config
-        .base_reward_rate
-        .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
-        .unwrap();
+    let normalized_difficulty = difficulty - config.min_difficulty as u32;
+    let mut gross_reward =
+        config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
 
-    // Nullify base reward if boost is invalid.
+    // Zero out gross reward if boost is invalid.
     if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
-        base_reward = 0;
-    }
-
-    // Apply boosts.
-    //
-    // Boosts are staking incentives that can multiply a miner's rewards. The boost rewards are
-    // split between the miner and staker.
-    let mut boost_reward = 0;
-    if t < boost.expires_at {
-        boost_reward = (base_reward as u128)
-            .checked_mul(boost.multiplier as u128)
-            .unwrap()
-            .checked_div(DENOMINATOR_MULTIPLIER as u128)
-            .unwrap() as u64;
+        gross_reward = 0;
     }
 
     // Apply liveness penalty.
     //
-    // The liveness penalty exists to ensure there is no "invisible" hashpower on the network. It
-    // should not be possible to spend ~1 hour on a given challenge and submit a hash with a large
-    // difficulty value to earn an outsized reward.
+    // The liveness penalty exists to ensure there is no "dark" hashpower on the network. It
+    // should not be possible to spend an excessively long time on a given challenge and submit a hash
+    // with a large difficulty score to earn an outsized reward.
     //
-    // The penalty works by halving the reward amount for every minute late the solution has been submitted.
+    // The liveness penalty works by halving the reward amount for every minute a solution has been submitted late.
     // This ultimately drives the reward to zero given enough time (10-20 minutes).
-    let gross_reward = base_reward.checked_add(boost_reward).unwrap();
     let mut gross_penalized_reward = gross_reward;
-    let t_liveness = t_target.saturating_add(TOLERANCE);
+    let t_liveness = t_target + TOLERANCE;
     if t > t_liveness {
         // Halve the reward for every minute late.
         let secs_late = t.saturating_sub(t_target) as u64;
@@ -154,64 +136,40 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Apply bus limit.
     //
-    // Busses are limited to distributing 1 ORE per epoch. The payout amount must be capped to whatever is
-    // left in the selected bus. This limits the maximum amount that will be paid out for any given hash to 1 ORE.
-    let net_reward = gross_penalized_reward.min(bus.rewards).min(ONE_ORE);
+    // Busses are limited to distributing the target emissions rate per epoch. The payout amount must be capped to whatever is
+    // left in the selected bus. This limits the maximum amount that will be paid out for any given hash to the target emissions rate.
+    let net_reward = gross_penalized_reward
+        .min(bus.rewards)
+        .min(config.target_emmissions_rate);
 
-    // Scale the base and boost rewards to account for penalties.
-    let net_base_reward = if gross_reward > 0 {
-        (net_reward as u128)
-            .checked_mul(base_reward as u128)
-            .unwrap()
-            .checked_div(gross_reward as u128)
-            .unwrap() as u64
+    // Split the net reward between the miner and stakers.
+    //
+    // The boost take rate is capped at 50% of the net reward. This protects miners from excessively
+    // large boost incentives that would overly skew the distribution of rewards.
+    let boost_bps = boost.multiplier.min(DENOMINATOR_BPS / 2);
+    let net_boost_reward = if t < boost.expires_at {
+        (net_reward as u128 * boost_bps as u128 / DENOMINATOR_BPS as u128) as u64
     } else {
         0
     };
-    let net_boost_reward = net_reward.checked_sub(net_base_reward).unwrap();
+    let net_miner_reward = net_reward - net_boost_reward;
 
-    // Split the boost rewards between miner and staker.
-    let net_staker_boost_reward = net_boost_reward.checked_div(2).unwrap();
-    let net_miner_boost_reward = net_boost_reward
-        .checked_sub(net_staker_boost_reward)
-        .unwrap();
-    let net_miner_reward = net_base_reward.checked_add(net_miner_boost_reward).unwrap();
-
-    // Checksum on rewards. Should never fail.
-    assert!(
-        net_reward
-            == net_base_reward
-                .checked_add(net_miner_boost_reward)
-                .unwrap()
-                .checked_add(net_staker_boost_reward)
-                .unwrap(),
-        "Rewards checksum failed"
-    );
+    // Sanity check the rewards.
+    assert_eq!(net_reward, net_miner_reward + net_boost_reward);
 
     // Update bus balances.
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
     // base reward rate will be updated to account for the real hashpower on the network.
-    bus.theoretical_rewards = bus
-        .theoretical_rewards
-        .checked_add(gross_penalized_reward)
-        .unwrap();
-    bus.rewards = bus.rewards.checked_sub(net_reward).unwrap();
-
-    // Update miner balances.
-    proof.balance = proof.balance.checked_add(net_miner_reward).unwrap();
+    bus.theoretical_rewards += gross_penalized_reward;
+    bus.rewards -= net_reward;
 
     // Update staker balances.
-    if net_staker_boost_reward > 0 {
-        boost_proof.balance = boost_proof
-            .balance
-            .checked_add(net_staker_boost_reward)
-            .unwrap();
-        boost_proof.total_rewards = boost_proof
-            .total_rewards
-            .checked_add(net_staker_boost_reward)
-            .unwrap();
-    }
+    boost_proof.balance += net_boost_reward;
+    boost_proof.total_rewards += net_boost_reward;
+
+    // Update miner balances.
+    proof.balance += net_miner_reward;
 
     // Hash a recent slot hash into the next challenge to prevent pre-mining attacks.
     //
@@ -227,8 +185,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Update stats.
     let prev_last_hash_at = proof.last_hash_at;
     proof.last_hash_at = t.max(t_target);
-    proof.total_hashes = proof.total_hashes.saturating_add(1);
-    proof.total_rewards = proof.total_rewards.saturating_add(net_miner_reward);
+    proof.total_hashes += 1;
+    proof.total_rewards += net_miner_reward;
 
     // Log data.
     //
@@ -238,11 +196,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         balance: proof.balance,
         difficulty: difficulty as u64,
         last_hash_at: prev_last_hash_at,
-        timing: t.saturating_sub(t_liveness),
+        timing: t - t_liveness,
         net_reward,
-        net_base_reward,
-        net_miner_boost_reward,
-        net_staker_boost_reward,
+        net_base_reward: net_miner_reward,
+        net_miner_boost_reward: 0,
+        net_staker_boost_reward: net_boost_reward,
     }
     .log_return();
 
