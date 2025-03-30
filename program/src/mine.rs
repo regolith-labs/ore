@@ -154,6 +154,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     };
     let net_miner_reward = net_reward - net_boost_reward;
 
+    // Sanity check the rewards.
+    assert_eq!(net_reward, net_miner_reward + net_boost_reward);
+
     // Update bus balances.
     //
     // We track the theoretical rewards that would have been paid out ignoring the bus limit, so the
@@ -184,9 +187,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes += 1;
     proof.total_rewards += net_miner_reward;
-
-    // Sanity check the rewards.
-    assert_eq!(net_miner_reward + net_boost_reward, net_reward);
 
     // Log data.
     //
