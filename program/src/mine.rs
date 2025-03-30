@@ -22,7 +22,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
     let t: i64 = clock.unix_timestamp;
-    let (required_accounts, optional_accounts) = accounts.split_at(6);
+    let (required_accounts, boost_accounts) = accounts.split_at(6);
     let [signer_info, bus_info, config_info, proof_info, instructions_sysvar, slot_hashes_sysvar] =
         required_accounts
     else {
@@ -34,7 +34,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .is_config()?
         .as_account::<Config>(&ore_api::ID)?
         .assert_err(
-            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            |c| t < c.last_reset_at + EPOCH_DURATION,
             OreError::NeedsReset.into(),
         )?;
     let proof = proof_info
@@ -45,6 +45,16 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         )?;
     instructions_sysvar.is_sysvar(&sysvar::instructions::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
+
+    // Load boost accounts.
+    let [boost_info, boost_proof_info, boost_config_info] = boost_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
+    let boost_proof = boost_proof_info
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *boost_info.key)?;
 
     // Authenticate the proof account.
     //
@@ -88,32 +98,27 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let normalized_difficulty = difficulty
         .checked_sub(config.min_difficulty as u32)
         .unwrap();
-    let base_reward = config
+    let mut base_reward = config
         .base_reward_rate
         .checked_mul(2u64.checked_pow(normalized_difficulty).unwrap())
         .unwrap();
+
+    // Nullify base reward if boost is invalid.
+    if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
+        base_reward = 0;
+    }
 
     // Apply boosts.
     //
     // Boosts are staking incentives that can multiply a miner's rewards. The boost rewards are
     // split between the miner and staker.
     let mut boost_reward = 0;
-    if let [boost_info, _boost_proof_info, boost_config_info] = optional_accounts {
-        // Load boost accounts.
-        let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-        let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
-
-        // Apply multiplier if boost is active, not expired, and last rotation was less than one minute ago
-        if boost_config.current == *boost_info.key
-            && t < boost_config.ts + ROTATION_DURATION
-            && t < boost.expires_at
-        {
-            boost_reward = (base_reward as u128)
-                .checked_mul(boost.multiplier as u128)
-                .unwrap()
-                .checked_div(DENOMINATOR_MULTIPLIER as u128)
-                .unwrap() as u64;
-        }
+    if t < boost.expires_at {
+        boost_reward = (base_reward as u128)
+            .checked_mul(boost.multiplier as u128)
+            .unwrap()
+            .checked_div(DENOMINATOR_MULTIPLIER as u128)
+            .unwrap() as u64;
     }
 
     // Apply liveness penalty.
@@ -198,19 +203,14 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
 
     // Update staker balances.
     if net_staker_boost_reward > 0 {
-        if let [boost_info, boost_proof_info, _boost_config_info] = optional_accounts {
-            let boost_proof = boost_proof_info
-                .as_account_mut::<Proof>(&ore_api::ID)?
-                .assert_mut(|p| p.authority == *boost_info.key)?;
-            boost_proof.balance = boost_proof
-                .balance
-                .checked_add(net_staker_boost_reward)
-                .unwrap();
-            boost_proof.total_rewards = boost_proof
-                .total_rewards
-                .checked_add(net_staker_boost_reward)
-                .unwrap();
-        }
+        boost_proof.balance = boost_proof
+            .balance
+            .checked_add(net_staker_boost_reward)
+            .unwrap();
+        boost_proof.total_rewards = boost_proof
+            .total_rewards
+            .checked_add(net_staker_boost_reward)
+            .unwrap();
     }
 
     // Hash a recent slot hash into the next challenge to prevent pre-mining attacks.

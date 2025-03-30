@@ -56,22 +56,21 @@ pub fn mine(
     authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
-    boost_keys: Option<[Pubkey; 2]>,
+    boost: Pubkey,
+    boost_config: Pubkey,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(bus, false),
         AccountMeta::new_readonly(CONFIG_ADDRESS, false),
         AccountMeta::new(proof, false),
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
         AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
+        AccountMeta::new_readonly(boost, false),
+        AccountMeta::new(proof_pda(boost).0, false),
+        AccountMeta::new_readonly(boost_config, false),
     ];
-    if let Some([boost_address, boost_config_address]) = boost_keys {
-        accounts.push(AccountMeta::new_readonly(boost_address, false));
-        accounts.push(AccountMeta::new(proof_pda(boost_address).0, false));
-        accounts.push(AccountMeta::new_readonly(boost_config_address, false));
-    }
     Instruction {
         program_id: crate::ID,
         accounts,
