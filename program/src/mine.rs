@@ -3,7 +3,7 @@ use std::mem::size_of;
 use drillx::Solution;
 use ore_api::prelude::*;
 use ore_boost_api::{
-    consts::{DENOMINATOR_MULTIPLIER, ROTATION_DURATION},
+    consts::{DENOMINATOR_BPS, ROTATION_DURATION},
     state::{Boost, Config as BoostConfig},
 };
 use solana_program::{
@@ -34,7 +34,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .is_config()?
         .as_account::<Config>(&ore_api::ID)?
         .assert_err(
-            |c| c.last_reset_at.saturating_add(EPOCH_DURATION) > t,
+            |c| t < c.last_reset_at + EPOCH_DURATION,
             OreError::NeedsReset.into(),
         )?;
     let proof = proof_info
@@ -51,10 +51,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-    boost_config_info
-        .as_account::<BoostConfig>(&ore_boost_api::ID)?
-        .assert(|c| c.current == *boost_info.key)?
-        .assert(|c| t < c.ts + ROTATION_DURATION)?;
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
     let boost_proof = boost_proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *boost_info.key)?;
@@ -99,7 +96,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // The reward doubles for every bit of difficulty (leading zeros) on the hash. We use the normalized
     // difficulty so the minimum accepted difficulty pays out at the base reward rate.
     let normalized_difficulty = difficulty - config.min_difficulty as u32;
-    let gross_reward = config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
+    let mut gross_reward =
+        config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
+
+    // Nullify gross reward if boost is invalid.
+    if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
+        gross_reward = 0;
+    }
 
     // Apply liveness penalty.
     //
@@ -139,10 +142,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .min(bus.rewards)
         .min(config.target_emmissions_rate);
 
-    // Calculate how much of the net reward goes to the miner and how much goes to stakers.
-    assert!(boost.multiplier <= DENOMINATOR_MULTIPLIER / 2);
-    let net_boost_reward =
-        (net_reward as u128 * boost.multiplier as u128 / DENOMINATOR_MULTIPLIER as u128) as u64;
+    // Split the net reward between the miner and stakers.
+    let boost_bps = boost.multiplier.min(DENOMINATOR_BPS / 2);
+    let net_boost_reward = if t < boost.expires_at {
+        (net_reward as u128 * boost_bps as u128 / DENOMINATOR_BPS as u128) as u64
+    } else {
+        0
+    };
     let net_miner_reward = net_reward - net_boost_reward;
 
     // Update bus balances.
