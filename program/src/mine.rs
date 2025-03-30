@@ -99,7 +99,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let mut gross_reward =
         config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
 
-    // Nullify gross reward if boost is invalid.
+    // Zero out gross reward if boost is invalid.
     if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
         gross_reward = 0;
     }
@@ -143,6 +143,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .min(config.target_emmissions_rate);
 
     // Split the net reward between the miner and stakers.
+    //
+    // The boost take rate is capped at 50% of the net reward. This protects miners from excessively
+    // large boost incentives that would overly skew the distribution of rewards.
     let boost_bps = boost.multiplier.min(DENOMINATOR_BPS / 2);
     let net_boost_reward = if t < boost.expires_at {
         (net_reward as u128 * boost_bps as u128 / DENOMINATOR_BPS as u128) as u64
@@ -181,6 +184,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     proof.last_hash_at = t.max(t_target);
     proof.total_hashes += 1;
     proof.total_rewards += net_miner_reward;
+
+    // Sanity check the rewards.
+    assert_eq!(net_miner_reward + net_boost_reward, net_reward);
 
     // Log data.
     //
