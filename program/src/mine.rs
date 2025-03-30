@@ -139,8 +139,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .min(bus.rewards)
         .min(config.target_emmissions_rate);
 
-    // Calculate how much of the reward goes to stakers and how much goes to the miner.
-    assert!(boost.multiplier <= DENOMINATOR_MULTIPLIER);
+    // Calculate how much of the net reward goes to the miner and how much goes to stakers.
+    assert!(boost.multiplier <= DENOMINATOR_MULTIPLIER / 2);
     let net_boost_reward =
         (net_reward as u128 * boost.multiplier as u128 / DENOMINATOR_MULTIPLIER as u128) as u64;
     let net_miner_reward = net_reward - net_boost_reward;
@@ -153,10 +153,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     bus.rewards -= net_reward;
 
     // Update staker balances.
-    if net_boost_reward > 0 {
-        boost_proof.balance += net_boost_reward;
-        boost_proof.total_rewards += net_boost_reward;
-    }
+    boost_proof.balance += net_boost_reward;
+    boost_proof.total_rewards += net_boost_reward;
 
     // Update miner balances.
     proof.balance += net_miner_reward;
