@@ -146,7 +146,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The boost take rate is capped at 50% of the net reward. This protects miners from excessively
     // large boost incentives that would overly skew the distribution of rewards.
-    let boost_bps = boost.multiplier.min(DENOMINATOR_BPS / 2);
+    let boost_bps = boost.multiplier;
     let net_boost_reward = if t < boost.expires_at {
         (net_reward as u128 * boost_bps as u128 / DENOMINATOR_BPS as u128) as u64
     } else {
