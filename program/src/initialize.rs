@@ -73,10 +73,21 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
 
     // Initialize bus accounts.
     let bus_infos = [
-        bus_0_info, bus_1_info, bus_2_info, bus_3_info, bus_4_info, bus_5_info, bus_6_info,
-        bus_7_info,
+        &bus_0_info,
+        &bus_1_info,
+        &bus_2_info,
+        &bus_3_info,
+        &bus_4_info,
+        &bus_5_info,
+        &bus_6_info,
+        &bus_7_info,
     ];
+
     for i in 0..BUS_COUNT {
+        if i >= bus_infos.len() {
+            return Err(ProgramError::InvalidAccountData);
+        }
+
         create_program_account::<Bus>(
             bus_infos[i],
             system_program,
@@ -84,6 +95,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             &ore_api::ID,
             &[BUS, &[i as u8]],
         )?;
+
         let bus = bus_infos[i].as_account_mut::<Bus>(&ore_api::ID)?;
         bus.id = i as u64;
         bus.rewards = 0;
