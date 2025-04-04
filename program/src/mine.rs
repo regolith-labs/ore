@@ -2,10 +2,7 @@ use std::mem::size_of;
 
 use drillx::Solution;
 use ore_api::prelude::*;
-use ore_boost_api::{
-    consts::{DENOMINATOR_BPS, ROTATION_DURATION},
-    state::{Boost, Config as BoostConfig},
-};
+use ore_boost_api::{consts::DENOMINATOR_BPS, state::Config as BoostConfig};
 use solana_program::{
     keccak::hashv,
     sanitize::SanitizeError,
@@ -47,14 +44,13 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Load boost accounts.
-    // let [boost_info, boost_proof_info, boost_config_info] = boost_accounts else {
-    //     return Err(ProgramError::NotEnoughAccountKeys);
-    // };
-    // let boost = boost_info.as_account::<Boost>(&ore_boost_api::ID)?;
-    // let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
-    // let boost_proof = boost_proof_info
-    //     .as_account_mut::<Proof>(&ore_api::ID)?
-    //     .assert_mut(|p| p.authority == *boost_info.key)?;
+    let [boost_config_info, boost_proof_info] = boost_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
+    let boost_proof = boost_proof_info
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *boost_config_info.key)?;
 
     // Authenticate the proof account.
     //
@@ -96,13 +92,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     // The reward doubles for every bit of difficulty (leading zeros) on the hash. We use the normalized
     // difficulty so the minimum accepted difficulty pays out at the base reward rate.
     let normalized_difficulty = difficulty - config.min_difficulty as u32;
-    let mut gross_reward =
-        config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
-
-    // Zero out gross reward if boost is invalid.
-    // if boost_config.current != *boost_info.key || t >= boost_config.ts + ROTATION_DURATION {
-    //     gross_reward = 0;
-    // }
+    let gross_reward = config.base_reward_rate * 2u64.checked_pow(normalized_difficulty).unwrap();
 
     // Apply liveness penalty.
     //
@@ -146,7 +136,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The boost take rate is capped at 50% of the net reward. This protects miners from excessively
     // large boost incentives that would overly skew the distribution of rewards.
-    let net_boost_reward = 0;
+    let net_boost_reward = (net_reward as u128 * boost_config.staker_take_rate as u128
+        / DENOMINATOR_BPS as u128) as u64;
     let net_miner_reward = net_reward - net_boost_reward;
 
     // Sanity check the rewards.
@@ -160,8 +151,8 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     bus.rewards -= net_reward;
 
     // Update staker balances.
-    // boost_proof.balance += net_boost_reward;
-    // boost_proof.total_rewards += net_boost_reward;
+    boost_proof.balance += net_boost_reward;
+    boost_proof.total_rewards += net_boost_reward;
 
     // Update miner balances.
     proof.balance += net_miner_reward;

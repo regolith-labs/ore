@@ -31,6 +31,7 @@ steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
 
 [patch.crates-io]
+ore-boost-api = { path = "../ore-boost/api" }
 
 [profile.release]
 overflow-checks = true
