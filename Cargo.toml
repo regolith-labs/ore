@@ -22,7 +22,7 @@ drillx = { version = "2.2", features = ["solana"] }
 mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
 ore-api = { path = "api" }
-ore-boost-api = { version = "3.0", git = "https://github.com/regolith-labs/ore-boost.git", rev = "924105c" }
+ore-boost-api = "4.0.0-alpha"
 solana-program = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
