@@ -56,7 +56,6 @@ pub fn mine(
     authority: Pubkey,
     bus: Pubkey,
     solution: Solution,
-    boost: Pubkey,
     boost_config: Pubkey,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
@@ -67,9 +66,8 @@ pub fn mine(
         AccountMeta::new(proof, false),
         AccountMeta::new_readonly(sysvar::instructions::ID, false),
         AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
-        AccountMeta::new_readonly(boost, false),
-        AccountMeta::new(proof_pda(boost).0, false),
         AccountMeta::new_readonly(boost_config, false),
+        AccountMeta::new(proof_pda(boost_config).0, false),
     ];
     Instruction {
         program_id: crate::ID,

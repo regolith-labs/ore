@@ -3208,3 +3208,7 @@ dependencies = [
  "quote",
  "syn 2.0.100",
 ]
+
+[[patch.unused]]
+name = "ore-boost-api"
+version = "3.0.1"
