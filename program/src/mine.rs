@@ -133,9 +133,6 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         .min(config.target_emmissions_rate);
 
     // Split the net reward between the miner and stakers.
-    //
-    // The boost take rate is capped at 50% of the net reward. This protects miners from excessively
-    // large boost incentives that would overly skew the distribution of rewards.
     let net_boost_reward =
         (net_reward as u128 * boost_config.take_rate as u128 / DENOMINATOR_BPS as u128) as u64;
     let net_miner_reward = net_reward - net_boost_reward;

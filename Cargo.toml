@@ -3,11 +3,11 @@ resolver = "2"
 members = ["api", "program"]
 
 [workspace.package]
-version = "3.5.0"
+version = "3.6.0-alpha"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.supply"
-description = "Liquid digial gold everyone can mine"
+description = "Liquid digial gold"
 documentation = "https://docs.rs/ore-api/latest/ore_api/"
 repository = "https://github.com/regolith-labs/ore"
 readme = "./README.md"
@@ -22,7 +22,7 @@ drillx = { version = "2.2", features = ["solana"] }
 mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
 ore-api = { path = "api" }
-ore-boost-api = { version = "3.0", git = "https://github.com/regolith-labs/ore-boost.git", rev = "924105c" }
+ore-boost-api = "4.0.0-alpha"
 solana-program = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
@@ -31,7 +31,6 @@ steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
 
 [patch.crates-io]
-ore-boost-api = { path = "../ore-boost/api" }
 
 [profile.release]
 overflow-checks = true
