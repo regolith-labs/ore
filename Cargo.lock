@@ -1246,9 +1246,7 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "3.2.0-boostv3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "06956691f3138fabb379f1e991c94eb9f924715efaafbd1af8df07fc451c8ea6"
+version = "3.6.0-beta"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1266,7 +1264,9 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "3.5.0"
+version = "3.6.0-beta"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eff73b3394583f3df7ce0f58e9ec66d890777c6cc6dd739de63f8ec826fd4baf"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1284,35 +1284,16 @@ dependencies = [
 
 [[package]]
 name = "ore-boost-api"
-version = "1.5.0-boostv3"
+version = "4.0.0-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c423e9bcedb910473119e3a6ee8fa81e73875f3f15df92fc7e0de045091d6fd3"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "num_enum",
- "ore-api 3.2.0-boostv3",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "static_assertions",
- "steel",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ore-boost-api"
-version = "3.0.0"
-source = "git+https://github.com/regolith-labs/ore-boost.git?rev=924105c#924105c494d950a2e2c3322972d18d6da83a5384"
+checksum = "d0d09065544f61448a879ee9cc04e1c45a13ba76c38988fce83faa3f7aa31b1f"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
  "fixed",
  "num_enum",
- "ore-api 3.2.0-boostv3",
- "ore-boost-api 1.5.0-boostv3",
+ "ore-api 3.6.0-beta (registry+https://github.com/rust-lang/crates.io-index)",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
@@ -1323,12 +1304,12 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "3.5.0"
+version = "3.6.0-beta"
 dependencies = [
  "drillx",
  "mpl-token-metadata",
- "ore-api 3.5.0",
- "ore-boost-api 3.0.0",
+ "ore-api 3.6.0-beta",
+ "ore-boost-api",
  "rand 0.8.5",
  "solana-program",
  "spl-associated-token-account",
