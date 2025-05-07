@@ -13,7 +13,7 @@ pub struct Vesting {
     /// The amount of tokens that have been claimed in the current window.
     pub window_claim_amount: u64,
 
-    /// The high water mark of the proof balance in this window.
+    /// The high water mark of the proof balance.
     pub window_proof_balance: u64,
 
     /// The start of the vesting window.
