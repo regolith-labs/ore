@@ -4,7 +4,7 @@ use steel::*;
 use crate::{
     consts::*,
     instruction::*,
-    state::{bus_pda, config_pda, proof_pda, treasury_pda},
+    state::{bus_pda, config_pda, proof_pda, treasury_pda, vesting_pda},
 };
 
 /// Builds an auth instruction.
@@ -19,6 +19,7 @@ pub fn auth(proof: Pubkey) -> Instruction {
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
     let proof = proof_pda(signer).0;
+    let vesting = vesting_pda(proof).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -27,6 +28,7 @@ pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(proof, false),
             AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new(vesting, false),
             AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Claim {
