@@ -33,6 +33,9 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
+/// The duration of one day, in seconds.
+pub const ONE_DAY: i64 = 86400;
+
 /// The number of minutes in a program epoch.
 pub const EPOCH_MINUTES: i64 = 15;
 
@@ -66,6 +69,9 @@ pub const PROOF: &[u8] = b"proof";
 
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
+
+/// The seed of the vesting account PDA.
+pub const VESTING: &[u8] = b"vesting";
 
 /// Noise for deriving the mint pda
 pub const MINT_NOISE: [u8; 16] = [
