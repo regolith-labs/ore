@@ -64,11 +64,11 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     // Update vesting window.
     if clock.unix_timestamp > vesting.window_start_at + ONE_DAY {
         vesting.window_claim_amount = 0;
-        vesting.window_proof_balance = proof.balance;
         vesting.window_start_at = clock.unix_timestamp;
-    } else {
-        vesting.window_proof_balance = vesting.window_proof_balance.max(proof.balance);
     };
+
+    // Update the high water mark.
+    vesting.window_proof_balance = vesting.window_proof_balance.max(proof.balance);
 
     // Calculate claim amount.
     let max_claim_amount = vesting.window_proof_balance.checked_div(100).unwrap();
