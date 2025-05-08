@@ -1,4 +1,3 @@
-use drillx::Solution;
 use steel::*;
 
 use crate::{
@@ -55,7 +54,7 @@ pub fn mine(
     signer: Pubkey,
     authority: Pubkey,
     bus: Pubkey,
-    solution: Solution,
+    nonce: u64,
     boost_config: Pubkey,
 ) -> Instruction {
     let proof = proof_pda(authority).0;
@@ -73,8 +72,8 @@ pub fn mine(
         program_id: crate::ID,
         accounts,
         data: Mine {
-            digest: solution.d,
-            nonce: solution.n,
+            // digest: solution.d,
+            nonce: nonce.to_le_bytes(),
         }
         .to_bytes(),
     }

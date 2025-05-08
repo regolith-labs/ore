@@ -1,10 +1,10 @@
 use std::mem::size_of;
 
-use drillx::Solution;
+use drillx::difficulty;
 use ore_api::prelude::*;
 use ore_boost_api::{consts::DENOMINATOR_BPS, state::Config as BoostConfig};
 use solana_program::{
-    keccak::hashv,
+    keccak::{self, hashv},
     sanitize::SanitizeError,
     serialize_utils::{read_pubkey, read_u16},
     slot_hashes::SlotHash,
@@ -68,21 +68,16 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(OreError::Spam.into());
     }
 
-    // Validate the hash digest.
+    // Compute the hash.
     //
-    // Here we use drillx to validate the provided solution is a valid hash of the challenge.
-    // If invalid, we return an error.
-    let solution = Solution::new(args.digest, args.nonce);
-    if !solution.is_valid(&proof.challenge) {
-        return Err(OreError::HashInvalid.into());
-    }
+    // Here we use simple keccak.
+    let solution = keccak::hashv(&[proof.challenge.as_slice(), args.nonce.as_slice()]);
 
     // Validate the hash satisfies the minimum difficulty.
     //
     // We use drillx to get the difficulty (leading zeros) of the hash. If the hash does not have the
     // minimum required difficulty, we reject it with an error.
-    let hash = solution.to_hash();
-    let difficulty = hash.difficulty();
+    let difficulty = difficulty(solution.0);
     if difficulty < config.min_difficulty as u32 {
         return Err(OreError::HashTooEasy.into());
     }
@@ -158,9 +153,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     //
     // The slot hashes are unpredictable values. By seeding the next challenge with the most recent slot hash,
     // miners are forced to submit their current solution before they can begin mining for the next.
-    proof.last_hash = hash.h;
+    proof.last_hash = solution.0;
     proof.challenge = hashv(&[
-        hash.h.as_slice(),
+        solution.0.as_slice(),
         &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .0;

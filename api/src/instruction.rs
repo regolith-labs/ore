@@ -28,7 +28,7 @@ pub struct Close {}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
-    pub digest: [u8; 16],
+    // pub digest: [u8; 16],
     pub nonce: [u8; 8],
 }
 
