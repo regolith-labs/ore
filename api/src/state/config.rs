@@ -6,17 +6,20 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Config {
-    /// The base reward rate paid out for a hash of minimum difficulty.
-    pub base_reward_rate: u64,
-
     /// The timestamp of the last reset.
     pub last_reset_at: i64,
 
-    /// The minimum accepted difficulty.
-    pub min_difficulty: u64,
+    /// The best difficulty score of this epoch.
+    pub best_difficulty: u64,
+
+    /// The proof of the best submitted hash of this epoch.
+    pub best_proof: Pubkey,
+
+    /// The challenge of this epoch.
+    pub challenge: [u8; 32],
 
     /// The target emissions rate in ORE/min.
-    pub target_emmissions_rate: u64,
+    pub block_reward: u64,
 }
 
 account!(OreAccount, Config);
