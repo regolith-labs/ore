@@ -1,12 +1,14 @@
 use ore_api::prelude::*;
+use ore_boost_api::state::Config as BoostConfig;
 use solana_program::{hash::hashv, slot_hashes::SlotHash};
 use steel::*;
 
 /// Reset tops up the bus balances and updates the emissions and reward rates.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
+    let (required_accounts, boost_accounts) = accounts.split_at(7);
     let [signer_info, config_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program, slot_hashes_sysvar] =
-        accounts
+        required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -25,6 +27,15 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     treasury_tokens_info.is_treasury_tokens()?.is_writable()?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
+
+    // Parse boost accounts.
+    let [boost_config_info, boost_proof_info] = boost_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_api::ID)?;
+    let boost_proof = boost_proof_info
+        .as_account_mut::<Proof>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *boost_config_info.key)?;
 
     // Validate enough time has passed since the last reset.
     let clock = Clock::get()?;
@@ -47,8 +58,14 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     ])
     .to_bytes();
 
+    // Calculate boost reward.
+    let take_rate = boost_config.take_rate.min(9900); // Cap at 99%
+    let boost_reward = config.block_reward * take_rate / ore_boost_api::consts::DENOMINATOR_BPS;
+    let miner_reward = config.block_reward - boost_reward;
+
     // Update proof balance.
-    proof.balance += config.block_reward;
+    proof.balance += miner_reward;
+    boost_proof.balance += boost_reward;
 
     // Fund the treasury token account.
     mint_to_signed(
