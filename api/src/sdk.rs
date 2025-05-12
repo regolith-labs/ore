@@ -1,19 +1,6 @@
 use steel::*;
 
-use crate::{
-    consts::*,
-    instruction::*,
-    state::{config_pda, proof_pda, treasury_pda},
-};
-
-/// Builds an auth instruction.
-pub fn auth(proof: Pubkey) -> Instruction {
-    Instruction {
-        program_id: NOOP_PROGRAM_ID,
-        accounts: vec![],
-        data: proof.to_bytes().to_vec(),
-    }
-}
+use crate::{consts::*, instruction::*, state::proof_pda};
 
 /// Builds a claim instruction.
 pub fn claim(signer: Pubkey, beneficiary: Pubkey, amount: u64) -> Instruction {
@@ -128,51 +115,22 @@ pub fn update(signer: Pubkey, miner: Pubkey) -> Instruction {
 }
 
 // Builds an initialize instruction.
-// pub fn initialize(signer: Pubkey) -> Instruction {
-//     let bus_pdas = [
-//         bus_pda(0),
-//         bus_pda(1),
-//         bus_pda(2),
-//         bus_pda(3),
-//         bus_pda(4),
-//         bus_pda(5),
-//         bus_pda(6),
-//         bus_pda(7),
-//     ];
-//     let config_pda = config_pda();
-//     let mint_pda = Pubkey::find_program_address(&[MINT, MINT_NOISE.as_slice()], &crate::ID);
-//     let treasury_pda = treasury_pda();
-//     let metadata_pda = Pubkey::find_program_address(
-//         &[
-//             METADATA,
-//             mpl_token_metadata::ID.as_ref(),
-//             mint_pda.0.as_ref(),
-//         ],
-//         &mpl_token_metadata::ID,
-//     );
-//     Instruction {
-//         program_id: crate::ID,
-//         accounts: vec![
-//             AccountMeta::new(signer, true),
-//             AccountMeta::new(bus_pdas[0].0, false),
-//             AccountMeta::new(bus_pdas[1].0, false),
-//             AccountMeta::new(bus_pdas[2].0, false),
-//             AccountMeta::new(bus_pdas[3].0, false),
-//             AccountMeta::new(bus_pdas[4].0, false),
-//             AccountMeta::new(bus_pdas[5].0, false),
-//             AccountMeta::new(bus_pdas[6].0, false),
-//             AccountMeta::new(bus_pdas[7].0, false),
-//             AccountMeta::new(config_pda.0, false),
-//             AccountMeta::new(metadata_pda.0, false),
-//             AccountMeta::new(mint_pda.0, false),
-//             AccountMeta::new(treasury_pda.0, false),
-//             AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
-//             AccountMeta::new_readonly(system_program::ID, false),
-//             AccountMeta::new_readonly(spl_token::ID, false),
-//             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-//             AccountMeta::new_readonly(mpl_token_metadata::ID, false),
-//             AccountMeta::new_readonly(sysvar::rent::ID, false),
-//         ],
-//         data: Initialize {}.to_bytes(),
-//     }
-// }
+pub fn initialize(signer: Pubkey) -> Instruction {
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(CONFIG_ADDRESS, false),
+            AccountMeta::new(METADATA_ADDRESS, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(TREASURY_TOKENS_ADDRESS, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(mpl_token_metadata::ID, false),
+            AccountMeta::new_readonly(sysvar::rent::ID, false),
+        ],
+        data: Initialize {}.to_bytes(),
+    }
+}

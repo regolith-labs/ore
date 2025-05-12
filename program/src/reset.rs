@@ -83,7 +83,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 /// This function calculates the block reward (ORE / min) based on the current supply.
 /// It is designed to reduce emissions by 10% approximately every 12 months with a hard stop at 5 million ORE.
 pub(crate) fn get_block_reward(current_supply: u64) -> u64 {
-    let max_supply = ONE_ORE * 5_000_000;
     match current_supply {
         n if n < ONE_ORE * 525_600 => 100_000_000_000, // Year ~1
         n if n < ONE_ORE * 998_640 => 90_000_000_000,  // Year ~2
@@ -113,7 +112,7 @@ pub(crate) fn get_block_reward(current_supply: u64) -> u64 {
         n if n < ONE_ORE * 4_916_405 => 7_178_979_874, // Year ~26
         n if n < ONE_ORE * 4_950_365 => 6_461_081_886, // Year ~27
         n if n < ONE_ORE * 4_980_928 => 5_814_973_607, // Year ~28
-        n if n < max_supply => 5_233_476_327.min(max_supply - current_supply), // Year ~29
+        n if n < MAX_SUPPLY => 5_233_476_327.min(MAX_SUPPLY - current_supply), // Year ~29
         _ => 0,
     }
 }
