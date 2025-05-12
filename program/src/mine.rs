@@ -1,4 +1,3 @@
-use drillx::difficulty;
 use ore_api::prelude::*;
 use solana_program::hash;
 use steel::*;
@@ -35,12 +34,9 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         proof.authority.to_bytes().as_slice(),
     ]);
 
-    // Get the difficulty score.
-    let difficulty = difficulty(solution.to_bytes());
-
     // Update the best solution.
-    if difficulty as u64 > config.best_difficulty {
-        config.best_difficulty = difficulty as u64;
+    if solution.to_bytes() < config.best_hash {
+        config.best_hash = solution.to_bytes();
         config.best_proof = *proof_info.key;
     }
 

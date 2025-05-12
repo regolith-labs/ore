@@ -50,7 +50,10 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     // config.base_reward_rate = INITIAL_BASE_REWARD_RATE;
     config.last_reset_at = 0;
-    // config.min_difficulty = INITIAL_MIN_DIFFICULTY as u64;
+    config.best_hash = [u8::MAX; 32];
+    config.best_proof = Pubkey::default();
+    config.challenge = [0; 32];
+    config.block_reward = 0;
 
     // Initialize treasury.
     create_program_account::<Treasury>(

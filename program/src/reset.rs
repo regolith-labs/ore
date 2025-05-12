@@ -1,3 +1,4 @@
+use drillx::difficulty;
 use ore_api::prelude::*;
 use ore_boost_api::state::Config as BoostConfig;
 use solana_program::{hash::hashv, slot_hashes::SlotHash};
@@ -47,16 +48,21 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Ok(());
     }
 
-    // Process epoch.
-    config.block_reward = get_block_reward(mint.supply());
-    config.best_proof = Pubkey::default();
-    config.best_difficulty = 0;
-    config.last_reset_at = clock.unix_timestamp;
+    // Record difficulty.
+    let difficulty = difficulty(config.best_hash) as u64;
+
+    // Reset the challenge.
     config.challenge = hashv(&[
         config.challenge.as_slice(),
         &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
     ])
     .to_bytes();
+
+    // Reset the config.
+    config.block_reward = get_block_reward(mint.supply());
+    config.best_proof = Pubkey::default();
+    config.best_hash = [u8::MAX; 32];
+    config.last_reset_at = clock.unix_timestamp;
 
     // Calculate boost reward.
     let take_rate = boost_config.take_rate.min(9900); // Cap at 99%
@@ -76,6 +82,19 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         config.block_reward,
         &[TREASURY],
     )?;
+
+    // Emit event.
+    MineEvent {
+        balance: proof.balance,
+        difficulty,
+        last_hash_at: 0,
+        timing: 0,
+        net_reward: config.block_reward,
+        net_base_reward: miner_reward,
+        net_miner_boost_reward: boost_reward,
+        net_staker_boost_reward: 0,
+    }
+    .log_return();
 
     Ok(())
 }

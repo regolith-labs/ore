@@ -10,7 +10,7 @@ pub struct Config {
     pub last_reset_at: i64,
 
     /// The best difficulty score of this epoch.
-    pub best_difficulty: u64,
+    pub best_hash: [u8; 32],
 
     /// The proof of the best submitted hash of this epoch.
     pub best_proof: Pubkey,
