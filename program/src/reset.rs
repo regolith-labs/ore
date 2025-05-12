@@ -7,6 +7,7 @@ use steel::*;
 /// Reset tops up the bus balances and updates the emissions and reward rates.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
+    let clock = Clock::get()?;
     let (required_accounts, boost_accounts) = accounts.split_at(7);
     let [signer_info, config_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program, slot_hashes_sysvar] =
         required_accounts
@@ -39,7 +40,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|p| p.authority == *boost_config_info.key)?;
 
     // Validate enough time has passed since the last reset.
-    let clock = Clock::get()?;
     if config
         .last_reset_at
         .saturating_add(EPOCH_DURATION)
@@ -49,7 +49,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Record difficulty.
-    let difficulty = difficulty(config.best_hash) as u64;
+    let score = difficulty(config.best_hash) as u64;
 
     // Reset the challenge.
     config.challenge = hashv(&[
@@ -59,40 +59,37 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     .to_bytes();
 
     // Reset the config.
-    config.block_reward = get_block_reward(mint.supply());
+    let block_reward = get_block_reward(mint.supply());
+    config.block_reward = block_reward;
     config.best_proof = Pubkey::default();
     config.best_hash = [u8::MAX; 32];
     config.last_reset_at = clock.unix_timestamp;
 
     // Calculate boost reward.
     let take_rate = boost_config.take_rate.min(9900); // Cap at 99%
-    let boost_reward = config.block_reward * take_rate / ore_boost_api::consts::DENOMINATOR_BPS;
-    let miner_reward = config.block_reward - boost_reward;
+    let boost_reward = block_reward * take_rate / ore_boost_api::consts::DENOMINATOR_BPS;
+    let miner_reward = block_reward - boost_reward;
 
-    // Update proof balance.
+    // Update proof balances.
     proof.balance += miner_reward;
     boost_proof.balance += boost_reward;
 
-    // Fund the treasury token account.
+    // Fund the treasury.
     mint_to_signed(
         mint_info,
         treasury_tokens_info,
         treasury_info,
         token_program,
-        config.block_reward,
+        block_reward,
         &[TREASURY],
     )?;
 
     // Emit event.
-    MineEvent {
-        balance: proof.balance,
-        difficulty,
-        last_hash_at: 0,
-        timing: 0,
-        net_reward: config.block_reward,
-        net_base_reward: miner_reward,
-        net_miner_boost_reward: boost_reward,
-        net_staker_boost_reward: 0,
+    BlockEvent {
+        score,
+        block_reward,
+        boost_reward,
+        ts: clock.unix_timestamp as u64,
     }
     .log_return();
 
