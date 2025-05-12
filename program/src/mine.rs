@@ -14,12 +14,7 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let config = config_info
-        .as_account_mut::<Config>(&ore_api::ID)?
-        .assert_mut_err(
-            |c| t < c.last_reset_at + EPOCH_DURATION,
-            OreError::NeedsReset.into(),
-        )?;
+    let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     let proof = proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut_err(
@@ -39,6 +34,11 @@ pub fn process_mine(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
         config.best_hash = solution.to_bytes();
         config.best_proof = *proof_info.key;
     }
+
+    // Update the proof.
+    proof.last_hash = solution.to_bytes();
+    proof.last_hash_at = t;
+    proof.total_hashes += 1;
 
     Ok(())
 }

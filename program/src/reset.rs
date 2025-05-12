@@ -40,11 +40,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|p| p.authority == *boost_config_info.key)?;
 
     // Validate enough time has passed since the last reset.
-    if config
-        .last_reset_at
-        .saturating_add(EPOCH_DURATION)
-        .gt(&clock.unix_timestamp)
-    {
+    if clock.unix_timestamp < config.last_reset_at + EPOCH_DURATION {
         return Ok(());
     }
 
@@ -72,7 +68,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Update proof balances.
     proof.balance += miner_reward;
+    proof.total_rewards += miner_reward;
     boost_proof.balance += boost_reward;
+    boost_proof.total_rewards += boost_reward;
 
     // Fund the treasury.
     mint_to_signed(
