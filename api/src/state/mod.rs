@@ -21,11 +21,6 @@ pub enum OreAccount {
     Treasury = 103,
 }
 
-/// Fetch the PDA of a bus account.
-pub fn bus_pda(id: u8) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[BUS, &[id]], &crate::id())
-}
-
 /// Derive the PDA of the config account.
 pub fn config_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CONFIG], &crate::id())
@@ -39,4 +34,10 @@ pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
 /// Derive the PDA of the treasury account.
 pub fn treasury_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TREASURY], &crate::id())
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
+pub enum OldOreAccount {
+    OldConfig = 101,
 }

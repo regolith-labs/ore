@@ -13,6 +13,7 @@ pub enum OreInstruction {
 
     // Admin
     Initialize = 100,
+    Migrate = 101,
 }
 
 #[repr(C)]
@@ -28,7 +29,6 @@ pub struct Close {}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
-    pub digest: [u8; 16],
     pub nonce: [u8; 8],
 }
 
@@ -48,6 +48,10 @@ pub struct Update {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Migrate {}
+
 instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Mine);
@@ -55,3 +59,4 @@ instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, Update);
 instruction!(OreInstruction, Initialize);
+instruction!(OreInstruction, Migrate);

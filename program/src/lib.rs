@@ -1,6 +1,7 @@
 mod claim;
 mod close;
 mod initialize;
+mod migrate;
 mod mine;
 mod open;
 mod reset;
@@ -9,13 +10,13 @@ mod update;
 use claim::*;
 use close::*;
 use initialize::*;
+use migrate::*;
 use mine::*;
 use open::*;
-use reset::*;
-use update::*;
-
 use ore_api::instruction::*;
+use reset::*;
 use steel::*;
+use update::*;
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -32,6 +33,7 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Update => process_update(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
+        OreInstruction::Migrate => process_migrate(accounts, data)?,
     }
 
     Ok(())

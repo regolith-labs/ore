@@ -1266,12 +1266,11 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "3.6.0"
+version = "3.7.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
- "drillx",
  "mpl-token-metadata",
  "num_enum",
  "solana-program",
@@ -1304,11 +1303,11 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "3.6.0"
+version = "3.7.0"
 dependencies = [
  "drillx",
  "mpl-token-metadata",
- "ore-api 3.6.0",
+ "ore-api 3.7.0",
  "ore-boost-api",
  "rand 0.8.5",
  "solana-program",
