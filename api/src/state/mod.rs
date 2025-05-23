@@ -1,12 +1,12 @@
-mod bus;
-mod config;
+mod block;
 mod proof;
 mod treasury;
+mod wager;
 
-pub use bus::*;
-pub use config::*;
+pub use block::*;
 pub use proof::*;
 pub use treasury::*;
+pub use wager::*;
 
 use steel::*;
 
@@ -15,29 +15,27 @@ use crate::consts::*;
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccount {
-    Bus = 100,
-    Config = 101,
     Proof = 102,
     Treasury = 103,
+    Block = 104,
+    Wager = 105,
 }
 
-/// Derive the PDA of the config account.
-pub fn config_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[CONFIG], &crate::id())
+pub fn block_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[BLOCK], &crate::ID)
 }
 
-/// Derive the PDA of a proof account.
 pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[PROOF, authority.as_ref()], &crate::id())
 }
 
-/// Derive the PDA of the treasury account.
-pub fn treasury_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[TREASURY], &crate::id())
+pub fn wager_pda(round: u64, id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[WAGER, &round.to_le_bytes(), &id.to_le_bytes()],
+        &crate::ID,
+    )
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OldOreAccount {
-    OldConfig = 101,
+pub fn treasury_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[TREASURY], &crate::ID)
 }

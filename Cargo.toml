@@ -24,11 +24,14 @@ num_enum = "0.7.2"
 ore-api = { path = "api" }
 ore-boost-api = "4.0.0-alpha"
 solana-program = "^2.1"
+solana-client = "^2.1"
+solana-sdk = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
 static_assertions = "1.1.0"
 steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
+tokio = { version = "1.37.0", features = ["full"] }
 
 [patch.crates-io]
 

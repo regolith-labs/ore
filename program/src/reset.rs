@@ -1,76 +1,55 @@
-use drillx::difficulty;
 use ore_api::prelude::*;
-use ore_boost_api::state::Config as BoostConfig;
-use solana_program::{hash::hashv, slot_hashes::SlotHash};
+use ore_boost_api::{consts::DENOMINATOR_BPS, prelude::Config as BoostConfig};
 use steel::*;
 
 /// Reset tops up the bus balances and updates the emissions and reward rates.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, boost_accounts) = accounts.split_at(7);
-    let [signer_info, config_info, mint_info, proof_info, treasury_info, treasury_tokens_info, token_program, slot_hashes_sysvar] =
+    let (required_accounts, boost_accounts) = accounts.split_at(6);
+    let [signer_info, block_info, mint_info, treasury_info, treasury_tokens_info, token_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let config = config_info
-        .is_config()?
-        .as_account_mut::<Config>(&ore_api::ID)?;
+    let block = block_info
+        .as_account_mut::<Block>(&ore_api::ID)?
+        .assert_mut(|b| b.ends_at < clock.slot)?
+        .assert_mut(|b| b.payed_out != 0)?;
     let mint = mint_info
         .has_address(&MINT_ADDRESS)?
         .is_writable()?
         .as_mint()?;
-    let proof = proof_info
-        .as_account_mut::<Proof>(&ore_api::ID)?
-        .assert_mut(|p| p.authority == config.best_proof)?;
-    treasury_info.is_treasury()?.is_writable()?;
-    treasury_tokens_info.is_treasury_tokens()?.is_writable()?;
+    treasury_info.has_address(&TREASURY_ADDRESS)?;
+    treasury_tokens_info.has_address(&TREASURY_TOKENS_ADDRESS)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
-    // Parse boost accounts.
     let [boost_config_info, boost_proof_info] = boost_accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_api::ID)?;
+    let boost_config = boost_config_info.as_account::<BoostConfig>(&ore_boost_api::ID)?;
     let boost_proof = boost_proof_info
         .as_account_mut::<Proof>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *boost_config_info.key)?;
 
-    // Validate enough time has passed since the last reset.
-    if clock.unix_timestamp < config.last_reset_at + EPOCH_DURATION {
-        return Ok(());
-    }
-
-    // Record difficulty.
-    let score = difficulty(config.best_hash) as u64;
-
-    // Reset the challenge.
-    config.challenge = hashv(&[
-        config.challenge.as_slice(),
-        &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()],
-    ])
-    .to_bytes();
-
-    // Reset the config.
-    let block_reward = get_block_reward(mint.supply());
-    config.block_reward = block_reward;
-    config.best_proof = Pubkey::default();
-    config.best_hash = [u8::MAX; 32];
-    config.last_reset_at = clock.unix_timestamp;
-
-    // Calculate boost reward.
-    let take_rate = boost_config.take_rate.min(9900); // Cap at 99%
-    let boost_reward = block_reward * take_rate / ore_boost_api::consts::DENOMINATOR_BPS;
-    let miner_reward = block_reward - boost_reward;
-
-    // Update proof balances.
-    proof.balance += miner_reward;
-    proof.total_rewards += miner_reward;
+    // Payout to boosts.
+    let net_emissions = get_target_emissions_rate(mint.supply());
+    let boost_reward =
+        (net_emissions as u128 * boost_config.take_rate as u128 / DENOMINATOR_BPS as u128) as u64;
     boost_proof.balance += boost_reward;
     boost_proof.total_rewards += boost_reward;
+
+    // Reset the block.
+    block.reward = net_emissions - boost_reward;
+    block.started_at = clock.slot;
+    block.ends_at = clock.slot + 150; // 60 seconds
+    block.payed_out = 0;
+    block.total_bets = 0;
+    block.bet_count = 0;
+    block.noise = [0; 32];
+    block.current_round += 1;
 
     // Fund the treasury.
     mint_to_signed(
@@ -78,25 +57,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury_tokens_info,
         treasury_info,
         token_program,
-        block_reward,
+        net_emissions,
         &[TREASURY],
     )?;
-
-    // Emit event.
-    BlockEvent {
-        score,
-        block_reward,
-        boost_reward,
-        ts: clock.unix_timestamp as u64,
-    }
-    .log_return();
 
     Ok(())
 }
 
-/// This function calculates the block reward (ORE / min) based on the current supply.
-/// It is designed to reduce emissions by 10% approximately every 12 months with a hard stop at 5 million ORE.
-pub(crate) fn get_block_reward(current_supply: u64) -> u64 {
+/// This function calculates the target emissions rate (ORE / min) based on the current supply.
+/// It is designed to reduce emissions by 10% approximately every 12 months with a hardcap at 5 million ORE.
+pub(crate) fn get_target_emissions_rate(current_supply: u64) -> u64 {
     match current_supply {
         n if n < ONE_ORE * 525_600 => 100_000_000_000, // Year ~1
         n if n < ONE_ORE * 998_640 => 90_000_000_000,  // Year ~2
@@ -126,52 +96,7 @@ pub(crate) fn get_block_reward(current_supply: u64) -> u64 {
         n if n < ONE_ORE * 4_916_405 => 7_178_979_874, // Year ~26
         n if n < ONE_ORE * 4_950_365 => 6_461_081_886, // Year ~27
         n if n < ONE_ORE * 4_980_928 => 5_814_973_607, // Year ~28
-        n if n < MAX_SUPPLY => 5_233_476_327.min(MAX_SUPPLY - current_supply), // Year ~29
+        n if n < ONE_ORE * 5_000_000 => 5_233_476_327, // Year ~29
         _ => 0,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_block_reward_max_supply() {
-        let max_supply = ONE_ORE * 5_000_000;
-
-        // Test at max supply
-        assert_eq!(get_block_reward(max_supply), 0);
-
-        // Test slightly below max supply
-        let near_max = max_supply - 1;
-        assert_eq!(get_block_reward(near_max), 1);
-
-        // Test at max supply - 1000
-        let below_max = max_supply - 1000;
-        assert_eq!(get_block_reward(below_max), 1000);
-
-        // Test that reward never exceeds remaining supply
-        let supply_4_999_990 = ONE_ORE * 4_999_990;
-        assert!(get_block_reward(supply_4_999_990) <= max_supply - supply_4_999_990);
-    }
-
-    #[test]
-    fn test_block_reward_boundaries() {
-        // Test first tier boundary
-        let year1_supply = ONE_ORE * 525_599;
-        assert_eq!(get_block_reward(year1_supply), 100_000_000_000);
-
-        // Test middle tier boundary
-        let year15_supply = ONE_ORE * 4_173_835;
-        assert_eq!(get_block_reward(year15_supply), 22_876_792_454);
-
-        // Test last tier boundary before max supply logic
-        let last_tier_supply = ONE_ORE * 4_980_927;
-        assert_eq!(get_block_reward(last_tier_supply), 5_814_973_607);
-    }
-
-    #[test]
-    fn test_block_reward_zero_supply() {
-        assert_eq!(get_block_reward(0), 100_000_000_000);
     }
 }

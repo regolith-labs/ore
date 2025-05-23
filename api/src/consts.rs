@@ -52,6 +52,12 @@ pub const SMOOTHING_FACTOR: u64 = 2;
 /// The seed of the bus account PDA.
 pub const BUS: &[u8] = b"bus";
 
+/// The seed of the block account PDA.
+pub const BLOCK: &[u8] = b"block";
+
+/// The seed of the wager account PDA.
+pub const WAGER: &[u8] = b"wager";
+
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
 

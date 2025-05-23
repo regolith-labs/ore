@@ -4,22 +4,20 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Claim = 0,
+    Bet = 0,
     Close = 1,
-    Mine = 2,
-    Open = 3,
-    Reset = 4,
-    Update = 5,
+    Payout = 2,
+    Reset = 3,
 
     // Admin
     Initialize = 100,
-    Migrate = 101,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Claim {
+pub struct Bet {
     pub amount: [u8; 8],
+    pub seed: [u8; 32],
 }
 
 #[repr(C)]
@@ -28,35 +26,18 @@ pub struct Close {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Mine {
-    pub nonce: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Open {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Update {}
+pub struct Payout {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Migrate {}
-
-instruction!(OreInstruction, Claim);
+instruction!(OreInstruction, Bet);
 instruction!(OreInstruction, Close);
-instruction!(OreInstruction, Mine);
-instruction!(OreInstruction, Open);
+instruction!(OreInstruction, Payout);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, Update);
 instruction!(OreInstruction, Initialize);
-instruction!(OreInstruction, Migrate);
