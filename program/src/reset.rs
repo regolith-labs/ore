@@ -26,6 +26,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
+    // Load boost accounts.
     let [boost_config_info, boost_proof_info] = boost_accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };

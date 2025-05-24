@@ -11,7 +11,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, wager_info, block_bets_info, sender_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, block_bets_info, sender_info, wager_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);

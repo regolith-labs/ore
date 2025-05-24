@@ -1,7 +1,6 @@
 # ORE
 
-**ORE is a cryptocurrency everyone can mine.**
-
+**Digital gold, accelerated.**
 
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.

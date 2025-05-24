@@ -4,7 +4,7 @@ use steel::*;
 /// Initialize sets up the ORE program to begin mining.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, block_info, block_bets_info, sol_mint_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, block_bets_info, block_ore_info, ore_mint_info, sol_mint_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -15,6 +15,8 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         .is_writable()?
         .has_seeds(&[BLOCK], &ore_api::ID)?;
     block_bets_info.is_empty()?.is_writable()?;
+    block_ore_info.is_empty()?.is_writable()?;
+    ore_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     sol_mint_info
         .has_address(&spl_token::native_mint::ID)?
         .as_mint()?;
@@ -41,12 +43,21 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     block.reward = 0;
     block.noise = [0; 32];
 
-    // Initialize treasury token account.
+    // Initialize block token accounts.
     create_associated_token_account(
         signer_info,
         block_info,
         block_bets_info,
         sol_mint_info,
+        system_program,
+        token_program,
+        associated_token_program,
+    )?;
+    create_associated_token_account(
+        signer_info,
+        block_info,
+        block_ore_info,
+        ore_mint_info,
         system_program,
         token_program,
         associated_token_program,

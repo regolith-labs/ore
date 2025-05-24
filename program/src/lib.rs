@@ -1,10 +1,12 @@
 mod bet;
+mod bury;
 mod close;
 mod initialize;
 mod payout;
 mod reset;
 
 use bet::*;
+use bury::*;
 use close::*;
 use initialize::*;
 use payout::*;
@@ -22,6 +24,7 @@ pub fn process_instruction(
 
     match ix {
         OreInstruction::Bet => process_bet(accounts, data)?,
+        OreInstruction::Bury => process_bury(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,

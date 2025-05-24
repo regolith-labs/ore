@@ -19,6 +19,7 @@ default = []
 
 [dependencies]
 drillx.workspace = true
+meteora-pools-sdk.workspace = true
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
 ore-boost-api.workspace = true

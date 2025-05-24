@@ -5,9 +5,10 @@ use steel::*;
 pub enum OreInstruction {
     // User
     Bet = 0,
-    Close = 1,
-    Payout = 2,
-    Reset = 3,
+    Bury = 1,
+    Close = 2,
+    Payout = 3,
+    Reset = 4,
 
     // Admin
     Initialize = 100,
@@ -19,6 +20,10 @@ pub struct Bet {
     pub amount: [u8; 8],
     pub seed: [u8; 32],
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -37,6 +42,7 @@ pub struct Payout {}
 pub struct Initialize {}
 
 instruction!(OreInstruction, Bet);
+instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Payout);
 instruction!(OreInstruction, Reset);
