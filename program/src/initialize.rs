@@ -9,17 +9,15 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?.has_address(&INITIALIZER_ADDRESS)?;
+    signer_info.is_signer()?; // .has_address(&INITIALIZER_ADDRESS)?;
     block_info
         .is_empty()?
         .is_writable()?
         .has_seeds(&[BLOCK], &ore_api::ID)?;
     block_bets_info.is_empty()?.is_writable()?;
     block_ore_info.is_empty()?.is_writable()?;
-    ore_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    sol_mint_info
-        .has_address(&spl_token::native_mint::ID)?
-        .as_mint()?;
+    ore_mint_info.has_address(&MINT_ADDRESS)?;
+    sol_mint_info.has_address(&spl_token::native_mint::ID)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
@@ -53,15 +51,15 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         token_program,
         associated_token_program,
     )?;
-    create_associated_token_account(
-        signer_info,
-        block_info,
-        block_ore_info,
-        ore_mint_info,
-        system_program,
-        token_program,
-        associated_token_program,
-    )?;
+    // create_associated_token_account(
+    //     signer_info,
+    //     block_info,
+    //     block_ore_info,
+    //     ore_mint_info,
+    //     system_program,
+    //     token_program,
+    //     associated_token_program,
+    // )?;
 
     Ok(())
 }

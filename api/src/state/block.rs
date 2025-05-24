@@ -5,11 +5,11 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Block {
-    /// The current round.
-    pub current_round: u64,
-
     /// The number of bets made in the current round.
     pub bet_count: u64,
+
+    /// The current round.
+    pub current_round: u64,
 
     /// The slot at which the current round ends.
     pub ends_at: u64,

@@ -86,12 +86,12 @@ pub fn close(signer: Pubkey, wager: Pubkey) -> Instruction {
     }
 }
 
-pub fn initialize(signer: Pubkey, mint: Pubkey, ore_mint: Pubkey) -> Instruction {
+pub fn initialize(signer: Pubkey) -> Instruction {
     let block = block_pda().0;
     let block_bets =
-        spl_associated_token_account::get_associated_token_address(&signer, &native_mint::ID);
+        spl_associated_token_account::get_associated_token_address(&block, &native_mint::ID);
     let block_ore =
-        spl_associated_token_account::get_associated_token_address(&signer, &MINT_ADDRESS);
+        spl_associated_token_account::get_associated_token_address(&block, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -99,8 +99,8 @@ pub fn initialize(signer: Pubkey, mint: Pubkey, ore_mint: Pubkey) -> Instruction
             AccountMeta::new(block, false),
             AccountMeta::new(block_bets, false),
             AccountMeta::new(block_ore, false),
-            AccountMeta::new(mint, false),
-            AccountMeta::new(ore_mint, false),
+            AccountMeta::new_readonly(MINT_ADDRESS, false),
+            AccountMeta::new_readonly(native_mint::ID, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
