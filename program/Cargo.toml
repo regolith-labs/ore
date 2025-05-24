@@ -18,6 +18,7 @@ name = "ore"
 default = []
 
 [dependencies]
+bincode.workspace = true
 drillx.workspace = true
 meteora-pools-sdk.workspace = true
 mpl-token-metadata.workspace = true

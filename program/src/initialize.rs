@@ -1,7 +1,7 @@
 use ore_api::prelude::*;
 use steel::*;
 
-/// Initialize sets up the ORE program to begin mining.
+/// Initialize the program.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, block_info, block_bets_info, block_ore_info, ore_mint_info, sol_mint_info, system_program, token_program, associated_token_program] =

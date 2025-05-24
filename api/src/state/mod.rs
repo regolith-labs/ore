@@ -29,11 +29,8 @@ pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[PROOF, authority.as_ref()], &crate::id())
 }
 
-pub fn wager_pda(round: u64, id: u64) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[WAGER, &round.to_le_bytes(), &id.to_le_bytes()],
-        &crate::ID,
-    )
+pub fn wager_pda(round: u64, seed: [u8; 32]) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[WAGER, &round.to_le_bytes(), &seed], &crate::ID)
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {

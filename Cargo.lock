@@ -1283,6 +1283,7 @@ dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "const-crypto",
+ "meteora-pools-sdk",
  "mpl-token-metadata",
  "num_enum",
  "solana-program",
@@ -1317,6 +1318,7 @@ dependencies = [
 name = "ore-program"
 version = "3.7.0"
 dependencies = [
+ "bincode",
  "drillx",
  "meteora-pools-sdk",
  "mpl-token-metadata",

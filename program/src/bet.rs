@@ -4,10 +4,12 @@ use ore_api::prelude::*;
 use solana_program::{keccak::hashv, slot_hashes::SlotHash};
 use steel::*;
 
+/// Places a bet.
 pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = Bet::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
+    let seed = args.seed;
 
     // Load accounts.
     let clock = Clock::get()?;
@@ -24,11 +26,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     block_bets_info.as_associated_token_account(block_info.key, &block.mint)?;
     sender_info.as_associated_token_account(signer_info.key, &block.mint)?;
     wager_info.is_writable()?.is_empty()?.has_seeds(
-        &[
-            WAGER,
-            &block.current_round.to_le_bytes(),
-            &block.bet_count.to_le_bytes(),
-        ],
+        &[WAGER, &block.current_round.to_le_bytes(), &seed],
         &ore_api::ID,
     )?;
     system_program.is_program(&system_program::ID)?;
@@ -55,18 +53,12 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     wager.timestamp = clock.unix_timestamp as u64;
     wager.cumulative_bets = block.total_bets;
 
-    // Update block.
+    // Update block stats.
     block.total_bets += amount;
     block.bet_count += 1;
 
-    // Hash client seed into block noise. Use a recent slot hash if no seed is provided.
-    // This follows the scheme for provable randomness.
-    let seed: &[u8] = if args.seed == [0; 32] {
-        &slot_hashes_sysvar.data.borrow()[0..size_of::<SlotHash>()]
-    } else {
-        args.seed.as_slice()
-    };
-    block.noise = hashv(&[&block.noise, seed]).to_bytes();
+    // Hash client seed into block noise. This follows the scheme for provable randomness.
+    block.noise = hashv(&[&block.noise, &seed]).to_bytes();
 
     // Transfer wagers.
     transfer(

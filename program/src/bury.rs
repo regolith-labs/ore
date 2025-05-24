@@ -2,6 +2,7 @@ use meteora_pools_sdk::instructions::{SwapCpi, SwapCpiAccounts, SwapInstructionA
 use ore_api::prelude::*;
 use steel::*;
 
+/// Swaps bets into ORE and buries the ORE.
 pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let (required_accounts, meteora_accounts) = accounts.split_at(5);
@@ -56,13 +57,14 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
 
     // Burn (bury) the purchased ORE.
     let block_ore = block_ore_info.as_associated_token_account(block_info.key, &MINT_ADDRESS)?;
-    burn_signed(
+    burn_signed_with_bump(
         block_ore_info,
         ore_mint_info,
         block_info,
         token_program_info,
         block_ore.amount(),
-        &[BLOCK, &[block_bump]],
+        &[BLOCK],
+        block_bump,
     )?;
 
     Ok(())
