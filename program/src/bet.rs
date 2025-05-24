@@ -55,7 +55,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     block.total_bets += amount;
     block.bet_count += 1;
 
-    // Hash client seed into block noise. This follows the scheme for provable randomness.
+    // Hash client seed into block noise for provably fair randomness.
     block.noise = hashv(&[&block.noise, &seed]).to_bytes();
 
     // Transfer wagers.

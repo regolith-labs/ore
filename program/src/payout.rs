@@ -33,11 +33,10 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
         return Ok(());
     }
 
-    // Select the slothash from the slot at when the round ended.
-    // The represents the server seed for a provably fair random number.
+    // Select the hash from the slot when the block ended for provably fair randomness.
     let slot_hashes =
         bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
-    let slot_hash = slot_hashes.get(&block.ends_at).unwrap();
+    let slot_hash = slot_hashes.get(&block.ends_at).unwrap(); // TODO: Handle recovery case.
     block.noise = hashv(&[&block.noise, slot_hash.as_ref()]).to_bytes();
 
     // Calculate the random number.

@@ -9,19 +9,18 @@
 - [`Instruction`](api/src/instruction.rs) – Declared instructions and arguments.
 
 ## Instructions
-- [`Claim`](program/src/claim.rs) – Distributes ORE from the treasury to a miner.
-- [`Close`](program/src/close.rs) – Closes a proof account returns the rent to the owner.
-- [`Open`](program/src/open.rs) – Opens a new proof account for a miner.
-- [`Mine`](program/src/mine.rs) – Verifies a hash and increments a miner's claimable balance.
-- [`Reset`](program/src/reset.rs) – Resets the program for a new epoch.
-- [`Update`](program/src/update.rs) – Updates a proof account's miner authority.
-- [`Initialize`](program/src/initialize.rs) – Initializes the program and creates the global accounts.
+- [`Bet`](program/src/bet.rs) - Creates a wager on the current block.
+- [`Bury`](program/src/bury.rs) - Swaps bets into ORE and burns it.
+- [`Close`](program/src/close.rs) - Closes a wager account.
+- [`Initialize`](program/src/initialize.rs) - Initializes the program.
+- [`Payout`](program/src/payout.rs) - Distributes the block reward to the winner.
+- [`Reset`](program/src/reset.rs) - Resets the program for the next block.
 
 ## State
- - [`Bus`](api/src/state/bus.rs) - An account (8 total) which tracks and limits the amount ORE mined each epoch.
- - [`Config`](api/src/state/config.rs) – A singleton account which manages program-wide variables.
- - [`Proof`](api/src/state/proof.rs) - An account (1 per user) which tracks a miner's current hash and current stake.
- - [`Treasury`](api/src/state/treasury.rs) – A singleton account which has authority to mint ORE and holds onto user stake.
+- [`Block`](api/src/state/block.rs) - A singleton account tracking rounds of wagering.
+- [`Proof`](api/src/state/proof.rs) - (Deprecated) An account which tracks a miner's current hash and current stake.
+- [`Treasury`](api/src/state/treasury.rs) – The ORE mint authority.
+- [`Wager`](api/src/state/wager.rs) - A bet placed by a user.
 
 
 ## Tests
