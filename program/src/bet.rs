@@ -1,7 +1,5 @@
-use std::mem::size_of;
-
 use ore_api::prelude::*;
-use solana_program::{keccak::hashv, slot_hashes::SlotHash};
+use solana_program::keccak::hashv;
 use steel::*;
 
 /// Places a bet.
