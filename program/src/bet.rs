@@ -67,5 +67,13 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
         amount,
     )?;
 
+    // Emit an event.
+    BetEvent {
+        authority: *signer_info.key,
+        amount,
+        ts: clock.unix_timestamp as u64,
+    }
+    .log();
+
     Ok(())
 }

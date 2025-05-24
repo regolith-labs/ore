@@ -63,5 +63,13 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
         &[TREASURY],
     )?;
 
+    // Emit an event.
+    PayoutEvent {
+        authority: wager.authority,
+        amount: block.reward,
+        ts: clock.unix_timestamp as u64,
+    }
+    .log();
+
     Ok(())
 }

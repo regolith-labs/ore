@@ -5,6 +5,7 @@ use steel::*;
 /// Swaps bets into ORE and buries the ORE.
 pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
+    let clock = Clock::get()?;
     let (required_accounts, meteora_accounts) = accounts.split_at(5);
     let [signer_info, block_info, block_bets_info, block_ore_info, bet_mint_info, ore_mint_info] =
         required_accounts
@@ -66,6 +67,13 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
         &[BLOCK],
         block_bump,
     )?;
+
+    // Emit an event.
+    BuryEvent {
+        amount: block_ore.amount(),
+        ts: clock.unix_timestamp as u64,
+    }
+    .log();
 
     Ok(())
 }

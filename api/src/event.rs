@@ -2,11 +2,27 @@ use steel::*;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct BlockEvent {
-    pub score: u64,
-    pub block_reward: u64,
-    pub boost_reward: u64,
+pub struct PayoutEvent {
+    pub authority: Pubkey,
+    pub amount: u64,
     pub ts: u64,
 }
 
-event!(BlockEvent);
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct BetEvent {
+    pub authority: Pubkey,
+    pub amount: u64,
+    pub ts: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub struct BuryEvent {
+    pub amount: u64,
+    pub ts: u64,
+}
+
+event!(PayoutEvent);
+event!(BetEvent);
+event!(BuryEvent);
