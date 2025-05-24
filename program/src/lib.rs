@@ -1,18 +1,16 @@
-mod claim;
+mod bet;
+mod bury;
 mod close;
 mod initialize;
-mod mine;
-mod open;
+mod payout;
 mod reset;
-mod update;
 
-use claim::*;
+use bet::*;
+use bury::*;
 use close::*;
 use initialize::*;
-use mine::*;
-use open::*;
+use payout::*;
 use reset::*;
-use update::*;
 
 use ore_api::instruction::*;
 use steel::*;
@@ -25,13 +23,12 @@ pub fn process_instruction(
     let (ix, data) = parse_instruction(&ore_api::ID, program_id, data)?;
 
     match ix {
-        OreInstruction::Claim => process_claim(accounts, data)?,
+        OreInstruction::Bet => process_bet(accounts, data)?,
+        OreInstruction::Bury => process_bury(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
-        OreInstruction::Mine => process_mine(accounts, data)?,
-        OreInstruction::Open => process_open(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::Update => process_update(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
+        OreInstruction::Payout => process_payout(accounts, data)?,
     }
 
     Ok(())

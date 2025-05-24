@@ -4,12 +4,11 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Claim = 0,
-    Close = 1,
-    Mine = 2,
-    Open = 3,
+    Bet = 0,
+    Bury = 1,
+    Close = 2,
+    Payout = 3,
     Reset = 4,
-    Update = 5,
 
     // Admin
     Initialize = 100,
@@ -17,9 +16,14 @@ pub enum OreInstruction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Claim {
+pub struct Bet {
     pub amount: [u8; 8],
+    pub seed: [u8; 32],
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -27,31 +31,19 @@ pub struct Close {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Mine {
-    pub digest: [u8; 16],
-    pub nonce: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Open {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Update {}
+pub struct Payout {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
-instruction!(OreInstruction, Claim);
+instruction!(OreInstruction, Bet);
+instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Close);
-instruction!(OreInstruction, Mine);
-instruction!(OreInstruction, Open);
+instruction!(OreInstruction, Payout);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, Update);
 instruction!(OreInstruction, Initialize);
