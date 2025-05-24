@@ -1,6 +1,5 @@
 solana-test-validator -r \
 # TODO Copy accounts and programs from mainnet
-# ORE
 # Config
 # Treasury
 # Treasury tokens
@@ -10,3 +9,6 @@ solana-test-validator -r \
 # Boost config
 # Meteora program
 # Meteora pool and vaults
+
+
+# TODO Deploy ore program

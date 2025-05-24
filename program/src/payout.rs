@@ -29,7 +29,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     block.payed_out = 1;
 
     // Skip payout if no bets were placed.
-    if block.total_bets == 0 {
+    if block.total_bets == 0 || block.reward == 0 {
         return Ok(());
     }
 
