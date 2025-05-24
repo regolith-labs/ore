@@ -6,7 +6,7 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, boost_accounts) = accounts.split_at(5);
+    let (required_accounts, boost_accounts) = accounts.split_at(6);
     let [signer_info, block_info, mint_info, treasury_info, treasury_tokens_info, token_program] =
         required_accounts
     else {
@@ -15,7 +15,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     signer_info.is_signer()?;
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
-        .assert_mut(|b| b.ends_at < clock.slot)?
+        .assert_mut(|b| b.ends_at <= clock.slot)?
         .assert_mut(|b| b.payed_out != 0)?;
     let mint = mint_info
         .has_address(&MINT_ADDRESS)?

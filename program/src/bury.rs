@@ -6,7 +6,7 @@ use steel::*;
 pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, meteora_accounts) = accounts.split_at(5);
+    let (required_accounts, meteora_accounts) = accounts.split_at(6);
     let [signer_info, block_info, block_bets_info, block_ore_info, bet_mint_info, ore_mint_info] =
         required_accounts
     else {

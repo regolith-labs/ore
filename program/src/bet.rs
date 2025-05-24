@@ -21,8 +21,12 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.ends_at > clock.slot)?
         .assert_mut(|b| b.payed_out == 0)?;
-    block_bets_info.as_associated_token_account(block_info.key, &block.mint)?;
-    sender_info.as_associated_token_account(signer_info.key, &block.mint)?;
+    block_bets_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, &block.mint)?;
+    sender_info
+        .is_writable()?
+        .as_associated_token_account(signer_info.key, &block.mint)?;
     wager_info.is_writable()?.is_empty()?.has_seeds(
         &[WAGER, &block.current_round.to_le_bytes(), &seed],
         &ore_api::ID,
@@ -37,11 +41,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
         &system_program,
         &signer_info,
         &ore_api::ID,
-        &[
-            WAGER,
-            &block.current_round.to_le_bytes(),
-            &block.bet_count.to_le_bytes(),
-        ],
+        &[WAGER, &block.current_round.to_le_bytes(), &seed],
     )?;
     let wager = wager_info.as_account_mut::<Wager>(&ore_api::ID)?;
     wager.amount = amount;

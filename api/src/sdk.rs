@@ -11,7 +11,7 @@ use crate::{
 pub fn bet(signer: Pubkey, mint: Pubkey, amount: u64, round: u64, seed: [u8; 32]) -> Instruction {
     let sender = spl_associated_token_account::get_associated_token_address(&signer, &mint);
     let block = block_pda().0;
-    let block_bets = spl_associated_token_account::get_associated_token_address(&signer, &mint);
+    let block_bets = spl_associated_token_account::get_associated_token_address(&block, &mint);
     let wager = wager_pda(round, seed).0;
     Instruction {
         program_id: crate::ID,
@@ -21,7 +21,7 @@ pub fn bet(signer: Pubkey, mint: Pubkey, amount: u64, round: u64, seed: [u8; 32]
             AccountMeta::new(block_bets, false),
             AccountMeta::new(sender, false),
             AccountMeta::new(wager, false),
-            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
         ],

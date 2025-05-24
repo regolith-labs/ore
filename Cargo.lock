@@ -2510,15 +2510,20 @@ dependencies = [
 name = "ore-cli"
 version = "3.7.0"
 dependencies = [
+ "anyhow",
  "base64 0.22.1",
  "bincode",
  "bytemuck",
  "ore-api 3.7.0",
+ "ore-boost-api",
  "serde_json",
+ "solana-account-decoder",
  "solana-client",
  "solana-program",
  "solana-sdk",
  "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "steel",
  "tokio",
 ]
 
