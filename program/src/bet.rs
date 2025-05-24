@@ -20,7 +20,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.ends_at > clock.slot)?
-        .assert_mut(|b| b.payed_out != 0)?;
+        .assert_mut(|b| b.payed_out == 0)?;
     block_bets_info.as_associated_token_account(block_info.key, &block.mint)?;
     sender_info.as_associated_token_account(signer_info.key, &block.mint)?;
     wager_info.is_writable()?.is_empty()?.has_seeds(
@@ -46,14 +46,14 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     let wager = wager_info.as_account_mut::<Wager>(&ore_api::ID)?;
     wager.amount = amount;
     wager.authority = *signer_info.key;
-    wager.id = block.bet_count;
-    wager.round = block.current_round;
-    wager.timestamp = clock.unix_timestamp as u64;
     wager.cumulative_bets = block.total_bets;
+    wager.round = block.current_round;
+    wager.seed = seed;
+    wager.timestamp = clock.unix_timestamp as u64;
 
     // Update block stats.
-    block.total_bets += amount;
     block.bet_count += 1;
+    block.total_bets += amount;
 
     // Hash client seed into block noise for provably fair randomness.
     block.noise = hashv(&[&block.noise, &seed]).to_bytes();

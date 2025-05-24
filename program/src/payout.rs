@@ -15,7 +15,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     signer_info.is_signer()?;
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
-        .assert_mut(|b| b.ends_at < clock.slot)?
+        .assert_mut(|b| b.ends_at <= clock.slot)?
         .assert_mut(|b| b.payed_out == 0)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     treasury_tokens_info
