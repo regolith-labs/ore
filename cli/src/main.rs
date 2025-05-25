@@ -1,3 +1,4 @@
+use meteora_pools_sdk::instructions::Swap;
 use ore_api::{prelude::*, sdk::*};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
@@ -6,6 +7,7 @@ use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
     rpc_filter::{Memcmp, RpcFilterType},
 };
+use solana_program::pubkey;
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
     keccak::hashv,
@@ -56,6 +58,9 @@ async fn main() {
         "wagers" => {
             let wagers = get_block_wagers(&rpc).await.unwrap();
             println!("Wagers: {:?}", wagers);
+        }
+        "bury" => {
+            bury_ore_sol(&rpc, &payer).await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
@@ -153,6 +158,32 @@ async fn bet(
     submit_transaction(rpc, payer, &ixs).await?;
     println!("Placed bet of {} lamports", amount);
 
+    Ok(())
+}
+
+async fn bury_ore_sol(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), solana_client::client_error::ClientError> {
+    let swap = Swap {
+        pool: pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj"),
+        user_source_token: spl_token::native_mint::ID,
+        user_destination_token: ore_api::consts::MINT_ADDRESS,
+        a_vault: pubkey!("3s6ki6dQSM8FuqWiPsnGkgVsAEo8BTAfUR1Vvt1TPiJN"),
+        b_vault: pubkey!("FERjPVNEa7Udq8CEv68h6tPL46Tq7ieE49HrE2wea3XT"),
+        a_token_vault: pubkey!("BtJuiRG44vew5nYBVeUhuBawPTZLyYYxdzTYzerkfnto"),
+        b_token_vault: pubkey!("HZeLxbZ9uHtSpwZC3LBr4Nubd14iHwz7bRSghRZf5VCG"),
+        a_vault_lp_mint: pubkey!("6Av9sdKvnjwoDHVnhEiz6JEq8e6SGzmhCsCncT2WJ7nN"),
+        b_vault_lp_mint: pubkey!("FZN7QZ8ZUUAxMPfxYEYkH3cXUASzH8EqA6B4tyCL8f1j"),
+        a_vault_lp: pubkey!("2k7V1NtM1krwh1sdt5wWqBRcvNQ5jzxj3J2rV78zdTsL"),
+        b_vault_lp: pubkey!("CFATQFgkKXJyU3MdCNvQqN79qorNSMJFF8jrF66a7r6i"),
+        protocol_token_fee: pubkey!("3WYz5TC8X4FLvwWQ2QvSfXuZHXjqvsdymKwmMFkgCgVs"),
+        user: payer.pubkey(),
+        vault_program: pubkey!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi"),
+        token_program: spl_token::ID,
+    };
+    let ix = bury(payer.pubkey(), swap);
+    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 

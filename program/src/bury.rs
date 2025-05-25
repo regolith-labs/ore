@@ -1,5 +1,6 @@
 use meteora_pools_sdk::instructions::{SwapCpi, SwapCpiAccounts, SwapInstructionArgs};
 use ore_api::prelude::*;
+use solana_program::log::sol_log;
 use steel::*;
 
 /// Swaps bets into ORE and buries the ORE.
@@ -7,19 +8,24 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     // Load accounts.
     let clock = Clock::get()?;
     let (required_accounts, meteora_accounts) = accounts.split_at(6);
+    sol_log(format!("Loading {} required accounts", meteora_accounts.len()).as_str());
     let [signer_info, block_info, block_bets_info, block_ore_info, bet_mint_info, ore_mint_info] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?.has_address(&INITIALIZER_ADDRESS)?;
+    signer_info.is_signer()?; // .has_address(&INITIALIZER_ADDRESS)?;
     block_info.as_account::<Block>(&ore_api::ID)?;
-    let block_bets =
-        block_bets_info.as_associated_token_account(block_info.key, bet_mint_info.key)?;
-    block_ore_info.as_associated_token_account(block_info.key, &MINT_ADDRESS)?;
+    let block_bets = block_bets_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, bet_mint_info.key)?;
+    block_ore_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, &MINT_ADDRESS)?;
     bet_mint_info.as_mint()?;
     ore_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
 
+    sol_log(format!("Loading {} meteora accounts", meteora_accounts.len()).as_str());
     // Load meteora accounts.
     let [pool_info, a_vault_info, b_vault_info, a_token_vault_info, b_token_vault_info, a_vault_lp_mint_info, b_vault_lp_mint_info, a_vault_lp_info, b_vault_lp_info, protocol_token_fee_info, vault_program_info, token_program_info, meteora_pools_program] =
         meteora_accounts

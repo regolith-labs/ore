@@ -2514,6 +2514,7 @@ dependencies = [
  "base64 0.22.1",
  "bincode",
  "bytemuck",
+ "meteora-pools-sdk",
  "ore-api 3.7.0",
  "ore-boost-api",
  "serde_json",

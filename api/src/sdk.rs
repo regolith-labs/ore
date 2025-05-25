@@ -36,11 +36,11 @@ pub fn bet(signer: Pubkey, mint: Pubkey, amount: u64, round: u64, seed: [u8; 32]
 pub fn bury(signer: Pubkey, swap: Swap) -> Instruction {
     let block = block_pda().0;
     let block_bets = spl_associated_token_account::get_associated_token_address(
-        &signer,
+        &block,
         &spl_token::native_mint::ID,
     );
     let block_ore =
-        spl_associated_token_account::get_associated_token_address(&signer, &MINT_ADDRESS);
+        spl_associated_token_account::get_associated_token_address(&block, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -53,8 +53,6 @@ pub fn bury(signer: Pubkey, swap: Swap) -> Instruction {
             AccountMeta::new(MINT_ADDRESS, false),
             // swap accounts
             AccountMeta::new(swap.pool, false),
-            AccountMeta::new(swap.user_source_token, false),
-            AccountMeta::new(swap.user_destination_token, false),
             AccountMeta::new(swap.a_vault, false),
             AccountMeta::new(swap.b_vault, false),
             AccountMeta::new(swap.a_token_vault, false),
@@ -68,7 +66,7 @@ pub fn bury(signer: Pubkey, swap: Swap) -> Instruction {
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(meteora_pools_sdk::programs::AMM_ID, false),
         ],
-        data: Close {}.to_bytes(),
+        data: Bury {}.to_bytes(),
     }
 }
 
