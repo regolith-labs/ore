@@ -20,7 +20,7 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.ends_at > clock.slot)?
-        .assert_mut(|b| b.payed_out == 0)?;
+        .assert_mut(|b| b.paid == 0)?;
     block_bets_info
         .is_writable()?
         .as_associated_token_account(block_info.key, &block.mint)?;

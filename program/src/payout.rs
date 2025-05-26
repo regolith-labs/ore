@@ -16,7 +16,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.ends_at <= clock.slot)?
-        .assert_mut(|b| b.payed_out == 0)?;
+        .assert_mut(|b| b.paid == 0)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     treasury_tokens_info
         .has_address(&TREASURY_TOKENS_ADDRESS)?
@@ -26,7 +26,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Mark the block as paid out.
-    block.payed_out = 1;
+    block.paid = 1;
 
     // Skip payout if no bets were placed.
     if block.cumulative_sum == 0 || block.reward == 0 {

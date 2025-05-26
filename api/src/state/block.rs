@@ -21,7 +21,7 @@ pub struct Block {
     pub noise: [u8; 32],
 
     /// Whether or not the current round has paid out.
-    pub payed_out: u64,
+    pub paid: u64,
 
     /// The amount of ORE to distribute to the winner.
     pub reward: u64,

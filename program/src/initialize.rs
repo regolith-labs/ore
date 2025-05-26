@@ -36,7 +36,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     block.ends_at = 0;
     block.mint = spl_token::native_mint::ID;
     block.noise = [0; 32];
-    block.payed_out = 0;
+    block.paid = 0;
     block.reward = 0;
     block.started_at = 0;
     block.total_wagers = 0;

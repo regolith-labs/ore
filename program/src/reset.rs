@@ -16,7 +16,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.ends_at <= clock.slot)?
-        .assert_mut(|b| b.payed_out != 0)?;
+        .assert_mut(|b| b.paid != 0)?;
     let mint = mint_info
         .has_address(&MINT_ADDRESS)?
         .is_writable()?
@@ -46,7 +46,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     block.current_round += 1;
     block.ends_at = clock.slot + 150; // 60 seconds
     block.noise = [0; 32];
-    block.payed_out = 0;
+    block.paid = 0;
     block.reward = net_emissions - boost_reward;
     block.started_at = clock.slot;
     block.total_wagers = 0;
