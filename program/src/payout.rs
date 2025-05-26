@@ -36,7 +36,11 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     // Select the hash from the slot when the block ended for provably fair randomness.
     let slot_hashes =
         bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
-    let slot_hash = slot_hashes.get(&block.ends_at).unwrap(); // TODO: Handle recovery case.
+    let Some(slot_hash) = slot_hashes.get(&block.ends_at) else {
+        // If payout is not called within 2.5 minutes of the block ending,
+        // then the slot hash will be unavailable and the winning wager cannot be determined.
+        return Ok(());
+    };
     block.noise = hashv(&[&block.noise, slot_hash.as_ref()]).to_bytes();
 
     // Calculate the random number.

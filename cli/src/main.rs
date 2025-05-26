@@ -69,28 +69,37 @@ async fn main() {
 async fn crank(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), solana_client::client_error::ClientError> {
+) -> Result<(), anyhow::Error> {
+    let boost_config = ore_boost_api::state::config_pda().0;
     loop {
-        let block = get_block(rpc).await?;
-        let clock = get_clock(rpc).await?;
-
-        if clock.slot >= block.ends_at {
-            // Time to payout and reset
-            let payout_ix = build_payout_ix(rpc, payer).await?;
-            let reset_ix = reset(payer.pubkey(), ore_boost_api::state::config_pda().0);
-            submit_transaction(rpc, &payer, &[payout_ix, reset_ix]).await?;
-            println!("Submitted payout and reset transaction");
+        if let Ok(block) = get_block(rpc).await {
+            if let Ok(clock) = get_clock(rpc).await {
+                if clock.slot >= block.ends_at {
+                    // Time to payout and reset
+                    if let Ok(payout_ix) = build_payout_ix(rpc, payer).await {
+                        let reset_ix = reset(payer.pubkey(), boost_config);
+                        submit_transaction(rpc, &payer, &[payout_ix, reset_ix])
+                            .await
+                            .ok();
+                        println!("Submitted payout and reset transaction");
+                    }
+                } else {
+                    // Calculate and print time remaining
+                    let slots_remaining = block.ends_at.saturating_sub(clock.slot);
+                    let seconds_remaining = (slots_remaining as f64) * 0.4;
+                    println!(
+                        "Time until payout: {:.1} seconds ({} slots) – {} wagers – {} SOL",
+                        seconds_remaining,
+                        slots_remaining,
+                        block.total_wagers,
+                        lamports_to_sol(block.cumulative_sum)
+                    );
+                }
+            } else {
+                println!("Error getting clock");
+            }
         } else {
-            // Calculate and print time remaining
-            let slots_remaining = block.ends_at.saturating_sub(clock.slot);
-            let seconds_remaining = (slots_remaining as f64) * 0.4;
-            println!(
-                "Time until payout: {:.1} seconds ({} slots) – {} wagers – {} SOL",
-                seconds_remaining,
-                slots_remaining,
-                block.total_wagers,
-                lamports_to_sol(block.cumulative_sum)
-            );
+            println!("Error getting block");
         }
 
         // Wait 3 seconds before next check
@@ -102,7 +111,7 @@ async fn bet(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     amount: u64,
-) -> Result<(), solana_client::client_error::ClientError> {
+) -> Result<(), anyhow::Error> {
     // Get current block to get round number
     let block = get_block(rpc).await?;
 
@@ -164,7 +173,7 @@ async fn bet(
 async fn bury_ore_sol(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), solana_client::client_error::ClientError> {
+) -> Result<(), anyhow::Error> {
     let swap = Swap {
         pool: pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj"),
         user_source_token: spl_token::native_mint::ID,
@@ -190,7 +199,7 @@ async fn bury_ore_sol(
 async fn build_payout_ix(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<Instruction, solana_client::client_error::ClientError> {
+) -> Result<Instruction, anyhow::Error> {
     let block = get_block(rpc).await?;
     let wagers = get_block_wagers(rpc).await?;
 
@@ -245,7 +254,7 @@ async fn build_payout_ix(
 async fn close_all_wagers(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), solana_client::client_error::ClientError> {
+) -> Result<(), anyhow::Error> {
     let block = get_block(rpc).await?;
     let wagers = get_my_wagers(rpc, payer).await?;
     let mut ixs = vec![];
@@ -259,47 +268,38 @@ async fn close_all_wagers(
     Ok(())
 }
 
-async fn get_block(rpc: &RpcClient) -> Result<Block, solana_client::client_error::ClientError> {
+async fn get_block(rpc: &RpcClient) -> Result<Block, anyhow::Error> {
     let block_pda = ore_api::state::block_pda();
     let account = rpc.get_account(&block_pda.0).await?;
-    let block = Block::try_from_bytes(&account.data).unwrap();
+    let block = Block::try_from_bytes(&account.data)?;
     Ok(*block)
 }
 
-async fn get_clock(rpc: &RpcClient) -> Result<Clock, solana_client::client_error::ClientError> {
-    let data = rpc
-        .get_account_data(&solana_sdk::sysvar::clock::ID)
-        .await
-        .unwrap();
-    let clock = bincode::deserialize::<Clock>(&data).unwrap();
+async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
+    let data = rpc.get_account_data(&solana_sdk::sysvar::clock::ID).await?;
+    let clock = bincode::deserialize::<Clock>(&data)?;
     Ok(clock)
 }
 
-async fn get_block_wagers(
-    rpc: &RpcClient,
-) -> Result<Vec<(Pubkey, Wager)>, solana_client::client_error::ClientError> {
+async fn get_block_wagers(rpc: &RpcClient) -> Result<Vec<(Pubkey, Wager)>, anyhow::Error> {
     let block = get_block(rpc).await?;
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
         56,
         &block.current_round.to_le_bytes(),
     ));
-    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter])
-        .await
-        .unwrap();
+    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(wagers)
 }
 
 async fn get_my_wagers(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<Vec<(Pubkey, Wager)>, solana_client::client_error::ClientError> {
+) -> Result<Vec<(Pubkey, Wager)>, anyhow::Error> {
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
         16,
         &payer.pubkey().to_bytes().as_ref(),
     ));
-    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter])
-        .await
-        .unwrap();
+    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(wagers)
 }
 
@@ -324,7 +324,7 @@ async fn submit_transaction(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     instructions: &[solana_sdk::instruction::Instruction],
-) -> Result<solana_sdk::signature::Signature, solana_client::client_error::ClientError> {
+) -> Result<solana_sdk::signature::Signature, anyhow::Error> {
     let blockhash = rpc.get_latest_blockhash().await?;
     let mut all_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(1_400_000)];
     all_instructions.extend_from_slice(instructions);
@@ -342,7 +342,7 @@ async fn submit_transaction(
         }
         Err(e) => {
             println!("Error submitting transaction: {:?}", e);
-            Err(e)
+            Err(e.into())
         }
     }
 }
