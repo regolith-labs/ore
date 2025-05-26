@@ -114,6 +114,7 @@ pub fn payout(signer: Pubkey, wager: Pubkey, recipient: Pubkey) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block, false),
+            AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(wager, false),
             AccountMeta::new(recipient, false),
             AccountMeta::new(TREASURY_ADDRESS, false),
