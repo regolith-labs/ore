@@ -19,7 +19,6 @@ bincode = "1.3.3"
 bytemuck = "1.14.3"
 bytemuck_derive = "1.7.0"
 const-crypto = "0.1.0"
-drillx = { version = "2.2", features = ["solana"] }
 meteora-pools-sdk = "0.1"
 mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
@@ -31,7 +30,6 @@ solana-client = "^2.1"
 solana-sdk = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
-static_assertions = "1.1.0"
 steel = { features = ["spl"], version = "4.0" }
 thiserror = "1.0.57"
 tokio = { version = "1.37.0", features = ["full"] }

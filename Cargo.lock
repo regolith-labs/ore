@@ -2480,7 +2480,6 @@ dependencies = [
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
- "static_assertions",
  "steel",
  "thiserror 1.0.69",
 ]
@@ -2532,7 +2531,6 @@ name = "ore-program"
 version = "3.7.0"
 dependencies = [
  "bincode",
- "drillx",
  "meteora-pools-sdk",
  "mpl-token-metadata",
  "ore-api 3.7.0",
