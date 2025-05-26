@@ -32,8 +32,13 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     // Mark the block as paid out.
     block.paid = 1;
 
+    // Skip if no block reward.
+    if block.reward == 0 {
+        return Ok(());
+    }
+
     // Skip payout if no bets were placed.
-    if block.cumulative_sum == 0 || block.reward == 0 {
+    if block.cumulative_sum == 0 {
         burn_signed(
             &treasury_tokens_info,
             &mint_info,
