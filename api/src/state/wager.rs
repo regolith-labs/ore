@@ -5,19 +5,19 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Wager {
-    /// The quantity of SOL this miner has bet in the current round.
+    /// The amount bet in this wager.
     pub amount: u64,
 
     /// The signer authorized to use this wager.
     pub authority: Pubkey,
 
-    /// The cumulative amount risked in the current round, up to and including this wager.
+    /// The cumulative amount bet in the current round prior to this wager.
     pub cumulative_sum: u64,
 
-    /// The current round this miner is betting in.
+    /// The current round this wager is for.
     pub round: u64,
 
-    /// The ID of the bet.
+    /// The ID of the wager, used for provably fair randomness.
     pub seed: [u8; 32],
 
     /// The timestamp of the wager.
