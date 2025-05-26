@@ -88,8 +88,8 @@ async fn crank(
                 "Time until payout: {:.1} seconds ({} slots) – {} wagers – {} SOL",
                 seconds_remaining,
                 slots_remaining,
-                block.bet_count,
-                lamports_to_sol(block.total_bets)
+                block.total_wagers,
+                lamports_to_sol(block.cumulative_sum)
             );
         }
 
@@ -195,7 +195,7 @@ async fn build_payout_ix(
     let wagers = get_block_wagers(rpc).await?;
 
     // Return early if no wagers
-    if block.total_bets == 0 {
+    if block.cumulative_sum == 0 || block.reward == 0 {
         return Ok(payout(
             payer.pubkey(),
             Pubkey::new_unique(),
@@ -213,12 +213,12 @@ async fn build_payout_ix(
     let y = u64::from_le_bytes(noise[8..16].try_into().unwrap());
     let z = u64::from_le_bytes(noise[16..24].try_into().unwrap());
     let w = u64::from_le_bytes(noise[24..32].try_into().unwrap());
-    let roll = (x ^ y ^ z ^ w) % block.total_bets;
+    let roll = (x ^ y ^ z ^ w) % block.cumulative_sum;
 
     // Find the winning wager
     let mut winner = None;
     for (pubkey, wager) in wagers {
-        if roll >= wager.cumulative_bets && roll < wager.cumulative_bets + wager.amount {
+        if roll >= wager.cumulative_sum && roll < wager.cumulative_sum + wager.amount {
             println!("Roll: {}, Winner: {:?}", roll, pubkey);
             winner = Some((pubkey, wager));
             break;

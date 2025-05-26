@@ -11,8 +11,8 @@ pub struct Wager {
     /// The signer authorized to use this wager.
     pub authority: Pubkey,
 
-    /// The cumulative amount of SOL bet in the current round, up to and including this wager.
-    pub cumulative_bets: u64,
+    /// The cumulative amount risked in the current round, up to and including this wager.
+    pub cumulative_sum: u64,
 
     /// The current round this miner is betting in.
     pub round: u64,

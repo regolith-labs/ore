@@ -5,8 +5,8 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Block {
-    /// The number of bets made in the current round.
-    pub bet_count: u64,
+    /// The cumulative amount risked in the current round.
+    pub cumulative_sum: u64,
 
     /// The current round.
     pub current_round: u64,
@@ -14,23 +14,23 @@ pub struct Block {
     /// The slot at which the current round ends.
     pub ends_at: u64,
 
-    /// The mint used to track wagers of the current round.
+    /// The mint used for wagers of the current round.
     pub mint: Pubkey,
 
-    /// The noise used for the current round.
+    /// The noise used for the current round for provably fair randomness.
     pub noise: [u8; 32],
 
-    /// Whether or not the current round has ended.
+    /// Whether or not the current round has paid out.
     pub payed_out: u64,
 
     /// The amount of ORE to distribute to the winner.
     pub reward: u64,
 
-    /// The time time the current round started.
+    /// The time the current round started at.
     pub started_at: u64,
 
-    /// The cumulative amount of SOL risked in the current round, up to and including this bet.
-    pub total_bets: u64,
+    /// The number of wagers made in the current round.
+    pub total_wagers: u64,
 }
 
 account!(OreAccount, Block);

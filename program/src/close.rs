@@ -1,7 +1,7 @@
 use ore_api::prelude::*;
 use steel::*;
 
-/// Closes a wager account.
+/// Close a wager account.
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, block_info, wager_info, system_program] = accounts else {

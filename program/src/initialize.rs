@@ -31,7 +31,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         &[BLOCK],
     )?;
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
-    block.bet_count = 0;
+    block.cumulative_sum = 0;
     block.current_round = 0;
     block.ends_at = 0;
     block.mint = spl_token::native_mint::ID;
@@ -39,7 +39,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     block.payed_out = 0;
     block.reward = 0;
     block.started_at = 0;
-    block.total_bets = 0;
+    block.total_wagers = 0;
 
     // Initialize block token accounts.
     create_associated_token_account(

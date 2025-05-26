@@ -2,7 +2,7 @@ use ore_api::prelude::*;
 use solana_program::keccak::hashv;
 use steel::*;
 
-/// Places a bet.
+/// Open a wager.
 pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = Bet::try_from_bytes(data)?;
@@ -46,14 +46,14 @@ pub fn process_bet(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     let wager = wager_info.as_account_mut::<Wager>(&ore_api::ID)?;
     wager.amount = amount;
     wager.authority = *signer_info.key;
-    wager.cumulative_bets = block.total_bets;
+    wager.cumulative_sum = block.cumulative_sum;
     wager.round = block.current_round;
     wager.seed = seed;
     wager.timestamp = clock.unix_timestamp as u64;
 
     // Update block stats.
-    block.bet_count += 1;
-    block.total_bets += amount;
+    block.cumulative_sum += amount;
+    block.total_wagers += 1;
 
     // Hash client seed into block noise for provably fair randomness.
     block.noise = hashv(&[&block.noise, &seed]).to_bytes();

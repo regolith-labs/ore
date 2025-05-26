@@ -3,7 +3,7 @@ use solana_program::keccak::hashv;
 use steel::*;
 use sysvar::slot_hashes::SlotHashes;
 
-/// Pays out a block reward to the winning.
+/// Payout block reward to the winning wager.
 pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
@@ -29,7 +29,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     block.payed_out = 1;
 
     // Skip payout if no bets were placed.
-    if block.total_bets == 0 || block.reward == 0 {
+    if block.cumulative_sum == 0 || block.reward == 0 {
         return Ok(());
     }
 
@@ -44,13 +44,13 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     let y = u64::from_le_bytes(block.noise[8..16].try_into().unwrap());
     let z = u64::from_le_bytes(block.noise[16..24].try_into().unwrap());
     let w = u64::from_le_bytes(block.noise[24..32].try_into().unwrap());
-    let roll = (x ^ y ^ z ^ w) % block.total_bets;
+    let roll = (x ^ y ^ z ^ w) % block.cumulative_sum;
 
     // Validate the wager account.
     let wager = wager_info
         .as_account_mut::<Wager>(&ore_api::ID)?
-        .assert_mut(|w| roll >= w.cumulative_bets)?
-        .assert_mut(|w| roll < w.cumulative_bets + w.amount)?;
+        .assert_mut(|w| roll >= w.cumulative_sum)?
+        .assert_mut(|w| roll < w.cumulative_sum + w.amount)?;
     recipient_info.as_associated_token_account(&wager.authority, &MINT_ADDRESS)?;
 
     // Transfer the winnings to the recipient.

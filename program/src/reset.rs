@@ -2,7 +2,7 @@ use ore_api::prelude::*;
 use ore_boost_api::{consts::DENOMINATOR_BPS, prelude::Config as BoostConfig};
 use steel::*;
 
-/// Reset tops up the bus balances and updates the emissions and reward rates.
+/// Start the next block.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
@@ -42,14 +42,14 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     boost_proof.total_rewards += boost_reward;
 
     // Reset the block.
-    block.bet_count = 0;
+    block.cumulative_sum = 0;
     block.current_round += 1;
     block.ends_at = clock.slot + 150; // 60 seconds
     block.noise = [0; 32];
     block.payed_out = 0;
     block.reward = net_emissions - boost_reward;
     block.started_at = clock.slot;
-    block.total_bets = 0;
+    block.total_wagers = 0;
 
     // Fund the treasury.
     mint_to_signed(
