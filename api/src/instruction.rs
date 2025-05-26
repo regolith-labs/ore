@@ -4,11 +4,12 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Bet = 0,
-    Bury = 1,
-    Close = 2,
-    Payout = 3,
-    Reset = 4,
+    Claim = 0,
+    Bet = 1,
+    Bury = 2,
+    Close = 3,
+    Payout = 4,
+    Reset = 5,
 
     // Admin
     Initialize = 100,
@@ -27,6 +28,12 @@ pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Claim {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
 
 #[repr(C)]
@@ -41,6 +48,7 @@ pub struct Payout {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
+instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Bet);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Close);
