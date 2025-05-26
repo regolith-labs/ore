@@ -177,7 +177,7 @@ async fn bury_ore_sol(
         b_vault_lp_mint: pubkey!("FZN7QZ8ZUUAxMPfxYEYkH3cXUASzH8EqA6B4tyCL8f1j"),
         a_vault_lp: pubkey!("2k7V1NtM1krwh1sdt5wWqBRcvNQ5jzxj3J2rV78zdTsL"),
         b_vault_lp: pubkey!("CFATQFgkKXJyU3MdCNvQqN79qorNSMJFF8jrF66a7r6i"),
-        protocol_token_fee: pubkey!("3WYz5TC8X4FLvwWQ2QvSfXuZHXjqvsdymKwmMFkgCgVs"),
+        protocol_token_fee: pubkey!("6kzYo2LMo2q2bkLAD8ienoG5NC1MkNXNTfm8sdyHuX3h"),
         user: payer.pubkey(),
         vault_program: pubkey!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi"),
         token_program: spl_token::ID,
