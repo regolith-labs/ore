@@ -10,7 +10,6 @@ repository.workspace = true
 keywords.workspace = true
 
 [dependencies]
-array-const-fn-init.workspace = true
 bytemuck.workspace = true
 const-crypto.workspace = true
 meteora-pools-sdk.workspace = true

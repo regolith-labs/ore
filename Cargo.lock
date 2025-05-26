@@ -2472,7 +2472,6 @@ dependencies = [
 name = "ore-api"
 version = "3.7.0"
 dependencies = [
- "array-const-fn-init",
  "bytemuck",
  "const-crypto",
  "meteora-pools-sdk",
