@@ -9,7 +9,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?; // .has_address(&ADMIN_ADDRESS)?;
+    signer_info.is_signer()?.has_address(&ADMIN_ADDRESS)?;
     block_info
         .is_empty()?
         .is_writable()?

@@ -12,7 +12,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?; // .has_address(&ADMIN_ADDRESS)?;
+    signer_info.is_signer()?.has_address(&ADMIN_ADDRESS)?;
     block_info.as_account::<Block>(&ore_api::ID)?;
     let block_bets = block_bets_info
         .is_writable()?
