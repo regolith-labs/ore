@@ -3,11 +3,11 @@ use solana_program::keccak::hashv;
 use steel::*;
 use sysvar::slot_hashes::SlotHashes;
 
-/// Payout block reward to the winning wager.
+/// Payout block reward to the winning commit.
 pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, mint_info, wager_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, commit_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -37,7 +37,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
         return Ok(());
     }
 
-    // Skip payout if no bets were placed.
+    // Skip payout if no commits were placed.
     if block.cumulative_sum == 0 {
         burn_signed(
             &treasury_tokens_info,
@@ -55,7 +55,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
         bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
     let Some(slot_hash) = slot_hashes.get(&block.ends_at) else {
         // If payout is not called within 2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and the winning wager cannot be determined.
+        // then the slot hash will be unavailable and the winning commit cannot be determined.
         burn_signed(
             &treasury_tokens_info,
             &mint_info,
@@ -75,12 +75,12 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
     let w = u64::from_le_bytes(block.noise[24..32].try_into().unwrap());
     let roll = (x ^ y ^ z ^ w) % block.cumulative_sum;
 
-    // Validate the wager account.
-    let wager = wager_info
-        .as_account_mut::<Wager>(&ore_api::ID)?
-        .assert_mut(|w| roll >= w.cumulative_sum)?
-        .assert_mut(|w| roll < w.cumulative_sum + w.amount)?;
-    recipient_info.as_associated_token_account(&wager.authority, &MINT_ADDRESS)?;
+    // Validate the commit account.
+    let commit = commit_info
+        .as_account_mut::<Commit>(&ore_api::ID)?
+        .assert_mut(|c| roll >= c.cumulative_sum)?
+        .assert_mut(|c| roll < c.cumulative_sum + c.amount)?;
+    recipient_info.as_associated_token_account(&commit.authority, &MINT_ADDRESS)?;
 
     // Transfer the winnings to the recipient.
     transfer_signed(
@@ -94,7 +94,7 @@ pub fn process_payout(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResu
 
     // Emit an event.
     PayoutEvent {
-        authority: wager.authority,
+        authority: commit.authority,
         amount: block.reward,
         ts: clock.unix_timestamp as u64,
     }

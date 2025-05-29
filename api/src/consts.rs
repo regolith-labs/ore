@@ -20,8 +20,8 @@ pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 /// The seed of the block account PDA.
 pub const BLOCK: &[u8] = b"block";
 
-/// The seed of the wager account PDA.
-pub const WAGER: &[u8] = b"wager";
+/// The seed of the commit account PDA.
+pub const COMMIT: &[u8] = b"commit";
 
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";

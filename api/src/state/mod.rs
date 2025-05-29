@@ -1,12 +1,12 @@
 mod block;
+mod commit;
 mod proof;
 mod treasury;
-mod wager;
 
 pub use block::*;
+pub use commit::*;
 pub use proof::*;
 pub use treasury::*;
-pub use wager::*;
 
 use steel::*;
 
@@ -18,7 +18,7 @@ pub enum OreAccount {
     Proof = 102,
     Treasury = 103,
     Block = 104,
-    Wager = 105,
+    Commit = 105,
 }
 
 pub fn block_pda() -> (Pubkey, u8) {
@@ -33,6 +33,6 @@ pub fn treasury_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TREASURY], &crate::ID)
 }
 
-pub fn wager_pda(round: u64, seed: [u8; 32]) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[WAGER, &round.to_le_bytes(), &seed], &crate::ID)
+pub fn commit_pda(round: u64, seed: [u8; 32]) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[COMMIT, &round.to_le_bytes(), &seed], &crate::ID)
 }

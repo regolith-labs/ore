@@ -2,25 +2,29 @@ use meteora_pools_sdk::instructions::{SwapCpi, SwapCpiAccounts, SwapInstructionA
 use ore_api::prelude::*;
 use steel::*;
 
-/// Swap wagers into ORE and bury the ORE.
-pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+/// Swap commits into ORE and bury the ORE.
+pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    // Parse data.
+    let args = Bury::try_from_bytes(data)?;
+    let amount = u64::from_le_bytes(args.amount);
+
     // Load accounts.
     let clock = Clock::get()?;
     let (required_accounts, meteora_accounts) = accounts.split_at(6);
-    let [signer_info, block_info, block_bets_info, block_ore_info, bet_mint_info, ore_mint_info] =
+    let [signer_info, block_info, block_commits_info, block_ore_info, mint_info, ore_mint_info] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?.has_address(&ADMIN_ADDRESS)?;
+    signer_info.is_signer()?; // .has_address(&ADMIN_ADDRESS)?;
     block_info.as_account::<Block>(&ore_api::ID)?;
-    let block_bets = block_bets_info
+    let block_commits = block_commits_info
         .is_writable()?
-        .as_associated_token_account(block_info.key, bet_mint_info.key)?;
+        .as_associated_token_account(block_info.key, mint_info.key)?;
     block_ore_info
         .is_writable()?
         .as_associated_token_account(block_info.key, &MINT_ADDRESS)?;
-    bet_mint_info.as_mint()?;
+    mint_info.as_mint()?;
     ore_mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
 
     // Load meteora accounts.
@@ -36,7 +40,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
         &meteora_pools_program,
         SwapCpiAccounts {
             pool: pool_info,
-            user_source_token: block_bets_info,
+            user_source_token: block_commits_info,
             user_destination_token: block_ore_info,
             a_vault: a_vault_info,
             b_vault: b_vault_info,
@@ -52,7 +56,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
             token_program: token_program_info,
         },
         SwapInstructionArgs {
-            in_amount: block_bets.amount(),
+            in_amount: block_commits.amount().min(amount),
             minimum_out_amount: 0, // TODO: Calculate minimum out amount with slippage
         },
     );

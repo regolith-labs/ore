@@ -5,9 +5,9 @@ use steel::*;
 pub enum OreInstruction {
     // User
     Claim = 0,
-    Bet = 1,
-    Bury = 2,
-    Close = 3,
+    Bury = 1,
+    Close = 2,
+    Deploy = 3,
     Payout = 4,
     Reset = 5,
 
@@ -17,14 +17,9 @@ pub enum OreInstruction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Bet {
+pub struct Bury {
     pub amount: [u8; 8],
-    pub seed: [u8; 32],
 }
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -35,6 +30,13 @@ pub struct Claim {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Deploy {
+    pub amount: [u8; 8],
+    pub seed: [u8; 32],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -49,9 +51,9 @@ pub struct Payout {}
 pub struct Initialize {}
 
 instruction!(OreInstruction, Claim);
-instruction!(OreInstruction, Bet);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Close);
+instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Payout);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, Initialize);

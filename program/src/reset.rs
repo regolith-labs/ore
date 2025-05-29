@@ -49,7 +49,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     block.paid = 0;
     block.reward = net_emissions - boost_reward;
     block.started_at = clock.slot;
-    block.total_wagers = 0;
+    block.total_commits = 0;
 
     // Fund the treasury.
     mint_to_signed(

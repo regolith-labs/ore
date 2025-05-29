@@ -49,15 +49,15 @@ async fn main() {
         "crank" => {
             crank(&rpc, &payer).await.unwrap();
         }
-        "bet" => {
-            bet(&rpc, &payer, sol_to_lamports(1.0)).await.unwrap();
+        "deploy" => {
+            deploy(&rpc, &payer, sol_to_lamports(1.0)).await.unwrap();
         }
         "close" => {
-            close_all_wagers(&rpc, &payer).await.unwrap();
+            close_all_commits(&rpc, &payer).await.unwrap();
         }
-        "wagers" => {
-            let wagers = get_block_wagers(&rpc).await.unwrap();
-            println!("Wagers: {:?}", wagers);
+        "commits" => {
+            let commits = get_block_commits(&rpc).await.unwrap();
+            println!("Commits: {:?}", commits);
         }
         "bury" => {
             bury_ore_sol(&rpc, &payer).await.unwrap();
@@ -88,10 +88,10 @@ async fn crank(
                     let slots_remaining = block.ends_at.saturating_sub(clock.slot);
                     let seconds_remaining = (slots_remaining as f64) * 0.4;
                     println!(
-                        "Time until payout: {:.1} seconds ({} slots) – {} wagers – {} SOL",
+                        "Time until payout: {:.1} seconds ({} slots) – {} commits – {} SOL",
                         seconds_remaining,
                         slots_remaining,
-                        block.total_wagers,
+                        block.total_commits,
                         lamports_to_sol(block.cumulative_sum)
                     );
                 }
@@ -107,7 +107,7 @@ async fn crank(
     }
 }
 
-async fn bet(
+async fn deploy(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     amount: u64,
@@ -149,10 +149,10 @@ async fn bet(
     )
     .unwrap();
 
-    // Build bet instruction
+    // Build deploy instruction
     let seed = generate_seed(&payer, &block);
     println!("Seed: {:?}", seed);
-    let ix = ore_api::sdk::bet(
+    let ix = ore_api::sdk::deploy(
         payer.pubkey(),
         spl_token::native_mint::ID,
         amount,
@@ -165,7 +165,7 @@ async fn bet(
 
     // Submit transaction
     submit_transaction(rpc, payer, &ixs).await?;
-    println!("Placed bet of {} lamports", amount);
+    println!("Deployed {} SOL", lamports_to_sol(amount));
 
     Ok(())
 }
@@ -191,7 +191,7 @@ async fn bury_ore_sol(
         vault_program: pubkey!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi"),
         token_program: spl_token::ID,
     };
-    let ix = bury(payer.pubkey(), swap);
+    let ix = bury(payer.pubkey(), swap, u64::MAX);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -201,9 +201,9 @@ async fn build_payout_ix(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<Instruction, anyhow::Error> {
     let block = get_block(rpc).await?;
-    let wagers = get_block_wagers(rpc).await?;
+    let commits = get_block_commits(rpc).await?;
 
-    // Return early if no wagers
+    // Return early if no commits
     if block.cumulative_sum == 0 || block.reward == 0 {
         return Ok(payout(
             payer.pubkey(),
@@ -224,23 +224,23 @@ async fn build_payout_ix(
     let w = u64::from_le_bytes(noise[24..32].try_into().unwrap());
     let roll = (x ^ y ^ z ^ w) % block.cumulative_sum;
 
-    // Find the winning wager
+    // Find the winning commit
     let mut winner = None;
-    for (pubkey, wager) in wagers {
-        if roll >= wager.cumulative_sum && roll < wager.cumulative_sum + wager.amount {
+    for (pubkey, commit) in commits {
+        if roll >= commit.cumulative_sum && roll < commit.cumulative_sum + commit.amount {
             println!("Roll: {}, Winner: {:?}", roll, pubkey);
-            winner = Some((pubkey, wager));
+            winner = Some((pubkey, commit));
             break;
         }
     }
 
     // Build payout instruction
-    let ix = if let Some((pubkey, wager)) = winner {
+    let ix = if let Some((pubkey, commit)) = winner {
         payout(
             payer.pubkey(),
             pubkey,
             spl_associated_token_account::get_associated_token_address(
-                &wager.authority,
+                &commit.authority,
                 &spl_token::native_mint::ID,
             ),
         )
@@ -251,15 +251,15 @@ async fn build_payout_ix(
     Ok(ix)
 }
 
-async fn close_all_wagers(
+async fn close_all_commits(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let block = get_block(rpc).await?;
-    let wagers = get_my_wagers(rpc, payer).await?;
+    let commits = get_my_commits(rpc, payer).await?;
     let mut ixs = vec![];
-    for (pubkey, wager) in wagers {
-        if wager.round != block.current_round {
+    for (pubkey, commit) in commits {
+        if commit.round != block.current_round {
             let ix = ore_api::sdk::close(payer.pubkey(), pubkey);
             ixs.push(ix);
         }
@@ -281,26 +281,26 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_block_wagers(rpc: &RpcClient) -> Result<Vec<(Pubkey, Wager)>, anyhow::Error> {
+async fn get_block_commits(rpc: &RpcClient) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
     let block = get_block(rpc).await?;
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
         56,
         &block.current_round.to_le_bytes(),
     ));
-    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter]).await?;
-    Ok(wagers)
+    let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
+    Ok(commits)
 }
 
-async fn get_my_wagers(
+async fn get_my_commits(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<Vec<(Pubkey, Wager)>, anyhow::Error> {
+) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
         16,
         &payer.pubkey().to_bytes().as_ref(),
     ));
-    let wagers = get_program_accounts::<Wager>(rpc, ore_api::ID, vec![filter]).await?;
-    Ok(wagers)
+    let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
+    Ok(commits)
 }
 
 fn generate_seed(payer: &solana_sdk::signer::keypair::Keypair, block: &Block) -> [u8; 32] {

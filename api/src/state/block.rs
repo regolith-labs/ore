@@ -5,7 +5,7 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Block {
-    /// The cumulative amount risked in the current round.
+    /// The cumulative amount deployed in the current round.
     pub cumulative_sum: u64,
 
     /// The current round.
@@ -14,7 +14,7 @@ pub struct Block {
     /// The slot at which the current round ends.
     pub ends_at: u64,
 
-    /// The mint used for wagers of the current round.
+    /// The mint used for commits of the current round.
     pub mint: Pubkey,
 
     /// The noise used for the current round for provably fair randomness.
@@ -29,8 +29,8 @@ pub struct Block {
     /// The time the current round started at.
     pub started_at: u64,
 
-    /// The number of wagers made in the current round.
-    pub total_wagers: u64,
+    /// The number of commits made in the current round.
+    pub total_commits: u64,
 }
 
 account!(OreAccount, Block);
