@@ -26,14 +26,23 @@ pub const COMMIT: &[u8] = b"commit";
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
 
+/// The seed of the market account PDA.
+pub const MARKET: &[u8] = b"market";
+
+/// The seed of the miner account PDA.
+pub const MINER: &[u8] = b"miner";
+
+/// The seed of the receipt account PDA.
+pub const RECEIPT: &[u8] = b"receipt";
+
+/// The seed of the stake account PDA.
+pub const STAKE: &[u8] = b"stake";
+
 /// The seed of the metadata account PDA.
 pub const METADATA: &[u8] = b"metadata";
 
 /// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
-
-/// The seed of proof account PDAs.
-pub const PROOF: &[u8] = b"proof";
 
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";

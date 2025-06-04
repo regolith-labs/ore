@@ -5,32 +5,23 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Block {
-    /// The cumulative amount deployed in the current round.
-    pub cumulative_sum: u64,
+    /// The best hash.
+    pub best_hash: [u8; 32],
 
-    /// The current round.
-    pub current_round: u64,
+    /// The miner who submitted the best hash.
+    pub best_miner: Pubkey,
 
-    /// The slot at which the current round ends.
-    pub ends_at: u64,
+    /// The block number.
+    pub id: u64,
 
-    /// The mint used for commits of the current round.
-    pub mint: Pubkey,
-
-    /// The noise used for the current round for provably fair randomness.
-    pub noise: [u8; 32],
-
-    /// Whether or not the current round has paid out.
-    pub paid: u64,
-
-    /// The amount of ORE to distribute to the winner.
+    /// The amount of ORE to payout to the miner who submitted the best hash.
     pub reward: u64,
 
-    /// The time the current round started at.
-    pub started_at: u64,
+    /// The hash of the starting slot.
+    pub slot_hash: [u8; 32],
 
-    /// The number of commits made in the current round.
-    pub total_commits: u64,
+    /// The starting slot of the block.
+    pub start_slot: u64,
 }
 
 account!(OreAccount, Block);

@@ -3,28 +3,25 @@ use steel::*;
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
-    // User
-    Claim = 0,
-    Bury = 1,
-    Close = 2,
-    Deploy = 3,
-    Payout = 4,
-    Reset = 5,
+    // Block
+    Open = 0,
+    Close = 1,
+    Mine = 2,
 
-    // Admin
-    Initialize = 100,
+    // Market
+    Buy = 3,
+    Sell = 4,
+
+    // Stake
+    Deposit = 5,
+    Withdraw = 6,
+    Free = 7,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Bury {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Claim {
-    pub amount: [u8; 8],
+pub struct Open {
+    pub id: [u8; 8],
 }
 
 #[repr(C)]
@@ -33,27 +30,35 @@ pub struct Close {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Deploy {
+pub struct Mine {
     pub amount: [u8; 8],
-    pub seed: [u8; 32],
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Reset {}
+pub struct Buy {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Payout {}
+pub struct Sell {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Initialize {}
+pub struct Deposit {}
 
-instruction!(OreInstruction, Claim);
-instruction!(OreInstruction, Bury);
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Withdraw {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Free {}
+
+instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
-instruction!(OreInstruction, Deploy);
-instruction!(OreInstruction, Payout);
-instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, Initialize);
+instruction!(OreInstruction, Mine);
+instruction!(OreInstruction, Buy);
+instruction!(OreInstruction, Sell);
+instruction!(OreInstruction, Deposit);
+instruction!(OreInstruction, Withdraw);
+instruction!(OreInstruction, Free);

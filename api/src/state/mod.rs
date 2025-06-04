@@ -1,38 +1,55 @@
 mod block;
-mod commit;
-mod proof;
+mod config;
+mod market;
+mod miner;
+mod receipt;
 mod treasury;
 
 pub use block::*;
-pub use commit::*;
-pub use proof::*;
+pub use config::*;
+pub use market::*;
+pub use miner::*;
+pub use receipt::*;
 pub use treasury::*;
 
-use steel::*;
-
 use crate::consts::*;
+
+use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccount {
-    Proof = 102,
-    Treasury = 103,
-    Block = 104,
-    Commit = 105,
+    Block = 100,
+    Config = 101,
+    Market = 102,
+    Miner = 103,
+    Receipt = 104,
+    Treasury = 105,
 }
 
-pub fn block_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[BLOCK], &crate::ID)
+pub fn block_pda(id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[BLOCK, &id.to_le_bytes()], &crate::ID)
 }
 
-pub fn proof_pda(authority: Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[PROOF, authority.as_ref()], &crate::id())
+pub fn config_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[CONFIG], &crate::ID)
+}
+
+pub fn market_pda(id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[MARKET, &id.to_le_bytes()], &crate::ID)
+}
+
+pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[MINER, &authority.to_bytes()], &crate::ID)
+}
+
+pub fn receipt_pda(authority: Pubkey, id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[RECEIPT, &authority.to_bytes(), &id.to_le_bytes()],
+        &crate::ID,
+    )
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TREASURY], &crate::ID)
-}
-
-pub fn commit_pda(round: u64, seed: [u8; 32]) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[COMMIT, &round.to_le_bytes(), &seed], &crate::ID)
 }

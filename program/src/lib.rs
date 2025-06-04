@@ -1,18 +1,20 @@
-mod bury;
-mod claim;
+mod buy;
 mod close;
-mod deploy;
-mod initialize;
-mod payout;
-mod reset;
+mod deposit;
+mod free;
+mod mine;
+mod open;
+mod sell;
+mod withdraw;
 
-use bury::*;
-use claim::*;
+use buy::*;
 use close::*;
-use deploy::*;
-use initialize::*;
-use payout::*;
-use reset::*;
+use deposit::*;
+use free::*;
+use mine::*;
+use open::*;
+use sell::*;
+use withdraw::*;
 
 use ore_api::instruction::*;
 use steel::*;
@@ -25,16 +27,10 @@ pub fn process_instruction(
     let (ix, data) = parse_instruction(&ore_api::ID, program_id, data)?;
 
     match ix {
-        // User
-        OreInstruction::Claim => process_claim(accounts, data)?,
-        OreInstruction::Close => process_close(accounts, data)?,
-        OreInstruction::Deploy => process_deploy(accounts, data)?,
-        OreInstruction::Payout => process_payout(accounts, data)?,
-        OreInstruction::Reset => process_reset(accounts, data)?,
+        OreInstruction::Open => process_open(accounts, data)?,
+        OreInstruction::Mine => process_mine(accounts, data)?,
 
-        // Admin
-        OreInstruction::Bury => process_bury(accounts, data)?,
-        OreInstruction::Initialize => process_initialize(accounts, data)?,
+        _ => panic!("Not implemented"),
     }
 
     Ok(())
