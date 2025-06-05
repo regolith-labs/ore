@@ -107,3 +107,12 @@ pub const TREASURY_TOKENS_ADDRESS: Pubkey = Pubkey::new_from_array(
     )
     .0,
 );
+
+/// Denominator for protocol fee calculations.
+pub const FEE_RATE_BPS: u64 = 100;
+
+/// Denominator for fee calculations.
+pub const DENOMINATOR_BPS: u64 = 10_000;
+
+/// Slot window size, used for sandwich resistance.
+pub const SLOT_WINDOW: u64 = 4;
