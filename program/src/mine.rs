@@ -2,7 +2,7 @@ use ore_api::prelude::*;
 use solana_program::keccak;
 use steel::*;
 
-/// Opens a new block for hashpower trading.
+/// Mine a block.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = Mine::try_from_bytes(data)?;

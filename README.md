@@ -1,6 +1,6 @@
 # ORE
 
-**Digital gold, accelerated.**
+**Mine blockspace. Trade hashpower. Win rewards.**
 
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.
@@ -9,18 +9,28 @@
 - [`Instruction`](api/src/instruction.rs) – Declared instructions and arguments.
 
 ## Instructions
-- [`Bury`](program/src/bury.rs) - Swap committed tokens into ORE and burns it.
-- [`Close`](program/src/close.rs) - Close a commit account.
-- [`Deploy`](program/src/deploy.rs) - Deploy capital to mine the current block.
-- [`Initialize`](program/src/initialize.rs) - Initialize the program.
-- [`Payout`](program/src/payout.rs) - Payout the block reward to the winning commit.
-- [`Reset`](program/src/reset.rs) - Start the next block.
+
+#### Mine
+- [`Open`](program/src/open.rs) - Opens a new block for mining.
+- [`Close`](program/src/close.rs) - Closes a block and pays out rewards.
+- [`Mine`](program/src/mine.rs) - Mines the current block by computing hashes.
+
+#### Stake
+- [`Deposit`](program/src/deposit.rs) - Deposits stake into a miner account.
+- [`Withdraw`](program/src/withdraw.rs) - Withdraws stake from a miner account.
+- [`Free`](program/src/free.rs) - Frees up miner capacity after block ends.
+
+#### Trade
+- [`Buy`](program/src/buy.rs) - Buys hash tokens from the market.
+- [`Sell`](program/src/sell.rs) - Sells hash tokens to the market.
 
 ## State
-- [`Block`](api/src/state/block.rs) - A singleton account tracking rounds of commits.
-- [`Proof`](api/src/state/proof.rs) - (Deprecated) An account which tracks a miner's current hash and current stake.
-- [`Treasury`](api/src/state/treasury.rs) – The mint authority on the ORE token.
-- [`Commit`](api/src/state/commit.rs) - Capital deployed by a miner in the current block.
+- [`Block`](api/src/state/block.rs) - A period of time for mining.
+- [`Config`](api/src/state/config.rs) - Global program configuration.
+- [`Market`](api/src/state/market.rs) - Hashpower market for a given block.
+- [`Miner`](api/src/state/miner.rs) - A user's mining and staking state.
+- [`Receipt`](api/src/state/receipt.rs) - Tracks a miner's deployed capital.
+- [`Treasury`](api/src/state/treasury.rs) - The mint authority on the ORE token.
 
 
 ## Tests

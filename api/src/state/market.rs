@@ -6,7 +6,10 @@ use super::OreAccount;
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Market {
     /// The id of the block this market is associated with.
-    pub block_id: u64,
+    pub id: u64,
+
+    /// Mint of the hash token.
+    pub mint: Pubkey,
 }
 
 // TODO Bonding curve stuff

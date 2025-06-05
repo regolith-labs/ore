@@ -27,10 +27,19 @@ pub fn process_instruction(
     let (ix, data) = parse_instruction(&ore_api::ID, program_id, data)?;
 
     match ix {
+        // Mine
         OreInstruction::Open => process_open(accounts, data)?,
+        OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
 
-        _ => panic!("Not implemented"),
+        // Stake
+        OreInstruction::Deposit => process_deposit(accounts, data)?,
+        OreInstruction::Withdraw => process_withdraw(accounts, data)?,
+        OreInstruction::Free => process_free(accounts, data)?,
+
+        // Trade
+        OreInstruction::Buy => process_buy(accounts, data)?,
+        OreInstruction::Sell => process_sell(accounts, data)?,
     }
 
     Ok(())
