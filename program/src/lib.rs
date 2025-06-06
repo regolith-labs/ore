@@ -1,19 +1,17 @@
-mod buy;
 mod close;
 mod deposit;
 mod free;
 mod mine;
 mod open;
-mod sell;
+mod swap;
 mod withdraw;
 
-use buy::*;
 use close::*;
 use deposit::*;
 use free::*;
 use mine::*;
 use open::*;
-use sell::*;
+use swap::*;
 use withdraw::*;
 
 use ore_api::instruction::*;
@@ -35,11 +33,10 @@ pub fn process_instruction(
         // Stake
         OreInstruction::Deposit => process_deposit(accounts, data)?,
         OreInstruction::Withdraw => process_withdraw(accounts, data)?,
-        OreInstruction::Free => process_free(accounts, data)?,
 
         // Trade
-        OreInstruction::Buy => process_buy(accounts, data)?,
-        OreInstruction::Sell => process_sell(accounts, data)?,
+        OreInstruction::Free => process_free(accounts, data)?,
+        OreInstruction::Swap => process_swap(accounts, data)?,
     }
 
     Ok(())

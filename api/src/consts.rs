@@ -116,3 +116,6 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 
 /// Slot window size, used for sandwich resistance.
 pub const SLOT_WINDOW: u64 = 4;
+
+/// Amount of hash tokens to mint to market.
+pub const HASH_TOKEN_SUPPLY: u64 = 10_000_000;

@@ -11,11 +11,10 @@ pub enum OreInstruction {
     // Stake
     Deposit = 3,
     Withdraw = 4,
-    Free = 5,
 
     // Trade
-    Buy = 6,
-    Sell = 7,
+    Free = 5,
+    Swap = 6,
 }
 
 #[repr(C)]
@@ -52,11 +51,11 @@ pub struct Free {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Buy {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Sell {}
+pub struct Swap {
+    pub amount: [u8; 8],
+    pub direction: u8,
+    pub precision: u8,
+}
 
 instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
@@ -64,5 +63,4 @@ instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, Free);
-instruction!(OreInstruction, Buy);
-instruction!(OreInstruction, Sell);
+instruction!(OreInstruction, Swap);
