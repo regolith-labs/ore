@@ -19,7 +19,7 @@
 - [`Block`](api/src/state/block.rs) - A period of time for mining.
 - [`Config`](api/src/state/config.rs) - Global program configuration.
 - [`Market`](api/src/state/market.rs) - Hashpower market for a given block.
-- [`Miner`](api/src/state/miner.rs) - A user's mining and staking state.
+- [`Miner`](api/src/state/miner.rs) - Tracks a user's mining state.
 - [`Treasury`](api/src/state/treasury.rs) - The mint authority on the ORE token.
 
 
