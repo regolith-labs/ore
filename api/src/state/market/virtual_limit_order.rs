@@ -1,6 +1,6 @@
 use steel::Clock;
 
-use crate::consts::SLOT_WINDOW;
+use crate::{consts::SLOT_WINDOW, error::OreError};
 
 use super::{Market, SwapDirection, TokenType, VirtualLimitOrder};
 
@@ -41,8 +41,8 @@ impl Market {
     /// ```
     pub fn get_virtual_limit_order(&self, direction: SwapDirection) -> VirtualLimitOrder {
         // Upcast data.
-        let base_balance = self.base.balance as u128;
-        let quote_balance = self.quote.balance as u128;
+        let base_balance = self.base.reserves();
+        let quote_balance = self.quote.reserves();
         let base_snapshot = self.snapshot.base_balance as u128;
         let quote_snapshot = self.snapshot.quote_balance as u128;
 
@@ -126,21 +126,33 @@ impl Market {
         let snapshot_slot = (slot / SLOT_WINDOW) * SLOT_WINDOW;
         if snapshot_slot != self.snapshot.slot {
             self.snapshot.slot = snapshot_slot;
-            self.snapshot.base_balance = self.base.balance;
-            self.snapshot.quote_balance = self.quote.balance;
+            self.snapshot.base_balance = self.base.reserves() as u64;
+            self.snapshot.quote_balance = self.quote.reserves() as u64;
         }
     }
 
-    pub(crate) fn update_reserves(&mut self, base: u128, quote: u128, direction: SwapDirection) {
+    pub(crate) fn update_reserves(
+        &mut self,
+        base: u128,
+        quote: u128,
+        direction: SwapDirection,
+    ) -> Result<(), OreError> {
         match direction {
             SwapDirection::Buy => {
+                if base > self.base.balance as u128 {
+                    return Err(OreError::InsufficientVaultReserves.into());
+                }
                 self.base.balance -= base as u64;
                 self.quote.balance += quote as u64;
             }
             SwapDirection::Sell => {
+                if quote > self.quote.balance as u128 {
+                    return Err(OreError::InsufficientVaultReserves.into());
+                }
                 self.base.balance += base as u64;
                 self.quote.balance -= quote as u64;
             }
         }
+        Ok(())
     }
 }

@@ -23,7 +23,7 @@ impl Market {
                 // Fill entire swap via curve.
                 let base_via_curve = base_in;
                 let mut quote_via_curve = self.get_quote_out(base_via_curve);
-                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell);
+                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell)?;
                 let swap_fee = self.fee(quote_via_curve as u64);
                 quote_fee += swap_fee;
                 quote_via_curve -= swap_fee as u128;
@@ -37,7 +37,7 @@ impl Market {
                     TokenType::Base,
                 );
                 quote_fee += self.fee(quote_via_bid as u64);
-                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell);
+                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell)?;
                 quote_via_bid -= quote_fee as u128;
                 (base_via_bid, quote_via_bid, 0, 0)
             } else {
@@ -45,13 +45,13 @@ impl Market {
                 let base_via_bid = bid_size_in_base;
                 let mut quote_via_bid = bid_size_in_quote;
                 quote_fee += self.fee(quote_via_bid as u64);
-                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell);
+                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell)?;
                 quote_via_bid -= quote_fee as u128;
 
                 // Fill remaining swap through pool.
                 let base_via_curve = base_in - base_via_bid;
                 let mut quote_via_curve = self.get_quote_out(base_via_curve);
-                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell);
+                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell)?;
                 let swap_fee = self.fee(quote_via_curve as u64);
                 quote_fee += swap_fee;
                 quote_via_curve -= swap_fee as u128;

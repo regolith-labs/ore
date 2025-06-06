@@ -48,8 +48,17 @@ pub struct TokenParams {
     /// Mint of the token.
     pub mint: Pubkey,
 
-    /// Amount of token held in liquidity.
+    /// Amount of tokens held in liquidity.
     pub balance: u64,
+
+    /// Amount of virtual tokens held in liquidity.
+    pub balance_virtual: u64,
+}
+
+impl TokenParams {
+    pub fn reserves(&self) -> u128 {
+        (self.balance + self.balance_virtual) as u128
+    }
 }
 
 #[repr(C)]
@@ -192,6 +201,8 @@ mod tests {
     #[test]
     fn test_fills() {
         let mut market = new_market();
+        let mut clock = Clock::default();
+        clock.slot = 10;
 
         // Small buy
         // Assert swap is filled via curve.
@@ -201,7 +212,7 @@ mod tests {
                 100_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_1.base_via_curve > 0 && swap_1.quote_via_curve > 0);
@@ -215,7 +226,7 @@ mod tests {
                 1_000_000,
                 SwapDirection::Sell,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_2.base_via_curve > 0 && swap_2.quote_via_curve > 0);
@@ -229,7 +240,7 @@ mod tests {
                 1_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_3.base_via_curve == 0 && swap_3.quote_via_curve == 0);
@@ -243,7 +254,7 @@ mod tests {
                 1_000_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_4.base_via_curve > 0 && swap_4.quote_via_curve > 0);
@@ -261,13 +272,16 @@ mod tests {
             slot: 0,
         };
 
+        let mut clock = Clock::default();
+        clock.slot = 10;
+
         // Open sandwich
         let swap_1 = market
             .swap(
                 100_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         let amount_base_1 = swap_1.base_to_transfer;
@@ -280,7 +294,7 @@ mod tests {
                 100_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_2.base_via_curve > 0 && swap_2.quote_via_curve > 0);
@@ -292,7 +306,7 @@ mod tests {
                 amount_base_1,
                 SwapDirection::Sell,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_3.base_via_curve > 0 && swap_3.quote_via_curve > 0);
@@ -307,13 +321,16 @@ mod tests {
         let mut market = new_market();
         market.fee.rate = 0;
 
+        let mut clock = Clock::default();
+        clock.slot = 10;
+
         // Open sandwich
         let swap_1 = market
             .swap(
                 100_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         let amount_base_1 = swap_1.base_to_transfer;
@@ -326,7 +343,7 @@ mod tests {
                 100_000,
                 SwapDirection::Buy,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_2.base_via_curve > 0 && swap_2.quote_via_curve > 0);
@@ -338,7 +355,7 @@ mod tests {
                 amount_base_1,
                 SwapDirection::Sell,
                 SwapPrecision::ExactIn,
-                Clock::default(),
+                clock.clone(),
             )
             .unwrap();
         assert!(swap_3.base_via_curve == 0 && swap_3.quote_via_curve == 0);
@@ -348,15 +365,78 @@ mod tests {
         assert!(swap_3.quote_to_transfer <= swap_1.quote_to_transfer);
     }
 
+    #[test]
+    fn test_virtual_liquidity() {
+        let mut market = new_market();
+        market.fee.rate = 0;
+        market.quote.balance_virtual = 1_000_000_000;
+        market.quote.balance = 0;
+
+        let mut clock = Clock::default();
+        clock.slot = 10;
+
+        // Sell
+        // Assert swap fails without real liquidity to satisfy order.
+        let swap = market.swap(
+            100_000,
+            SwapDirection::Sell,
+            SwapPrecision::ExactIn,
+            clock.clone(),
+        );
+        assert!(swap.is_err());
+
+        // Buy
+        // Assert buy succeeds adding liquidity.
+        let swap = market
+            .swap(
+                100_000,
+                SwapDirection::Buy,
+                SwapPrecision::ExactIn,
+                clock.clone(),
+            )
+            .unwrap();
+        assert!(swap.base_via_curve > 0 && swap.quote_via_curve > 0);
+        assert!(swap.base_via_order == 0 && swap.quote_via_order == 0);
+        assert_eq!(market.quote.balance, 100_000);
+        assert_eq!(market.quote.balance_virtual, 1_000_000_000);
+
+        // Sell
+        // Assert sell fails if there is insufficient liquidity.
+        let swap = market.swap(
+            100_001,
+            SwapDirection::Sell,
+            SwapPrecision::ExactOut,
+            clock.clone(),
+        );
+        assert!(swap.is_err());
+
+        // Sell
+        // Assert sell succeeds removing liquidity.
+        let swap = market
+            .swap(
+                100_000,
+                SwapDirection::Sell,
+                SwapPrecision::ExactOut,
+                clock.clone(),
+            )
+            .unwrap();
+        assert!(swap.base_via_curve > 0 && swap.quote_via_curve > 0);
+        assert!(swap.base_via_order > 0 && swap.quote_via_order > 0);
+        assert_eq!(market.quote.balance, 0);
+        assert_eq!(market.quote.balance_virtual, 1_000_000_000);
+    }
+
     fn new_market() -> Market {
         Market {
             base: TokenParams {
                 mint: Pubkey::new_unique(),
                 balance: 1_000_000_000,
+                balance_virtual: 0,
             },
             quote: TokenParams {
                 mint: Pubkey::new_unique(),
                 balance: 1_000_000_000,
+                balance_virtual: 0,
             },
             fee: FeeParams {
                 cumulative: 0,
@@ -365,8 +445,8 @@ mod tests {
             },
             snapshot: Snapshot {
                 enabled: 1,
-                base_balance: 1_000_000_000,
-                quote_balance: 1_000_000_000,
+                base_balance: 0,
+                quote_balance: 0,
                 slot: 0,
             },
             id: 0,

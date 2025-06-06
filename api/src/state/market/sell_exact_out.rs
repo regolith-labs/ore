@@ -29,7 +29,7 @@ impl Market {
                 // Fill entire swap via curve.
                 let quote_via_curve = quote_out_pre_fee;
                 let base_via_curve = self.get_base_in(quote_via_curve)?;
-                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell);
+                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell)?;
                 (0, 0, base_via_curve, quote_via_curve)
             } else if bid_size_in_quote >= quote_out {
                 // Fill entire swap through virtual limit order.
@@ -39,18 +39,18 @@ impl Market {
                     SwapDirection::Sell,
                     TokenType::Quote,
                 );
-                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell);
+                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell)?;
                 (base_via_bid, quote_via_bid, 0, 0)
             } else {
                 // Partially fill swap through virtual limit order.
                 let base_via_bid = bid_size_in_base;
                 let quote_via_bid = bid_size_in_quote;
-                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell);
+                self.update_reserves(base_via_bid, quote_via_bid, SwapDirection::Sell)?;
 
                 // Fill remaining swap amount through pool.
                 let quote_via_curve = quote_out_pre_fee - quote_via_bid;
                 let base_via_curve = self.get_base_in(quote_via_curve)?;
-                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell);
+                self.update_reserves(base_via_curve, quote_via_curve, SwapDirection::Sell)?;
                 (base_via_bid, quote_via_bid, base_via_curve, quote_via_curve)
             };
 

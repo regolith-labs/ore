@@ -58,6 +58,27 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[MARKET, &id.to_le_bytes()],
     )?;
     let market = market_info.as_account_mut::<Market>(&ore_api::ID)?;
+    market.base = TokenParams {
+        mint: Pubkey::default(),
+        balance: 0,
+        balance_virtual: 0,
+    };
+    market.quote = TokenParams {
+        mint: Pubkey::default(),
+        balance: 0,
+        balance_virtual: 0,
+    };
+    market.fee = FeeParams {
+        rate: FEE_RATE_BPS,
+        uncollected: 0,
+        cumulative: 0,
+    };
+    market.snapshot = Snapshot {
+        enabled: 1,
+        base_balance: 0,
+        quote_balance: 0,
+        slot: 0,
+    };
     market.id = id;
 
     // Initialize hash token mint.
