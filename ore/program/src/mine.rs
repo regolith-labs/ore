@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::keccak;
+use solana_program::{keccak, slot_hashes::SlotHashes};
 use steel::*;
 
 /// Mine a block.
@@ -10,7 +10,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_info, sender_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, miner_info, mint_info, sender_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -30,6 +30,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert(|t| t.amount() >= amount)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Load miner account.
     let miner = if miner_info.data_is_empty() {
@@ -53,6 +54,24 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert_mut(|m| m.authority == *signer_info.key)?
     };
 
+    // Update miner stats.
+    miner.total_hashes += amount;
+
+    // Burn hash tokens.
+    burn(sender_info, mint_info, signer_info, token_program, amount)?;
+
+    // Set block slot hash.
+    if block.slot_hash == [0; 32] {
+        let slot_hashes =
+            bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
+        let Some(slot_hash) = slot_hashes.get(&block.start_slot) else {
+            // If mine is not called within 2.5 minutes of the block starting,
+            // then the slot hash will be unavailable and secure hashes cannot be generated.
+            return Ok(());
+        };
+        block.slot_hash = slot_hash.to_bytes();
+    }
+
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
         miner.block_id = block.id;
@@ -68,12 +87,6 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             block.best_miner = miner.authority;
         }
     }
-
-    // Update miner stats.
-    miner.total_hashes += amount;
-
-    // Burn hash tokens.
-    burn(sender_info, mint_info, signer_info, token_program, amount)?;
 
     Ok(())
 }
