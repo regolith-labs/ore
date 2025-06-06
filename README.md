@@ -10,17 +10,17 @@
 
 ## Instructions
 
-- [`Open`](program/src/open.rs) - Opens a new block for mining.
-- [`Close`](program/src/close.rs) - Closes a block and pays out rewards.
-- [`Mine`](program/src/mine.rs) - Mines the current block by computing hashes.
+- [`Open`](program/src/open.rs) - Open a new block.
+- [`Close`](program/src/close.rs) - Close a block and pay out the reward.
+- [`Mine`](program/src/mine.rs) - Mine the current block.
 - [`Swap`](program/src/swap.rs) - Trade in a hashpower market.
 
 ## State
 - [`Block`](api/src/state/block.rs) - A period of time for mining.
 - [`Config`](api/src/state/config.rs) - Global program configuration.
 - [`Market`](api/src/state/market.rs) - Hashpower market for a given block.
-- [`Miner`](api/src/state/miner.rs) - Tracks a user's mining state.
-- [`Treasury`](api/src/state/treasury.rs) - The mint authority on the ORE token.
+- [`Miner`](api/src/state/miner.rs) - Tracks a miner state and history.
+- [`Treasury`](api/src/state/treasury.rs) - The mint authority of the ORE token.
 
 
 ## Tests
