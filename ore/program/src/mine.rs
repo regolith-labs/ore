@@ -1,5 +1,6 @@
 use ore_api::prelude::*;
-use solana_program::{keccak, slot_hashes::SlotHashes};
+use solana_nostd_keccak::hash;
+use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Mine a block.
@@ -75,13 +76,15 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
         miner.block_id = block.id;
-        miner.hash =
-            keccak::hashv(&[block.slot_hash.as_ref(), miner.authority.as_ref()]).to_bytes();
+        let mut args = [0u8; 64];
+        args[..32].copy_from_slice(&block.slot_hash);
+        args[32..].copy_from_slice(&miner.authority.to_bytes());
+        miner.hash = hash(&args);
     }
 
     // Mine.
     for _ in 0..amount {
-        miner.hash = keccak::hashv(&[miner.hash.as_ref()]).to_bytes();
+        miner.hash = hash(miner.hash.as_ref());
         if miner.hash < block.best_hash {
             block.best_hash = miner.hash;
             block.best_miner = miner.authority;
