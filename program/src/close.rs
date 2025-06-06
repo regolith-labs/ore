@@ -45,7 +45,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         mint_base_info,
         market_info,
         token_program,
-        market_hash.amount(),
+        vault_base.amount(),
         &[MARKET, &market.id.to_le_bytes()],
     )?;
 

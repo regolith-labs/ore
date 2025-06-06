@@ -24,11 +24,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?
         .assert_mut_err(
-            |m| m.base.reserves() > 0,
+            |m| m.base.liquidity() > 0,
             OreError::InsufficientLiquidity.into(),
         )?
         .assert_mut_err(
-            |m| m.quote.reserves() > 0,
+            |m| m.quote.liquidity() > 0,
             OreError::InsufficientLiquidity.into(),
         )?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;

@@ -1111,18 +1111,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "meteora-pools-sdk"
-version = "0.1.1"
-source = "git+https://github.com/regolith-labs/meteora-pools-sdk?branch=master#6f5a7eab4a460435591765a7d278f117a946b3bd"
-dependencies = [
- "borsh 0.10.4",
- "num-derive 0.4.2",
- "num-traits",
- "solana-program",
- "thiserror 2.0.12",
-]
-
-[[package]]
 name = "mpl-token-metadata"
 version = "5.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1282,7 +1270,6 @@ version = "3.7.0"
 dependencies = [
  "bytemuck",
  "const-crypto",
- "meteora-pools-sdk",
  "mpl-token-metadata",
  "num_enum",
  "solana-program",
@@ -1317,7 +1304,6 @@ name = "ore-program"
 version = "3.7.0"
 dependencies = [
  "bincode",
- "meteora-pools-sdk",
  "mpl-token-metadata",
  "ore-api 3.7.0",
  "ore-boost-api",
