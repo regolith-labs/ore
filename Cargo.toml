@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["api", "program"]
+members = ["ore/*", "ore-delegate/*"]
 
 [workspace.package]
 version = "3.7.0"
@@ -21,7 +21,8 @@ bytemuck_derive = "1.7.0"
 const-crypto = "0.1.0"
 mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
-ore-api = { path = "api" }
+ore-api = { path = "./ore/api" }
+ore-delegate-api = { path = "./ore-delegate/api" }
 ore-boost-api = "4.0.0-alpha"
 solana-account-decoder = "^2.1"
 solana-program = "^2.1"
