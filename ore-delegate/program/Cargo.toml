@@ -20,6 +20,7 @@ default = []
 [dependencies]
 bincode.workspace = true
 mpl-token-metadata.workspace = true
+ore-api.workspace = true
 ore-delegate-api.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true

@@ -1320,6 +1320,7 @@ version = "3.7.0"
 dependencies = [
  "bincode",
  "mpl-token-metadata",
+ "ore-api 3.7.0",
  "ore-delegate-api",
  "rand 0.8.5",
  "solana-program",

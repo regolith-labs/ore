@@ -1,69 +1,77 @@
+use ore_api::prelude::*;
 use ore_delegate_api::prelude::*;
 use steel::*;
 
 /// Deposits hash tokens for cranking.
-pub fn process_deposit(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    // Load data.
+    let args = Deposit::try_from_bytes(data)?;
+    let amount = u64::from_le_bytes(args.amount);
+
     // Load accounts.
-    // let clock = Clock::get()?;
-    // let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
-    //     accounts
-    // else {
-    //     return Err(ProgramError::NotEnoughAccountKeys);
-    // };
-    // signer_info.is_signer()?;
-    // let block = block_info
-    //     .as_account_mut::<Block>(&ore_api::ID)?
-    //     .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
-    // let market = market_info
-    //     .as_account_mut::<Market>(&ore_api::ID)?
-    //     .assert_mut(|m| m.id == block.id)?;
-    // mint_base_info.has_address(&market.base.mint)?.as_mint()?;
-    // mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
-    // let vault_base =
-    //     vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
-    // let vault_quote =
-    //     vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
-    // system_program.is_program(&system_program::ID)?;
-    // token_program.is_program(&spl_token::ID)?;
+    let [signer_info, block_info, delegate_info, escrow_info, market_info, mint_info, sender_info, system_program, token_program, associated_token_program] =
+        accounts
+    else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    signer_info.is_signer()?;
+    let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
+    let market = market_info
+        .as_account_mut::<Market>(&ore_api::ID)?
+        .assert_mut(|m| m.id == block.id)?;
+    mint_info.has_address(&market.base.mint)?.as_mint()?;
+    sender_info
+        .is_writable()?
+        .as_associated_token_account(signer_info.key, &market.base.mint)?
+        .assert_mut(|t| t.amount() >= amount)?;
+    system_program.is_program(&system_program::ID)?;
+    token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
 
-    // // Payout block reward.
-    // if block.best_miner != Pubkey::default() {
-    //     recipient_info.as_associated_token_account(&block.best_miner, &MINT_ADDRESS)?;
-    //     mint_to_signed(
-    //         mint_quote_info,
-    //         recipient_info,
-    //         treasury_info,
-    //         token_program,
-    //         block.reward,
-    //         &[TREASURY],
-    //     )?;
-    // }
+    // Initialize delegate.
+    let delegate = if delegate_info.data_is_empty() {
+        create_program_account::<Delegate>(
+            delegate_info,
+            system_program,
+            signer_info,
+            &ore_delegate_api::ID,
+            &[
+                DELEGATE,
+                &signer_info.key.to_bytes(),
+                &block.id.to_le_bytes(),
+            ],
+        )?;
+        let delegate = delegate_info.as_account_mut::<Delegate>(&ore_delegate_api::ID)?;
+        delegate.authority = *signer_info.key;
+        delegate.block_id = block.id;
+        delegate.fee = 0; // TODO: Set fee.
+        delegate
+    } else {
+        delegate_info.as_account_mut::<Delegate>(&ore_delegate_api::ID)?
+    };
 
-    // // Burn base liquidity.
-    // burn_signed(
-    //     vault_base_info,
-    //     mint_base_info,
-    //     market_info,
-    //     token_program,
-    //     vault_base.amount(),
-    //     &[MARKET, &market.id.to_le_bytes()],
-    // )?;
+    // Initialize escrow.
+    if escrow_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            delegate_info,
+            escrow_info,
+            mint_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        escrow_info
+            .is_writable()?
+            .as_associated_token_account(delegate_info.key, &mint_info.key)?;
+    }
 
-    // // Burn quote liquidity.
-    // burn_signed(
-    //     vault_quote_info,
-    //     mint_quote_info,
-    //     market_info,
-    //     token_program,
-    //     vault_quote.amount(),
-    //     &[MARKET, &market.id.to_le_bytes()],
-    // )?;
+    // Update delegate.
+    delegate.balance += amount;
 
-    // // Close block.
-    // block_info.close(signer_info)?;
-
-    // // Close market.
-    // market_info.close(signer_info)?;
+    // Transfer tokens.
+    transfer(signer_info, sender_info, escrow_info, token_program, amount)?;
 
     Ok(())
 }
