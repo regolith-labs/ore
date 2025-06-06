@@ -39,7 +39,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         )?;
     }
 
-    // Burn hash tokens.
+    // Burn hash token liquidity.
     burn_signed(
         market_hash_info,
         mint_hash_info,
