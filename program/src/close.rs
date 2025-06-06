@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, market_ore_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
