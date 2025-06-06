@@ -49,7 +49,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     token_program.is_program(&spl_token::ID)?;
 
     // Update market state.
-    let swap_result = market.swap(amount, direction, precision, clock)?;
+    let mut swap_result = market.swap(amount, direction, precision, clock)?;
+    swap_result.block_id = block.id;
     swap_result.log_return();
 
     // Get transfer amounts and accounts.

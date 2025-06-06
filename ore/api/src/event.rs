@@ -5,6 +5,9 @@ use crate::state::SwapDirection;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct SwapEvent {
+    /// The block id.
+    pub block_id: u64,
+
     /// Swap direction.
     pub direction: u64,
 

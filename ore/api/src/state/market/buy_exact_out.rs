@@ -57,6 +57,7 @@ impl Market {
 
         // Produce swap result.
         let swap_event = SwapEvent {
+            block_id: 0,
             direction: SwapDirection::Buy as u64,
             base_to_transfer: base_out as u64,
             quote_to_transfer: quote_in as u64,
