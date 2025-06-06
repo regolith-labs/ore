@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -31,9 +31,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             |m| m.quote.reserves() > 0,
             OreError::InsufficientLiquidity.into(),
         )?;
-    let miner = miner_info
-        .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
     tokens_base_info
@@ -74,17 +71,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             tokens_quote_info,
         ),
     };
-
-    // Update miner state.
-    match direction {
-        SwapDirection::Buy => {
-            miner.deployed += in_amount;
-            assert!(miner.deployed <= miner.stake);
-        }
-        SwapDirection::Sell => {
-            miner.deployed = miner.deployed.saturating_sub(out_amount);
-        }
-    }
 
     // Transfer tokens.
     transfer(signer_info, in_from, in_to, token_program, in_amount)?;

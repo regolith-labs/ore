@@ -10,7 +10,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, system_program, token_program] = accounts else {
+    let [signer_info, block_info, market_info, miner_info, mint_info, sender_info, system_program, token_program] =
+        accounts
+    else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
@@ -18,14 +20,38 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot)?
         .assert_mut(|b| clock.slot < b.start_slot + 1500)?;
-    let miner = miner_info
-        .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut(|m| m.authority == *signer_info.key)?;
+    let market = market_info
+        .as_account::<Market>(&ore_api::ID)?
+        .assert(|m| m.id == block.id)?;
+    mint_info.has_address(&market.base.mint)?.as_mint()?;
+    sender_info
+        .is_writable()?
+        .as_associated_token_account(signer_info.key, &mint_info.key)?
+        .assert(|t| t.amount() >= amount)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 
-    // TODO Open miner account if it doesn't exist.
-    // TODO Burn hash tokens
+    // Load miner account.
+    let miner = if miner_info.data_is_empty() {
+        create_program_account::<Miner>(
+            miner_info,
+            system_program,
+            signer_info,
+            &ore_api::ID,
+            &[MINER, &signer_info.key.to_bytes()],
+        )?;
+        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        miner.authority = *signer_info.key;
+        miner.block_id = 0;
+        miner.hash = [0; 32];
+        miner.total_hashes = 0;
+        miner.total_rewards = 0;
+        miner
+    } else {
+        miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == *signer_info.key)?
+    };
 
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
@@ -34,6 +60,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             keccak::hashv(&[block.slot_hash.as_ref(), miner.authority.as_ref()]).to_bytes();
     }
 
+    // Mine.
     for _ in 0..amount {
         miner.hash = keccak::hashv(&[miner.hash.as_ref()]).to_bytes();
         if miner.hash < block.best_hash {
@@ -44,6 +71,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Update miner stats.
     miner.total_hashes += amount;
+
+    // Burn hash tokens.
+    burn(sender_info, mint_info, signer_info, token_program, amount)?;
 
     Ok(())
 }

@@ -11,14 +11,8 @@ pub struct Miner {
     /// The ID of the last block this miner mined in.
     pub block_id: u64,
 
-    /// The amount of ORE this miner has deployed into hashpower markets.
-    pub deployed: u64,
-
     /// The hash of the last block this miner mined in.
     pub hash: [u8; 32],
-
-    /// The amount of ORE this miner has staked.
-    pub stake: u64,
 
     /// The total number of hashes this miner has submitted.
     pub total_hashes: u64,
