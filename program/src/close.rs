@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, market_hash_info, market_ore_info, mint_hash_info, mint_ore_info, recipient_info, treasury_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, market_ore_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -17,12 +17,12 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?;
-    let market_hash =
-        market_hash_info.as_associated_token_account(market_info.key, mint_hash_info.key)?;
-    let market_ore =
-        market_ore_info.as_associated_token_account(market_info.key, mint_ore_info.key)?;
-    mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
-    mint_ore_info.has_address(&market.quote.mint)?.as_mint()?;
+    mint_base_info.has_address(&market.base.mint)?.as_mint()?;
+    mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
+    let vault_base =
+        vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
+    let vault_quote =
+        vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 
@@ -30,7 +30,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if block.best_miner != Pubkey::default() {
         recipient_info.as_associated_token_account(&block.best_miner, &MINT_ADDRESS)?;
         mint_to_signed(
-            mint_ore_info,
+            mint_quote_info,
             recipient_info,
             treasury_info,
             token_program,
@@ -39,23 +39,23 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         )?;
     }
 
-    // Burn hash token liquidity.
+    // Burn base liquidity.
     burn_signed(
-        market_hash_info,
-        mint_hash_info,
+        vault_base_info,
+        mint_base_info,
         market_info,
         token_program,
         market_hash.amount(),
         &[MARKET, &market.id.to_le_bytes()],
     )?;
 
-    // Burn ORE liquidity.
+    // Burn quote liquidity.
     burn_signed(
-        market_ore_info,
-        mint_ore_info,
+        vault_quote_info,
+        mint_quote_info,
         market_info,
         token_program,
-        market_ore.amount(),
+        vault_quote.amount(),
         &[MARKET, &market.id.to_le_bytes()],
     )?;
 

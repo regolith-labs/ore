@@ -41,8 +41,8 @@ impl Market {
     /// ```
     pub fn get_virtual_limit_order(&self, direction: SwapDirection) -> VirtualLimitOrder {
         // Upcast data.
-        let base_balance = self.base.reserves();
-        let quote_balance = self.quote.reserves();
+        let base_balance = self.base.liquidity();
+        let quote_balance = self.quote.liquidity();
         let base_snapshot = self.snapshot.base_balance as u128;
         let quote_snapshot = self.snapshot.quote_balance as u128;
 
@@ -126,8 +126,8 @@ impl Market {
         let snapshot_slot = (slot / SLOT_WINDOW) * SLOT_WINDOW;
         if snapshot_slot != self.snapshot.slot {
             self.snapshot.slot = snapshot_slot;
-            self.snapshot.base_balance = self.base.reserves() as u64;
-            self.snapshot.quote_balance = self.quote.reserves() as u64;
+            self.snapshot.base_balance = self.base.liquidity() as u64;
+            self.snapshot.quote_balance = self.quote.liquidity() as u64;
         }
     }
 

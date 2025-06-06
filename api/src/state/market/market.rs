@@ -56,7 +56,7 @@ pub struct TokenParams {
 }
 
 impl TokenParams {
-    pub fn reserves(&self) -> u128 {
+    pub fn liquidity(&self) -> u128 {
         (self.balance + self.balance_virtual) as u128
     }
 }
