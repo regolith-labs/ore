@@ -21,8 +21,8 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         market_hash_info.as_associated_token_account(market_info.key, mint_hash_info.key)?;
     let market_ore =
         market_ore_info.as_associated_token_account(market_info.key, mint_ore_info.key)?;
-    mint_hash_info.has_address(&market.base.mint)?.as_mint();
-    mint_ore_info.has_address(&market.quote.mint)?.as_mint();
+    mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
+    mint_ore_info.has_address(&market.quote.mint)?.as_mint()?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 

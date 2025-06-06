@@ -2,14 +2,12 @@ mod block;
 mod config;
 mod market;
 mod miner;
-mod receipt;
 mod treasury;
 
 pub use block::*;
 pub use config::*;
 pub use market::*;
 pub use miner::*;
-pub use receipt::*;
 pub use treasury::*;
 
 use crate::consts::*;
@@ -23,8 +21,7 @@ pub enum OreAccount {
     Config = 101,
     Market = 102,
     Miner = 103,
-    Receipt = 104,
-    Treasury = 105,
+    Treasury = 104,
 }
 
 pub fn block_pda(id: u64) -> (Pubkey, u8) {
@@ -41,13 +38,6 @@ pub fn market_pda(id: u64) -> (Pubkey, u8) {
 
 pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[MINER, &authority.to_bytes()], &crate::ID)
-}
-
-pub fn receipt_pda(authority: Pubkey, id: u64) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[RECEIPT, &authority.to_bytes(), &id.to_le_bytes()],
-        &crate::ID,
-    )
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {

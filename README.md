@@ -10,26 +10,16 @@
 
 ## Instructions
 
-#### Mine
 - [`Open`](program/src/open.rs) - Opens a new block for mining.
 - [`Close`](program/src/close.rs) - Closes a block and pays out rewards.
 - [`Mine`](program/src/mine.rs) - Mines the current block by computing hashes.
-
-#### Stake
-- [`Deposit`](program/src/deposit.rs) - Deposits stake into a miner account.
-- [`Withdraw`](program/src/withdraw.rs) - Withdraws stake from a miner account.
-- [`Free`](program/src/free.rs) - Frees up miner capacity after block ends.
-
-#### Trade
-- [`Buy`](program/src/buy.rs) - Buys hash tokens from the market.
-- [`Sell`](program/src/sell.rs) - Sells hash tokens to the market.
+- [`Swap`](program/src/swap.rs) - Trade in a hashpower market.
 
 ## State
 - [`Block`](api/src/state/block.rs) - A period of time for mining.
 - [`Config`](api/src/state/config.rs) - Global program configuration.
 - [`Market`](api/src/state/market.rs) - Hashpower market for a given block.
 - [`Miner`](api/src/state/miner.rs) - A user's mining and staking state.
-- [`Receipt`](api/src/state/receipt.rs) - Tracks a miner's deployed capital.
 - [`Treasury`](api/src/state/treasury.rs) - The mint authority on the ORE token.
 
 

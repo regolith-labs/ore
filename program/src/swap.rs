@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_base_info, mint_quote_info, receipt_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, miner_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -50,8 +50,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
-
-    // TODO Buy hash tokens
 
     // Update market state.
     let swap_result = market.swap(amount, direction, precision, clock)?;
