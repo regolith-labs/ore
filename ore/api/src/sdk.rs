@@ -119,3 +119,11 @@ pub fn swap(
         .to_bytes(),
     }
 }
+
+#[test]
+fn test_open() {
+    // let ix = open(Pubkey::default(), 0);
+    let treasury_pda = treasury_pda();
+    println!("{:?}", treasury_pda);
+    assert!(false);
+}
