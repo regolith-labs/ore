@@ -19,6 +19,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|m| m.id == block.id)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
+    treasury_info.has_address(&TREASURY_ADDRESS)?;
     let vault_base =
         vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
     let vault_quote =

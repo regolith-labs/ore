@@ -6,9 +6,6 @@ use super::OreAccount;
 /// the program's global token account.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct Treasury {
-    /// The total amount of ORE that has been staked.
-    pub total_stake: u64,
-}
+pub struct Treasury {}
 
 account!(OreAccount, Treasury);
