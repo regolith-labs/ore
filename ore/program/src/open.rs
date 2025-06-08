@@ -10,7 +10,8 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let id = u64::from_le_bytes(args.id);
 
     // Load accounts.
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, system_program, vault_base_info, vault_quote_info, token_program, associated_token_program, rent_sysvar] =
+    let clock = Clock::get()?;
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -34,6 +35,14 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
 
+    // Error out if start slot is within the current period.
+    let start_slot = id * 1500;
+    let current_period_start = (clock.slot / 1500) * 1500;
+    let current_period_end = current_period_start + 1500;
+    if start_slot < current_period_end {
+        return Err(ProgramError::InvalidArgument);
+    }
+
     // Initialize config.
     create_program_account::<Block>(
         block_info,
@@ -48,7 +57,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     block.id = id;
     block.reward = ONE_ORE * 10;
     block.slot_hash = [0; 32];
-    block.start_slot = 1500 * id;
+    block.start_slot = start_slot;
 
     // Initialize market.
     create_program_account::<Market>(
@@ -83,15 +92,17 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market.id = id;
 
     // Initialize hash token mint.
-    allocate_account(
+    let mint_bump = mint_pda(block.id).1;
+    allocate_account_with_bump(
         mint_base_info,
         system_program,
         signer_info,
         spl_token::state::Mint::LEN,
         &spl_token::ID,
         &[MINT, &id.to_le_bytes()],
+        mint_bump,
     )?;
-    initialize_mint_signed(
+    initialize_mint_signed_with_bump(
         mint_base_info,
         block_info,
         None,
@@ -99,6 +110,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         rent_sysvar,
         0,
         &[MINT, &id.to_le_bytes()],
+        mint_bump,
     )?;
 
     // TODO Initialize hash token metadata.

@@ -11,34 +11,22 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let block = block_info
+    let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
-        .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
+        .assert_mut(|b| clock.slot < b.start_slot)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?
-        .assert_mut_err(
-            |m| m.base.liquidity() > 0,
-            OreError::InsufficientLiquidity.into(),
-        )?
-        .assert_mut_err(
-            |m| m.quote.liquidity() > 0,
-            OreError::InsufficientLiquidity.into(),
-        )?;
+        .assert_mut(|m| m.base.liquidity() > 0)?
+        .assert_mut(|m| m.quote.liquidity() > 0)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
-    tokens_base_info
-        .is_writable()?
-        .as_associated_token_account(signer_info.key, mint_base_info.key)?;
-    tokens_quote_info
-        .is_writable()?
-        .as_associated_token_account(signer_info.key, mint_quote_info.key)?;
     vault_base_info
         .is_writable()?
         .as_associated_token_account(market_info.key, mint_base_info.key)?;
@@ -47,6 +35,39 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
+
+    // Load token acccounts.
+    if tokens_base_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            signer_info,
+            tokens_base_info,
+            mint_base_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        tokens_base_info
+            .is_writable()?
+            .as_associated_token_account(signer_info.key, mint_base_info.key)?;
+    }
+    if tokens_quote_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            signer_info,
+            tokens_quote_info,
+            mint_quote_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        tokens_quote_info
+            .is_writable()?
+            .as_associated_token_account(signer_info.key, mint_quote_info.key)?;
+    }
 
     // Update market state.
     let mut swap_result = market.swap(amount, direction, precision, clock)?;

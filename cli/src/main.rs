@@ -1,5 +1,4 @@
-use meteora_pools_sdk::instructions::Swap;
-use ore_api::{prelude::*, sdk::*};
+use ore_api::prelude::*;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
     client_error::{reqwest::StatusCode, ClientErrorKind},
@@ -7,16 +6,13 @@ use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
     rpc_filter::{Memcmp, RpcFilterType},
 };
-use solana_program::pubkey;
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
-    keccak::hashv,
-    native_token::{lamports_to_sol, sol_to_lamports},
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
     transaction::Transaction,
 };
-use steel::{AccountDeserialize, Clock, Discriminator, Instruction};
+use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
 async fn main() {
@@ -30,246 +26,60 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
-        "initialize" => {
-            let ix = initialize(payer.pubkey());
-            submit_transaction(&rpc, &payer, &[ix]).await.unwrap();
-        }
-        "payout" => {
-            let ix = payout(payer.pubkey(), Pubkey::new_unique(), Pubkey::new_unique());
-            submit_transaction(&rpc, &payer, &[ix]).await.unwrap();
-        }
-        "reset" => {
-            let ix = reset(payer.pubkey(), ore_boost_api::state::config_pda().0);
-            submit_transaction(&rpc, &payer, &[ix]).await.unwrap();
-        }
-        "block" => {
-            let block = get_block(&rpc).await.unwrap();
-            println!("Block: {:?}", block);
-        }
-        "crank" => {
-            crank(&rpc, &payer).await.unwrap();
-        }
-        "deploy" => {
-            deploy(&rpc, &payer, sol_to_lamports(1.0)).await.unwrap();
+        "open" => {
+            open(&rpc, &payer).await.unwrap();
         }
         "close" => {
-            close_all_commits(&rpc, &payer).await.unwrap();
+            close(&rpc, &payer).await.unwrap();
         }
-        "commits" => {
-            let commits = get_block_commits(&rpc).await.unwrap();
-            println!("Commits: {:?}", commits);
+        "clock" => {
+            log_clock(&rpc).await.unwrap();
         }
-        "bury" => {
-            bury_ore_sol(&rpc, &payer).await.unwrap();
+        "block" => {
+            log_block(&rpc).await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
 }
 
-async fn crank(
+async fn open(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let boost_config = ore_boost_api::state::config_pda().0;
-    loop {
-        if let Ok(block) = get_block(rpc).await {
-            if let Ok(clock) = get_clock(rpc).await {
-                if clock.slot >= block.ends_at {
-                    // Time to payout and reset
-                    if let Ok(payout_ix) = build_payout_ix(rpc, payer).await {
-                        let reset_ix = reset(payer.pubkey(), boost_config);
-                        submit_transaction(rpc, &payer, &[payout_ix, reset_ix])
-                            .await
-                            .ok();
-                        println!("Submitted payout and reset transaction");
-                    }
-                } else {
-                    // Calculate and print time remaining
-                    let slots_remaining = block.ends_at.saturating_sub(clock.slot);
-                    let seconds_remaining = (slots_remaining as f64) * 0.4;
-                    println!(
-                        "Time until payout: {:.1} seconds ({} slots) – {} commits – {} SOL",
-                        seconds_remaining,
-                        slots_remaining,
-                        block.total_commits,
-                        lamports_to_sol(block.cumulative_sum)
-                    );
-                }
-            } else {
-                println!("Error getting clock");
-            }
-        } else {
-            println!("Error getting block");
-        }
-
-        // Wait 3 seconds before next check
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-    }
-}
-
-async fn deploy(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-    amount: u64,
-) -> Result<(), anyhow::Error> {
-    // Get current block to get round number
-    let block = get_block(rpc).await?;
-
-    // Create WSOL ATA if it doesn't exist
-    let wsol_ata = spl_associated_token_account::get_associated_token_address(
-        &payer.pubkey(),
-        &spl_token::native_mint::ID,
-    );
-    let create_ata_ix = spl_associated_token_account::instruction::create_associated_token_account(
-        &payer.pubkey(),
-        &payer.pubkey(),
-        &spl_token::native_mint::ID,
-        &spl_token::ID,
-    );
-    let mut ixs = match rpc.get_account(&wsol_ata).await {
-        Ok(_) => vec![],
-        Err(_) => vec![create_ata_ix],
-    };
-
-    // Wrap SOL
-    let wrap_ix = solana_sdk::system_instruction::transfer(
-        &payer.pubkey(),
-        &spl_associated_token_account::get_associated_token_address(
-            &payer.pubkey(),
-            &spl_token::native_mint::ID,
-        ),
-        amount,
-    );
-    let sync_native_ix = spl_token::instruction::sync_native(
-        &spl_token::ID,
-        &spl_associated_token_account::get_associated_token_address(
-            &payer.pubkey(),
-            &spl_token::native_mint::ID,
-        ),
-    )
-    .unwrap();
-
-    // Build deploy instruction
-    let seed = generate_seed(&payer, &block);
-    println!("Seed: {:?}", seed);
-    let ix = ore_api::sdk::deploy(
-        payer.pubkey(),
-        spl_token::native_mint::ID,
-        amount,
-        block.current_round,
-        seed,
-    );
-    ixs.push(wrap_ix);
-    ixs.push(sync_native_ix);
-    ixs.push(ix);
-
-    // Submit transaction
-    submit_transaction(rpc, payer, &ixs).await?;
-    println!("Deployed {} SOL", lamports_to_sol(amount));
-
-    Ok(())
-}
-
-async fn bury_ore_sol(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let swap = Swap {
-        pool: pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj"),
-        user_source_token: spl_token::native_mint::ID,
-        user_destination_token: ore_api::consts::MINT_ADDRESS,
-        a_vault: pubkey!("3s6ki6dQSM8FuqWiPsnGkgVsAEo8BTAfUR1Vvt1TPiJN"),
-        b_vault: pubkey!("FERjPVNEa7Udq8CEv68h6tPL46Tq7ieE49HrE2wea3XT"),
-        a_token_vault: pubkey!("BtJuiRG44vew5nYBVeUhuBawPTZLyYYxdzTYzerkfnto"),
-        b_token_vault: pubkey!("HZeLxbZ9uHtSpwZC3LBr4Nubd14iHwz7bRSghRZf5VCG"),
-        a_vault_lp_mint: pubkey!("6Av9sdKvnjwoDHVnhEiz6JEq8e6SGzmhCsCncT2WJ7nN"),
-        b_vault_lp_mint: pubkey!("FZN7QZ8ZUUAxMPfxYEYkH3cXUASzH8EqA6B4tyCL8f1j"),
-        a_vault_lp: pubkey!("2k7V1NtM1krwh1sdt5wWqBRcvNQ5jzxj3J2rV78zdTsL"),
-        b_vault_lp: pubkey!("CFATQFgkKXJyU3MdCNvQqN79qorNSMJFF8jrF66a7r6i"),
-        protocol_token_fee: pubkey!("6kzYo2LMo2q2bkLAD8ienoG5NC1MkNXNTfm8sdyHuX3h"),
-        user: payer.pubkey(),
-        vault_program: pubkey!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi"),
-        token_program: spl_token::ID,
-    };
-    let ix = bury(payer.pubkey(), swap, u64::MAX);
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let ix = ore_api::sdk::open(payer.pubkey(), id);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
-async fn build_payout_ix(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<Instruction, anyhow::Error> {
-    let block = get_block(rpc).await?;
-    let commits = get_block_commits(rpc).await?;
-
-    // Return early if no commits
-    if block.cumulative_sum == 0 || block.reward == 0 {
-        return Ok(payout(
-            payer.pubkey(),
-            Pubkey::new_unique(),
-            Pubkey::new_unique(),
-        ));
-    }
-
-    // Get blockhash
-    let solana_block = rpc.get_block(block.ends_at).await?;
-    let blockhash = solana_block.blockhash;
-    let noise = hashv(&[&block.noise, blockhash.as_ref()]).to_bytes();
-
-    // Calculate the random number.
-    let x = u64::from_le_bytes(noise[0..8].try_into().unwrap());
-    let y = u64::from_le_bytes(noise[8..16].try_into().unwrap());
-    let z = u64::from_le_bytes(noise[16..24].try_into().unwrap());
-    let w = u64::from_le_bytes(noise[24..32].try_into().unwrap());
-    let roll = (x ^ y ^ z ^ w) % block.cumulative_sum;
-
-    // Find the winning commit
-    let mut winner = None;
-    for (pubkey, commit) in commits {
-        if roll >= commit.cumulative_sum && roll < commit.cumulative_sum + commit.amount {
-            println!("Roll: {}, Winner: {:?}", roll, pubkey);
-            winner = Some((pubkey, commit));
-            break;
-        }
-    }
-
-    // Build payout instruction
-    let ix = if let Some((pubkey, commit)) = winner {
-        payout(
-            payer.pubkey(),
-            pubkey,
-            spl_associated_token_account::get_associated_token_address(
-                &commit.authority,
-                &spl_token::native_mint::ID,
-            ),
-        )
-    } else {
-        payout(payer.pubkey(), Pubkey::new_unique(), Pubkey::new_unique())
-    };
-
-    Ok(ix)
-}
-
-async fn close_all_commits(
+async fn close(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let block = get_block(rpc).await?;
-    let commits = get_my_commits(rpc, payer).await?;
-    let mut ixs = vec![];
-    for (pubkey, commit) in commits {
-        if commit.round != block.current_round {
-            let ix = ore_api::sdk::close(payer.pubkey(), pubkey);
-            ixs.push(ix);
-        }
-    }
-    submit_transaction(rpc, payer, &ixs).await?;
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let ix = ore_api::sdk::close(payer.pubkey(), payer.pubkey(), id);
+    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
-async fn get_block(rpc: &RpcClient) -> Result<Block, anyhow::Error> {
-    let block_pda = ore_api::state::block_pda();
+async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let clock = get_clock(&rpc).await?;
+    println!("Clock: {:?}", clock);
+    Ok(())
+}
+
+async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let block = get_block(&rpc, id).await?;
+    println!("Block: {:?}", block);
+    Ok(())
+}
+
+async fn get_block(rpc: &RpcClient, id: u64) -> Result<Block, anyhow::Error> {
+    let block_pda = ore_api::state::block_pda(id);
     let account = rpc.get_account(&block_pda.0).await?;
     let block = Block::try_from_bytes(&account.data)?;
     Ok(*block)
@@ -281,44 +91,27 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_block_commits(rpc: &RpcClient) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
-    let block = get_block(rpc).await?;
-    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-        56,
-        &block.current_round.to_le_bytes(),
-    ));
-    let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
-    Ok(commits)
-}
+// async fn get_block_commits(rpc: &RpcClient) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
+//     let block = get_block(rpc).await?;
+//     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
+//         56,
+//         &block.current_round.to_le_bytes(),
+//     ));
+//     let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
+//     Ok(commits)
+// }
 
-async fn get_my_commits(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
-    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-        16,
-        &payer.pubkey().to_bytes().as_ref(),
-    ));
-    let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
-    Ok(commits)
-}
-
-fn generate_seed(payer: &solana_sdk::signer::keypair::Keypair, block: &Block) -> [u8; 32] {
-    solana_sdk::hash::hash(
-        &[
-            payer.pubkey().to_bytes().as_ref(),
-            block.current_round.to_le_bytes().as_ref(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-                .to_le_bytes()
-                .as_ref(),
-        ]
-        .concat(),
-    )
-    .to_bytes()
-}
+// async fn get_my_commits(
+//     rpc: &RpcClient,
+//     payer: &solana_sdk::signer::keypair::Keypair,
+// ) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
+//     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
+//         16,
+//         &payer.pubkey().to_bytes().as_ref(),
+//     ));
+//     let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
+//     Ok(commits)
+// }
 
 async fn submit_transaction(
     rpc: &RpcClient,

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["ore/*", "ore-delegate/*"]
+members = ["ore/*", "ore-delegate/*", "cli"]
 
 [workspace.package]
 version = "3.7.0"
