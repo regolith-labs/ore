@@ -22,6 +22,9 @@ pub struct Block {
 
     /// The starting slot of the block.
     pub start_slot: u64,
+
+    /// The total number of hashes submitted to the block.
+    pub total_hashes: u64,
 }
 
 account!(OreAccount, Block);

@@ -38,6 +38,9 @@ async fn main() {
         "block" => {
             log_block(&rpc).await.unwrap();
         }
+        "blocks" => {
+            log_blocks(&rpc).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
 }
@@ -74,7 +77,26 @@ async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
     let block = get_block(&rpc, id).await?;
-    println!("Block: {:?}", block);
+    print_block(block);
+    Ok(())
+}
+
+fn print_block(block: Block) {
+    let address = block_pda(block.id).0;
+    println!("Address: {:?}", address);
+    println!("  Id: {:?}", block.id);
+    println!("  Start slot: {:?}", block.start_slot);
+    println!("  Best miner: {:?}", block.best_miner);
+    println!("  Reward: {:?}", block.reward);
+    println!("  Slot hash: {:?}", block.slot_hash);
+    println!("  Best hash: {:?}\n", block.best_hash);
+}
+
+async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let blocks = get_blocks(&rpc).await?;
+    for (_, block) in blocks {
+        print_block(block);
+    }
     Ok(())
 }
 
@@ -101,17 +123,10 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 //     Ok(commits)
 // }
 
-// async fn get_my_commits(
-//     rpc: &RpcClient,
-//     payer: &solana_sdk::signer::keypair::Keypair,
-// ) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
-//     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-//         16,
-//         &payer.pubkey().to_bytes().as_ref(),
-//     ));
-//     let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
-//     Ok(commits)
-// }
+async fn get_blocks(rpc: &RpcClient) -> Result<Vec<(Pubkey, Block)>, anyhow::Error> {
+    let blocks = get_program_accounts::<Block>(rpc, ore_api::ID, vec![]).await?;
+    Ok(blocks)
+}
 
 async fn submit_transaction(
     rpc: &RpcClient,

@@ -84,6 +84,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Mine.
     for _ in 0..amount {
+        block.total_hashes += 1;
         miner.hash = hash(miner.hash.as_ref());
         if miner.hash < block.best_hash {
             block.best_hash = miner.hash;
