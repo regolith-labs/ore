@@ -11,7 +11,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer_info, block_info, commitment_info, market_info, mint_base_info, mint_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -115,6 +115,21 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     // TODO Initialize hash token metadata.
+
+    // Initialize commitment token account.
+    if commitment_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            block_info,
+            commitment_info,
+            mint_base_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        commitment_info.as_associated_token_account(block_info.key, mint_base_info.key)?;
+    }
 
     // Initialize vault token accounts.
     if vault_base_info.data_is_empty() {

@@ -5,8 +5,10 @@ use steel::*;
 pub enum OreInstruction {
     Open = 0,
     Close = 1,
-    Mine = 2,
-    Swap = 3,
+    Commit = 2,
+    Decommit = 3,
+    Mine = 4,
+    Swap = 5,
 }
 
 #[repr(C)]
@@ -18,6 +20,18 @@ pub struct Open {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Commit {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Decommit {
+    pub amount: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -35,5 +49,7 @@ pub struct Swap {
 
 instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
+instruction!(OreInstruction, Commit);
+instruction!(OreInstruction, Decommit);
 instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Swap);

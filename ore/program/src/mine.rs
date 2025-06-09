@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_hash_info, mint_ore_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -26,6 +26,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert(|m| m.id == block.id)?;
     mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    permit_info
+        .as_account::<Permit>(&ore_api::ID)?
+        .assert(|p| p.authority == *signer_info.key)?;
     recipient_info
         .is_writable()?
         .as_associated_token_account(signer_info.key, &MINT_ADDRESS)?;

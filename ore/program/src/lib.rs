@@ -1,9 +1,15 @@
 mod close;
+mod commit;
+mod decommit;
 mod mine;
 mod open;
 mod swap;
 
+use core::panic;
+
 use close::*;
+use commit::*;
+use decommit::*;
 use mine::*;
 use open::*;
 use swap::*;
@@ -21,6 +27,8 @@ pub fn process_instruction(
     match ix {
         OreInstruction::Open => process_open(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
+        OreInstruction::Commit => process_commit(accounts, data)?,
+        OreInstruction::Decommit => process_decommit(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
         OreInstruction::Swap => process_swap(accounts, data)?,
     }
