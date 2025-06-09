@@ -5,8 +5,6 @@ mod mine;
 mod open;
 mod swap;
 
-use core::panic;
-
 use close::*;
 use commit::*;
 use decommit::*;
