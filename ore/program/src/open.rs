@@ -76,7 +76,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market.quote = TokenParams {
         mint: *mint_quote_info.key,
         balance: 0,
-        balance_virtual: ONE_ORE,
+        balance_virtual: VIRTUAL_ORE_LIQUIDITY,
     };
     market.fee = FeeParams {
         rate: FEE_RATE_BPS,

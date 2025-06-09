@@ -60,3 +60,6 @@ pub const SLOT_WINDOW: u64 = 4;
 
 /// Amount of hash tokens to mint to market.
 pub const HASH_TOKEN_SUPPLY: u64 = 10_000_000;
+
+/// The virtual ORE liquidity.
+pub const VIRTUAL_ORE_LIQUIDITY: u64 = ONE_ORE * 5;
