@@ -1,6 +1,4 @@
 use ore_api::prelude::*;
-use solana_nostd_keccak::hash;
-use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Deposits collateral.
@@ -11,7 +9,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, market_info, miner_info, mint_ore_info, sender_info, stake_info, system_program, token_program] =
+    let [signer_info, block_info, collateral_info, mint_ore_info, sender_info, stake_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -23,9 +21,6 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     collateral_info
         .is_writable()?
         .as_associated_token_account(block_info.key, mint_ore_info.key)?;
-    let market = market_info
-        .as_account::<Market>(&ore_api::ID)?
-        .assert(|m| m.id == block.id)?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     sender_info
         .is_writable()?

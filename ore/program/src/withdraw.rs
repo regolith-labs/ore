@@ -1,6 +1,4 @@
 use ore_api::prelude::*;
-use solana_nostd_keccak::hash;
-use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Withdraws collateral.
