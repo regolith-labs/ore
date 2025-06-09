@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -21,14 +21,18 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot)?
         .assert_mut(|b| clock.slot < b.start_slot + 1500)?;
+    commitment_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, mint_hash_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
     mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    permit_info
-        .as_account::<Permit>(&ore_api::ID)?
-        .assert(|p| p.authority == *signer_info.key)?;
+    let permit = permit_info
+        .as_account_mut::<Permit>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *signer_info.key)?
+        .assert_mut(|p| p.amount >= amount)?;
     recipient_info
         .is_writable()?
         .as_associated_token_account(signer_info.key, &MINT_ADDRESS)?;
@@ -63,13 +67,22 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert_mut(|m| m.authority == *signer_info.key)?
     };
 
+    // Reduce permit amount.
+    permit.amount -= amount;
+
+    // Close permit account, if empty.
+    if permit.amount == 0 {
+        permit_info.close(signer_info)?;
+    }
+
     // Burn hash tokens.
-    burn(
-        sender_info,
+    burn_signed(
+        commitment_info,
         mint_hash_info,
-        signer_info,
+        block_info,
         token_program,
         amount,
+        &[BLOCK, &block.id.to_le_bytes()],
     )?;
 
     // Set block slot hash.

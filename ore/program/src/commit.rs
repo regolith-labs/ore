@@ -46,9 +46,9 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             &[PERMIT, &signer_info.key.to_bytes(), &block.id.to_le_bytes()],
         )?;
         let permit = permit_info.as_account_mut::<Permit>(&ore_api::ID)?;
+        permit.amount = 0;
         permit.authority = *signer_info.key;
         permit.block_id = block.id;
-        permit.amount = 0;
         permit
     } else {
         permit_info

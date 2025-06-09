@@ -55,7 +55,7 @@ pub fn process_decommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Update block.
     permit.amount -= amount;
 
-    // Close permit, if empty.
+    // Close permit account, if empty.
     if permit.amount == 0 {
         permit_info.close(signer_info)?;
     }
