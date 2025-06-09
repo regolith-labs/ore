@@ -52,12 +52,13 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[BLOCK, &id.to_le_bytes()],
     )?;
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
-    block.best_hash = [0; 32];
-    block.best_miner = Pubkey::default();
     block.id = id;
-    block.reward = BLOCK_REWARD;
+    block.min_difficulty = MIN_DIFFICULTY;
+    block.reward_rate = REWARD_RATE;
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;
+    block.total_hashes = 0;
+    block.winning_hashes = 0;
 
     // Initialize market.
     create_program_account::<Market>(

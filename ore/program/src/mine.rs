@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_info, sender_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, market_info, miner_info, mint_hash_info, mint_ore_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -24,11 +24,16 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
-    mint_info.has_address(&market.base.mint)?.as_mint()?;
+    mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
+    mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    recipient_info
+        .is_writable()?
+        .as_associated_token_account(signer_info.key, &MINT_ADDRESS)?;
     sender_info
         .is_writable()?
-        .as_associated_token_account(signer_info.key, &mint_info.key)?
+        .as_associated_token_account(signer_info.key, &mint_hash_info.key)?
         .assert(|t| t.amount() >= amount)?;
+    treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
@@ -55,18 +60,21 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert_mut(|m| m.authority == *signer_info.key)?
     };
 
-    // Update miner stats.
-    miner.total_hashes += amount;
-
     // Burn hash tokens.
-    burn(sender_info, mint_info, signer_info, token_program, amount)?;
+    burn(
+        sender_info,
+        mint_hash_info,
+        signer_info,
+        token_program,
+        amount,
+    )?;
 
     // Set block slot hash.
     if block.slot_hash == [0; 32] {
         let slot_hashes =
             bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
         let Some(slot_hash) = slot_hashes.get(&block.start_slot) else {
-            // If mine is not called within 2.5 minutes of the block starting,
+            // If mine is not called within ~2.5 minutes of the block starting,
             // then the slot hash will be unavailable and secure hashes cannot be generated.
             return Ok(());
         };
@@ -76,21 +84,56 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
         miner.block_id = block.id;
-        let mut args = [0u8; 64];
-        args[..32].copy_from_slice(&block.slot_hash);
-        args[32..].copy_from_slice(&miner.authority.to_bytes());
+        let mut args = [0u8; 96];
+        args[..32].copy_from_slice(&block.id.to_le_bytes());
+        args[32..64].copy_from_slice(&block.slot_hash);
+        args[64..].copy_from_slice(&miner.authority.to_bytes());
         miner.hash = hash(&args);
     }
 
-    // Mine.
+    // Mine and accumulate rewards.
+    let mut miner_reward = 0;
     for _ in 0..amount {
+        // Update stats
         block.total_hashes += 1;
+        miner.total_hashes += 1;
+
+        // Generate hash.
         miner.hash = hash(miner.hash.as_ref());
-        if miner.hash < block.best_hash {
-            block.best_hash = miner.hash;
-            block.best_miner = miner.authority;
+
+        // Score and increment rewards.
+        let score = difficulty(miner.hash) as u64;
+        if score >= block.min_difficulty {
+            block.winning_hashes += 1;
+            miner.winning_hashes += 1;
+            miner_reward += block.reward_rate;
         }
     }
 
+    // Payout ORE.
+    block.total_rewards += miner_reward;
+    miner.total_rewards += miner_reward;
+    mint_to_signed(
+        mint_ore_info,
+        recipient_info,
+        treasury_info,
+        token_program,
+        miner_reward,
+        &[TREASURY],
+    )?;
+
     Ok(())
+}
+
+/// Returns the number of leading zeros on a 32 byte buffer.
+pub fn difficulty(hash: [u8; 32]) -> u32 {
+    let mut count = 0;
+    for &byte in &hash {
+        let lz = byte.leading_zeros();
+        count += lz;
+        if lz < 8 {
+            break;
+        }
+    }
+    count
 }

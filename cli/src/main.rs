@@ -87,13 +87,14 @@ fn print_block(block: Block) {
     println!("Address: {:?}", address);
     println!("  Id: {:?}", block.id);
     println!("  Start slot: {:?}", block.start_slot);
-    println!("  Best miner: {:?}", block.best_miner);
     println!(
-        "  Reward: {:?}",
-        amount_to_ui_amount(block.reward, TOKEN_DECIMALS)
+        "  Reward rate: {:?}",
+        amount_to_ui_amount(block.reward_rate, TOKEN_DECIMALS)
     );
     println!("  Slot hash: {:?}", block.slot_hash);
-    println!("  Best hash: {:?}\n", block.best_hash);
+    println!("  Min difficulty: {:?}", block.min_difficulty);
+    println!("  Total hashes: {:?}", block.total_hashes);
+    println!("  Winning hashes: {:?}", block.winning_hashes);
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {

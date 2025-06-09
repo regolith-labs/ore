@@ -62,7 +62,13 @@ pub const SLOT_WINDOW: u64 = 4;
 pub const HASH_TOKEN_SUPPLY: u64 = 10_000_000;
 
 /// The block reward.
-pub const BLOCK_REWARD: u64 = ONE_ORE * 10;
+// pub const BLOCK_REWARD: u64 = ONE_ORE * 10;
 
 /// The virtual ORE liquidity.
-pub const VIRTUAL_ORE_LIQUIDITY: u64 = BLOCK_REWARD / 2;
+pub const VIRTUAL_ORE_LIQUIDITY: u64 = ONE_ORE * 5;
+
+/// The minimum difficulty required for payout.
+pub const MIN_DIFFICULTY: u64 = 10;
+
+/// The reward rate per satisfying hash (0.002048 ORE).
+pub const REWARD_RATE: u64 = 204_800_000;
