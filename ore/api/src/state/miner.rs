@@ -1,5 +1,7 @@
 use steel::*;
 
+use crate::state::miner_pda;
+
 use super::OreAccount;
 
 #[repr(C)]
@@ -19,6 +21,12 @@ pub struct Miner {
 
     /// The amount of ORE this miner has mined.
     pub total_rewards: u64,
+}
+
+impl Miner {
+    pub fn pda(&self) -> (Pubkey, u8) {
+        miner_pda(self.authority)
+    }
 }
 
 account!(OreAccount, Miner);

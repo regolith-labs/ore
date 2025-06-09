@@ -1,5 +1,7 @@
 use steel::*;
 
+use crate::state::block_pda;
+
 use super::OreAccount;
 
 #[repr(C)]
@@ -25,6 +27,12 @@ pub struct Block {
 
     /// The total number of hashes submitted to the block.
     pub total_hashes: u64,
+}
+
+impl Block {
+    pub fn pda(&self) -> (Pubkey, u8) {
+        block_pda(self.id)
+    }
 }
 
 account!(OreAccount, Block);

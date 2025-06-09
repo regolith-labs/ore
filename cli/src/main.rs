@@ -12,6 +12,7 @@ use solana_sdk::{
     signature::{read_keypair_file, Signer},
     transaction::Transaction,
 };
+use spl_token::amount_to_ui_amount;
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -87,13 +88,17 @@ fn print_block(block: Block) {
     println!("  Id: {:?}", block.id);
     println!("  Start slot: {:?}", block.start_slot);
     println!("  Best miner: {:?}", block.best_miner);
-    println!("  Reward: {:?}", block.reward);
+    println!(
+        "  Reward: {:?}",
+        amount_to_ui_amount(block.reward, TOKEN_DECIMALS)
+    );
     println!("  Slot hash: {:?}", block.slot_hash);
     println!("  Best hash: {:?}\n", block.best_hash);
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let blocks = get_blocks(&rpc).await?;
+    let mut blocks = get_blocks(&rpc).await?;
+    blocks.sort_by_key(|(_, block)| block.id);
     for (_, block) in blocks {
         print_block(block);
     }
@@ -186,9 +191,12 @@ where
         Ok(accounts) => {
             let accounts = accounts
                 .into_iter()
-                .map(|(pubkey, account)| {
-                    let account = T::try_from_bytes(&account.data).unwrap().clone();
-                    (pubkey, account)
+                .filter_map(|(pubkey, account)| {
+                    if let Ok(account) = T::try_from_bytes(&account.data) {
+                        Some((pubkey, account.clone()))
+                    } else {
+                        None
+                    }
                 })
                 .collect();
             Ok(accounts)
