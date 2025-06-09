@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, collateral_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -20,6 +20,9 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot < b.start_slot)?;
+    collateral_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, mint_quote_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?
@@ -27,6 +30,10 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|m| m.quote.liquidity() > 0)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
+    stake_info
+        .as_account_mut::<Stake>(&ore_api::ID)?
+        .assert_mut(|p| p.authority == *signer_info.key)?
+        .assert_mut(|p| p.block_id == block.id)?;
     vault_base_info
         .is_writable()?
         .as_associated_token_account(market_info.key, mint_base_info.key)?;
@@ -36,6 +43,28 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
+
+    // Load stake account.
+    let stake = if stake_info.data_is_empty() {
+        create_program_account::<Stake>(
+            stake_info,
+            system_program,
+            signer_info,
+            &ore_api::ID,
+            &[STAKE, &signer_info.key.to_bytes(), &block.id.to_le_bytes()],
+        )?;
+        let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
+        stake.authority = *signer_info.key;
+        stake.block_id = block.id;
+        stake.capacity = 0;
+        stake.utilization = 0;
+        stake
+    } else {
+        stake_info
+            .as_account_mut::<Stake>(&ore_api::ID)?
+            .assert_mut(|p| p.authority == *signer_info.key)?
+            .assert_mut(|p| p.block_id == block.id)?
+    };
 
     // Load token acccounts.
     if tokens_base_info.data_is_empty() {
@@ -93,6 +122,21 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             tokens_quote_info,
         ),
     };
+
+    // Update stake state.
+    match direction {
+        SwapDirection::Buy => {
+            stake.utilization += in_amount;
+        }
+        SwapDirection::Sell => {
+            stake.utilization = stake.utilization.saturating_sub(out_amount);
+        }
+    }
+
+    // Assert utilization is not greater than capacity.
+    if stake.utilization > stake.capacity {
+        panic!("utilization is greater than capacity");
+    }
 
     // Transfer tokens.
     transfer(signer_info, in_from, in_to, token_program, in_amount)?;

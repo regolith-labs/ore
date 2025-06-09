@@ -2512,37 +2512,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ore-delegate-api"
-version = "3.7.0"
-dependencies = [
- "bytemuck",
- "const-crypto",
- "mpl-token-metadata",
- "num_enum",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "steel",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "ore-delegate-program"
-version = "3.7.0"
-dependencies = [
- "bincode",
- "mpl-token-metadata",
- "ore-api 3.7.0",
- "ore-delegate-api",
- "rand 0.8.5",
- "solana-program",
- "spl-associated-token-account",
- "spl-token 4.0.2",
- "spl-token-2022 7.0.0",
- "steel",
-]
-
-[[package]]
 name = "ore-program"
 version = "3.7.0"
 dependencies = [

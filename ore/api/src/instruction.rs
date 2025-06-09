@@ -7,8 +7,10 @@ pub enum OreInstruction {
     Close = 1,
     Commit = 2,
     Decommit = 3,
-    Mine = 4,
-    Swap = 5,
+    Deposit = 4,
+    Mine = 5,
+    Swap = 6,
+    Withdraw = 7,
 }
 
 #[repr(C)]
@@ -35,6 +37,12 @@ pub struct Decommit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Deposit {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
     pub amount: [u8; 8],
 }
@@ -47,9 +55,17 @@ pub struct Swap {
     pub precision: u8,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Withdraw {
+    pub amount: [u8; 8],
+}
+
 instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Commit);
 instruction!(OreInstruction, Decommit);
+instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Swap);
+instruction!(OreInstruction, Withdraw);

@@ -3,6 +3,7 @@ mod config;
 mod market;
 mod miner;
 mod permit;
+mod stake;
 mod treasury;
 
 pub use block::*;
@@ -10,6 +11,7 @@ pub use config::*;
 pub use market::*;
 pub use miner::*;
 pub use permit::*;
+pub use stake::*;
 pub use treasury::*;
 
 use crate::consts::*;
@@ -24,7 +26,8 @@ pub enum OreAccount {
     Market = 102,
     Miner = 103,
     Permit = 104,
-    Treasury = 105,
+    Stake = 105,
+    Treasury = 106,
 }
 
 pub fn block_pda(id: u64) -> (Pubkey, u8) {
@@ -50,6 +53,13 @@ pub fn mint_pda(id: u64) -> (Pubkey, u8) {
 pub fn permit_pda(authority: Pubkey, block_id: u64) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PERMIT, &authority.to_bytes(), &block_id.to_le_bytes()],
+        &crate::ID,
+    )
+}
+
+pub fn stake_pda(authority: Pubkey, block_id: u64) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[STAKE, &authority.to_bytes(), &block_id.to_le_bytes()],
         &crate::ID,
     )
 }

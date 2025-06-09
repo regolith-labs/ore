@@ -20,6 +20,9 @@ pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 /// The seed of the block account PDA.
 pub const BLOCK: &[u8] = b"block";
 
+/// The seed of the stake account PDA.
+pub const STAKE: &[u8] = b"stake";
+
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
 
