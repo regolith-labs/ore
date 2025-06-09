@@ -55,7 +55,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     block.best_hash = [0; 32];
     block.best_miner = Pubkey::default();
     block.id = id;
-    block.reward = ONE_ORE * 10;
+    block.reward = BLOCK_REWARD;
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;
 
