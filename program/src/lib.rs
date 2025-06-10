@@ -1,19 +1,19 @@
 mod close;
 mod commit;
-mod decommit;
 mod deposit;
 mod mine;
 mod open;
 mod swap;
+mod uncommit;
 mod withdraw;
 
 use close::*;
 use commit::*;
-use decommit::*;
 use deposit::*;
 use mine::*;
 use open::*;
 use swap::*;
+use uncommit::*;
 use withdraw::*;
 
 use ore_api::instruction::*;
@@ -30,10 +30,10 @@ pub fn process_instruction(
         OreInstruction::Open => process_open(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Commit => process_commit(accounts, data)?,
-        OreInstruction::Decommit => process_decommit(accounts, data)?,
         OreInstruction::Deposit => process_deposit(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
         OreInstruction::Swap => process_swap(accounts, data)?,
+        OreInstruction::Uncommit => process_uncommit(accounts, data)?,
         OreInstruction::Withdraw => process_withdraw(accounts, data)?,
     }
 

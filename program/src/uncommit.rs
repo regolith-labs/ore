@@ -1,10 +1,10 @@
 use ore_api::prelude::*;
 use steel::*;
 
-/// Decommit from a block.
-pub fn process_decommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+/// Uncommit from a block.
+pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
-    let args = Decommit::try_from_bytes(data)?;
+    let args = Uncommit::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
