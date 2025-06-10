@@ -100,6 +100,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Update market state.
     let mut swap_result = market.swap(amount, direction, precision, clock)?;
+    swap_result.authority = signer_info.key.to_bytes();
     swap_result.block_id = block.id;
     swap_result.log_return();
 

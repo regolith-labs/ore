@@ -5,6 +5,9 @@ use crate::state::SwapDirection;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct SwapEvent {
+    /// The authority of the swap.
+    pub authority: [u8; 32],
+
     /// The block id.
     pub block_id: u64,
 
