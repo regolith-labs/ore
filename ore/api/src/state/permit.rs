@@ -15,6 +15,12 @@ pub struct Permit {
 
     /// The ID of the block this permit is for.
     pub block_id: u64,
+
+    /// The executor of the permit.
+    pub executor: Pubkey,
+
+    /// The fee paid to the executor.
+    pub fee: u64,
 }
 
 impl Permit {

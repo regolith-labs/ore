@@ -27,6 +27,8 @@ pub struct Close {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Commit {
     pub amount: [u8; 8],
+    pub executor: [u8; 32],
+    pub fee: [u8; 8],
 }
 
 #[repr(C)]

@@ -6,6 +6,8 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Parse data.
     let args = Commit::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
+    let executor = Pubkey::new_from_array(args.executor);
+    let fee = u64::from_le_bytes(args.fee);
 
     // Load accounts.
     let clock = Clock::get()?;
@@ -22,9 +24,6 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
-    miner_info
-        .as_account::<Miner>(&ore_api::ID)?
-        .assert(|m| m.authority == *signer_info.key)?;
     mint_info.has_address(&market.base.mint)?.as_mint()?;
     let sender = sender_info
         .is_writable()?
@@ -35,6 +34,28 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Normalize amount.
     let amount = sender.amount().min(amount);
+
+    // Load miner account.
+    let _miner = if miner_info.data_is_empty() {
+        create_program_account::<Miner>(
+            miner_info,
+            system_program,
+            signer_info,
+            &ore_api::ID,
+            &[MINER, &signer_info.key.to_bytes()],
+        )?;
+        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        miner.authority = *signer_info.key;
+        miner.block_id = 0;
+        miner.hash = [0; 32];
+        miner.total_hashes = 0;
+        miner.total_rewards = 0;
+        miner
+    } else {
+        miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == *signer_info.key)?
+    };
 
     // Load permit account.
     let permit = if permit_info.data_is_empty() {
@@ -56,6 +77,10 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             .assert_mut(|p| p.authority == *signer_info.key)?
             .assert_mut(|p| p.block_id == block.id)?
     };
+
+    // Update executor logic.
+    permit.executor = executor;
+    permit.fee = fee;
 
     // Transfer hash tokens.
     transfer(

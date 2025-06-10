@@ -1,6 +1,6 @@
 # ORE
 
-**Mine blockspace. Trade hashpower. Win rewards.**
+**Mine blockspace. Trade hashpower. Earn rewards.**
 
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.

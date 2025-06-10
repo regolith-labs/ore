@@ -11,12 +11,13 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, sender_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    authority_info.is_writable()?;
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot)?
@@ -29,50 +30,34 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert(|m| m.id == block.id)?;
     mint_hash_info.has_address(&market.base.mint)?.as_mint()?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    let miner = miner_info
+        .as_account_mut::<Miner>(&ore_api::ID)?
+        .assert_mut(|m| m.authority == *authority_info.key)?;
     let permit = permit_info
         .as_account_mut::<Permit>(&ore_api::ID)?
-        .assert_mut(|p| p.authority == *signer_info.key)?
-        .assert_mut(|p| p.amount >= amount)?;
+        .assert_mut(|p| p.authority == miner.authority)?
+        .assert_mut(|p| p.block_id == block.id)?
+        .assert_mut(|p| p.executor == *signer_info.key || p.executor == Pubkey::default())?;
     recipient_info
         .is_writable()?
-        .as_associated_token_account(signer_info.key, &MINT_ADDRESS)?;
-    sender_info
-        .is_writable()?
-        .as_associated_token_account(signer_info.key, &mint_hash_info.key)?
-        .assert(|t| t.amount() >= amount)?;
+        .as_associated_token_account(&miner.authority, &MINT_ADDRESS)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
-    // Load miner account.
-    let miner = if miner_info.data_is_empty() {
-        create_program_account::<Miner>(
-            miner_info,
-            system_program,
-            signer_info,
-            &ore_api::ID,
-            &[MINER, &signer_info.key.to_bytes()],
-        )?;
-        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
-        miner.authority = *signer_info.key;
-        miner.block_id = 0;
-        miner.hash = [0; 32];
-        miner.total_hashes = 0;
-        miner.total_rewards = 0;
-        miner
-    } else {
-        miner_info
-            .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.authority == *signer_info.key)?
-    };
-
     // Reduce permit amount.
+    let amount = permit.amount.min(amount);
     permit.amount -= amount;
+
+    // Pay executor fee.
+    if permit.fee > 0 {
+        permit_info.send(permit.fee * amount, signer_info);
+    }
 
     // Close permit account, if empty.
     if permit.amount == 0 {
-        permit_info.close(signer_info)?;
+        permit_info.close(authority_info)?;
     }
 
     // Burn hash tokens.
