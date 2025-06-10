@@ -67,11 +67,8 @@ pub const SLOT_WINDOW: u64 = 4;
 /// Amount of hash tokens to mint to market.
 pub const HASH_TOKEN_SUPPLY: u64 = 10_000_000;
 
-/// The block reward.
-// pub const BLOCK_REWARD: u64 = ONE_ORE * 10;
-
-/// The virtual ORE liquidity.
-pub const VIRTUAL_ORE_LIQUIDITY: u64 = ONE_ORE * 5;
+/// The virtual liquidity to seed the markets with (in ORE).
+pub const VIRTUAL_LIQUIDITY: u64 = ONE_ORE * 5;
 
 /// The minimum difficulty required for payout.
 pub const MIN_DIFFICULTY: u64 = 10;
