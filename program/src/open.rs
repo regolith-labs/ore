@@ -60,8 +60,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         best_hash_reward: 0,
         difficulty_threshold: MIN_DIFFICULTY,
         difficulty_reward: 0,
-        jackpot_amount: 0,
-        jackpot_threshold: 0,
     };
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;

@@ -57,12 +57,6 @@ pub struct RewardConfig {
 
     /// The minimum difficulty required for payout.
     pub difficulty_threshold: u64,
-
-    /// Jackpot amount.
-    pub jackpot_amount: u64,
-
-    /// The threshold difficulty for the jackpot payout.
-    pub jackpot_threshold: u64,
 }
 
 impl Block {
