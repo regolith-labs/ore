@@ -87,12 +87,12 @@ fn print_block(block: Block) {
     println!("Address: {:?}", address);
     println!("  Id: {:?}", block.id);
     println!("  Start slot: {:?}", block.start_slot);
-    println!(
-        "  Reward rate: {:?}",
-        amount_to_ui_amount(block.reward_rate, TOKEN_DECIMALS)
-    );
+    // println!(
+    //     "  Reward rate: {:?}",
+    //     amount_to_ui_amount(block.reward_rate, TOKEN_DECIMALS)
+    // );
     println!("  Slot hash: {:?}", block.slot_hash);
-    println!("  Min difficulty: {:?}", block.min_difficulty);
+    // println!("  Min difficulty: {:?}", block.min_difficulty);
     println!("  Total hashes: {:?}", block.total_hashes);
     println!("  Winning hashes: {:?}", block.winning_hashes);
 }

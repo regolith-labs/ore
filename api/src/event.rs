@@ -6,7 +6,7 @@ use crate::state::SwapDirection;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct SwapEvent {
     /// The authority of the swap.
-    pub authority: [u8; 32],
+    pub authority: Pubkey,
 
     /// The block id.
     pub block_id: u64,
@@ -42,4 +42,18 @@ impl SwapEvent {
     }
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct RewardEvent {
+    /// The authority who received the reward.
+    pub authority: Pubkey,
+
+    /// The block id.
+    pub block_id: u64,
+
+    /// The amount of ORE distributed as a reward.
+    pub amount: u64,
+}
+
 event!(SwapEvent);
+event!(RewardEvent);

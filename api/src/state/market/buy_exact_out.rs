@@ -1,3 +1,5 @@
+use steel::Pubkey;
+
 use crate::error::OreError;
 
 use super::{Market, SwapDirection, TokenType, VirtualLimitOrder};
@@ -57,7 +59,7 @@ impl Market {
 
         // Produce swap result.
         let swap_event = SwapEvent {
-            authority: [0; 32],
+            authority: Pubkey::default(),
             block_id: 0,
             direction: SwapDirection::Buy as u64,
             base_to_transfer: base_out as u64,

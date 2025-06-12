@@ -73,5 +73,5 @@ pub const VIRTUAL_LIQUIDITY: u64 = ONE_ORE * 5;
 /// The minimum difficulty required for payout.
 pub const MIN_DIFFICULTY: u64 = 10;
 
-/// The reward rate per satisfying hash (0.002048 ORE).
-pub const REWARD_RATE: u64 = 204_800_000;
+// The reward rate per satisfying hash (0.002048 ORE).
+// pub const REWARD_RATE: u64 = 204_800_000;

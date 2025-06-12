@@ -54,7 +54,7 @@ impl Market {
         // Produce swap result.
         let base_out = base_via_ask + base_via_curve;
         let swap_event = SwapEvent {
-            authority: [0; 32],
+            authority: Pubkey::default(),
             block_id: 0,
             direction: SwapDirection::Buy as u64,
             base_to_transfer: base_out as u64,

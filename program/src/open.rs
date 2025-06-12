@@ -1,4 +1,5 @@
 use ore_api::prelude::*;
+use solana_nostd_keccak::hash;
 use solana_program::program_pack::Pack;
 use spl_token_2022::instruction::AuthorityType;
 use steel::*;
@@ -53,12 +54,30 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     block.id = id;
-    block.min_difficulty = MIN_DIFFICULTY;
-    block.reward_rate = REWARD_RATE;
+    block.reward = RewardConfig {
+        best_hash: [0; 32],
+        best_hash_authority: Pubkey::default(),
+        best_hash_reward: 0,
+        difficulty_threshold: MIN_DIFFICULTY,
+        difficulty_reward: 0,
+        jackpot_amount: 0,
+        jackpot_threshold: 0,
+    };
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;
     block.total_hashes = 0;
     block.winning_hashes = 0;
+
+    // Select reward strategy.
+    let noise_seed = block.id.to_le_bytes();
+    let noise = hash(&noise_seed);
+    let best_hash_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+    let target_block_reward = ONE_ORE * 10;
+    let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
+    let expected_qualifying_hashes = expected_hashes_per_block / 2u64.pow(MIN_DIFFICULTY as u32);
+    let difficulty_reward = (target_block_reward - best_hash_reward) / expected_qualifying_hashes;
+    block.reward.best_hash_reward = best_hash_reward;
+    block.reward.difficulty_reward = difficulty_reward;
 
     // Initialize market.
     create_program_account::<Market>(
@@ -193,4 +212,36 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     Ok(())
+}
+
+fn generate_best_hash_reward(hash: [u8; 32]) -> u8 {
+    // Extract the first byte (0 to 255)
+    let byte_value = hash[0];
+
+    // Map to 1-10 using integer division
+    let reward = (byte_value / 25) + 1;
+
+    // Ensure the value doesn't exceed 10
+    if reward > 10 {
+        10
+    } else {
+        reward
+    }
+}
+
+#[test]
+fn test_hash_rewards() {
+    for i in 0u64..1000 {
+        let noise_seed = i.to_le_bytes();
+        let noise = hash(&noise_seed);
+        let best_hash_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+        let target_block_reward = ONE_ORE * 10;
+        let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
+        let expected_qualifying_hashes =
+            expected_hashes_per_block / 2u64.pow(MIN_DIFFICULTY as u32);
+        let difficulty_reward =
+            (target_block_reward - best_hash_reward) / expected_qualifying_hashes;
+        println!("{}: {} {}", i, best_hash_reward, difficulty_reward);
+    }
+    // assert!(false);
 }

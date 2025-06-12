@@ -104,10 +104,16 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
         // Score and increment rewards.
         let score = difficulty(miner.hash) as u64;
-        if score >= block.min_difficulty {
+        if score >= block.reward.difficulty_threshold {
             block.winning_hashes += 1;
             miner.winning_hashes += 1;
-            miner_reward += block.reward_rate;
+            miner_reward += block.reward.difficulty_reward;
+        }
+
+        // If hash is best hash, update best hash.
+        if miner.hash < block.reward.best_hash {
+            block.reward.best_hash = miner.hash;
+            block.reward.best_hash_authority = miner.authority;
         }
     }
 
