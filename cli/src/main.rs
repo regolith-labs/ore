@@ -121,7 +121,12 @@ async fn swap(
 
 async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let clock = get_clock(&rpc).await?;
-    println!("Clock: {:?}", clock);
+    println!("Clock");
+    println!("  slot: {}", clock.slot);
+    println!("  epoch_start_timestamp: {}", clock.epoch_start_timestamp);
+    println!("  epoch: {}", clock.epoch);
+    println!("  leader_schedule_epoch: {}", clock.leader_schedule_epoch);
+    println!("  unix_timestamp: {}", clock.unix_timestamp);
     Ok(())
 }
 
@@ -129,29 +134,38 @@ async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
     let block = get_block(&rpc, id).await?;
-    print_block(block);
+    let clock = get_clock(&rpc).await?;
+    print_block(block, &clock);
     Ok(())
 }
 
-fn print_block(block: Block) {
+fn print_block(block: Block, clock: &Clock) {
     let address = block_pda(block.id).0;
+    let current_slot = clock.slot;
+    let elapsed_time = (block.start_slot - current_slot) as f64 * 0.4;
     println!("Address: {:?}", address);
     println!("  Id: {:?}", block.id);
     println!("  Start slot: {:?}", block.start_slot);
-    // println!(
-    //     "  Reward rate: {:?}",
-    //     amount_to_ui_amount(block.reward_rate, TOKEN_DECIMALS)
-    // );
+    println!("  Starts in: {:?} sec", elapsed_time as u64);
     println!("  Slot hash: {:?}", block.slot_hash);
-    // println!("  Min difficulty: {:?}", block.min_difficulty);
     println!("  Total hashes: {:?}", block.total_hashes);
+    println!("  Lode reward: {:?}", block.reward.lode_reward);
+    println!("  Lode authority: {:?}", block.reward.lode_authority);
+    println!("  Lode hash: {:?}", block.reward.lode_hash);
+    println!("  Nugget reward: {:?}", block.reward.nugget_reward);
+    println!("  Nugget threshold: {:?}", block.reward.nugget_threshold);
+    println!(
+        "  Motherlode threshold: {:?}",
+        block.reward.motherlode_threshold
+    );
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let clock = get_clock(&rpc).await?;
     let mut blocks = get_blocks(&rpc).await?;
     blocks.sort_by_key(|(_, block)| block.id);
     for (_, block) in blocks {
-        print_block(block);
+        print_block(block, &clock);
     }
     Ok(())
 }
