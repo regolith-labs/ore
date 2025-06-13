@@ -81,6 +81,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Update executor logic.
     permit.executor = executor;
     permit.fee = fee;
+    permit.seed = args.seed;
 
     // Transfer hash tokens.
     transfer(

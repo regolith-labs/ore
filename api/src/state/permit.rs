@@ -21,6 +21,9 @@ pub struct Permit {
 
     /// The fee paid to the executor.
     pub fee: u64,
+
+    /// A user-supplied seed for random number generation.
+    pub seed: [u8; 32],
 }
 
 impl Permit {

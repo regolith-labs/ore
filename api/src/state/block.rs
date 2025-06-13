@@ -16,11 +16,7 @@ pub struct Block {
     /// The block number.
     pub id: u64,
 
-    /// The minimum difficulty required for payout.
-    // pub min_difficulty: u64,
-
-    /// The reward rate per satisfying hash.
-    // pub reward_rate: u64,
+    /// The reward configuration.
     pub reward: RewardConfig,
 
     /// The hash of the starting slot.
@@ -34,9 +30,6 @@ pub struct Block {
 
     /// The total amount of rewards paid out to miners.
     pub total_rewards: u64,
-
-    /// The total number of hashes that resulted in a payout.
-    pub winning_hashes: u64,
 }
 
 /// Configuration specifying how rewards are paid out.

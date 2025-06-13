@@ -94,7 +94,6 @@ fn print_block(block: Block) {
     println!("  Slot hash: {:?}", block.slot_hash);
     // println!("  Min difficulty: {:?}", block.min_difficulty);
     println!("  Total hashes: {:?}", block.total_hashes);
-    println!("  Winning hashes: {:?}", block.winning_hashes);
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -118,16 +117,6 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     let clock = bincode::deserialize::<Clock>(&data)?;
     Ok(clock)
 }
-
-// async fn get_block_commits(rpc: &RpcClient) -> Result<Vec<(Pubkey, Commit)>, anyhow::Error> {
-//     let block = get_block(rpc).await?;
-//     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-//         56,
-//         &block.current_round.to_le_bytes(),
-//     ));
-//     let commits = get_program_accounts::<Commit>(rpc, ore_api::ID, vec![filter]).await?;
-//     Ok(commits)
-// }
 
 async fn get_blocks(rpc: &RpcClient) -> Result<Vec<(Pubkey, Block)>, anyhow::Error> {
     let blocks = get_program_accounts::<Block>(rpc, ore_api::ID, vec![]).await?;

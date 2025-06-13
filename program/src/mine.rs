@@ -87,12 +87,13 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
-        miner.block_id = block.id;
-        let mut args = [0u8; 96];
+        let mut args = [0u8; 128];
         args[..32].copy_from_slice(&block.id.to_le_bytes());
         args[32..64].copy_from_slice(&block.slot_hash);
-        args[64..].copy_from_slice(&miner.authority.to_bytes());
+        args[64..96].copy_from_slice(&permit.authority.to_bytes());
+        args[96..].copy_from_slice(&permit.seed);
         miner.hash = hash(&args);
+        miner.block_id = block.id;
     }
 
     // Mine and accumulate rewards.
@@ -108,8 +109,6 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         // Score and increment rewards.
         let score = difficulty(miner.hash) as u64;
         if score >= block.reward.nugget_threshold {
-            block.winning_hashes += 1;
-            miner.winning_hashes += 1;
             miner_reward += block.reward.nugget_reward;
         }
 

@@ -79,7 +79,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;
     block.total_hashes = 0;
-    block.winning_hashes = 0;
 
     // Select reward strategy.
     let noise_seed = block.id.to_le_bytes();

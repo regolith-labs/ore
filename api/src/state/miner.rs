@@ -21,9 +21,6 @@ pub struct Miner {
 
     /// The amount of ORE this miner has mined.
     pub total_rewards: u64,
-
-    /// The number of winning hashes this miner has submitted.
-    pub winning_hashes: u64,
 }
 
 impl Miner {
