@@ -34,7 +34,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &mint_quote_info.key)?
-        .assert_mut(|t| t.amount() >= OPEN_FEE)?;
+        .assert(|t| t.amount() >= OPEN_FEE)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;

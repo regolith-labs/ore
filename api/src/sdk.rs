@@ -11,6 +11,9 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
+    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
     let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
     Instruction {
@@ -18,9 +21,13 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(collateral_address, false),
+            AccountMeta::new(commitment_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(sender_address, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(vault_base_address, false),
             AccountMeta::new(vault_quote_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
