@@ -12,7 +12,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, treasury_tokens_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -41,26 +41,11 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
 
-    // Load treasury token accounts.
-    if treasury_tokens_info.data_is_empty() {
-        create_associated_token_account(
-            signer_info,
-            treasury_info,
-            treasury_tokens_info,
-            mint_quote_info,
-            system_program,
-            token_program,
-            associated_token_program,
-        )?;
-    } else {
-        treasury_tokens_info.as_associated_token_account(&TREASURY_ADDRESS, mint_quote_info.key)?;
-    }
-
     // Pay block opening fee.
-    transfer(
-        signer_info,
+    burn(
         sender_info,
-        treasury_tokens_info,
+        mint_quote_info,
+        signer_info,
         token_program,
         OPEN_FEE,
     )?;
