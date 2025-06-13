@@ -44,19 +44,22 @@ pub struct Block {
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct RewardConfig {
     /// The reward paid to the submitter of the best hash.
-    pub best_hash_reward: u64,
+    pub lode_reward: u64,
 
     /// The authority of the miner who submitted the best hash.
-    pub best_hash_authority: Pubkey,
+    pub lode_authority: Pubkey,
 
     /// The best hash.
-    pub best_hash: [u8; 32],
+    pub lode_hash: [u8; 32],
+
+    /// The threshold difficulty for the motherlode payout.
+    pub motherlode_threshold: u64,
 
     /// The reward rate paid to hashes satisfying the difficulty threshold.
-    pub difficulty_reward: u64,
+    pub nugget_reward: u64,
 
     /// The minimum difficulty required for payout.
-    pub difficulty_threshold: u64,
+    pub nugget_threshold: u64,
 }
 
 impl Block {

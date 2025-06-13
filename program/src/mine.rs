@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -42,6 +42,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .is_writable()?
         .as_associated_token_account(&miner.authority, &MINT_ADDRESS)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
+    let treasury_tokens = treasury_tokens_info
+        .is_writable()?
+        .as_associated_token_account(&treasury_info.key, &mint_ore_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
@@ -104,16 +107,28 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
         // Score and increment rewards.
         let score = difficulty(miner.hash) as u64;
-        if score >= block.reward.difficulty_threshold {
+        if score >= block.reward.nugget_threshold {
             block.winning_hashes += 1;
             miner.winning_hashes += 1;
-            miner_reward += block.reward.difficulty_reward;
+            miner_reward += block.reward.nugget_reward;
         }
 
         // If hash is best hash, update best hash.
-        if miner.hash < block.reward.best_hash {
-            block.reward.best_hash = miner.hash;
-            block.reward.best_hash_authority = miner.authority;
+        if miner.hash < block.reward.lode_hash {
+            block.reward.lode_hash = miner.hash;
+            block.reward.lode_authority = miner.authority;
+        }
+
+        // If hash is motherlode hash, pay the motherlode reward.
+        if score >= block.reward.motherlode_threshold {
+            transfer_signed(
+                authority_info,
+                treasury_tokens_info,
+                recipient_info,
+                token_program,
+                treasury_tokens.amount(),
+                &[TREASURY],
+            )?;
         }
     }
 

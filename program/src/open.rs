@@ -12,7 +12,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, treasury_tokens_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -31,10 +31,39 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .is_writable()?
         .has_seeds(&[MINT, &id.to_le_bytes()], &ore_api::ID)?;
     mint_quote_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    sender_info
+        .is_writable()?
+        .as_associated_token_account(&signer_info.key, &mint_quote_info.key)?
+        .assert_mut(|t| t.amount() >= OPEN_FEE)?;
+    treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
+
+    // Load treasury token accounts.
+    if treasury_tokens_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            treasury_info,
+            treasury_tokens_info,
+            mint_quote_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        treasury_tokens_info.as_associated_token_account(&TREASURY_ADDRESS, mint_quote_info.key)?;
+    }
+
+    // Pay block opening fee.
+    transfer(
+        signer_info,
+        sender_info,
+        treasury_tokens_info,
+        token_program,
+        OPEN_FEE,
+    )?;
 
     // Error out if start slot is within the current period.
     let start_slot = id * 1500;
@@ -55,11 +84,12 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     block.id = id;
     block.reward = RewardConfig {
-        best_hash: [0; 32],
-        best_hash_authority: Pubkey::default(),
-        best_hash_reward: 0,
-        difficulty_threshold: MIN_DIFFICULTY,
-        difficulty_reward: 0,
+        lode_hash: [0; 32],
+        lode_authority: Pubkey::default(),
+        lode_reward: 0,
+        motherlode_threshold: MOTHERLOAD_DIFFICULTY,
+        nugget_reward: 0,
+        nugget_threshold: NUGGET_DIFFICULTY,
     };
     block.slot_hash = [0; 32];
     block.start_slot = start_slot;
@@ -69,13 +99,13 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Select reward strategy.
     let noise_seed = block.id.to_le_bytes();
     let noise = hash(&noise_seed);
-    let best_hash_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+    let lode_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
     let target_block_reward = ONE_ORE * 10;
     let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
-    let expected_qualifying_hashes = expected_hashes_per_block / 2u64.pow(MIN_DIFFICULTY as u32);
-    let difficulty_reward = (target_block_reward - best_hash_reward) / expected_qualifying_hashes;
-    block.reward.best_hash_reward = best_hash_reward;
-    block.reward.difficulty_reward = difficulty_reward;
+    let expected_qualifying_hashes = expected_hashes_per_block / 2u64.pow(NUGGET_DIFFICULTY as u32);
+    let difficulty_reward = (target_block_reward - lode_reward) / expected_qualifying_hashes;
+    block.reward.lode_reward = lode_reward;
+    block.reward.nugget_reward = difficulty_reward;
 
     // Initialize market.
     create_program_account::<Market>(
@@ -232,14 +262,13 @@ fn test_hash_rewards() {
     for i in 0u64..1000 {
         let noise_seed = i.to_le_bytes();
         let noise = hash(&noise_seed);
-        let best_hash_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+        let lode_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
         let target_block_reward = ONE_ORE * 10;
         let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
         let expected_qualifying_hashes =
-            expected_hashes_per_block / 2u64.pow(MIN_DIFFICULTY as u32);
-        let difficulty_reward =
-            (target_block_reward - best_hash_reward) / expected_qualifying_hashes;
-        println!("{}: {} {}", i, best_hash_reward, difficulty_reward);
+            expected_hashes_per_block / 2u64.pow(NUGGET_DIFFICULTY as u32);
+        let difficulty_reward = (target_block_reward - lode_reward) / expected_qualifying_hashes;
+        println!("{}: {} {}", i, lode_reward, difficulty_reward);
     }
     // assert!(false);
 }

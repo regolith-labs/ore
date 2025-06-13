@@ -30,15 +30,14 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     token_program.is_program(&spl_token::ID)?;
 
     // Payout block reward.
-    if block.reward.best_hash_reward > 0 && block.reward.best_hash_authority != Pubkey::default() {
-        recipient_info
-            .as_associated_token_account(&block.reward.best_hash_authority, &MINT_ADDRESS)?;
+    if block.reward.lode_reward > 0 && block.reward.lode_authority != Pubkey::default() {
+        recipient_info.as_associated_token_account(&block.reward.lode_authority, &MINT_ADDRESS)?;
         mint_to_signed(
             mint_quote_info,
             recipient_info,
             treasury_info,
             token_program,
-            block.reward.best_hash_reward,
+            block.reward.lode_reward,
             &[TREASURY],
         )?;
     }
