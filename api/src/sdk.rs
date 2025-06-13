@@ -93,6 +93,47 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
+// let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, sender_info, system_program, token_program, slot_hashes_sysvar] =
+
+pub fn commit(
+    signer: Pubkey,
+    amount: u64,
+    executor: Pubkey,
+    fee: u64,
+    id: u64,
+    seed: [u8; 32],
+) -> Instruction {
+    let block_adddress = block_pda(id).0;
+    let market_address = market_pda(id).0;
+    let base_mint_address = mint_pda(id).0;
+    let miner_address = miner_pda(signer).0;
+    let permit_address = permit_pda(signer, id).0;
+    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let sender_address = get_associated_token_address(&signer, &base_mint_address);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(block_adddress, false),
+            AccountMeta::new(commitment_address, false),
+            AccountMeta::new(market_address, false),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new(base_mint_address, false),
+            AccountMeta::new(permit_address, false),
+            AccountMeta::new(sender_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: Commit {
+            amount: amount.to_le_bytes(),
+            executor: executor.to_bytes(),
+            fee: fee.to_le_bytes(),
+            seed: seed,
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);

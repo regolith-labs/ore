@@ -9,7 +9,7 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, recipient_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, recipient_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -37,7 +37,6 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .as_associated_token_account(signer_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
-    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Normalize amount.
     let amount = permit.amount.min(amount);
