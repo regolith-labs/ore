@@ -97,7 +97,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     }
 
     // Mine and accumulate rewards.
-    let mut miner_reward = 0;
+    let mut nugget_reward = 0;
     for _ in 0..amount {
         // Update stats
         block.total_hashes += 1;
@@ -109,7 +109,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         // Score and increment rewards.
         let score = difficulty(miner.hash) as u64;
         if score >= block.reward.nugget_threshold {
-            miner_reward += block.reward.nugget_reward;
+            nugget_reward += block.reward.nugget_reward;
         }
 
         // If hash is best hash, update best hash.
@@ -120,28 +120,53 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
         // If hash is motherlode hash, pay the motherlode reward.
         if score >= block.reward.motherlode_threshold {
+            // Execute transfer.
+            let motherlode_amount = treasury_tokens.amount();
             transfer_signed(
                 authority_info,
                 treasury_tokens_info,
                 recipient_info,
                 token_program,
-                treasury_tokens.amount(),
+                motherlode_amount,
                 &[TREASURY],
             )?;
+
+            // Emit event.
+            RewardEvent {
+                amount: motherlode_amount,
+                authority: miner.authority,
+                block_id: block.id,
+                rewards_type: RewardsType::Motherlode as u64,
+            }
+            .log();
         }
     }
 
     // Payout ORE.
-    block.total_rewards += miner_reward;
-    miner.total_rewards += miner_reward;
-    mint_to_signed(
-        mint_ore_info,
-        recipient_info,
-        treasury_info,
-        token_program,
-        miner_reward,
-        &[TREASURY],
-    )?;
+    if nugget_reward > 0 {
+        // Update stats.
+        block.total_rewards += nugget_reward;
+        miner.total_rewards += nugget_reward;
+
+        // Mint to recipient.
+        mint_to_signed(
+            mint_ore_info,
+            recipient_info,
+            treasury_info,
+            token_program,
+            nugget_reward,
+            &[TREASURY],
+        )?;
+
+        // Emit event.
+        RewardEvent {
+            amount: nugget_reward,
+            authority: miner.authority,
+            block_id: block.id,
+            rewards_type: RewardsType::Nugget as u64,
+        }
+        .log();
+    }
 
     Ok(())
 }

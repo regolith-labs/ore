@@ -45,14 +45,25 @@ impl SwapEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct RewardEvent {
+    /// The amount of ORE distributed as a reward.
+    pub amount: u64,
+
     /// The authority who received the reward.
     pub authority: Pubkey,
 
     /// The block id.
     pub block_id: u64,
 
-    /// The amount of ORE distributed as a reward.
-    pub amount: u64,
+    /// The type of reward.
+    pub rewards_type: u64,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+pub enum RewardsType {
+    Nugget = 0,
+    Lode = 1,
+    Motherlode = 2,
 }
 
 event!(SwapEvent);
