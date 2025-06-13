@@ -93,6 +93,34 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
+pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
+    let block_adddress = block_pda(id).0;
+    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    let stake_address = stake_pda(signer, id).0;
+    let sender = get_associated_token_address(&signer, &MINT_ADDRESS);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(block_adddress, false),
+            AccountMeta::new(collateral_address, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(sender, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: Deposit {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+// let [signer_info, block_info, collateral_info, mint_ore_info, sender_info, stake_info, system_program, token_program] =
+
+// let [signer_info, block_info, collateral_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
+
 pub fn swap(
     signer: Pubkey,
     id: u64,
@@ -103,6 +131,8 @@ pub fn swap(
     let block_adddress = block_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
+    let stake_address = stake_pda(signer, id).0;
+    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
     let tokens_base_address = get_associated_token_address(&signer, &base_mint_address);
     let tokens_quote_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
@@ -112,9 +142,11 @@ pub fn swap(
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(collateral_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(stake_address, false),
             AccountMeta::new(tokens_base_address, false),
             AccountMeta::new(tokens_quote_address, false),
             AccountMeta::new(vault_base_address, false),

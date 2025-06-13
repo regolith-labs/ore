@@ -56,8 +56,8 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Transfer collateral.
     transfer(
-        sender_info,
         signer_info,
+        sender_info,
         collateral_info,
         token_program,
         amount,

@@ -42,6 +42,12 @@ async fn main() {
         "blocks" => {
             log_blocks(&rpc).await.unwrap();
         }
+        "deposit" => {
+            deposit(&rpc, &payer).await.unwrap();
+        }
+        "swap" => {
+            swap(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
 }
@@ -64,6 +70,34 @@ async fn close(
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
     let ix = ore_api::sdk::close(payer.pubkey(), payer.pubkey(), id);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn deposit(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let ix = ore_api::sdk::deposit(payer.pubkey(), id, 10000000);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn swap(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let ix = ore_api::sdk::swap(
+        payer.pubkey(),
+        id,
+        10000000,
+        SwapDirection::Buy,
+        SwapPrecision::ExactIn,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }

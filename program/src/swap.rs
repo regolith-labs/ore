@@ -30,7 +30,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|m| m.quote.liquidity() > 0)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
-    stake_info
+    let stake = stake_info
         .as_account_mut::<Stake>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *signer_info.key)?
         .assert_mut(|p| p.block_id == block.id)?;
@@ -43,28 +43,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
-
-    // Load stake account.
-    let stake = if stake_info.data_is_empty() {
-        create_program_account::<Stake>(
-            stake_info,
-            system_program,
-            signer_info,
-            &ore_api::ID,
-            &[STAKE, &signer_info.key.to_bytes(), &block.id.to_le_bytes()],
-        )?;
-        let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
-        stake.authority = *signer_info.key;
-        stake.block_id = block.id;
-        stake.capacity = 0;
-        stake.utilization = 0;
-        stake
-    } else {
-        stake_info
-            .as_account_mut::<Stake>(&ore_api::ID)?
-            .assert_mut(|p| p.authority == *signer_info.key)?
-            .assert_mut(|p| p.block_id == block.id)?
-    };
 
     // Load token acccounts.
     if tokens_base_info.data_is_empty() {
@@ -127,6 +105,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Update stake state.
     match direction {
         SwapDirection::Buy => {
+            // TODO Fail if out_amount is zero
             stake.utilization += in_amount;
         }
         SwapDirection::Sell => {
@@ -147,12 +126,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         out_to,
         token_program,
         out_amount,
-        &[
-            MARKET,
-            market.base.mint.as_ref(),
-            market.quote.mint.as_ref(),
-            market.id.to_le_bytes().as_ref(),
-        ],
+        &[MARKET, market.id.to_le_bytes().as_ref()],
     )?;
 
     // Validate vault reserves.
