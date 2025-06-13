@@ -137,6 +137,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                 authority: miner.authority,
                 block_id: block.id,
                 rewards_type: RewardsType::Motherlode as u64,
+                ts: clock.unix_timestamp,
             }
             .log();
         }
@@ -164,6 +165,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             authority: miner.authority,
             block_id: block.id,
             rewards_type: RewardsType::Nugget as u64,
+            ts: clock.unix_timestamp,
         }
         .log();
     }

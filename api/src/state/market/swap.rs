@@ -14,18 +14,21 @@ impl Market {
         clock: Clock,
     ) -> Result<SwapEvent, OreError> {
         // Update snapshot.
-        self.update_snapshot(clock);
+        self.update_snapshot(&clock);
 
         // Get invariant.
         let k_pre = self.k();
 
         // Execute swap.
-        let swap_event = match (direction, precision) {
+        let mut swap_event = match (direction, precision) {
             (SwapDirection::Buy, SwapPrecision::ExactIn) => self.buy_exact_in(amount)?,
             (SwapDirection::Buy, SwapPrecision::ExactOut) => self.buy_exact_out(amount)?,
             (SwapDirection::Sell, SwapPrecision::ExactIn) => self.sell_exact_in(amount)?,
             (SwapDirection::Sell, SwapPrecision::ExactOut) => self.sell_exact_out(amount)?,
         };
+
+        // Update timestamp.
+        swap_event.ts = clock.unix_timestamp;
 
         // Check invariant.
         let k_post = self.k();

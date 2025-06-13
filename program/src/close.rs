@@ -76,6 +76,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             authority: block.reward.lode_authority,
             block_id: block.id,
             rewards_type: RewardsType::Lode as u64,
+            ts: clock.unix_timestamp,
         }
         .log();
     }

@@ -223,6 +223,18 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[BLOCK, &id.to_le_bytes()],
     )?;
 
+    // Emit event.
+    OpenEvent {
+        id,
+        start_slot,
+        signer: *signer_info.key,
+        reward_config: block.reward,
+        liquidity_base: market.base.liquidity() as u64,
+        liquidity_quote: market.quote.liquidity() as u64,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
+
     Ok(())
 }
 

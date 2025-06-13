@@ -34,7 +34,7 @@ pub struct Block {
 
 /// Configuration specifying how rewards are paid out.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct RewardConfig {
     /// The reward paid to the submitter of the best hash.
     pub lode_reward: u64,

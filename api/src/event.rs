@@ -1,6 +1,6 @@
 use steel::*;
 
-use crate::state::SwapDirection;
+use crate::state::{RewardConfig, SwapDirection};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
@@ -34,6 +34,9 @@ pub struct SwapEvent {
 
     /// Amount of quote tokens taken in fees.
     pub quote_fee: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
 }
 
 impl SwapEvent {
@@ -56,6 +59,9 @@ pub struct RewardEvent {
 
     /// The type of reward.
     pub rewards_type: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
 }
 
 #[repr(u8)]
@@ -66,5 +72,31 @@ pub enum RewardsType {
     Motherlode = 2,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct OpenEvent {
+    /// The signer of the open transaction.
+    pub signer: Pubkey,
+
+    /// The id of the block.
+    pub id: u64,
+
+    /// The start slot of the block.
+    pub start_slot: u64,
+
+    /// The base liquidity in the market.
+    pub liquidity_base: u64,
+
+    /// The quote liquidity in the market.
+    pub liquidity_quote: u64,
+
+    /// The reward configuration.
+    pub reward_config: RewardConfig,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(SwapEvent);
 event!(RewardEvent);
+event!(OpenEvent);

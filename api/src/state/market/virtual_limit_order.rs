@@ -121,7 +121,7 @@ impl Market {
         }
     }
 
-    pub(crate) fn update_snapshot(&mut self, clock: Clock) {
+    pub(crate) fn update_snapshot(&mut self, clock: &Clock) {
         let slot = clock.slot;
         let snapshot_slot = (slot / SLOT_WINDOW) * SLOT_WINDOW;
         if snapshot_slot != self.snapshot.slot {

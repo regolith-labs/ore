@@ -71,6 +71,7 @@ impl Market {
             base_via_curve: base_via_curve as u64,
             quote_via_curve: quote_via_curve as u64,
             quote_fee: quote_fee as u64,
+            ts: 0,
         };
 
         // Sanity check swap result.
