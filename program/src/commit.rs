@@ -94,5 +94,15 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Update block.
     permit.amount += amount;
 
+    // Emit event.
+    CommitEvent {
+        authority: *signer_info.key,
+        block_id: block.id,
+        amount,
+        commitment: permit.amount,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
+
     Ok(())
 }

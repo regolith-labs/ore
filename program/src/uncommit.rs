@@ -59,5 +59,15 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         permit_info.close(signer_info)?;
     }
 
+    // Emit event.
+    UncommitEvent {
+        authority: *signer_info.key,
+        block_id: block.id,
+        commitment: permit.amount,
+        amount,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
+
     Ok(())
 }

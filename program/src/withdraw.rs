@@ -53,5 +53,15 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         stake_info.close(signer_info)?;
     }
 
+    // Emit event.
+    WithdrawEvent {
+        authority: *signer_info.key,
+        block_id: stake.block_id,
+        amount,
+        capacity: stake.capacity,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
+
     Ok(())
 }

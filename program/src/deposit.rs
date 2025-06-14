@@ -63,5 +63,15 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         amount,
     )?;
 
+    // Emit event.
+    DepositEvent {
+        authority: *signer_info.key,
+        block_id: block.id,
+        amount,
+        capacity: stake.capacity,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
+
     Ok(())
 }

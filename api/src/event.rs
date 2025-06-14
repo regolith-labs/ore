@@ -97,6 +97,86 @@ pub struct OpenEvent {
     pub ts: i64,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct CommitEvent {
+    /// The authority of the commit transaction.
+    pub authority: Pubkey,
+
+    /// The id of the block.
+    pub block_id: u64,
+
+    /// The amount of hashpower committed.
+    pub amount: u64,
+
+    /// The total amount of hashpower this user has committed.
+    pub commitment: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct UncommitEvent {
+    /// The authority of the commit transaction.
+    pub authority: Pubkey,
+
+    /// The id of the block.
+    pub block_id: u64,
+
+    /// The amount of hashpower committed.
+    pub amount: u64,
+
+    /// The total amount of hashpower this user has committed.
+    pub commitment: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct DepositEvent {
+    /// The authority of the commit transaction.
+    pub authority: Pubkey,
+
+    /// The id of the block.
+    pub block_id: u64,
+
+    /// The amount of ORE collateral deposited.
+    pub amount: u64,
+
+    /// The total amount of ORE this user has deposited as collateral.
+    pub capacity: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct WithdrawEvent {
+    /// The authority of the commit transaction.
+    pub authority: Pubkey,
+
+    /// The id of the block.
+    pub block_id: u64,
+
+    /// The amount of ORE collateral withdrawn.
+    pub amount: u64,
+
+    /// The total amount of ORE this user has deposited as collateral.
+    pub capacity: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(SwapEvent);
 event!(RewardEvent);
 event!(OpenEvent);
+event!(CommitEvent);
+event!(DepositEvent);
+event!(WithdrawEvent);
+event!(UncommitEvent);
