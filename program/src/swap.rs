@@ -77,10 +77,9 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     }
 
     // Update market state.
-    let mut swap_result = market.swap(amount, direction, precision, clock)?;
-    swap_result.authority = *signer_info.key;
-    swap_result.block_id = block.id;
-    swap_result.log_return();
+    let mut swap_event = market.swap(amount, direction, precision, clock)?;
+    swap_event.authority = *signer_info.key;
+    swap_event.block_id = block.id;
 
     // Get transfer amounts and accounts.
     let (in_amount, in_from, in_to, out_amount, out_from, out_to) = match direction {
@@ -135,6 +134,9 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let vault_quote =
         vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
     market.check_vaults(&vault_base, &vault_quote)?;
+
+    // Emit event.
+    swap_event.log_return();
 
     Ok(())
 }
