@@ -84,18 +84,18 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Get transfer amounts and accounts.
     let (in_amount, in_from, in_to, out_amount, out_from, out_to) = match direction {
         SwapDirection::Buy => (
-            swap_result.quote_to_transfer,
+            swap_event.quote_to_transfer,
             tokens_quote_info,
             vault_quote_info,
-            swap_result.base_to_transfer,
+            swap_event.base_to_transfer,
             vault_base_info,
             tokens_base_info,
         ),
         SwapDirection::Sell => (
-            swap_result.base_to_transfer,
+            swap_event.base_to_transfer,
             tokens_base_info,
             vault_base_info,
-            swap_result.quote_to_transfer,
+            swap_event.quote_to_transfer,
             vault_quote_info,
             tokens_quote_info,
         ),
