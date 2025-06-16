@@ -82,22 +82,24 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Burn base liquidity.
+    let base_burned = vault_base.amount();
     burn_signed(
         vault_base_info,
         mint_base_info,
         market_info,
         token_program,
-        vault_base.amount(),
+        base_burned,
         &[MARKET, &market.id.to_le_bytes()],
     )?;
 
     // Burn quote liquidity.
+    let quote_burned = vault_quote.amount();
     burn_signed(
         vault_quote_info,
         mint_quote_info,
         market_info,
         token_program,
-        vault_quote.amount(),
+        quote_burned,
         &[MARKET, &market.id.to_le_bytes()],
     )?;
 
@@ -106,6 +108,16 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Close market.
     market_info.close(signer_info)?;
+
+    // Emit event.
+    CloseEvent {
+        authority: *signer_info.key,
+        id: block.id,
+        burned_base: base_burned,
+        burned_quote: quote_burned,
+        ts: clock.unix_timestamp,
+    }
+    .log_return();
 
     Ok(())
 }

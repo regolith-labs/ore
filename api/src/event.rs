@@ -99,6 +99,25 @@ pub struct OpenEvent {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct CloseEvent {
+    /// The authority of the close transaction.
+    pub authority: Pubkey,
+
+    /// The id of the block.
+    pub id: u64,
+
+    /// The amount of base (hashpower) liquidity burned.
+    pub burned_base: u64,
+
+    /// The amount of quote (ORE) liquidity burned.
+    pub burned_quote: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct CommitEvent {
     /// The authority of the commit transaction.
     pub authority: Pubkey,
@@ -180,3 +199,4 @@ event!(CommitEvent);
 event!(DepositEvent);
 event!(WithdrawEvent);
 event!(UncommitEvent);
+event!(CloseEvent);
