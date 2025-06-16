@@ -83,7 +83,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Select reward strategy.
     let noise_seed = block.id.to_le_bytes();
     let noise = hash(&noise_seed);
-    let lode_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+    let lode_reward = ONE_ORE * generate_lode(noise) as u64;
     let target_block_reward = ONE_ORE * 10;
     let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
     let expected_qualifying_hashes = expected_hashes_per_block / 2u64.pow(NUGGET_DIFFICULTY as u32);
@@ -238,7 +238,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     Ok(())
 }
 
-fn generate_best_hash_reward(hash: [u8; 32]) -> u8 {
+fn generate_lode(hash: [u8; 32]) -> u8 {
     // Extract the first byte (0 to 255)
     let byte_value = hash[0];
 
@@ -254,11 +254,11 @@ fn generate_best_hash_reward(hash: [u8; 32]) -> u8 {
 }
 
 #[test]
-fn test_hash_rewards() {
+fn test_lode_rewards() {
     for i in 0u64..1000 {
         let noise_seed = i.to_le_bytes();
         let noise = hash(&noise_seed);
-        let lode_reward = ONE_ORE * generate_best_hash_reward(noise) as u64;
+        let lode_reward = ONE_ORE * generate_lode(noise) as u64;
         let target_block_reward = ONE_ORE * 10;
         let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
         let expected_qualifying_hashes =

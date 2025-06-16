@@ -39,4 +39,3 @@ For line coverage, use llvm-cov:
 cargo llvm-cov
 ```
 
-Congrats on the child. That's great news. 
