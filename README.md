@@ -38,4 +38,3 @@ For line coverage, use llvm-cov:
 ```
 cargo llvm-cov
 ```
-

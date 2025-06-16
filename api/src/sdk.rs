@@ -134,6 +134,35 @@ pub fn commit(
     }
 }
 
+pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
+    let block_adddress = block_pda(id).0;
+    let market_address = market_pda(id).0;
+    let base_mint_address = mint_pda(id).0;
+    let miner_address = miner_pda(signer).0;
+    let permit_address = permit_pda(signer, id).0;
+    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(block_adddress, false),
+            AccountMeta::new(commitment_address, false),
+            AccountMeta::new(market_address, false),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new(base_mint_address, false),
+            AccountMeta::new(permit_address, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: Uncommit {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
