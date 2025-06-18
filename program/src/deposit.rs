@@ -65,6 +65,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Emit event.
     DepositEvent {
+        disc: OreEvent::Deposit as u64,
         authority: *signer_info.key,
         block_id: block.id,
         amount,

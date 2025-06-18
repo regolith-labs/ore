@@ -55,6 +55,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Emit event.
     WithdrawEvent {
+        disc: OreEvent::Withdraw as u64,
         authority: *signer_info.key,
         block_id: stake.block_id,
         amount,

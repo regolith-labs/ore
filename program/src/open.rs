@@ -225,6 +225,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Emit event.
     OpenEvent {
+        disc: OreEvent::Open as u64,
         id,
         start_slot,
         signer: *signer_info.key,

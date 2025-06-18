@@ -133,6 +133,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
             // Emit event.
             RewardEvent {
+                disc: OreEvent::Reward as u64,
                 amount: motherlode_amount,
                 authority: miner.authority,
                 block_id: block.id,
@@ -161,6 +162,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
         // Emit event.
         RewardEvent {
+            disc: OreEvent::Reward as u64,
             amount: nugget_reward,
             authority: miner.authority,
             block_id: block.id,

@@ -96,6 +96,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Emit event.
     CommitEvent {
+        disc: OreEvent::Commit as u64,
         authority: *signer_info.key,
         block_id: block.id,
         amount,

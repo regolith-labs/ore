@@ -61,6 +61,7 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Emit event.
     UncommitEvent {
+        disc: OreEvent::Uncommit as u64,
         authority: *signer_info.key,
         block_id: block.id,
         commitment: permit.amount,

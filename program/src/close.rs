@@ -72,6 +72,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
         // Emit event.
         RewardEvent {
+            disc: OreEvent::Reward as u64,
             amount: block.reward.lode_reward,
             authority: block.reward.lode_authority,
             block_id: block.id,

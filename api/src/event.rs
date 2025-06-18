@@ -2,9 +2,22 @@ use steel::*;
 
 use crate::state::{RewardConfig, SwapDirection};
 
+pub enum OreEvent {
+    Swap = 0,
+    Reward = 1,
+    Open = 2,
+    Commit = 3,
+    Deposit = 4,
+    Withdraw = 5,
+    Uncommit = 6,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct SwapEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The authority of the swap.
     pub authority: Pubkey,
 
@@ -48,6 +61,9 @@ impl SwapEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct RewardEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The amount of ORE distributed as a reward.
     pub amount: u64,
 
@@ -75,6 +91,9 @@ pub enum RewardsType {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct OpenEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The signer of the open transaction.
     pub signer: Pubkey,
 
@@ -119,6 +138,9 @@ pub struct CloseEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct CommitEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
@@ -138,6 +160,9 @@ pub struct CommitEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct UncommitEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
@@ -157,6 +182,9 @@ pub struct UncommitEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct DepositEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
@@ -176,6 +204,9 @@ pub struct DepositEvent {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct WithdrawEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 

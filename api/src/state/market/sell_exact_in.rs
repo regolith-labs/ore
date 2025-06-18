@@ -1,6 +1,6 @@
 use steel::Pubkey;
 
-use crate::error::OreError;
+use crate::{error::OreError, event::OreEvent};
 
 use super::{Market, SwapDirection, TokenType, VirtualLimitOrder};
 use crate::event::SwapEvent;
@@ -63,6 +63,7 @@ impl Market {
         // Produce swap result.
         let quote_out = quote_via_bid + quote_via_curve;
         let swap_event = SwapEvent {
+            disc: OreEvent::Swap as u64,
             authority: Pubkey::default(),
             block_id: 0,
             direction: SwapDirection::Sell as u64,
