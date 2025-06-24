@@ -65,7 +65,7 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 pub const SLOT_WINDOW: u64 = 4;
 
 /// Amount of hash tokens to mint to market.
-pub const HASH_TOKEN_SUPPLY: u64 = 2_000_000;
+pub const HASH_TOKEN_SUPPLY: u64 = 1_000_000;
 
 /// The virtual liquidity to seed the markets with (in ORE).
 pub const VIRTUAL_LIQUIDITY: u64 = ONE_ORE * 5;
