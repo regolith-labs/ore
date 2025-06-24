@@ -150,8 +150,11 @@ pub struct CommitEvent {
     /// The amount of hashpower committed.
     pub amount: u64,
 
-    /// The total amount of hashpower this user has committed.
-    pub commitment: u64,
+    /// The total amount of hashpower committed to the block.
+    pub block_commitment: u64,
+
+    /// The total amount of hashpower this miner has committed to the block.
+    pub permit_commitment: u64,
 
     /// The timestamp of the event.
     pub ts: i64,
@@ -172,8 +175,11 @@ pub struct UncommitEvent {
     /// The amount of hashpower committed.
     pub amount: u64,
 
-    /// The total amount of hashpower this user has committed.
-    pub commitment: u64,
+    /// The total amount of hashpower committed to the block.
+    pub block_commitment: u64,
+
+    /// The total amount of hashpower this miner has committed to the block.
+    pub permit_commitment: u64,
 
     /// The timestamp of the event.
     pub ts: i64,

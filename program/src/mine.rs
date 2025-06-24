@@ -117,31 +117,6 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             block.reward.lode_hash = miner.hash;
             block.reward.lode_authority = miner.authority;
         }
-
-        // If hash is motherlode hash, pay the motherlode reward.
-        if score >= block.reward.motherlode_threshold {
-            // Execute transfer.
-            let motherlode_amount = treasury_tokens.amount();
-            transfer_signed(
-                authority_info,
-                treasury_tokens_info,
-                recipient_info,
-                token_program,
-                motherlode_amount,
-                &[TREASURY],
-            )?;
-
-            // Emit event.
-            RewardEvent {
-                disc: OreEvent::Reward as u64,
-                amount: motherlode_amount,
-                authority: miner.authority,
-                block_id: block.id,
-                rewards_type: RewardsType::Motherlode as u64,
-                ts: clock.unix_timestamp,
-            }
-            .log();
-        }
     }
 
     // Payout ORE.

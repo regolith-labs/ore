@@ -48,9 +48,6 @@ pub struct RewardConfig {
     /// The best hash.
     pub lode_hash: [u8; 32],
 
-    /// The threshold difficulty for the motherlode payout.
-    pub motherlode_threshold: u64,
-
     /// The reward rate paid to hashes satisfying the difficulty threshold.
     pub nugget_reward: u64,
 

@@ -33,22 +33,12 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     mint_quote_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     sender_info
         .is_writable()?
-        .as_associated_token_account(&signer_info.key, &mint_quote_info.key)?
-        .assert(|t| t.amount() >= OPEN_FEE)?;
+        .as_associated_token_account(&signer_info.key, &mint_quote_info.key)?;
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
-
-    // Pay block opening fee.
-    burn(
-        sender_info,
-        mint_quote_info,
-        signer_info,
-        token_program,
-        OPEN_FEE,
-    )?;
 
     // Error out if start slot is within the current period.
     let start_slot = id * 1500;
@@ -72,7 +62,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         lode_hash: [0; 32],
         lode_authority: Pubkey::default(),
         lode_reward: 0,
-        motherlode_threshold: MOTHERLOAD_DIFFICULTY,
         nugget_reward: 0,
         nugget_threshold: NUGGET_DIFFICULTY,
     };

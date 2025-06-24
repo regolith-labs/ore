@@ -65,7 +65,7 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 pub const SLOT_WINDOW: u64 = 4;
 
 /// Amount of hash tokens to mint to market.
-pub const HASH_TOKEN_SUPPLY: u64 = 10_000_000;
+pub const HASH_TOKEN_SUPPLY: u64 = 2_000_000;
 
 /// The virtual liquidity to seed the markets with (in ORE).
 pub const VIRTUAL_LIQUIDITY: u64 = ONE_ORE * 5;
@@ -73,11 +73,11 @@ pub const VIRTUAL_LIQUIDITY: u64 = ONE_ORE * 5;
 /// The minimum difficulty required for payout.
 pub const NUGGET_DIFFICULTY: u64 = 10;
 
-/// The difficulty threshold for the motherlode payout.
-pub const MOTHERLOAD_DIFFICULTY: u64 = 35;
+// The difficulty threshold for the motherlode payout.
+// pub const MOTHERLOAD_DIFFICULTY: u64 = 35;
 
-/// The fee to open a block.
-pub const OPEN_FEE: u64 = ONE_ORE / 100;
+// The fee to open a block.
+// pub const OPEN_FEE: u64 = ONE_ORE / 100;
 
 // The reward rate per satisfying hash (0.002048 ORE).
 // pub const REWARD_RATE: u64 = 204_800_000;

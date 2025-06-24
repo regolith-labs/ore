@@ -106,7 +106,8 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         authority: *signer_info.key,
         block_id: block.id,
         amount,
-        commitment: permit.commitment,
+        block_commitment: block.total_committed,
+        permit_commitment: permit.commitment,
         ts: clock.unix_timestamp,
     }
     .log_return();

@@ -156,10 +156,6 @@ fn print_block(block: Block, clock: &Clock) {
     println!("  Lode hash: {:?}", block.reward.lode_hash);
     println!("  Nugget reward: {:?}", block.reward.nugget_reward);
     println!("  Nugget threshold: {:?}", block.reward.nugget_threshold);
-    println!(
-        "  Motherlode threshold: {:?}",
-        block.reward.motherlode_threshold
-    );
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
