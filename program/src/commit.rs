@@ -1,5 +1,4 @@
 use ore_api::prelude::*;
-use solana_program::log::sol_log;
 use steel::*;
 
 /// Commit to a block.
@@ -18,25 +17,18 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    sol_log("A");
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot < b.start_slot)?;
-    sol_log("B");
     commitment_info.as_associated_token_account(block_info.key, mint_info.key)?;
-    sol_log("C");
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
-    sol_log("D");
     mint_info.has_address(&market.base.mint)?.as_mint()?;
-    sol_log("E");
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(signer_info.key, &mint_info.key)?;
-    sol_log("F");
     system_program.is_program(&system_program::ID)?;
-    sol_log("G");
     token_program.is_program(&spl_token::ID)?;
 
     // Normalize amount.
