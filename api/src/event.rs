@@ -108,7 +108,6 @@ pub struct MineEvent {
 pub enum RewardsType {
     Nugget = 0,
     Lode = 1,
-    Motherlode = 2,
 }
 
 #[repr(C)]
@@ -164,14 +163,14 @@ pub struct CommitEvent {
     /// The event discriminator.
     pub disc: u64,
 
+    /// The amount of hashpower committed.
+    pub amount: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
     /// The id of the block.
     pub block_id: u64,
-
-    /// The amount of hashpower committed.
-    pub amount: u64,
 
     /// The total amount of hashpower committed to the block.
     pub block_commitment: u64,
@@ -189,14 +188,14 @@ pub struct UncommitEvent {
     /// The event discriminator.
     pub disc: u64,
 
+    /// The amount of hashpower committed.
+    pub amount: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
     /// The id of the block.
     pub block_id: u64,
-
-    /// The amount of hashpower committed.
-    pub amount: u64,
 
     /// The total amount of hashpower committed to the block.
     pub block_commitment: u64,
@@ -214,14 +213,14 @@ pub struct DepositEvent {
     /// The event discriminator.
     pub disc: u64,
 
+    /// The amount of ORE collateral deposited.
+    pub amount: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
     /// The id of the block.
     pub block_id: u64,
-
-    /// The amount of ORE collateral deposited.
-    pub amount: u64,
 
     /// The total amount of ORE this user has deposited as collateral.
     pub collateral: u64,
@@ -236,14 +235,14 @@ pub struct WithdrawEvent {
     /// The event discriminator.
     pub disc: u64,
 
+    /// The amount of ORE collateral withdrawn.
+    pub amount: u64,
+
     /// The authority of the commit transaction.
     pub authority: Pubkey,
 
     /// The id of the block.
     pub block_id: u64,
-
-    /// The amount of ORE collateral withdrawn.
-    pub amount: u64,
 
     /// The total amount of ORE this user has deposited as collateral.
     pub collateral: u64,
