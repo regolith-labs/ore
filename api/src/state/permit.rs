@@ -7,14 +7,14 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Permit {
-    /// The amount of hash tokens this miner has committed to the block.
-    pub amount: u64,
-
     /// The authority of the miner account.
     pub authority: Pubkey,
 
     /// The ID of the block this permit is for.
     pub block_id: u64,
+
+    /// The amount of hash tokens this miner has committed to the block.
+    pub commitment: u64,
 
     /// The executor of the permit.
     pub executor: Pubkey,

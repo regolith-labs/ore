@@ -36,7 +36,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     }
 
     // Update stake state.
-    stake.capacity -= amount;
+    stake.collateral -= amount;
 
     // Transfer collateral.
     transfer_signed(
@@ -49,7 +49,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     )?;
 
     // Close stake account, if empty.
-    if stake.capacity == 0 {
+    if stake.collateral == 0 {
         stake_info.close(signer_info)?;
     }
 
@@ -59,7 +59,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         authority: *signer_info.key,
         block_id: stake.block_id,
         amount,
-        capacity: stake.capacity,
+        collateral: stake.collateral,
         ts: clock.unix_timestamp,
     }
     .log_return();

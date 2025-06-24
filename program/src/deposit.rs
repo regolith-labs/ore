@@ -41,8 +41,8 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
         stake.authority = *signer_info.key;
         stake.block_id = block.id;
-        stake.capacity = 0;
-        stake.utilization = 0;
+        stake.collateral = 0;
+        stake.spend = 0;
         stake
     } else {
         stake_info
@@ -52,7 +52,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     };
 
     // Update stake state.
-    stake.capacity += amount;
+    stake.collateral += amount;
 
     // Transfer collateral.
     transfer(
@@ -69,7 +69,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         authority: *signer_info.key,
         block_id: block.id,
         amount,
-        capacity: stake.capacity,
+        collateral: stake.collateral,
         ts: clock.unix_timestamp,
     }
     .log_return();

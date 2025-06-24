@@ -16,17 +16,17 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     };
     signer_info.is_signer()?;
     let block = block_info
-        .as_account::<Block>(&ore_api::ID)?
-        .assert(|b| clock.slot < b.start_slot)?;
+        .as_account_mut::<Block>(&ore_api::ID)?
+        .assert_mut(|b| clock.slot < b.start_slot)?;
     commitment_info
         .is_writable()?
         .as_associated_token_account(block_info.key, mint_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
-    miner_info
-        .as_account::<Miner>(&ore_api::ID)?
-        .assert(|m| m.authority == *signer_info.key)?;
+    let miner = miner_info
+        .as_account_mut::<Miner>(&ore_api::ID)?
+        .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_info.has_address(&market.base.mint)?.as_mint()?;
     let permit = permit_info
         .as_account_mut::<Permit>(&ore_api::ID)?
@@ -39,7 +39,7 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     token_program.is_program(&spl_token::ID)?;
 
     // Normalize amount.
-    let amount = permit.amount.min(amount);
+    let amount = permit.commitment.min(amount);
 
     // Transfer hash tokens.
     transfer_signed(
@@ -52,10 +52,12 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     )?;
 
     // Update block.
-    permit.amount -= amount;
+    permit.commitment -= amount;
+    miner.total_committed -= amount;
+    block.total_committed -= amount;
 
     // Close permit account, if empty.
-    if permit.amount == 0 {
+    if permit.commitment == 0 {
         permit_info.close(signer_info)?;
     }
 
@@ -64,7 +66,7 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         disc: OreEvent::Uncommit as u64,
         authority: *signer_info.key,
         block_id: block.id,
-        commitment: permit.amount,
+        commitment: permit.commitment,
         amount,
         ts: clock.unix_timestamp,
     }

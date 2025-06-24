@@ -26,7 +26,10 @@ pub struct Block {
     pub start_slot: u64,
 
     /// The total number of hashes submitted to the block.
-    pub total_hashes: u64,
+    pub total_committed: u64,
+
+    /// The total number of hashes deployed to the block.
+    pub total_deployed: u64,
 
     /// The total amount of rewards paid out to miners.
     pub total_rewards: u64,

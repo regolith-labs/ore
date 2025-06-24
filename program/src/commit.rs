@@ -18,8 +18,8 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     };
     signer_info.is_signer()?;
     let block = block_info
-        .as_account::<Block>(&ore_api::ID)?
-        .assert(|b| clock.slot < b.start_slot)?;
+        .as_account_mut::<Block>(&ore_api::ID)?
+        .assert_mut(|b| clock.slot < b.start_slot)?;
     commitment_info.as_associated_token_account(block_info.key, mint_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
@@ -35,7 +35,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let amount = sender.amount().min(amount);
 
     // Load miner account.
-    let _miner = if miner_info.data_is_empty() {
+    let miner = if miner_info.data_is_empty() {
         create_program_account::<Miner>(
             miner_info,
             system_program,
@@ -47,7 +47,8 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.authority = *signer_info.key;
         miner.block_id = 0;
         miner.hash = [0; 32];
-        miner.total_hashes = 0;
+        miner.total_committed = 0;
+        miner.total_deployed = 0;
         miner.total_rewards = 0;
         miner
     } else {
@@ -66,9 +67,12 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             &[PERMIT, &signer_info.key.to_bytes(), &block.id.to_le_bytes()],
         )?;
         let permit = permit_info.as_account_mut::<Permit>(&ore_api::ID)?;
-        permit.amount = 0;
         permit.authority = *signer_info.key;
         permit.block_id = block.id;
+        permit.commitment = 0;
+        permit.executor = Pubkey::default();
+        permit.fee = 0;
+        permit.seed = [0; 32];
         permit
     } else {
         permit_info
@@ -92,7 +96,9 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     )?;
 
     // Update block.
-    permit.amount += amount;
+    permit.commitment += amount;
+    miner.total_committed += amount;
+    block.total_committed += amount;
 
     // Emit event.
     CommitEvent {
@@ -100,7 +106,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         authority: *signer_info.key,
         block_id: block.id,
         amount,
-        commitment: permit.amount,
+        commitment: permit.commitment,
         ts: clock.unix_timestamp,
     }
     .log_return();

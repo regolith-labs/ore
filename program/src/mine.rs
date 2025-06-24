@@ -50,8 +50,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Reduce permit amount.
-    let amount = permit.amount.min(amount);
-    permit.amount -= amount;
+    let amount = permit.commitment.min(amount);
+    permit.commitment -= amount;
 
     // Pay executor fee.
     if permit.fee > 0 {
@@ -59,7 +59,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     }
 
     // Close permit account, if empty.
-    if permit.amount == 0 {
+    if permit.commitment == 0 {
         permit_info.close(authority_info)?;
     }
 
@@ -100,8 +100,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let mut nugget_reward = 0;
     for _ in 0..amount {
         // Update stats
-        block.total_hashes += 1;
-        miner.total_hashes += 1;
+        block.total_deployed += 1;
+        miner.total_deployed += 1;
 
         // Generate hash.
         miner.hash = hash(miner.hash.as_ref());

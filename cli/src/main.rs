@@ -148,7 +148,9 @@ fn print_block(block: Block, clock: &Clock) {
     println!("  Start slot: {:?}", block.start_slot);
     println!("  Starts in: {:?} sec", elapsed_time as u64);
     println!("  Slot hash: {:?}", block.slot_hash);
-    println!("  Total hashes: {:?}", block.total_hashes);
+    println!("  Total hashes: {:?}", block.total_committed);
+    println!("  Total deployed: {:?}", block.total_deployed);
+    println!("  Total rewards: {:?}", block.total_rewards);
     println!("  Lode reward: {:?}", block.reward.lode_reward);
     println!("  Lode authority: {:?}", block.reward.lode_authority);
     println!("  Lode hash: {:?}", block.reward.lode_hash);

@@ -105,16 +105,16 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     match direction {
         SwapDirection::Buy => {
             // TODO Fail if out_amount is zero
-            stake.utilization += in_amount;
+            stake.spend += in_amount;
         }
         SwapDirection::Sell => {
-            stake.utilization = stake.utilization.saturating_sub(out_amount);
+            stake.spend = stake.spend.saturating_sub(out_amount);
         }
     }
 
     // Assert utilization is not greater than capacity.
-    if stake.utilization > stake.capacity {
-        panic!("utilization is greater than capacity");
+    if stake.spend > stake.collateral {
+        panic!("spend is greater than collateral");
     }
 
     // Transfer tokens.

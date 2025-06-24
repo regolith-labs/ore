@@ -195,7 +195,7 @@ pub struct DepositEvent {
     pub amount: u64,
 
     /// The total amount of ORE this user has deposited as collateral.
-    pub capacity: u64,
+    pub collateral: u64,
 
     /// The timestamp of the event.
     pub ts: i64,
@@ -217,7 +217,7 @@ pub struct WithdrawEvent {
     pub amount: u64,
 
     /// The total amount of ORE this user has deposited as collateral.
-    pub capacity: u64,
+    pub collateral: u64,
 
     /// The timestamp of the event.
     pub ts: i64,

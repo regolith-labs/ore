@@ -13,11 +13,11 @@ pub struct Stake {
     /// The ID of the block this collateral is associated with.
     pub block_id: u64,
 
-    /// The amount of ORE this miner can commit to the block.
-    pub capacity: u64,
+    /// The amount of ORE this miner has deposited as collateral for trading.
+    pub collateral: u64,
 
-    /// The amount of ORE this miner has committed to the block.
-    pub utilization: u64,
+    /// The amount of ORE this miner has spent on hashpower in this market.
+    pub spend: u64,
 }
 
 impl Stake {
