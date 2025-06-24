@@ -3,13 +3,14 @@ use steel::*;
 use crate::state::{RewardConfig, SwapDirection};
 
 pub enum OreEvent {
-    Swap = 0,
-    Reward = 1,
-    Open = 2,
-    Commit = 3,
-    Deposit = 4,
-    Withdraw = 5,
+    Commit = 0,
+    Deposit = 1,
+    Mine = 2,
+    Open = 3,
+    Reward = 4,
+    Swap = 5,
     Uncommit = 6,
+    Withdraw = 7,
 }
 
 #[repr(C)]
@@ -75,6 +76,28 @@ pub struct RewardEvent {
 
     /// The type of reward.
     pub rewards_type: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct MineEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The authority who mined.
+    pub authority: Pubkey,
+
+    /// The block id.
+    pub block_id: u64,
+
+    /// The amount of hashes deployed.
+    pub deployed: u64,
+
+    /// The total amount of hashes deployed in the block.
+    pub total_deployed: u64,
 
     /// The timestamp of the event.
     pub ts: i64,
@@ -236,4 +259,5 @@ event!(CommitEvent);
 event!(DepositEvent);
 event!(WithdrawEvent);
 event!(UncommitEvent);
+event!(MineEvent);
 event!(CloseEvent);

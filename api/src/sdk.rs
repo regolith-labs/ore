@@ -93,8 +93,6 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
-// let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, sender_info, system_program, token_program, slot_hashes_sysvar] =
-
 pub fn commit(
     signer: Pubkey,
     amount: u64,
@@ -186,10 +184,6 @@ pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
         .to_bytes(),
     }
 }
-
-// let [signer_info, block_info, collateral_info, mint_ore_info, sender_info, stake_info, system_program, token_program] =
-
-// let [signer_info, block_info, collateral_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
 
 pub fn swap(
     signer: Pubkey,
