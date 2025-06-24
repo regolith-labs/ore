@@ -260,3 +260,23 @@ event!(WithdrawEvent);
 event!(UncommitEvent);
 event!(MineEvent);
 event!(CloseEvent);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::{prelude::BASE64_STANDARD, Engine};
+
+    #[test]
+    fn test_parse_commit_event() {
+        // Create sample return data
+        let data = "BQAAAAAAAAB9607Qp9I2VxNo2rSPHAz/tR2pJzGu9om7qHP71TpKqciMAwAAAAAAAAAAAAAAAAA2CwUAAAAAAADodkgXAAAAAAAAAAAAAAAAAAAAAAAAADYLBQAAAAAAAB7cDBcAAAAAypo7AAAAAMMQW2gAAAAA";
+        let bytes = BASE64_STANDARD.decode(data).unwrap();
+
+        // Parse into CommitEvent
+        let event: &SwapEvent = bytemuck::try_from_bytes(&bytes).unwrap();
+
+        // Verify fields
+        println!("{:?}", event);
+        assert!(false);
+    }
+}

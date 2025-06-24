@@ -93,6 +93,8 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
+// let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, sender_info, system_program, token_program] =
+
 pub fn commit(
     signer: Pubkey,
     amount: u64,

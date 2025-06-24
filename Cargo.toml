@@ -15,6 +15,7 @@ keywords = ["solana", "crypto", "mining"]
 
 [workspace.dependencies]
 anyhow = "1.0"
+base64 = "0.22.1"
 bincode = "1.3.3"
 bytemuck = "1.14.3"
 bytemuck_derive = "1.7.0"

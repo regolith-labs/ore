@@ -10,6 +10,7 @@ repository.workspace = true
 keywords.workspace = true
 
 [dependencies]
+base64.workspace = true
 bytemuck.workspace = true
 const-crypto.workspace = true
 mpl-token-metadata.workspace = true
