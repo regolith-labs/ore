@@ -49,7 +49,7 @@ pub const CONFIG_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
 
 /// The address of the mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("Kw7itxU5N79d6xGkMwPqd3CHHkwr3ZJsG6WFqDivcTz");
+pub const MINT_ADDRESS: Pubkey = pubkey!("ESovLnpNMatjLDcStPtuZvidiufBdoyoEGr76oNtUrNx");
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
