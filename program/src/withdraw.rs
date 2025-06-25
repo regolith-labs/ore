@@ -15,7 +15,6 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    // .as_associated_token_account(block_info.key, mint_ore_info.key)?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info
         .is_writable()?

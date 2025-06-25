@@ -24,7 +24,6 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .as_token_account()?
         .assert(|t| t.mint() == *mint_ore_info.key)?
         .assert(|t| t.owner() == *block_info.key)?;
-    // .as_associated_token_account(block_info.key, mint_ore_info.key)?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     sender_info
         .is_writable()?

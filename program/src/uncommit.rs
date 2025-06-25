@@ -24,7 +24,6 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .as_token_account()?
         .assert(|t| t.mint() == *mint_info.key)?
         .assert(|t| t.owner() == *block_info.key)?;
-    // commitment_info.as_associated_token_account(block_info.key, mint_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;

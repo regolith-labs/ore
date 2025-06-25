@@ -205,7 +205,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             ],
         )?;
     } else {
-        // commitment_info.as_associated_token_account(block_info.key, mint_base_info.key)?;
         commitment_info
             .has_address(&commitment_pda(id).0)?
             .as_token_account()?
@@ -215,15 +214,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Initialize vault token accounts.
     if vault_base_info.data_is_empty() {
-        // create_associated_token_account(
-        //     signer_info,
-        //     market_info,
-        //     vault_base_info,
-        //     mint_base_info,
-        //     system_program,
-        //     token_program,
-        //     associated_token_program,
-        // )?;
         let vault_base_pda = vault_base_pda(id);
         allocate_account_with_bump(
             vault_base_info,
@@ -253,7 +243,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             ],
         )?;
     } else {
-        // vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
         vault_base_info
             .has_address(&vault_base_pda(id).0)?
             .as_token_account()?
@@ -261,15 +250,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert(|t| t.owner() == *market_info.key)?;
     }
     if vault_quote_info.data_is_empty() {
-        // create_associated_token_account(
-        //     signer_info,
-        //     market_info,
-        //     vault_quote_info,
-        //     mint_quote_info,
-        //     system_program,
-        //     token_program,
-        //     associated_token_program,
-        // )?;
         let vault_quote_pda = vault_quote_pda(id);
         allocate_account_with_bump(
             vault_quote_info,
@@ -299,7 +279,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             ],
         )?;
     } else {
-        // vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
         vault_quote_info
             .has_address(&vault_quote_pda(id).0)?
             .as_token_account()?
