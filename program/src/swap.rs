@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -20,12 +20,12 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot < b.start_slot)?;
-    collateral_info
-        .is_writable()?
-        .has_address(&collateral_pda(block.id).0)?
-        .as_token_account()?
-        .assert(|t| t.mint() == *mint_quote_info.key)?
-        .assert(|t| t.owner() == *market_info.key)?;
+    // collateral_info
+    //     .is_writable()?
+    //     .has_address(&collateral_pda(block.id).0)?
+    //     .as_token_account()?
+    //     .assert(|t| t.mint() == *mint_quote_info.key)?
+    //     .assert(|t| t.owner() == *market_info.key)?;
     // collateral_info.as_associated_token_account(block_info.key, mint_quote_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
@@ -141,10 +141,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     // Validate vault reserves.
-    let vault_base =
-        vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
-    let vault_quote =
-        vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
+    let vault_base = vault_base_info.as_token_account()?; //.as_associated_token_account(market_info.key, mint_base_info.key)?;
+    let vault_quote = vault_quote_info.as_token_account()?; //.as_associated_token_account(market_info.key, mint_quote_info.key)?;
     market.check_vaults(&vault_base, &vault_quote)?;
 
     // Emit event.
