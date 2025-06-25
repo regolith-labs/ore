@@ -243,12 +243,12 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                 &spl_token::ID,
                 &vault_base_pda.0,
                 &mint_base_info.key,
-                &block_info.key,
+                &market_info.key,
             )?,
             &[
                 vault_base_info.clone(),
                 mint_base_info.clone(),
-                block_info.clone(),
+                market_info.clone(),
                 token_program.clone(),
             ],
         )?;
@@ -289,12 +289,12 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
                 &spl_token::ID,
                 &vault_quote_pda.0,
                 &mint_quote_info.key,
-                &block_info.key,
+                &market_info.key,
             )?,
             &[
                 vault_quote_info.clone(),
                 mint_quote_info.clone(),
-                block_info.clone(),
+                market_info.clone(),
                 token_program.clone(),
             ],
         )?;
