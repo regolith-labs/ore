@@ -81,7 +81,15 @@ async fn close(
 ) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
-    let ix = ore_api::sdk::close(payer.pubkey(), payer.pubkey(), payer.pubkey(), id);
+    let block = get_block(rpc, id).await?;
+    let config = get_config(rpc).await?;
+    let ix = ore_api::sdk::close(
+        payer.pubkey(),
+        config.fee_collector,
+        block.opener,
+        payer.pubkey(),
+        id,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -188,6 +196,13 @@ async fn get_block(rpc: &RpcClient, id: u64) -> Result<Block, anyhow::Error> {
     let account = rpc.get_account(&block_pda.0).await?;
     let block = Block::try_from_bytes(&account.data)?;
     Ok(*block)
+}
+
+async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
+    let config_pda = ore_api::state::config_pda();
+    let account = rpc.get_account(&config_pda.0).await?;
+    let config = Config::try_from_bytes(&account.data)?;
+    Ok(*config)
 }
 
 async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
