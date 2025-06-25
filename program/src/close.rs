@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -14,6 +14,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
+    let config = config_info.as_account::<Config>(&ore_api::ID)?;
     collateral_info
         .is_writable()?
         .has_address(&collateral_pda(block.id).0)?
@@ -26,6 +27,9 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .as_token_account()?
         .assert(|t| t.mint() == *mint_base_info.key)?
         .assert(|t| t.owner() == *block_info.key)?;
+    fee_collector_info
+        .is_writable()?
+        .as_associated_token_account(&config.fee_collector, &mint_quote_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?;
@@ -74,6 +78,19 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             ts: clock.unix_timestamp,
         }
         .log();
+    }
+
+    // Payout fee.
+    if market.fee.uncollected > 0 {
+        transfer_signed(
+            market_info,
+            vault_quote_info,
+            fee_collector_info,
+            token_program,
+            market.fee.uncollected,
+            &[MARKET, &market.id.to_le_bytes()],
+        )?;
+        market.fee.uncollected = 0;
     }
 
     // Burn base liquidity.

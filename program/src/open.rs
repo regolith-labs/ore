@@ -12,7 +12,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -22,6 +22,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .is_empty()?
         .is_writable()?
         .has_seeds(&[BLOCK, &id.to_le_bytes()], &ore_api::ID)?;
+    let config = config_info.as_account::<Config>(&ore_api::ID)?;
     market_info
         .is_empty()?
         .is_writable()?
@@ -42,9 +43,13 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Error out if start slot is within the current period.
     let start_slot = id * 1500;
-    let current_period_start = (clock.slot / 1500) * 1500;
+    let current_block = clock.slot / 1500;
+    let current_period_start = current_block * 1500;
     let current_period_end = current_period_start + 1500;
     if start_slot < current_period_end {
+        return Err(ProgramError::InvalidArgument);
+    }
+    if id > current_block + config.block_limit {
         return Err(ProgramError::InvalidArgument);
     }
 

@@ -4,6 +4,7 @@ mod deposit;
 mod mine;
 mod open;
 mod set_admin;
+mod set_block_limit;
 mod set_fee_collector;
 mod set_fee_rate;
 mod swap;
@@ -16,6 +17,7 @@ use deposit::*;
 use mine::*;
 use open::*;
 use set_admin::*;
+use set_block_limit::*;
 use set_fee_collector::*;
 use set_fee_rate::*;
 use swap::*;
@@ -42,6 +44,7 @@ pub fn process_instruction(
         OreInstruction::Uncommit => process_uncommit(accounts, data)?,
         OreInstruction::Withdraw => process_withdraw(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
+        OreInstruction::SetBlockLimit => process_set_block_limit(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
         OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
     }

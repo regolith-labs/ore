@@ -14,9 +14,10 @@ pub enum OreInstruction {
     Withdraw = 7,
 
     // Admin
-    SetAdmin = 10,
-    SetFeeCollector = 9,
-    SetFeeRate = 8,
+    SetAdmin = 8,
+    SetBlockLimit = 9,
+    SetFeeCollector = 10,
+    SetFeeRate = 11,
 }
 
 #[repr(C)]
@@ -78,6 +79,12 @@ pub struct SetAdmin {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetBlockLimit {
+    pub block_limit: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetFeeCollector {
     pub fee_collector: [u8; 32],
 }
@@ -97,5 +104,6 @@ instruction!(OreInstruction, Swap);
 instruction!(OreInstruction, Uncommit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, SetAdmin);
+instruction!(OreInstruction, SetBlockLimit);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, SetFeeRate);
