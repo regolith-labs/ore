@@ -11,14 +11,10 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
-    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
     let collateral_address = collateral_pda(id).0;
-    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
     let commitment_address = commitment_pda(id).0;
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    // let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
     let vault_base_address = vault_base_pda(id).0;
-    // let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
     let vault_quote_address = vault_quote_pda(id).0;
     Instruction {
         program_id: crate::ID,
@@ -52,8 +48,6 @@ pub fn close(signer: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
     let base_mint_address = mint_pda(id).0;
     let vault_base = vault_base_pda(id).0;
     let vault_quote = vault_quote_pda(id).0;
-    // let vault_base = get_associated_token_address(&market_address, &base_mint_address);
-    // let vault_quote = get_associated_token_address(&market_address, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -99,8 +93,6 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
-// let [signer_info, block_info, commitment_info, market_info, miner_info, mint_info, permit_info, sender_info, system_program, token_program] =
-
 pub fn commit(
     signer: Pubkey,
     amount: u64,
@@ -114,7 +106,6 @@ pub fn commit(
     let base_mint_address = mint_pda(id).0;
     let miner_address = miner_pda(signer).0;
     let permit_address = permit_pda(signer, id).0;
-    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
     let commitment_address = commitment_pda(id).0;
     let sender_address = get_associated_token_address(&signer, &base_mint_address);
     Instruction {
@@ -147,7 +138,6 @@ pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
     let base_mint_address = mint_pda(id).0;
     let miner_address = miner_pda(signer).0;
     let permit_address = permit_pda(signer, id).0;
-    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
     let commitment_address = commitment_pda(id).0;
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     Instruction {
@@ -173,7 +163,6 @@ pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
 
 pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
-    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
     let collateral_address = collateral_pda(id).0;
     let stake_address = stake_pda(signer, id).0;
     let sender = get_associated_token_address(&signer, &MINT_ADDRESS);
@@ -207,11 +196,8 @@ pub fn swap(
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
     let stake_address = stake_pda(signer, id).0;
-    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
     let tokens_base_address = get_associated_token_address(&signer, &base_mint_address);
     let tokens_quote_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    // let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
-    // let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
     let vault_base_address = vault_base_pda(id).0;
     let vault_quote_address = vault_quote_pda(id).0;
     Instruction {
@@ -236,6 +222,70 @@ pub fn swap(
             amount: amount.to_le_bytes(),
             direction: direction as u8,
             precision: precision as u8,
+        }
+        .to_bytes(),
+    }
+}
+
+pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetAdmin {
+            admin: admin.to_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+pub fn set_block_limit(signer: Pubkey, block_limit: u64) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetBlockLimit {
+            block_limit: block_limit.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetFeeCollector {
+            fee_collector: fee_collector.to_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+pub fn set_fee_rate(signer: Pubkey, fee_rate: u64) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetFeeRate {
+            fee_rate: fee_rate.to_le_bytes(),
         }
         .to_bytes(),
     }
