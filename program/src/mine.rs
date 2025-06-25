@@ -24,7 +24,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|b| clock.slot < b.start_slot + 1500)?;
     commitment_info
         .is_writable()?
-        .as_associated_token_account(block_info.key, mint_hash_info.key)?;
+        .has_address(&commitment_pda(block.id).0)?
+        .as_token_account()?;
+    // .assert(|t| t.mint() == *mint_hash_info.key)?
+    // .assert(|t| t.owner() == *block_info.key)?;
+    // commitment_info.as_associated_token_account(block_info.key, mint_hash_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;

@@ -50,8 +50,10 @@ pub fn close(signer: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
-    let vault_base = get_associated_token_address(&market_address, &base_mint_address);
-    let vault_quote = get_associated_token_address(&market_address, &MINT_ADDRESS);
+    let vault_base = vault_base_pda(id).0;
+    let vault_quote = vault_quote_pda(id).0;
+    // let vault_base = get_associated_token_address(&market_address, &base_mint_address);
+    // let vault_quote = get_associated_token_address(&market_address, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -112,7 +114,8 @@ pub fn commit(
     let base_mint_address = mint_pda(id).0;
     let miner_address = miner_pda(signer).0;
     let permit_address = permit_pda(signer, id).0;
-    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let commitment_address = commitment_pda(id).0;
     let sender_address = get_associated_token_address(&signer, &base_mint_address);
     Instruction {
         program_id: crate::ID,
@@ -144,7 +147,8 @@ pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
     let base_mint_address = mint_pda(id).0;
     let miner_address = miner_pda(signer).0;
     let permit_address = permit_pda(signer, id).0;
-    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let commitment_address = commitment_pda(id).0;
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
@@ -169,7 +173,8 @@ pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
 
 pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
-    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    let collateral_address = collateral_pda(id).0;
     let stake_address = stake_pda(signer, id).0;
     let sender = get_associated_token_address(&signer, &MINT_ADDRESS);
     Instruction {
@@ -202,17 +207,19 @@ pub fn swap(
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
     let stake_address = stake_pda(signer, id).0;
-    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
     let tokens_base_address = get_associated_token_address(&signer, &base_mint_address);
     let tokens_quote_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
-    let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
+    // let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
+    // let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
+    let vault_base_address = vault_base_pda(id).0;
+    let vault_quote_address = vault_quote_pda(id).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
-            AccountMeta::new(collateral_address, false),
+            // AccountMeta::new(collateral_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),

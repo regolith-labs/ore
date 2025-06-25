@@ -22,7 +22,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|b| clock.slot < b.start_slot)?;
     collateral_info
         .is_writable()?
-        .as_associated_token_account(block_info.key, mint_quote_info.key)?;
+        .has_address(&collateral_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_quote_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // collateral_info.as_associated_token_account(block_info.key, mint_quote_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?
@@ -36,10 +40,18 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|p| p.block_id == block.id)?;
     vault_base_info
         .is_writable()?
-        .as_associated_token_account(market_info.key, mint_base_info.key)?;
+        .has_address(&vault_base_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_base_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
     vault_quote_info
         .is_writable()?
-        .as_associated_token_account(market_info.key, mint_quote_info.key)?;
+        .has_address(&vault_quote_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_quote_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;

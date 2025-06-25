@@ -14,12 +14,20 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
-    let _collateral = collateral_info
+    collateral_info
         .is_writable()?
-        .as_associated_token_account(block_info.key, mint_quote_info.key)?;
-    let commitment = commitment_info
+        .has_address(&collateral_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_quote_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // .as_associated_token_account(block_info.key, mint_quote_info.key)?;
+    commitment_info
         .is_writable()?
-        .as_associated_token_account(block_info.key, mint_base_info.key)?;
+        .has_address(&commitment_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_base_info.key)?
+        .assert(|t| t.owner() == *block_info.key)?;
+    // commitment_info.as_associated_token_account(block_info.key, mint_base_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?;
@@ -28,12 +36,20 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     treasury_info
         .is_writable()?
         .has_address(&TREASURY_ADDRESS)?;
-    let vault_base = vault_base_info
+    vault_base_info
         .is_writable()?
-        .as_associated_token_account(market_info.key, mint_base_info.key)?;
-    let vault_quote = vault_quote_info
+        .has_address(&vault_base_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_base_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // .as_associated_token_account(market_info.key, mint_base_info.key)?;
+    vault_quote_info
         .is_writable()?
-        .as_associated_token_account(market_info.key, mint_quote_info.key)?;
+        .has_address(&vault_quote_pda(block.id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_quote_info.key)?
+        .assert(|t| t.owner() == *market_info.key)?;
+    // .as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 
@@ -65,6 +81,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Burn base liquidity.
+    let vault_base = vault_base_info.as_token_account()?;
     let base_burned = vault_base.amount();
     burn_signed(
         vault_base_info,
@@ -76,6 +93,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     )?;
 
     // Burn quote liquidity.
+    let vault_quote = vault_quote_info.as_token_account()?;
     let quote_burned = vault_quote.amount();
     burn_signed(
         vault_quote_info,
@@ -87,6 +105,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     )?;
 
     // Burn any remaining commitment.
+    let commitment = commitment_info.as_token_account()?;
     let commitment_burned = commitment.amount();
     burn_signed(
         commitment_info,

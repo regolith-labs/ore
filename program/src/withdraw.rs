@@ -15,9 +15,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    collateral_info
-        .is_writable()?
-        .as_associated_token_account(block_info.key, mint_ore_info.key)?;
+    // .as_associated_token_account(block_info.key, mint_ore_info.key)?;
     mint_ore_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info
         .is_writable()?
@@ -26,6 +24,12 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .as_account_mut::<Stake>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *signer_info.key)?;
     block_info.has_seeds(&[BLOCK, &stake.block_id.to_le_bytes()], &ore_api::ID)?;
+    collateral_info
+        .is_writable()?
+        .has_address(&collateral_pda(stake.block_id).0)?
+        .as_token_account()?
+        .assert(|t| t.mint() == *mint_ore_info.key)?
+        .assert(|t| t.owner() == *block_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 
