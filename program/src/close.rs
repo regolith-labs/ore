@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -35,6 +35,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|m| m.id == block.id)?;
     mint_base_info.has_address(&market.base.mint)?.as_mint()?;
     mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
+    opener_info.is_writable()?.has_address(&block.opener)?;
     treasury_info
         .is_writable()?
         .has_address(&TREASURY_ADDRESS)?;
@@ -132,31 +133,31 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Close token accounts.
     close_token_account_signed(
         vault_base_info,
-        signer_info,
+        opener_info,
         market_info,
         token_program,
         &[MARKET, &market.id.to_le_bytes()],
     )?;
     close_token_account_signed(
         vault_quote_info,
-        signer_info,
+        opener_info,
         market_info,
         token_program,
         &[MARKET, &market.id.to_le_bytes()],
     )?;
     close_token_account_signed(
         commitment_info,
-        signer_info,
+        opener_info,
         block_info,
         token_program,
         &[BLOCK, &block.id.to_le_bytes()],
     )?;
 
     // Close block.
-    block_info.close(signer_info)?;
+    block_info.close(opener_info)?;
 
     // Close market.
-    market_info.close(signer_info)?;
+    market_info.close(opener_info)?;
 
     // Emit event.
     CloseEvent {

@@ -63,6 +63,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     block.id = id;
+    block.opener = *signer_info.key;
     block.reward = RewardConfig {
         lode_hash: [0; 32],
         lode_authority: Pubkey::default(),

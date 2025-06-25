@@ -44,7 +44,13 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     }
 }
 
-pub fn close(signer: Pubkey, fee_collector: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
+pub fn close(
+    signer: Pubkey,
+    fee_collector: Pubkey,
+    opener: Pubkey,
+    recipient: Pubkey,
+    id: u64,
+) -> Instruction {
     let block_adddress = block_pda(id).0;
     let config_address = config_pda().0;
     let collateral_address = collateral_pda(id).0;
@@ -66,6 +72,7 @@ pub fn close(signer: Pubkey, fee_collector: Pubkey, recipient: Pubkey, id: u64) 
             AccountMeta::new(market_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(opener, false),
             AccountMeta::new(recipient, false),
             AccountMeta::new_readonly(TREASURY_ADDRESS, false),
             AccountMeta::new(vault_base, false),

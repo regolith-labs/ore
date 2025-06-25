@@ -16,6 +16,9 @@ pub struct Block {
     /// The block number.
     pub id: u64,
 
+    /// The party that opened the block.
+    pub opener: Pubkey,
+
     /// The reward configuration.
     pub reward: RewardConfig,
 
