@@ -140,58 +140,171 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Initialize collateral and commitment token accounts.
     if collateral_info.data_is_empty() {
-        create_associated_token_account(
-            signer_info,
-            block_info,
+        let collateral_pda = collateral_pda(id);
+        allocate_account_with_bump(
             collateral_info,
-            mint_quote_info,
             system_program,
-            token_program,
-            associated_token_program,
+            signer_info,
+            spl_token::state::Account::LEN,
+            &spl_token::ID,
+            &[
+                block_info.key.as_ref(),
+                token_program.key.as_ref(),
+                mint_quote_info.key.as_ref(),
+            ],
+            collateral_pda.1,
+        )?;
+        solana_program::program::invoke(
+            &spl_token_2022::instruction::initialize_account3(
+                &spl_token::ID,
+                &collateral_pda.0,
+                &mint_quote_info.key,
+                &block_info.key,
+            )?,
+            &[
+                collateral_info.clone(),
+                mint_quote_info.clone(),
+                block_info.clone(),
+                token_program.clone(),
+            ],
         )?;
     } else {
-        collateral_info.as_associated_token_account(block_info.key, mint_quote_info.key)?;
+        collateral_info
+            .has_address(&collateral_pda(id).0)?
+            .as_token_account()?
+            .assert(|t| t.mint() == *mint_quote_info.key)?
+            .assert(|t| t.owner() == *block_info.key)?;
     }
     if commitment_info.data_is_empty() {
-        create_associated_token_account(
-            signer_info,
-            block_info,
+        let commitment_pda = commitment_pda(id);
+        allocate_account_with_bump(
             commitment_info,
-            mint_base_info,
             system_program,
-            token_program,
-            associated_token_program,
+            signer_info,
+            spl_token::state::Account::LEN,
+            &spl_token::ID,
+            &[
+                block_info.key.as_ref(),
+                token_program.key.as_ref(),
+                mint_base_info.key.as_ref(),
+            ],
+            commitment_pda.1,
+        )?;
+        solana_program::program::invoke(
+            &spl_token_2022::instruction::initialize_account3(
+                &spl_token::ID,
+                &commitment_pda.0,
+                &mint_base_info.key,
+                &block_info.key,
+            )?,
+            &[
+                commitment_info.clone(),
+                mint_base_info.clone(),
+                block_info.clone(),
+                token_program.clone(),
+            ],
         )?;
     } else {
-        commitment_info.as_associated_token_account(block_info.key, mint_base_info.key)?;
+        // commitment_info.as_associated_token_account(block_info.key, mint_base_info.key)?;
+        commitment_info
+            .has_address(&commitment_pda(id).0)?
+            .as_token_account()?
+            .assert(|t| t.mint() == *mint_base_info.key)?
+            .assert(|t| t.owner() == *block_info.key)?;
     }
 
     // Initialize vault token accounts.
     if vault_base_info.data_is_empty() {
-        create_associated_token_account(
-            signer_info,
-            market_info,
+        // create_associated_token_account(
+        //     signer_info,
+        //     market_info,
+        //     vault_base_info,
+        //     mint_base_info,
+        //     system_program,
+        //     token_program,
+        //     associated_token_program,
+        // )?;
+        let vault_base_pda = vault_base_pda(id);
+        allocate_account_with_bump(
             vault_base_info,
-            mint_base_info,
             system_program,
-            token_program,
-            associated_token_program,
+            signer_info,
+            spl_token::state::Account::LEN,
+            &spl_token::ID,
+            &[
+                market_info.key.as_ref(),
+                token_program.key.as_ref(),
+                mint_base_info.key.as_ref(),
+            ],
+            vault_base_pda.1,
+        )?;
+        solana_program::program::invoke(
+            &spl_token_2022::instruction::initialize_account3(
+                &spl_token::ID,
+                &vault_base_pda.0,
+                &mint_base_info.key,
+                &block_info.key,
+            )?,
+            &[
+                vault_base_info.clone(),
+                mint_base_info.clone(),
+                block_info.clone(),
+                token_program.clone(),
+            ],
         )?;
     } else {
-        vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
+        // vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
+        vault_base_info
+            .has_address(&vault_base_pda(id).0)?
+            .as_token_account()?
+            .assert(|t| t.mint() == *mint_base_info.key)?
+            .assert(|t| t.owner() == *market_info.key)?;
     }
     if vault_quote_info.data_is_empty() {
-        create_associated_token_account(
-            signer_info,
-            market_info,
+        // create_associated_token_account(
+        //     signer_info,
+        //     market_info,
+        //     vault_quote_info,
+        //     mint_quote_info,
+        //     system_program,
+        //     token_program,
+        //     associated_token_program,
+        // )?;
+        let vault_quote_pda = vault_quote_pda(id);
+        allocate_account_with_bump(
             vault_quote_info,
-            mint_quote_info,
             system_program,
-            token_program,
-            associated_token_program,
+            signer_info,
+            spl_token::state::Account::LEN,
+            &spl_token::ID,
+            &[
+                market_info.key.as_ref(),
+                token_program.key.as_ref(),
+                mint_quote_info.key.as_ref(),
+            ],
+            vault_quote_pda.1,
+        )?;
+        solana_program::program::invoke(
+            &spl_token_2022::instruction::initialize_account3(
+                &spl_token::ID,
+                &vault_quote_pda.0,
+                &mint_quote_info.key,
+                &block_info.key,
+            )?,
+            &[
+                vault_quote_info.clone(),
+                mint_quote_info.clone(),
+                block_info.clone(),
+                token_program.clone(),
+            ],
         )?;
     } else {
-        vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
+        // vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
+        vault_quote_info
+            .has_address(&vault_quote_pda(id).0)?
+            .as_token_account()?
+            .assert(|t| t.mint() == *mint_quote_info.key)?
+            .assert(|t| t.owner() == *market_info.key)?;
     }
 
     // Mint hash tokens to market.

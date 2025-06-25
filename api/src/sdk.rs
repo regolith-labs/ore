@@ -11,11 +11,15 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
-    let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
-    let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    // let collateral_address = get_associated_token_address(&block_adddress, &MINT_ADDRESS);
+    let collateral_address = collateral_pda(id).0;
+    // let commitment_address = get_associated_token_address(&block_adddress, &base_mint_address);
+    let commitment_address = commitment_pda(id).0;
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
-    let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
+    // let vault_base_address = get_associated_token_address(&market_address, &base_mint_address);
+    let vault_base_address = vault_base_pda(id).0;
+    // let vault_quote_address = get_associated_token_address(&market_address, &MINT_ADDRESS);
+    let vault_quote_address = vault_quote_pda(id).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![

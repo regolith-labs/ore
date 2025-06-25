@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -14,6 +14,12 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
+    let _collateral = collateral_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, mint_quote_info.key)?;
+    let commitment = commitment_info
+        .is_writable()?
+        .as_associated_token_account(block_info.key, mint_base_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.id == block.id)?;
@@ -22,10 +28,12 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     treasury_info
         .is_writable()?
         .has_address(&TREASURY_ADDRESS)?;
-    let vault_base =
-        vault_base_info.as_associated_token_account(market_info.key, mint_base_info.key)?;
-    let vault_quote =
-        vault_quote_info.as_associated_token_account(market_info.key, mint_quote_info.key)?;
+    let vault_base = vault_base_info
+        .is_writable()?
+        .as_associated_token_account(market_info.key, mint_base_info.key)?;
+    let vault_quote = vault_quote_info
+        .is_writable()?
+        .as_associated_token_account(market_info.key, mint_quote_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
 
@@ -76,6 +84,40 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         token_program,
         quote_burned,
         &[MARKET, &market.id.to_le_bytes()],
+    )?;
+
+    // Burn any remaining commitment.
+    let commitment_burned = commitment.amount();
+    burn_signed(
+        commitment_info,
+        mint_base_info,
+        block_info,
+        token_program,
+        commitment_burned,
+        &[BLOCK, &block.id.to_le_bytes()],
+    )?;
+
+    // Close token accounts.
+    close_token_account_signed(
+        vault_base_info,
+        signer_info,
+        market_info,
+        token_program,
+        &[MARKET, &market.id.to_le_bytes()],
+    )?;
+    close_token_account_signed(
+        vault_quote_info,
+        signer_info,
+        market_info,
+        token_program,
+        &[MARKET, &market.id.to_le_bytes()],
+    )?;
+    close_token_account_signed(
+        commitment_info,
+        signer_info,
+        block_info,
+        token_program,
+        &[BLOCK, &block.id.to_le_bytes()],
     )?;
 
     // Close block.
