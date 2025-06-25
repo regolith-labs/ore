@@ -29,6 +29,7 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         )?;
         let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
         config.admin = *signer_info.key;
+        config.block_limit = 100;
         config.fee_collector = *signer_info.key;
         config.fee_rate = 0;
         config

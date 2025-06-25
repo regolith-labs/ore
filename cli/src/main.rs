@@ -51,6 +51,12 @@ async fn main() {
         "commit" => {
             commit(&rpc, &payer).await.unwrap();
         }
+        "set_admin" => {
+            set_admin(&rpc, &payer).await.unwrap();
+        }
+        // "set_block_limit" => {
+        //     set_block_limit(&rpc, &payer).await.unwrap();
+        // }
         // "uncommit" => {
         //     uncommit(&rpc, &payer).await.unwrap();
         // }
@@ -75,7 +81,7 @@ async fn close(
 ) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
-    let ix = ore_api::sdk::close(payer.pubkey(), payer.pubkey(), id);
+    let ix = ore_api::sdk::close(payer.pubkey(), payer.pubkey(), payer.pubkey(), id);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -115,6 +121,15 @@ async fn swap(
         SwapDirection::Buy,
         SwapPrecision::ExactIn,
     );
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn set_admin(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }

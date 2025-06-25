@@ -9,6 +9,7 @@ use crate::{
 
 pub fn open(signer: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
+    let config_address = config_pda().0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
     let collateral_address = collateral_pda(id).0;
@@ -21,6 +22,7 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(config_address, false),
             AccountMeta::new(collateral_address, false),
             AccountMeta::new(commitment_address, false),
             AccountMeta::new(market_address, false),
@@ -42,8 +44,12 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     }
 }
 
-pub fn close(signer: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
+pub fn close(signer: Pubkey, fee_collector: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
+    let config_address = config_pda().0;
+    let collateral_address = collateral_pda(id).0;
+    let commitment_address = commitment_pda(id).0;
+    let fee_collector_address = get_associated_token_address(&fee_collector, &MINT_ADDRESS);
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
     let vault_base = vault_base_pda(id).0;
@@ -53,6 +59,10 @@ pub fn close(signer: Pubkey, recipient: Pubkey, id: u64) -> Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(collateral_address, false),
+            AccountMeta::new(commitment_address, false),
+            AccountMeta::new(fee_collector_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
