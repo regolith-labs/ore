@@ -48,7 +48,7 @@ pub fn close(
     signer: Pubkey,
     fee_collector: Pubkey,
     opener: Pubkey,
-    recipient: Pubkey,
+    load_authority: Pubkey,
     id: u64,
 ) -> Instruction {
     let block_adddress = block_pda(id).0;
@@ -60,6 +60,8 @@ pub fn close(
     let base_mint_address = mint_pda(id).0;
     let vault_base = vault_base_pda(id).0;
     let vault_quote = vault_quote_pda(id).0;
+    let miner_address = miner_pda(load_authority).0;
+    let recipient = get_associated_token_address(&load_authority, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -70,6 +72,7 @@ pub fn close(
             AccountMeta::new(commitment_address, false),
             AccountMeta::new(fee_collector_address, false),
             AccountMeta::new(market_address, false),
+            AccountMeta::new(miner_address, false),
             AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(opener, false),
