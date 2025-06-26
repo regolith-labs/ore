@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, miner_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -59,20 +59,33 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Load recipient.
         recipient_info.as_associated_token_account(&block.reward.lode_authority, &MINT_ADDRESS)?;
 
+        let miner = miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == block.reward.lode_authority)?;
+
+        // Limit payout to supply cap.
+        let ore_mint = mint_quote_info.as_mint()?;
+        let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
+        let reward_amount = block.reward.lode_reward.min(max_reward);
+
+        // Update stats.
+        block.total_rewards += reward_amount;
+        miner.total_rewards += reward_amount;
+
         // Mint reward to recipient.
         mint_to_signed(
             mint_quote_info,
             recipient_info,
             treasury_info,
             token_program,
-            block.reward.lode_reward,
+            reward_amount,
             &[TREASURY],
         )?;
 
         // Emit event.
         RewardEvent {
             disc: OreEvent::Reward as u64,
-            amount: block.reward.lode_reward,
+            amount: reward_amount,
             authority: block.reward.lode_authority,
             block_id: block.id,
             rewards_type: RewardsType::Lode as u64,

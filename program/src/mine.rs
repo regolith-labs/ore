@@ -119,9 +119,14 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Payout ORE.
     if nugget_reward > 0 {
+        // Limit payout to supply cap.
+        let ore_mint = mint_ore_info.as_mint()?;
+        let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
+        let reward_amount = nugget_reward.min(max_reward);
+
         // Update stats.
-        block.total_rewards += nugget_reward;
-        miner.total_rewards += nugget_reward;
+        block.total_rewards += reward_amount;
+        miner.total_rewards += reward_amount;
 
         // Mint to recipient.
         mint_to_signed(
@@ -129,14 +134,14 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             recipient_info,
             treasury_info,
             token_program,
-            nugget_reward,
+            reward_amount,
             &[TREASURY],
         )?;
 
         // Emit event.
         RewardEvent {
             disc: OreEvent::Reward as u64,
-            amount: nugget_reward,
+            amount: reward_amount,
             authority: miner.authority,
             block_id: block.id,
             rewards_type: RewardsType::Nugget as u64,
