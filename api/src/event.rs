@@ -49,6 +49,12 @@ pub struct SwapEvent {
     /// Amount of quote tokens taken in fees.
     pub quote_fee: u64,
 
+    /// Amount of base tokens in the market.
+    pub base_liquidity: u64,
+
+    /// Amount of quote tokens in the market.
+    pub quote_liquidity: u64,
+
     /// The timestamp of the event.
     pub ts: i64,
 }

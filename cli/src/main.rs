@@ -33,6 +33,9 @@ async fn main() {
         "close" => {
             close(&rpc, &payer).await.unwrap();
         }
+        "close_all" => {
+            close_all(&rpc, &payer).await.unwrap();
+        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -91,6 +94,28 @@ async fn close(
         id,
     );
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn close_all(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let config = get_config(rpc).await?;
+    let clock = get_clock(rpc).await?;
+    let blocks = get_blocks(rpc).await?;
+    for (_, block) in blocks {
+        if clock.slot > block.start_slot + 1500 {
+            let ix = ore_api::sdk::close(
+                payer.pubkey(),
+                config.fee_collector,
+                block.opener,
+                payer.pubkey(),
+                block.id,
+            );
+            submit_transaction(rpc, payer, &[ix]).await?;
+        }
+    }
     Ok(())
 }
 
