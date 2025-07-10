@@ -35,6 +35,7 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(ore_api::ID, false),
             AccountMeta::new_readonly(sysvar::rent::ID, false),
         ],
         data: Open {
@@ -92,15 +93,20 @@ pub fn log(signer: Pubkey, msg: &[u8]) -> Instruction {
     data.extend_from_slice(msg);
     Instruction {
         program_id: crate::ID,
-        accounts: vec![AccountMeta::new(signer, true)],
+        accounts: vec![AccountMeta::new(signer, false)],
         data: data,
     }
 }
 
-pub fn program_log(block_id: u64, block_info: AccountInfo, msg: &[u8]) -> Result<(), ProgramError> {
+pub fn program_log(
+    block_id: u64,
+    block_info: AccountInfo,
+    // ore_program: AccountInfo,
+    msg: &[u8],
+) -> Result<(), ProgramError> {
     invoke_signed(
         &log(*block_info.key, msg),
-        &[block_info.clone()],
+        &[block_info],
         &crate::ID,
         &[BLOCK, &block_id.to_le_bytes()],
     )

@@ -12,7 +12,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, rent_sysvar] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, ore_program, rent_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -39,6 +39,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
     rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
 
     // Error out if start slot is within the current period.
@@ -312,22 +313,27 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[BLOCK, &id.to_le_bytes()],
     )?;
 
-    // Emit event.
-    program_log(
-        block.id,
-        block_info.clone(),
-        &OpenEvent {
-            disc: OreEvent::Open as u64,
-            id,
-            start_slot,
-            signer: *signer_info.key,
-            reward_config: block.reward,
-            liquidity_base: market.base.liquidity() as u64,
-            liquidity_quote: market.quote.liquidity() as u64,
-            ts: clock.unix_timestamp,
-        }
-        .to_bytes(),
+    let msg = OpenEvent {
+        disc: OreEvent::Open as u64,
+        id,
+        start_slot,
+        signer: *signer_info.key,
+        reward_config: block.reward,
+        liquidity_base: market.base.liquidity() as u64,
+        liquidity_quote: market.quote.liquidity() as u64,
+        ts: clock.unix_timestamp,
+    }
+    .to_bytes();
+
+    invoke_signed(
+        &ore_api::sdk::log(*block_info.key, &msg),
+        &[block_info, ore_program],
+        &crate::ID,
+        &[BLOCK, &block_id.to_le_bytes()],
     )?;
+
+    // Emit event.
+    program_log(id, block_info.clone(), &msg)?;
 
     Ok(())
 }
