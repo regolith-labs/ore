@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -46,6 +46,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
 
     // Reduce permit amount.
     let amount = permit.commitment.min(amount);
@@ -141,7 +142,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         // Emit event.
         program_log(
             block.id,
-            block_info.clone(),
+            &[block_info.clone(), ore_program.clone()],
             &RewardEvent {
                 disc: OreEvent::Reward as u64,
                 amount: reward_amount,
@@ -157,7 +158,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Emit event.
     program_log(
         block.id,
-        block_info.clone(),
+        &[block_info.clone(), ore_program.clone()],
         &MineEvent {
             disc: OreEvent::Mine as u64,
             authority: miner.authority,

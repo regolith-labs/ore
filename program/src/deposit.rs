@@ -9,7 +9,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, mint_ore_info, sender_info, stake_info, system_program, token_program] =
+    let [signer_info, block_info, collateral_info, mint_ore_info, sender_info, stake_info, system_program, token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -31,6 +31,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .assert(|t| t.amount() >= amount)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
 
     // Load stake account.
     let stake = if stake_info.data_is_empty() {
@@ -69,7 +70,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     // Emit event.
     program_log(
         block.id,
-        block_info.clone(),
+        &[block_info.clone(), ore_program.clone()],
         &DepositEvent {
             disc: OreEvent::Deposit as u64,
             authority: *signer_info.key,

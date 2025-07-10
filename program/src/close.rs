@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, miner_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program] =
+    let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, miner_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -53,6 +53,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert(|t| t.owner() == *market_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
 
     // Payout block reward.
     if block.reward.lode_reward > 0 && block.reward.lode_authority != Pubkey::default() {
@@ -174,7 +175,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Emit event.
     program_log(
         block.id,
-        block_info.clone(),
+        &[block_info.clone(), ore_program.clone()],
         &CloseEvent {
             authority: *signer_info.key,
             id: block.id,

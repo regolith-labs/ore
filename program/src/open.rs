@@ -313,40 +313,22 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[BLOCK, &id.to_le_bytes()],
     )?;
 
-    // let msg = OpenEvent {
-    //     disc: OreEvent::Open as u64,
-    //     id,
-    //     start_slot,
-    //     signer: *signer_info.key,
-    //     reward_config: block.reward,
-    //     liquidity_base: market.base.liquidity() as u64,
-    //     liquidity_quote: market.quote.liquidity() as u64,
-    //     ts: clock.unix_timestamp,
-    // }
-    // .to_bytes();
-
-    invoke_signed(
-        &ore_api::sdk::log(
-            *block_info.key,
-            &OpenEvent {
-                disc: OreEvent::Open as u64,
-                id,
-                start_slot,
-                signer: *signer_info.key,
-                reward_config: block.reward,
-                liquidity_base: market.base.liquidity() as u64,
-                liquidity_quote: market.quote.liquidity() as u64,
-                ts: clock.unix_timestamp,
-            }
-            .to_bytes(),
-        ),
-        &[block_info.clone(), ore_program.clone()],
-        &ore_api::ID,
-        &[BLOCK, &id.to_le_bytes()],
-    )?;
-
     // Emit event.
-    // program_log(id, block_info.clone(), &msg)?;
+    program_log(
+        id,
+        &[block_info.clone(), ore_program.clone()],
+        &OpenEvent {
+            disc: OreEvent::Open as u64,
+            id,
+            start_slot,
+            signer: *signer_info.key,
+            reward_config: block.reward,
+            liquidity_base: market.base.liquidity() as u64,
+            liquidity_quote: market.quote.liquidity() as u64,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

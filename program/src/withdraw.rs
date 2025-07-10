@@ -9,7 +9,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, collateral_info, mint_ore_info, recipient_info, stake_info, system_program, token_program] =
+    let [signer_info, block_info, collateral_info, mint_ore_info, recipient_info, stake_info, system_program, token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -31,6 +31,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .assert(|t| t.owner() == *block_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
 
     // Check timestamp. Collateral can only be withdrawn after the block has started mining
     let start_slot = stake.block_id * 1500;
@@ -59,7 +60,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Emit event.
     program_log(
         stake.block_id,
-        block_info.clone(),
+        &[block_info.clone(), ore_program.clone()],
         &WithdrawEvent {
             disc: OreEvent::Withdraw as u64,
             authority: *signer_info.key,

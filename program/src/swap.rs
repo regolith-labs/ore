@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, market_info, mint_base_info, mint_quote_info, stake_info, tokens_base_info, tokens_quote_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -46,6 +46,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
 
     // Load token acccounts.
     if tokens_base_info.data_is_empty() {
@@ -137,7 +138,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market.check_vaults(&vault_base, &vault_quote)?;
 
     // Emit event.
-    program_log(block.id, block_info.clone(), &swap_event.to_bytes())?;
+    program_log(
+        block.id,
+        &[block_info.clone(), ore_program.clone()],
+        &swap_event.to_bytes(),
+    )?;
 
     Ok(())
 }

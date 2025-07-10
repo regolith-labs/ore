@@ -83,6 +83,7 @@ pub fn close(
             AccountMeta::new(vault_quote, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Close {}.to_bytes(),
     }
@@ -100,13 +101,12 @@ pub fn log(signer: Pubkey, msg: &[u8]) -> Instruction {
 
 pub fn program_log(
     block_id: u64,
-    block_info: AccountInfo,
-    // ore_program: AccountInfo,
+    accounts: &[AccountInfo],
     msg: &[u8],
 ) -> Result<(), ProgramError> {
     invoke_signed(
-        &log(*block_info.key, msg),
-        &[block_info],
+        &log(*accounts[0].key, msg),
+        accounts,
         &crate::ID,
         &[BLOCK, &block_id.to_le_bytes()],
     )
@@ -129,6 +129,7 @@ pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
             AccountMeta::new(sender, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
             AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
         ],
         data: Mine {
@@ -166,6 +167,7 @@ pub fn commit(
             AccountMeta::new(sender_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Commit {
             amount: amount.to_le_bytes(),
@@ -198,6 +200,7 @@ pub fn uncommit(signer: Pubkey, amount: u64, id: u64) -> Instruction {
             AccountMeta::new(recipient_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Uncommit {
             amount: amount.to_le_bytes(),
@@ -222,6 +225,7 @@ pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
             AccountMeta::new(stake_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Deposit {
             amount: amount.to_le_bytes(),
@@ -262,6 +266,7 @@ pub fn swap(
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Swap {
             amount: amount.to_le_bytes(),
