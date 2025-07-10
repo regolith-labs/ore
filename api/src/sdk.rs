@@ -35,7 +35,7 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-            AccountMeta::new_readonly(ore_api::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
             AccountMeta::new_readonly(sysvar::rent::ID, false),
         ],
         data: Open {
