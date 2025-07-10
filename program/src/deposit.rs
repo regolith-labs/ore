@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Deposits collateral.
@@ -67,15 +67,19 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     )?;
 
     // Emit event.
-    DepositEvent {
-        disc: OreEvent::Deposit as u64,
-        authority: *signer_info.key,
-        block_id: block.id,
-        amount,
-        collateral: stake.collateral,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &DepositEvent {
+            disc: OreEvent::Deposit as u64,
+            authority: *signer_info.key,
+            block_id: block.id,
+            amount,
+            collateral: stake.collateral,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

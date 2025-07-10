@@ -2,7 +2,7 @@ use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
 use crate::{
-    consts::{MINT_ADDRESS, TREASURY_ADDRESS},
+    consts::{BLOCK, MINT_ADDRESS, TREASURY_ADDRESS},
     instruction::*,
     state::*,
 };
@@ -85,6 +85,25 @@ pub fn close(
         ],
         data: Close {}.to_bytes(),
     }
+}
+
+pub fn log(signer: Pubkey, msg: &[u8]) -> Instruction {
+    let mut data = Log {}.to_bytes();
+    data.extend_from_slice(msg);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![AccountMeta::new(signer, true)],
+        data: data,
+    }
+}
+
+pub fn program_log(block_id: u64, block_info: AccountInfo, msg: &[u8]) -> Result<(), ProgramError> {
+    invoke_signed(
+        &log(*block_info.key, msg),
+        &[block_info.clone()],
+        &crate::ID,
+        &[BLOCK, &block_id.to_le_bytes()],
+    )
 }
 
 pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {

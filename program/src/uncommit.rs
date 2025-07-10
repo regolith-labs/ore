@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Uncommit from a block.
@@ -65,16 +65,20 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     }
 
     // Emit event.
-    UncommitEvent {
-        disc: OreEvent::Uncommit as u64,
-        authority: *signer_info.key,
-        block_id: block.id,
-        block_commitment: block.total_committed,
-        permit_commitment: permit.commitment,
-        amount,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &UncommitEvent {
+            disc: OreEvent::Uncommit as u64,
+            authority: *signer_info.key,
+            block_id: block.id,
+            block_commitment: block.total_committed,
+            permit_commitment: permit.commitment,
+            amount,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

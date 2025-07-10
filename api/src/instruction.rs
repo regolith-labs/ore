@@ -8,16 +8,17 @@ pub enum OreInstruction {
     Close = 1,
     Commit = 2,
     Deposit = 3,
-    Mine = 4,
-    Swap = 5,
-    Uncommit = 6,
-    Withdraw = 7,
+    Log = 4,
+    Mine = 5,
+    Swap = 6,
+    Uncommit = 7,
+    Withdraw = 8,
 
     // Admin
-    SetAdmin = 8,
-    SetBlockLimit = 9,
-    SetFeeCollector = 10,
-    SetFeeRate = 11,
+    SetAdmin = 9,
+    SetBlockLimit = 10,
+    SetFeeCollector = 11,
+    SetFeeRate = 12,
 }
 
 #[repr(C)]
@@ -44,6 +45,10 @@ pub struct Commit {
 pub struct Deposit {
     pub amount: [u8; 8],
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Log {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -99,6 +104,7 @@ instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Commit);
 instruction!(OreInstruction, Deposit);
+instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Swap);
 instruction!(OreInstruction, Uncommit);

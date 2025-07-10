@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Withdraws collateral.
@@ -57,15 +57,19 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     }
 
     // Emit event.
-    WithdrawEvent {
-        disc: OreEvent::Withdraw as u64,
-        authority: *signer_info.key,
-        block_id: stake.block_id,
-        amount,
-        collateral: stake.collateral,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        stake.block_id,
+        block_info.clone(),
+        &WithdrawEvent {
+            disc: OreEvent::Withdraw as u64,
+            authority: *signer_info.key,
+            block_id: stake.block_id,
+            amount,
+            collateral: stake.collateral,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

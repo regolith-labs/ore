@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use solana_nostd_keccak::hash;
 use solana_program::program_pack::Pack;
 use spl_token_2022::instruction::AuthorityType;
@@ -313,17 +313,21 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     // Emit event.
-    OpenEvent {
-        disc: OreEvent::Open as u64,
-        id,
-        start_slot,
-        signer: *signer_info.key,
-        reward_config: block.reward,
-        liquidity_base: market.base.liquidity() as u64,
-        liquidity_quote: market.quote.liquidity() as u64,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &OpenEvent {
+            disc: OreEvent::Open as u64,
+            id,
+            start_slot,
+            signer: *signer_info.key,
+            reward_config: block.reward,
+            liquidity_base: market.base.liquidity() as u64,
+            liquidity_quote: market.quote.liquidity() as u64,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

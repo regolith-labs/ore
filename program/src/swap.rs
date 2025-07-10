@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Swap in a hashpower market.
@@ -137,7 +137,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market.check_vaults(&vault_base, &vault_quote)?;
 
     // Emit event.
-    swap_event.log_return();
+    program_log(block.id, block_info.clone(), &swap_event.to_bytes())?;
 
     Ok(())
 }

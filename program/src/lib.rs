@@ -1,6 +1,7 @@
 mod close;
 mod commit;
 mod deposit;
+mod log;
 mod mine;
 mod open;
 mod set_admin;
@@ -14,6 +15,7 @@ mod withdraw;
 use close::*;
 use commit::*;
 use deposit::*;
+use log::*;
 use mine::*;
 use open::*;
 use set_admin::*;
@@ -39,6 +41,7 @@ pub fn process_instruction(
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Commit => process_commit(accounts, data)?,
         OreInstruction::Deposit => process_deposit(accounts, data)?,
+        OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
         OreInstruction::Swap => process_swap(accounts, data)?,
         OreInstruction::Uncommit => process_uncommit(accounts, data)?,

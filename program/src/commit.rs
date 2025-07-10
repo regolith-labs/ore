@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Commit to a block.
@@ -25,7 +25,6 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .as_token_account()?
         .assert(|t| t.mint() == *mint_info.key)?
         .assert(|t| t.owner() == *block_info.key)?;
-    // commitment_info.as_associated_token_account(block_info.key, mint_info.key)?;
     let market = market_info
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.id == block.id)?;
@@ -106,16 +105,20 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     block.total_committed += amount;
 
     // Emit event.
-    CommitEvent {
-        disc: OreEvent::Commit as u64,
-        authority: *signer_info.key,
-        block_id: block.id,
-        amount,
-        block_commitment: block.total_committed,
-        permit_commitment: permit.commitment,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &CommitEvent {
+            disc: OreEvent::Commit as u64,
+            authority: *signer_info.key,
+            block_id: block.id,
+            amount,
+            block_commitment: block.total_committed,
+            permit_commitment: permit.commitment,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

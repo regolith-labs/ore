@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use steel::*;
 
 /// Closes a block.
@@ -58,7 +58,6 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if block.reward.lode_reward > 0 && block.reward.lode_authority != Pubkey::default() {
         // Load recipient.
         recipient_info.as_associated_token_account(&block.reward.lode_authority, &MINT_ADDRESS)?;
-
         let miner = miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.authority == block.reward.lode_authority)?;
@@ -173,14 +172,18 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     market_info.close(opener_info)?;
 
     // Emit event.
-    CloseEvent {
-        authority: *signer_info.key,
-        id: block.id,
-        burned_base: base_burned,
-        burned_quote: quote_burned,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &CloseEvent {
+            authority: *signer_info.key,
+            id: block.id,
+            burned_base: base_burned,
+            burned_quote: quote_burned,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

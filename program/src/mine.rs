@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use ore_api::{prelude::*, sdk::program_log};
 use solana_nostd_keccak::hash;
 use solana_program::slot_hashes::SlotHashes;
 use steel::*;
@@ -139,27 +139,35 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         )?;
 
         // Emit event.
-        RewardEvent {
-            disc: OreEvent::Reward as u64,
-            amount: reward_amount,
-            authority: miner.authority,
-            block_id: block.id,
-            rewards_type: RewardsType::Nugget as u64,
-            ts: clock.unix_timestamp,
-        }
-        .log();
+        program_log(
+            block.id,
+            block_info.clone(),
+            &RewardEvent {
+                disc: OreEvent::Reward as u64,
+                amount: reward_amount,
+                authority: miner.authority,
+                block_id: block.id,
+                rewards_type: RewardsType::Nugget as u64,
+                ts: clock.unix_timestamp,
+            }
+            .to_bytes(),
+        )?;
     }
 
     // Emit event.
-    MineEvent {
-        disc: OreEvent::Mine as u64,
-        authority: miner.authority,
-        block_id: block.id,
-        deployed: amount,
-        total_deployed: block.total_deployed,
-        ts: clock.unix_timestamp,
-    }
-    .log_return();
+    program_log(
+        block.id,
+        block_info.clone(),
+        &MineEvent {
+            disc: OreEvent::Mine as u64,
+            authority: miner.authority,
+            block_id: block.id,
+            deployed: amount,
+            total_deployed: block.total_deployed,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }
