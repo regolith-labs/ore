@@ -184,6 +184,9 @@ pub struct CommitEvent {
     /// The total amount of hashpower this miner has committed to the block.
     pub permit_commitment: u64,
 
+    /// The fee paid per hash.
+    pub fee: u64,
+
     /// The timestamp of the event.
     pub ts: i64,
 }
@@ -208,6 +211,9 @@ pub struct UncommitEvent {
 
     /// The total amount of hashpower this miner has committed to the block.
     pub permit_commitment: u64,
+
+    /// The fee paid per hash.
+    pub fee: u64,
 
     /// The timestamp of the event.
     pub ts: i64,

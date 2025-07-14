@@ -61,6 +61,8 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     block.total_committed -= amount;
 
     // Close permit account, if empty.
+    let fee = permit.fee;
+    let commitment = permit.commitment;
     if permit.commitment == 0 {
         permit_info.close(signer_info)?;
     }
@@ -74,8 +76,9 @@ pub fn process_uncommit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
             authority: *signer_info.key,
             block_id: block.id,
             block_commitment: block.total_committed,
-            permit_commitment: permit.commitment,
+            permit_commitment: commitment,
             amount,
+            fee,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),

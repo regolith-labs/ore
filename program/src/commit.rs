@@ -116,6 +116,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             amount,
             block_commitment: block.total_committed,
             permit_commitment: permit.commitment,
+            fee,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),
