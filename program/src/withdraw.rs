@@ -39,6 +39,9 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         return Err(ProgramError::InvalidArgument);
     }
 
+    // Normalize amount
+    let amount = amount.min(stake.collateral);
+
     // Update stake state.
     stake.collateral -= amount;
 
