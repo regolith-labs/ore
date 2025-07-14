@@ -234,6 +234,31 @@ pub fn deposit(signer: Pubkey, id: u64, amount: u64) -> Instruction {
     }
 }
 
+pub fn withdraw(signer: Pubkey, id: u64, amount: u64) -> Instruction {
+    let block_adddress = block_pda(id).0;
+    let collateral_address = collateral_pda(id).0;
+    let stake_address = stake_pda(signer, id).0;
+    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(block_adddress, false),
+            AccountMeta::new(collateral_address, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
+        ],
+        data: Withdraw {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn swap(
     signer: Pubkey,
     id: u64,
