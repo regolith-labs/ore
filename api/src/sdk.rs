@@ -45,6 +45,8 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     }
 }
 
+// let [signer_info, block_info, config_info, collateral_info, commitment_info, fee_collector_info, market_info, miner_info, mint_base_info, mint_quote_info, opener_info, recipient_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, ore_program] =
+
 pub fn close(
     signer: Pubkey,
     fee_collector: Pubkey,
@@ -78,7 +80,7 @@ pub fn close(
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(opener, false),
             AccountMeta::new(recipient, false),
-            AccountMeta::new_readonly(TREASURY_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new(vault_base, false),
             AccountMeta::new(vault_quote, false),
             AccountMeta::new_readonly(system_program::ID, false),

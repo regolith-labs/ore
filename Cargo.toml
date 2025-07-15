@@ -32,12 +32,11 @@ solana-sdk = "^2.1"
 spl-token = { version = "^4", features = ["no-entrypoint"] }
 spl-token-2022 = "^7"
 spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] } 
-steel = { features = ["spl"], version = "4.0" }
+steel = { features = ["spl"], version = "4.0.2" }
 thiserror = "1.0.57"
 tokio = { version = "1.37.0", features = ["full"] }
 
 [patch.crates-io]
-
 
 [profile.release]
 overflow-checks = true

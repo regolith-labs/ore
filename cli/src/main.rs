@@ -106,6 +106,11 @@ async fn close_all(
     let blocks = get_blocks(rpc).await?;
     for (_, block) in blocks {
         if clock.slot > block.start_slot + 1500 {
+            println!("Closing block {}", block.id);
+            println!("  fee_collector: {}", config.fee_collector);
+            println!("  opener: {}", block.opener);
+            println!("  payer: {}", payer.pubkey());
+            println!("  id: {}", block.id);
             let ix = ore_api::sdk::close(
                 payer.pubkey(),
                 config.fee_collector,
@@ -114,6 +119,7 @@ async fn close_all(
                 block.id,
             );
             submit_transaction(rpc, payer, &[ix]).await?;
+            // simulate_transaction(rpc, payer, &[ix]).await;
         }
     }
     Ok(())
@@ -241,13 +247,33 @@ async fn get_blocks(rpc: &RpcClient) -> Result<Vec<(Pubkey, Block)>, anyhow::Err
     Ok(blocks)
 }
 
+async fn simulate_transaction(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+    instructions: &[solana_sdk::instruction::Instruction],
+) {
+    let blockhash = rpc.get_latest_blockhash().await.unwrap();
+    let x = rpc
+        .simulate_transaction(&Transaction::new_signed_with_payer(
+            instructions,
+            Some(&payer.pubkey()),
+            &[payer],
+            blockhash,
+        ))
+        .await;
+    println!("Simulation result: {:?}", x);
+}
+
 async fn submit_transaction(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     instructions: &[solana_sdk::instruction::Instruction],
 ) -> Result<solana_sdk::signature::Signature, anyhow::Error> {
     let blockhash = rpc.get_latest_blockhash().await?;
-    let mut all_instructions = vec![ComputeBudgetInstruction::set_compute_unit_limit(1_400_000)];
+    let mut all_instructions = vec![
+        ComputeBudgetInstruction::set_compute_unit_limit(1_400_000),
+        ComputeBudgetInstruction::set_compute_unit_price(1_000_000),
+    ];
     all_instructions.extend_from_slice(instructions);
     let transaction = Transaction::new_signed_with_payer(
         &all_instructions,

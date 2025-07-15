@@ -20,7 +20,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .has_address(&collateral_pda(block.id).0)?
         .as_token_account()?
         .assert(|t| t.mint() == *mint_quote_info.key)?
-        .assert(|t| t.owner() == *market_info.key)?;
+        .assert(|t| t.owner() == *block_info.key)?;
     commitment_info
         .is_writable()?
         .has_address(&commitment_pda(block.id).0)?
@@ -143,6 +143,20 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[BLOCK, &block.id.to_le_bytes()],
     )?;
 
+    // Emit event.
+    program_log(
+        block.id,
+        &[block_info.clone(), ore_program.clone()],
+        &CloseEvent {
+            authority: *signer_info.key,
+            id: block.id,
+            burned_base: base_burned,
+            burned_quote: quote_burned,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
+
     // Close token accounts.
     close_token_account_signed(
         vault_base_info,
@@ -171,20 +185,6 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Close market.
     market_info.close(opener_info)?;
-
-    // Emit event.
-    program_log(
-        block.id,
-        &[block_info.clone(), ore_program.clone()],
-        &CloseEvent {
-            authority: *signer_info.key,
-            id: block.id,
-            burned_base: base_burned,
-            burned_quote: quote_burned,
-            ts: clock.unix_timestamp,
-        }
-        .to_bytes(),
-    )?;
 
     Ok(())
 }
