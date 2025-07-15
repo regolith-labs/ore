@@ -48,7 +48,9 @@ pub struct Deposit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Log {}
+pub struct Log {
+    pub block_id: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]

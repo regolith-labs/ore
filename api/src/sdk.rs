@@ -91,12 +91,15 @@ pub fn close(
     }
 }
 
-pub fn log(signer: Pubkey, msg: &[u8]) -> Instruction {
-    let mut data = Log {}.to_bytes();
+pub fn log(signer: Pubkey, block_id: u64, msg: &[u8]) -> Instruction {
+    let mut data = Log {
+        block_id: block_id.to_le_bytes(),
+    }
+    .to_bytes();
     data.extend_from_slice(msg);
     Instruction {
         program_id: crate::ID,
-        accounts: vec![AccountMeta::new(signer, false)],
+        accounts: vec![AccountMeta::new(signer, true)],
         data: data,
     }
 }
@@ -107,7 +110,7 @@ pub fn program_log(
     msg: &[u8],
 ) -> Result<(), ProgramError> {
     invoke_signed(
-        &log(*accounts[0].key, msg),
+        &log(*accounts[0].key, block_id, msg),
         accounts,
         &crate::ID,
         &[BLOCK, &block_id.to_le_bytes()],

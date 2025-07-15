@@ -12,7 +12,6 @@ use solana_sdk::{
     signature::{read_keypair_file, Signer},
     transaction::Transaction,
 };
-use spl_token::amount_to_ui_amount;
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -247,7 +246,7 @@ async fn get_blocks(rpc: &RpcClient) -> Result<Vec<(Pubkey, Block)>, anyhow::Err
     Ok(blocks)
 }
 
-async fn simulate_transaction(
+async fn _simulate_transaction(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     instructions: &[solana_sdk::instruction::Instruction],
