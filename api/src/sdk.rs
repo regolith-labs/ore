@@ -117,16 +117,13 @@ pub fn program_log(
     )
 }
 
-// let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar, ore_program] =
-
 pub fn mine(signer: Pubkey, authority: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let commitment_address = commitment_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
-    let miner_address = miner_pda(signer).0;
-    let permit_address = permit_pda(signer, id).0;
-    let sender = get_associated_token_address(&signer, &base_mint_address);
+    let miner_address = miner_pda(authority).0;
+    let permit_address = permit_pda(authority, id).0;
     let recipient = get_associated_token_address(&authority, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
