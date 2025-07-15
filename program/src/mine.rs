@@ -11,7 +11,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar, ore_program] =
+    let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -45,8 +45,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
-    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Reduce permit amount.
     let amount = permit.commitment.min(amount);

@@ -117,21 +117,31 @@ pub fn program_log(
     )
 }
 
-pub fn mine(signer: Pubkey, id: u64, amount: u64) -> Instruction {
+// let [signer_info, authority_info, block_info, commitment_info, market_info, miner_info, mint_hash_info, mint_ore_info, permit_info, recipient_info, treasury_info, system_program, token_program, slot_hashes_sysvar, ore_program] =
+
+pub fn mine(signer: Pubkey, authority: Pubkey, id: u64, amount: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
+    let commitment_address = commitment_pda(id).0;
     let market_address = market_pda(id).0;
     let base_mint_address = mint_pda(id).0;
     let miner_address = miner_pda(signer).0;
+    let permit_address = permit_pda(signer, id).0;
     let sender = get_associated_token_address(&signer, &base_mint_address);
+    let recipient = get_associated_token_address(&authority, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(authority, false),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(commitment_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(miner_address, false),
+            AccountMeta::new(base_mint_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(sender, false),
+            AccountMeta::new(permit_address, false),
+            AccountMeta::new(recipient, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(crate::ID, false),
