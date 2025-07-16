@@ -1,4 +1,5 @@
 use ore_api::{prelude::*, sdk::program_log};
+use solana_program::rent::Rent;
 use steel::*;
 
 /// Commit to a block.
@@ -90,6 +91,15 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     permit.executor = executor;
     permit.fee = fee;
     permit.seed = args.seed;
+
+    // Send lamports to permit account to pay for fee.
+    if permit.fee > 0 {
+        let rent_exempt_balance = Rent::get()?.minimum_balance(size_of::<Permit>());
+        let surplus_balance = permit_info.lamports().saturating_sub(rent_exempt_balance);
+        let total_fees = permit.commitment * permit.fee;
+        let required_fees = total_fees.saturating_sub(surplus_balance);
+        permit_info.collect(required_fees, signer_info)?;
+    }
 
     // Transfer hash tokens.
     transfer(
