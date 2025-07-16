@@ -105,6 +105,9 @@ pub struct MineEvent {
     /// The total amount of hashes deployed in the block.
     pub total_deployed: u64,
 
+    /// The amount of hashpower remaining in the permit.
+    pub remaining_commitment: u64,
+
     /// The timestamp of the event.
     pub ts: i64,
 }

@@ -53,12 +53,13 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     permit.commitment -= amount;
 
     // Pay executor fee.
-    if permit.fee > 0 {
-        permit_info.send(permit.fee * amount, signer_info);
-    }
+    // if permit.fee > 0 {
+    //     permit_info.send(permit.fee * amount, signer_info);
+    // }
 
     // Close permit account, if empty.
-    if permit.commitment == 0 {
+    let permit_commitment = permit.commitment;
+    if permit_commitment == 0 {
         permit_info.close(authority_info)?;
     }
 
@@ -86,11 +87,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Reset miner hash if mining new block.
     if miner.block_id != block.id {
-        let mut args = [0u8; 128];
-        args[..32].copy_from_slice(&block.id.to_le_bytes());
-        args[32..64].copy_from_slice(&block.slot_hash);
-        args[64..96].copy_from_slice(&permit.authority.to_bytes());
-        args[96..].copy_from_slice(&permit.seed);
+        let mut args = [0u8; 104];
+        args[..8].copy_from_slice(&block.id.to_le_bytes());
+        args[8..40].copy_from_slice(&block.slot_hash);
+        args[40..72].copy_from_slice(&permit.authority.to_bytes());
+        args[72..].copy_from_slice(&permit.seed);
         miner.hash = hash(&args);
         miner.block_id = block.id;
     }
@@ -165,6 +166,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             block_id: block.id,
             deployed: amount,
             total_deployed: block.total_deployed,
+            remaining_commitment: permit_commitment,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),
