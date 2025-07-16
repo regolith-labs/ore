@@ -26,15 +26,6 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
-        "open" => {
-            open(&rpc, &payer).await.unwrap();
-        }
-        "close" => {
-            close(&rpc, &payer).await.unwrap();
-        }
-        "close_all" => {
-            close_all(&rpc, &payer).await.unwrap();
-        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -44,106 +35,17 @@ async fn main() {
         "blocks" => {
             log_blocks(&rpc).await.unwrap();
         }
-        "deposit" => {
-            deposit(&rpc, &payer).await.unwrap();
-        }
         "swap" => {
             swap(&rpc, &payer).await.unwrap();
-        }
-        "commit" => {
-            commit(&rpc, &payer).await.unwrap();
         }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
         }
-        // "set_block_limit" => {
-        //     set_block_limit(&rpc, &payer).await.unwrap();
-        // }
-        // "uncommit" => {
-        //     uncommit(&rpc, &payer).await.unwrap();
-        // }
+        "benchmark" => {
+            benchmark_keccak().await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn open(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let id_str = std::env::var("ID").expect("Missing ID env var");
-    let id = id_str.parse::<u64>()?;
-    let ix = ore_api::sdk::open(payer.pubkey(), id);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn close(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let id_str = std::env::var("ID").expect("Missing ID env var");
-    let id = id_str.parse::<u64>()?;
-    let block = get_block(rpc, id).await?;
-    let config = get_config(rpc).await?;
-    let ix = ore_api::sdk::close(
-        payer.pubkey(),
-        config.fee_collector,
-        block.opener,
-        payer.pubkey(),
-        id,
-    );
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn close_all(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let config = get_config(rpc).await?;
-    let clock = get_clock(rpc).await?;
-    let blocks = get_blocks(rpc).await?;
-    for (_, block) in blocks {
-        if clock.slot > block.start_slot + 1500 {
-            println!("Closing block {}", block.id);
-            println!("  fee_collector: {}", config.fee_collector);
-            println!("  opener: {}", block.opener);
-            println!("  payer: {}", payer.pubkey());
-            println!("  id: {}", block.id);
-            let ix = ore_api::sdk::close(
-                payer.pubkey(),
-                config.fee_collector,
-                block.opener,
-                payer.pubkey(),
-                block.id,
-            );
-            submit_transaction(rpc, payer, &[ix]).await?;
-            // simulate_transaction(rpc, payer, &[ix]).await;
-        }
-    }
-    Ok(())
-}
-
-async fn commit(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let id_str = std::env::var("ID").expect("Missing ID env var");
-    let id = id_str.parse::<u64>()?;
-    let ix = ore_api::sdk::commit(payer.pubkey(), 10000000, Pubkey::default(), 0, id, [0; 32]);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn deposit(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let id_str = std::env::var("ID").expect("Missing ID env var");
-    let id = id_str.parse::<u64>()?;
-    let ix = ore_api::sdk::deposit(payer.pubkey(), id, 10000000);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
 }
 
 async fn swap(
@@ -195,20 +97,9 @@ async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 fn print_block(block: Block, clock: &Clock) {
     let address = block_pda(block.id).0;
     let current_slot = clock.slot;
-    let elapsed_time = (block.start_slot - current_slot) as f64 * 0.4;
     println!("Address: {:?}", address);
     println!("  Id: {:?}", block.id);
-    println!("  Start slot: {:?}", block.start_slot);
-    println!("  Starts in: {:?} sec", elapsed_time as u64);
     println!("  Slot hash: {:?}", block.slot_hash);
-    println!("  Total hashes: {:?}", block.total_committed);
-    println!("  Total deployed: {:?}", block.total_deployed);
-    println!("  Total rewards: {:?}", block.total_rewards);
-    println!("  Lode reward: {:?}", block.reward.lode_reward);
-    println!("  Lode authority: {:?}", block.reward.lode_authority);
-    println!("  Lode hash: {:?}", block.reward.lode_hash);
-    println!("  Nugget reward: {:?}", block.reward.nugget_reward);
-    println!("  Nugget threshold: {:?}", block.reward.nugget_threshold);
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -349,4 +240,26 @@ where
             _ => return Err(anyhow::anyhow!("Failed to get program accounts: {}", err)),
         },
     }
+}
+
+async fn benchmark_keccak() -> Result<(), anyhow::Error> {
+    use solana_program::keccak::hash;
+    use std::time::Instant;
+
+    const NUM_HASHES: u64 = 1_000_000;
+    let start = Instant::now();
+
+    for i in 0..NUM_HASHES {
+        let _ = hash(&i.to_le_bytes());
+    }
+
+    let duration = start.elapsed();
+    let hashes_per_sec = NUM_HASHES as f64 / duration.as_secs_f64();
+
+    println!("\nKeccak-256 Benchmark:");
+    println!("Time elapsed: {:.2?}", duration);
+    println!("Hashes computed: {}", NUM_HASHES);
+    println!("Hashes per second: {:.0}", hashes_per_sec);
+
+    Ok(())
 }

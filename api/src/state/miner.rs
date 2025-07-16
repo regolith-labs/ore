@@ -16,11 +16,14 @@ pub struct Miner {
     /// The hash of the last block this miner mined in.
     pub hash: [u8; 32],
 
-    /// The total number of hashes this miner has committed to the block.
-    pub total_committed: u64,
+    /// The amount of hashpower this miner has committed to the current block.
+    pub hashpower: u64,
 
-    /// The total number of hashes this miner has deployed to the block.
-    pub total_deployed: u64,
+    /// A user-supplied seed for random number generation.
+    pub seed: [u8; 32],
+
+    /// The total amount of hashpower this miner has committed across all blocks.
+    pub total_hashpower: u64,
 
     /// The total amount of ORE this miner has mined across all blocks.
     pub total_rewards: u64,

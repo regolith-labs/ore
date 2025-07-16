@@ -20,13 +20,13 @@ pub struct Market {
     /// Snapshot of the market state at the time of the last swap.
     pub snapshot: Snapshot,
 
-    /// The id of the block this market is associated with.
-    pub id: u64,
+    /// The id of the current block.
+    pub block_id: u64,
 }
 
 impl Market {
     pub fn pda(&self) -> (Pubkey, u8) {
-        market_pda(self.id)
+        market_pda()
     }
 
     pub fn base_vault(&self) -> Pubkey {
@@ -449,7 +449,7 @@ mod tests {
                 quote_balance: 0,
                 slot: 0,
             },
-            id: 0,
+            block_id: 0,
         }
     }
 }

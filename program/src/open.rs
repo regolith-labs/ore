@@ -219,7 +219,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert(|t| t.owner() == *block_info.key)?;
     }
 
-    // Initialize vault token accounts.
+    // Initialize base vault token account.
     if vault_base_info.data_is_empty() {
         let vault_base_pda = vault_base_pda(id);
         allocate_account_with_bump(
@@ -256,6 +256,8 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .assert(|t| t.mint() == *mint_base_info.key)?
             .assert(|t| t.owner() == *market_info.key)?;
     }
+
+    // Initialize quote vault token account.
     if vault_quote_info.data_is_empty() {
         let vault_quote_pda = vault_quote_pda(id);
         allocate_account_with_bump(

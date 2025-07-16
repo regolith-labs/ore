@@ -35,9 +35,6 @@ pub const MINER: &[u8] = b"miner";
 /// The seed of the mint account PDA.
 pub const MINT: &[u8] = b"mint";
 
-/// The seed of the log authority PDA.
-// pub const LOG: &[u8] = b"log";
-
 /// The seed of the permit account PDA.
 pub const PERMIT: &[u8] = b"permit";
 
@@ -84,6 +81,3 @@ pub const NUGGET_DIFFICULTY: u64 = 10;
 
 // The fee to open a block.
 // pub const OPEN_FEE: u64 = ONE_ORE / 100;
-
-// The reward rate per satisfying hash (0.002048 ORE).
-// pub const REWARD_RATE: u64 = 204_800_000;

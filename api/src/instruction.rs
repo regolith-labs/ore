@@ -4,21 +4,15 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Open = 0,
-    Close = 1,
-    Commit = 2,
-    Deposit = 3,
-    Log = 4,
-    Mine = 5,
-    Swap = 6,
-    Uncommit = 7,
-    Withdraw = 8,
+    Log = 1,
+    Mine = 2,
+    Swap = 3,
+    Initialize = 4,
 
     // Admin
     SetAdmin = 9,
-    SetBlockLimit = 10,
-    SetFeeCollector = 11,
-    SetFeeRate = 12,
+    SetFeeCollector = 10,
+    SetFeeRate = 11,
 }
 
 #[repr(C)]
@@ -42,9 +36,7 @@ pub struct Commit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Deposit {
-    pub amount: [u8; 8],
-}
+pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -74,20 +66,8 @@ pub struct Uncommit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Withdraw {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetAdmin {
     pub admin: [u8; 32],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetBlockLimit {
-    pub block_limit: [u8; 8],
 }
 
 #[repr(C)]
@@ -102,16 +82,10 @@ pub struct SetFeeRate {
     pub fee_rate: [u8; 8],
 }
 
-instruction!(OreInstruction, Open);
-instruction!(OreInstruction, Close);
-instruction!(OreInstruction, Commit);
-instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Swap);
-instruction!(OreInstruction, Uncommit);
-instruction!(OreInstruction, Withdraw);
+instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, SetAdmin);
-instruction!(OreInstruction, SetBlockLimit);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, SetFeeRate);
