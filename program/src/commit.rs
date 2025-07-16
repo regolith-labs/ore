@@ -94,7 +94,7 @@ pub fn process_commit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Send lamports to permit account to pay for fee.
     if permit.fee > 0 {
-        let rent_exempt_balance = Rent::get()?.minimum_balance(size_of::<Permit>());
+        let rent_exempt_balance = Rent::get()?.minimum_balance(std::mem::size_of::<Permit>());
         let surplus_balance = permit_info.lamports().saturating_sub(rent_exempt_balance);
         let total_fees = permit.commitment * permit.fee;
         let required_fees = total_fees.saturating_sub(surplus_balance);

@@ -22,7 +22,8 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let stake = stake_info
         .as_account_mut::<Stake>(&ore_api::ID)?
         .assert_mut(|p| p.authority == *signer_info.key)?;
-    block_info.has_seeds(&[BLOCK, &stake.block_id.to_le_bytes()], &ore_api::ID)?;
+    let block_pda = block_pda(stake.block_id);
+    block_info.has_address(&block_pda.0)?;
     collateral_info
         .is_writable()?
         .has_address(&collateral_pda(stake.block_id).0)?
@@ -46,13 +47,14 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     stake.collateral -= amount;
 
     // Transfer collateral.
-    transfer_signed(
+    transfer_signed_with_bump(
         block_info,
         collateral_info,
         recipient_info,
         token_program,
         amount,
         &[BLOCK, &stake.block_id.to_le_bytes()],
+        block_pda.1,
     )?;
 
     // Close stake account, if empty.
