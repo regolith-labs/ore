@@ -58,6 +58,9 @@ pub const MINT_ADDRESS: Pubkey = pubkey!("ESovLnpNMatjLDcStPtuZvidiufBdoyoEGr76o
 pub const TREASURY_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);
 
+/// The address of the treasury account.
+pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
+
 /// Denominator for protocol fee calculations.
 pub const FEE_RATE_BPS: u64 = 100;
 

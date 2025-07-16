@@ -131,13 +131,14 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         miner.total_rewards += reward_amount;
 
         // Mint to recipient.
-        mint_to_signed(
+        mint_to_signed_with_bump(
             mint_ore_info,
             recipient_info,
             treasury_info,
             token_program,
             reward_amount,
             &[TREASURY],
+            TREASURY_BUMP,
         )?;
 
         // Emit event.
