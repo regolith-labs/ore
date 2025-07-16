@@ -1,14 +1,20 @@
+mod close;
 mod initialize;
 mod log;
 mod mine;
+mod open;
+mod reset;
 mod set_admin;
 mod set_fee_collector;
 mod set_fee_rate;
 mod swap;
 
+use close::*;
 use initialize::*;
 use log::*;
 use mine::*;
+use open::*;
+use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
 use set_fee_rate::*;
@@ -26,9 +32,12 @@ pub fn process_instruction(
 
     match ix {
         // User
+        OreInstruction::Open => process_open(accounts, data)?,
+        OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Mine => process_mine(accounts, data)?,
         OreInstruction::Swap => process_swap(accounts, data)?,
+        OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
 
         // Admin

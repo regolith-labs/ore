@@ -7,11 +7,11 @@ use steel::*;
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = Mine::try_from_bytes(data)?;
-    let amount = u64::from_le_bytes(args.amount);
+    let nonce = u64::from_le_bytes(args.nonce);
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, block_info, market_info, miner_info, mint_info, recipient_info, treasury_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, authority_info, block_info, miner_info, mint_info, recipient_info, treasury_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -21,9 +21,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     // .assert_mut(|b| clock.slot >= b.start_slot)?
     // .assert_mut(|b| clock.slot < b.start_slot + 1500)?;
-    let market = market_info
-        .as_account::<Market>(&ore_api::ID)?
-        .assert(|m| m.block_id == block.id)?;
+    // let market = market_info
+    //     .as_account::<Market>(&ore_api::ID)?
+    //     .assert(|m| m.block_id == block.id)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?

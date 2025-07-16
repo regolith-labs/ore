@@ -8,11 +8,14 @@ pub enum OreInstruction {
     Mine = 2,
     Swap = 3,
     Initialize = 4,
+    Open = 5,
+    Close = 6,
+    Reset = 7,
 
     // Admin
-    SetAdmin = 9,
-    SetFeeCollector = 10,
-    SetFeeRate = 11,
+    SetAdmin = 8,
+    SetFeeCollector = 9,
+    SetFeeRate = 10,
 }
 
 #[repr(C)]
@@ -24,6 +27,10 @@ pub struct Open {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -47,7 +54,7 @@ pub struct Log {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
-    pub amount: [u8; 8],
+    pub nonce: [u8; 8],
 }
 
 #[repr(C)]
@@ -82,10 +89,13 @@ pub struct SetFeeRate {
     pub fee_rate: [u8; 8],
 }
 
+instruction!(OreInstruction, Open);
+instruction!(OreInstruction, Close);
+instruction!(OreInstruction, Reset);
+instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Mine);
 instruction!(OreInstruction, Swap);
-instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, SetFeeRate);

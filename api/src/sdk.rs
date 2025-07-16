@@ -33,7 +33,7 @@ pub fn program_log(
     )
 }
 
-pub fn mine(signer: Pubkey, authority: Pubkey, id: u64, amount: u64) -> Instruction {
+pub fn mine(signer: Pubkey, authority: Pubkey, id: u64, nonce: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let market_address = market_pda().0;
     let miner_address = miner_pda(authority).0;
@@ -55,7 +55,7 @@ pub fn mine(signer: Pubkey, authority: Pubkey, id: u64, amount: u64) -> Instruct
             AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
         ],
         data: Mine {
-            amount: amount.to_le_bytes(),
+            nonce: nonce.to_le_bytes(),
         }
         .to_bytes(),
     }

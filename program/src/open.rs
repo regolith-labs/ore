@@ -1,7 +1,5 @@
-use ore_api::{prelude::*, sdk::program_log};
+use ore_api::prelude::*;
 use solana_nostd_keccak::hash;
-use solana_program::program_pack::Pack;
-use spl_token_2022::instruction::AuthorityType;
 use steel::*;
 
 /// Opens a new block.
@@ -12,9 +10,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, collateral_info, commitment_info, market_info, mint_base_info, mint_quote_info, sender_info, treasury_info, vault_base_info, vault_quote_info, system_program, token_program, associated_token_program, ore_program, rent_sysvar] =
-        accounts
-    else {
+    let [signer_info, block_info, system_program, ore_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
@@ -22,25 +18,10 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .is_empty()?
         .is_writable()?
         .has_seeds(&[BLOCK, &id.to_le_bytes()], &ore_api::ID)?;
-    let config = config_info.as_account::<Config>(&ore_api::ID)?;
-    market_info
-        .is_empty()?
-        .is_writable()?
-        .has_seeds(&[MARKET, &id.to_le_bytes()], &ore_api::ID)?;
-    mint_base_info
-        .is_empty()?
-        .is_writable()?
-        .has_seeds(&[MINT, &id.to_le_bytes()], &ore_api::ID)?;
-    mint_quote_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    sender_info
-        .is_writable()?
-        .as_associated_token_account(&signer_info.key, &mint_quote_info.key)?;
-    treasury_info.has_address(&TREASURY_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
-    token_program.is_program(&spl_token::ID)?;
-    associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
-    rent_sysvar.is_sysvar(&sysvar::rent::ID)?;
+
+    // TODO
 
     // Error out if start slot is within the current period.
     let start_slot = id * 1500;
@@ -50,11 +31,8 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     if start_slot < current_period_end {
         return Err(ProgramError::InvalidArgument);
     }
-    if id > current_block + config.block_limit {
-        return Err(ProgramError::InvalidArgument);
-    }
 
-    // Initialize config.
+    // Initialize block.
     create_program_account::<Block>(
         block_info,
         system_program,
@@ -65,279 +43,36 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     block.id = id;
     block.opener = *signer_info.key;
-    block.reward = RewardConfig {
-        lode_hash: [0; 32],
-        lode_authority: Pubkey::default(),
-        lode_reward: 0,
-        nugget_reward: 0,
-        nugget_threshold: NUGGET_DIFFICULTY,
-    };
-    block.slot_hash = [0; 32];
-    block.start_slot = start_slot;
-    block.total_committed = 0;
-    block.total_deployed = 0;
-    block.total_rewards = 0;
-
-    // Select reward strategy.
-    let noise_seed = block.id.to_le_bytes();
-    let noise = hash(&noise_seed);
-    let lode_reward = ONE_ORE * generate_lode(noise) as u64;
-    let target_block_reward = ONE_ORE * 10;
-    let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
-    let expected_qualifying_hashes = expected_hashes_per_block / 2u64.pow(NUGGET_DIFFICULTY as u32);
-    let difficulty_reward = (target_block_reward - lode_reward) / expected_qualifying_hashes;
-    block.reward.lode_reward = lode_reward;
-    block.reward.nugget_reward = difficulty_reward;
-
-    // Initialize market.
-    create_program_account::<Market>(
-        market_info,
-        system_program,
-        signer_info,
-        &ore_api::ID,
-        &[MARKET, &id.to_le_bytes()],
-    )?;
-    let market = market_info.as_account_mut::<Market>(&ore_api::ID)?;
-    market.base = TokenParams {
-        mint: *mint_base_info.key,
-        balance: HASH_TOKEN_SUPPLY,
-        balance_virtual: 0,
-    };
-    market.quote = TokenParams {
-        mint: *mint_quote_info.key,
-        balance: 0,
-        balance_virtual: VIRTUAL_LIQUIDITY,
-    };
-    market.fee = FeeParams {
-        rate: FEE_RATE_BPS,
-        uncollected: 0,
-        cumulative: 0,
-    };
-    market.snapshot = Snapshot {
-        enabled: 1,
-        base_balance: 0,
-        quote_balance: 0,
-        slot: 0,
-    };
-    market.id = id;
-
-    // Initialize hash token mint.
-    let mint_bump = mint_pda(block.id).1;
-    allocate_account_with_bump(
-        mint_base_info,
-        system_program,
-        signer_info,
-        spl_token::state::Mint::LEN,
-        &spl_token::ID,
-        &[MINT, &id.to_le_bytes()],
-        mint_bump,
-    )?;
-    initialize_mint_signed_with_bump(
-        mint_base_info,
-        block_info,
-        None,
-        token_program,
-        rent_sysvar,
-        0,
-        &[MINT, &id.to_le_bytes()],
-        mint_bump,
-    )?;
-
-    // TODO Initialize hash token metadata.
-
-    // Initialize collateral and commitment token accounts.
-    if collateral_info.data_is_empty() {
-        let collateral_pda = collateral_pda(id);
-        allocate_account_with_bump(
-            collateral_info,
-            system_program,
-            signer_info,
-            spl_token::state::Account::LEN,
-            &spl_token::ID,
-            &[
-                block_info.key.as_ref(),
-                token_program.key.as_ref(),
-                mint_quote_info.key.as_ref(),
-            ],
-            collateral_pda.1,
-        )?;
-        solana_program::program::invoke(
-            &spl_token_2022::instruction::initialize_account3(
-                &spl_token::ID,
-                &collateral_pda.0,
-                &mint_quote_info.key,
-                &block_info.key,
-            )?,
-            &[
-                collateral_info.clone(),
-                mint_quote_info.clone(),
-                block_info.clone(),
-                token_program.clone(),
-            ],
-        )?;
-    } else {
-        collateral_info
-            .has_address(&collateral_pda(id).0)?
-            .as_token_account()?
-            .assert(|t| t.mint() == *mint_quote_info.key)?
-            .assert(|t| t.owner() == *block_info.key)?;
-    }
-    if commitment_info.data_is_empty() {
-        let commitment_pda = commitment_pda(id);
-        allocate_account_with_bump(
-            commitment_info,
-            system_program,
-            signer_info,
-            spl_token::state::Account::LEN,
-            &spl_token::ID,
-            &[
-                block_info.key.as_ref(),
-                token_program.key.as_ref(),
-                mint_base_info.key.as_ref(),
-            ],
-            commitment_pda.1,
-        )?;
-        solana_program::program::invoke(
-            &spl_token_2022::instruction::initialize_account3(
-                &spl_token::ID,
-                &commitment_pda.0,
-                &mint_base_info.key,
-                &block_info.key,
-            )?,
-            &[
-                commitment_info.clone(),
-                mint_base_info.clone(),
-                block_info.clone(),
-                token_program.clone(),
-            ],
-        )?;
-    } else {
-        commitment_info
-            .has_address(&commitment_pda(id).0)?
-            .as_token_account()?
-            .assert(|t| t.mint() == *mint_base_info.key)?
-            .assert(|t| t.owner() == *block_info.key)?;
-    }
-
-    // Initialize base vault token account.
-    if vault_base_info.data_is_empty() {
-        let vault_base_pda = vault_base_pda(id);
-        allocate_account_with_bump(
-            vault_base_info,
-            system_program,
-            signer_info,
-            spl_token::state::Account::LEN,
-            &spl_token::ID,
-            &[
-                market_info.key.as_ref(),
-                token_program.key.as_ref(),
-                mint_base_info.key.as_ref(),
-            ],
-            vault_base_pda.1,
-        )?;
-        solana_program::program::invoke(
-            &spl_token_2022::instruction::initialize_account3(
-                &spl_token::ID,
-                &vault_base_pda.0,
-                &mint_base_info.key,
-                &market_info.key,
-            )?,
-            &[
-                vault_base_info.clone(),
-                mint_base_info.clone(),
-                market_info.clone(),
-                token_program.clone(),
-            ],
-        )?;
-    } else {
-        vault_base_info
-            .has_address(&vault_base_pda(id).0)?
-            .as_token_account()?
-            .assert(|t| t.mint() == *mint_base_info.key)?
-            .assert(|t| t.owner() == *market_info.key)?;
-    }
-
-    // Initialize quote vault token account.
-    if vault_quote_info.data_is_empty() {
-        let vault_quote_pda = vault_quote_pda(id);
-        allocate_account_with_bump(
-            vault_quote_info,
-            system_program,
-            signer_info,
-            spl_token::state::Account::LEN,
-            &spl_token::ID,
-            &[
-                market_info.key.as_ref(),
-                token_program.key.as_ref(),
-                mint_quote_info.key.as_ref(),
-            ],
-            vault_quote_pda.1,
-        )?;
-        solana_program::program::invoke(
-            &spl_token_2022::instruction::initialize_account3(
-                &spl_token::ID,
-                &vault_quote_pda.0,
-                &mint_quote_info.key,
-                &market_info.key,
-            )?,
-            &[
-                vault_quote_info.clone(),
-                mint_quote_info.clone(),
-                market_info.clone(),
-                token_program.clone(),
-            ],
-        )?;
-    } else {
-        vault_quote_info
-            .has_address(&vault_quote_pda(id).0)?
-            .as_token_account()?
-            .assert(|t| t.mint() == *mint_quote_info.key)?
-            .assert(|t| t.owner() == *market_info.key)?;
-    }
-
-    // Mint hash tokens to market.
-    mint_to_signed(
-        mint_base_info,
-        vault_base_info,
-        block_info,
-        token_program,
-        HASH_TOKEN_SUPPLY,
-        &[BLOCK, &id.to_le_bytes()],
-    )?;
-
-    // Burn mint authority.
-    set_authority_signed(
-        mint_base_info,
-        block_info,
-        None,
-        AuthorityType::MintTokens,
-        token_program,
-        &[BLOCK, &id.to_le_bytes()],
-    )?;
+    block.reward = ONE_ORE * generate_lode(block.id) as u64;
+    block.total_hashpower = 0;
 
     // Emit event.
-    program_log(
-        id,
-        &[block_info.clone(), ore_program.clone()],
-        &OpenEvent {
-            disc: OreEvent::Open as u64,
-            id,
-            start_slot,
-            signer: *signer_info.key,
-            reward_config: block.reward,
-            liquidity_base: market.base.liquidity() as u64,
-            liquidity_quote: market.quote.liquidity() as u64,
-            ts: clock.unix_timestamp,
-        }
-        .to_bytes(),
-    )?;
+    // program_log(
+    //     id,
+    //     &[block_info.clone(), ore_program.clone()],
+    //     &OpenEvent {
+    //         disc: OreEvent::Open as u64,
+    //         id,
+    //         start_slot,
+    //         signer: *signer_info.key,
+    //         reward_config: block.reward,
+    //         // liquidity_base: market.base.liquidity() as u64,
+    //         // liquidity_quote: market.quote.liquidity() as u64,
+    //         ts: clock.unix_timestamp,
+    //     }
+    //     .to_bytes(),
+    // )?;
 
     Ok(())
 }
 
-fn generate_lode(hash: [u8; 32]) -> u8 {
-    // Extract the first byte (0 to 255)
-    let byte_value = hash[0];
+fn generate_lode(block_id: u64) -> u8 {
+    // Generate noise.
+    let noise_seed = block_id.to_le_bytes();
+    let noise = hash(&noise_seed);
+
+    // Extract the first byte (0 to 255).
+    let byte_value = noise[0];
 
     // Map to 1-10 using integer division
     let reward = (byte_value / 25) + 1;
@@ -353,11 +88,9 @@ fn generate_lode(hash: [u8; 32]) -> u8 {
 #[test]
 fn test_lode_rewards() {
     for i in 0u64..1000 {
-        let noise_seed = i.to_le_bytes();
-        let noise = hash(&noise_seed);
-        let lode_reward = ONE_ORE * generate_lode(noise) as u64;
+        let lode_reward = ONE_ORE * generate_lode(i) as u64;
         let target_block_reward = ONE_ORE * 10;
-        let expected_hashes_per_block = HASH_TOKEN_SUPPLY / 2;
+        let expected_hashes_per_block = HASHPOWER_LIQUIDITY / 2;
         let expected_qualifying_hashes =
             expected_hashes_per_block / 2u64.pow(NUGGET_DIFFICULTY as u32);
         let difficulty_reward = (target_block_reward - lode_reward) / expected_qualifying_hashes;
