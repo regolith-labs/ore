@@ -10,6 +10,7 @@ pub mod prelude {
     pub use crate::error::*;
     pub use crate::event::*;
     pub use crate::instruction::*;
+    pub use crate::sdk::*;
     pub use crate::state::*;
 }
 

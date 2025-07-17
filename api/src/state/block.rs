@@ -22,7 +22,13 @@ pub struct Block {
     /// The authority of the miner who submitted the best hash.
     pub best_hash_miner: Pubkey,
 
-    /// The hash of the starting slot, used for random number generation.
+    /// The slot at which the block starts trading.
+    pub start_slot: u64,
+
+    /// The slot at which the block ends trading.
+    pub end_slot: u64,
+
+    /// The hash of the end slot, provided by solana, used for random number generation.
     pub slot_hash: [u8; 32],
 
     /// The total amount of hashpower bought in the block.

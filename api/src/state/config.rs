@@ -10,6 +10,9 @@ pub struct Config {
     // The address that can set the admin.
     pub admin: Pubkey,
 
+    // The block duration in slots.
+    pub block_duration: u64,
+
     // The address that receives fees.
     pub fee_collector: Pubkey,
 

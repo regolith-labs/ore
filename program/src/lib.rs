@@ -44,8 +44,6 @@ pub fn process_instruction(
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
         OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
-
-        _ => panic!("Not implemented"),
     }
 
     Ok(())

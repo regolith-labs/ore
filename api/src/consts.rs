@@ -64,6 +64,9 @@ pub const FEE_RATE_BPS: u64 = 100;
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
 
+/// Window to submit hashes, in slots.
+pub const MINING_WINDOW: u64 = 1500;
+
 /// Slot window size, used for sandwich resistance.
 pub const SLOT_WINDOW: u64 = 4;
 

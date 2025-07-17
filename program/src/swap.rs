@@ -1,4 +1,4 @@
-use ore_api::{prelude::*, sdk::program_log};
+use ore_api::prelude::*;
 use steel::*;
 
 /// Swap in a hashpower market.
@@ -11,25 +11,30 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, mint_quote_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program] =
+    let [signer_info, block_info, market_info, miner_info, mint_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let block: &mut Block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
-    // .assert_mut(|b| clock.slot < b.start_slot)?;
+    let block: &mut Block = block_info
+        .as_account_mut::<Block>(&ore_api::ID)?
+        .assert_mut(|b| b.start_slot <= clock.slot)?
+        .assert_mut(|b| b.end_slot > clock.slot)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.block_id == block.id)?
         .assert_mut(|m| m.base.liquidity() > 0)?
         .assert_mut(|m| m.quote.liquidity() > 0)?;
-    mint_quote_info.has_address(&market.quote.mint)?.as_mint()?;
+    let miner = miner_info
+        .as_account_mut::<Miner>(&ore_api::ID)?
+        .assert_mut(|m| m.authority == *signer_info.key)?;
+    mint_info.has_address(&market.quote.mint)?.as_mint()?;
     vault_info
         .is_writable()?
         .has_address(&vault_pda().0)?
         .as_token_account()?
-        .assert(|t| t.mint() == *mint_quote_info.key)?
+        .assert(|t| t.mint() == *mint_info.key)?
         .assert(|t| t.owner() == *market_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -42,7 +47,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             signer_info,
             signer_info,
             tokens_info,
-            mint_quote_info,
+            mint_info,
             system_program,
             token_program,
             associated_token_program,
@@ -50,7 +55,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     } else {
         tokens_info
             .is_writable()?
-            .as_associated_token_account(signer_info.key, mint_quote_info.key)?;
+            .as_associated_token_account(signer_info.key, mint_info.key)?;
     }
 
     // Update market state.
@@ -61,6 +66,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Transfer tokens
     match direction {
         SwapDirection::Buy => {
+            // Update hashpower.
+            block.total_hashpower += swap_event.base_to_transfer;
+            miner.total_hashpower += swap_event.base_to_transfer;
+
+            // Transfer ORE from signer to market.
             transfer(
                 signer_info,
                 tokens_info,
@@ -70,6 +80,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             )?;
         }
         SwapDirection::Sell => {
+            // Update hashpower.
+            block.total_hashpower -= swap_event.base_to_transfer;
+            miner.total_hashpower -= swap_event.base_to_transfer;
+
+            // Trasnfer ORE from market to signer.
             transfer_signed(
                 market_info,
                 vault_info,
@@ -82,9 +97,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     };
 
     // Validate vault reserves.
-    // let vault_base = vault_base_info.as_token_account()?;
-    // let vault_quote = vault_quote_info.as_token_account()?;
-    // market.check_vaults(&vault_base, &vault_quote)?;
+    let vault = vault_info.as_token_account()?;
+    market.check_quote_vault(&vault)?;
 
     // Emit event.
     program_log(

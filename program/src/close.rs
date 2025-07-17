@@ -1,4 +1,4 @@
-use ore_api::{prelude::*, sdk::program_log};
+use ore_api::prelude::*;
 use steel::*;
 
 /// Closes a block.
@@ -11,9 +11,9 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
-    // TODO Ensure block is closed.
-    // .assert_mut(|b| clock.slot >= b.start_slot + 1500)?;
+    let block = block_info
+        .as_account_mut::<Block>(&ore_api::ID)?
+        .assert_mut(|b| clock.slot >= b.end_slot + MINING_WINDOW)?; // Window for submitting hashes has closed
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     opener_info.is_writable()?.has_address(&block.opener)?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
@@ -22,7 +22,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     ore_program.is_program(&ore_api::ID)?;
 
     // Payout block reward.
-    if block.reward > 0 && block.best_hash_miner != Pubkey::default() {
+    if block.best_hash_miner != Pubkey::default() {
         // Load recipient.
         recipient_info.as_associated_token_account(&block.best_hash_miner, &mint_info.key)?;
         let miner = miner_info
@@ -46,18 +46,10 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             reward_amount,
             &[TREASURY],
         )?;
-
-        // Emit event.
-        // RewardEvent {
-        //     disc: OreEvent::Reward as u64,
-        //     amount: reward_amount,
-        //     authority: block.reward.lode_authority,
-        //     block_id: block.id,
-        //     rewards_type: RewardsType::Lode as u64,
-        //     ts: clock.unix_timestamp,
-        // }
-        // .log();
     }
+
+    // Close block.
+    block_info.close(opener_info)?;
 
     // Emit event.
     // program_log(
@@ -72,9 +64,6 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     //     }
     //     .to_bytes(),
     // )?;
-
-    // Close block.
-    block_info.close(opener_info)?;
 
     Ok(())
 }

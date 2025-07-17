@@ -2,11 +2,8 @@ use ore_api::prelude::*;
 use solana_program::program_pack::Pack;
 use steel::*;
 
-/// Sets the admin.
+/// Initializes the program.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
-    // Parse data.
-    // let args = Initialize::try_from_bytes(data)?;
-
     // Load accounts.
     let [signer_info, config_info, market_info, mint_info, treasury_info, vault_info, system_program, token_program] =
         accounts
@@ -44,6 +41,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     )?;
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     config.admin = *signer_info.key;
+    config.block_duration = 1500;
     config.fee_collector = *signer_info.key;
     config.fee_rate = 0;
 
