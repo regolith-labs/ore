@@ -4,9 +4,13 @@
 
 ## Summary
 
-ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower a miner has, the greater their chances of finding the best hash and winning the block reward. 
+ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower a miner acquires, the greater their chances of finding the best hash and winning the block reward. Will you play it safe or hit the motherlode?
 
-Rewards and  
+Step-by-step:
+
+1. Buy hashpower.
+2. Sell to lock in profits or losses.
+3. Hold until the end of the block to take a chance at striking gold.
 
 
 ## API
@@ -39,10 +43,17 @@ Rewards and
 - [`Miner`](api/src/state/miner.rs) - Tracks a miner state and history.
 - [`Treasury`](api/src/state/treasury.rs) - The mint authority of the ORE token.
 
+
 ## Block lifecycle
 
-- Open a block with an upcoming ID.
-- Reset the market to move it forward to the next ID. 
+- `Open` a block with an upcoming ID.
+- `Reset` to move the market forward, and begin trading. 
+- `Swap` to trade hashpower in the market for the current block.
+- Trading ends automatically once the end slot is reached.
+- `Reset` to move market forward again, and record the slot hash for the ended block.
+- `Mine` to submit the best hash within your available nonce range.
+- `Close` to return rent and transfert block reward to the winning miner for claiming.
+- `Claim` to claim block reward.
 
 
 ## Tests
