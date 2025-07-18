@@ -8,7 +8,7 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer_info, miner_info, miner_rewards_info, recipient_info, mint_info, system_program, token_program, associated_token_program] =
+    let [signer_info, miner_info, miner_tokens_info, recipient_info, mint_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -17,8 +17,8 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     let miner = miner_info
         .as_account::<Miner>(&ore_api::ID)?
         .assert(|m| m.authority == *signer_info.key)?;
-    let miner_rewards =
-        miner_rewards_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
+    let miner_tokens =
+        miner_tokens_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -40,13 +40,13 @@ pub fn process_claim(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult
     }
 
     // Load amount.
-    let amount = miner_rewards.amount().min(amount);
+    let amount = miner_tokens.amount().min(amount);
 
     // Transfer reward to recipient.
     transfer_signed(
         miner_info,
-        miner_rewards_info,
-        mint_info,
+        miner_tokens_info,
+        recipient_info,
         token_program,
         amount,
         &[MINER, miner.authority.as_ref()],

@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, miner_rewards_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, miner_info, miner_tokens_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -25,18 +25,18 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
 
     // Load miner rewards.
-    if miner_rewards_info.data_is_empty() {
+    if miner_tokens_info.data_is_empty() {
         create_associated_token_account(
             signer_info,
             miner_info,
-            miner_rewards_info,
+            miner_tokens_info,
             mint_info,
             system_program,
             token_program,
             associated_token_program,
         )?;
     } else {
-        miner_rewards_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
+        miner_tokens_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
     }
 
     // Payout block reward to winning miner.
@@ -54,7 +54,17 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         transfer_signed(
             treasury_info,
             treasury_tokens_info,
-            miner_rewards_info,
+            miner_tokens_info,
+            token_program,
+            block.reward,
+            &[TREASURY],
+        )?;
+    } else {
+        // If no one won, burn the block reward.
+        burn_signed(
+            treasury_tokens_info,
+            mint_info,
+            treasury_info,
             token_program,
             block.reward,
             &[TREASURY],

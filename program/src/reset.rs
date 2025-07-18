@@ -22,12 +22,12 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.block_id == block_next.id - 1)?;
-    mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info
         .is_writable()?
         .as_associated_token_account(treasury_info.key, mint_info.key)?;
-    let vault = vault_info.as_associated_token_account(&mint_info.key, &mint_info.key)?;
+    let vault = vault_info.as_associated_token_account(&market_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     ore_program.is_program(&ore_api::ID)?;
@@ -49,7 +49,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             let block_reward = calculate_block_reward(&block_prev.slot_hash);
 
             // Limit the block reward to supply cap.
-            let ore_mint = mint_info.as_mint()?;
             let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
             let block_reward = block_reward.min(max_reward);
 
@@ -94,7 +93,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     market.fee.uncollected = 0;
     market.fee.cumulative = 0;
 
-    // Mark the block start and end slots.
+    // Setup the next block start and end slots.
     block_next.start_slot = clock.slot;
     block_next.end_slot = clock.slot + config.block_duration;
 

@@ -19,8 +19,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     signer_info.is_signer()?;
     let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
-        .assert_mut(|b| b.start_slot <= clock.slot)?
-        .assert_mut(|b| b.end_slot > clock.slot)?;
+        .assert_mut(|b| b.start_slot <= clock.slot)? // Block has started
+        .assert_mut(|b| b.end_slot > clock.slot)?; // Block has not ended
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     fee_collector_info
         .is_writable()?
@@ -33,17 +33,24 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
         .assert_mut(|m| m.authority == *signer_info.key)?;
-    mint_info.has_address(&market.quote.mint)?.as_mint()?;
+    mint_info
+        .has_address(&market.quote.mint)?
+        .has_address(&MINT_ADDRESS)?
+        .as_mint()?;
     vault_info
         .is_writable()?
         .has_address(&vault_pda().0)?
-        .as_token_account()?
-        .assert(|t| t.mint() == *mint_info.key)?
-        .assert(|t| t.owner() == *market_info.key)?;
+        .as_associated_token_account(market_info.key, mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+
+    // Reset miner.
+    if miner.block_id != block.id {
+        miner.block_id = block.id;
+        miner.hashpower = 0;
+    }
 
     // Pay swap fee.
     if config.fee_rate > 0 {
@@ -75,12 +82,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let mut swap_event = market.swap(amount, direction, precision, clock)?;
     swap_event.authority = *signer_info.key;
     swap_event.block_id = block.id;
-
-    // Reset miner.
-    if miner.block_id != block.id {
-        miner.block_id = block.id;
-        miner.hashpower = 0;
-    }
 
     // Transfer tokens
     match direction {
