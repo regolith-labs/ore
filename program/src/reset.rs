@@ -97,6 +97,20 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     block_next.start_slot = clock.slot;
     block_next.end_slot = clock.slot + config.block_duration;
 
+    // Emit event.
+    program_log(
+        &[market_info.clone(), ore_program.clone()],
+        &ResetEvent {
+            disc: 0,
+            authority: *signer_info.key,
+            block_id: block_next.id,
+            start_slot: block_next.start_slot,
+            end_slot: block_next.end_slot,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
+
     Ok(())
 }
 

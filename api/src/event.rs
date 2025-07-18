@@ -3,7 +3,30 @@ use steel::*;
 use crate::state::SwapDirection;
 
 pub enum OreEvent {
+    Reset = 0,
     Swap = 1,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct ResetEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The authority of the swap.
+    pub authority: Pubkey,
+
+    /// The block that was opened for trading.
+    pub block_id: u64,
+
+    /// The start slot of the next block.
+    pub start_slot: u64,
+
+    /// The end slot of the next block.
+    pub end_slot: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
 }
 
 #[repr(C)]
@@ -58,4 +81,5 @@ impl SwapEvent {
     }
 }
 
+event!(ResetEvent);
 event!(SwapEvent);
