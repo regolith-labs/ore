@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, mint_info, opener_info, recipient_info, treasury_info, system_program, token_program, ore_program] =
+    let [signer_info, block_info, miner_info, miner_rewards_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -17,9 +17,28 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     opener_info.is_writable()?.has_address(&block.opener)?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
+    treasury_tokens_info
+        .is_writable()?
+        .as_associated_token_account(treasury_info.key, mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+
+    // Load miner rewards.
+    if miner_rewards_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            miner_info,
+            miner_rewards_info,
+            mint_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        miner_rewards_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
+    }
 
     // Payout block reward.
     if block.best_hash_miner != Pubkey::default() {
@@ -29,21 +48,16 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.authority == block.best_hash_miner)?;
 
-        // Limit payout to supply cap.
-        let ore_mint = mint_info.as_mint()?;
-        let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
-        let reward_amount = block.reward.min(max_reward);
-
         // Update stats.
-        miner.total_rewards += reward_amount;
+        miner.total_rewards += block.reward;
 
-        // Mint reward to recipient.
-        mint_to_signed(
-            mint_info,
-            recipient_info,
+        // Transfer reward to miner.
+        transfer_signed(
             treasury_info,
+            treasury_tokens_info,
+            miner_rewards_info,
             token_program,
-            reward_amount,
+            block.reward,
             &[TREASURY],
         )?;
     }

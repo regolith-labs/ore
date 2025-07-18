@@ -58,11 +58,14 @@ pub const TREASURY_ADDRESS: Pubkey =
 /// The address of the treasury account.
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
 
-/// Denominator for protocol fee calculations.
-pub const FEE_RATE_BPS: u64 = 100;
+/// Swap fee in lamports.
+pub const FEE_LAMPORTS: u64 = 1_000_000; // 0.001 SOL
 
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
+
+/// Window to submit hashes, in slots.
+pub const INITIAL_BLOCK_DURATION: u64 = 1500;
 
 /// Window to submit hashes, in slots.
 pub const MINING_WINDOW: u64 = 1500;
@@ -74,7 +77,7 @@ pub const SLOT_WINDOW: u64 = 4;
 pub const HASHPOWER_LIQUIDITY: u64 = 1_000_000;
 
 /// The ORE liquidity to seed the markets with.
-pub const ORE_LIQUIDITY: u64 = ONE_ORE * 5;
+pub const ORE_LIQUIDITY: u64 = ONE_ORE * 100;
 
 /// The minimum difficulty required for payout.
 pub const NUGGET_DIFFICULTY: u64 = 10;

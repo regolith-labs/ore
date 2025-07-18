@@ -5,7 +5,7 @@ use steel::*;
 /// Initializes the program.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, config_info, market_info, mint_info, treasury_info, vault_info, system_program, token_program] =
+    let [signer_info, config_info, market_info, mint_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -24,12 +24,14 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         .is_writable()?
         .is_empty()?
         .has_seeds(&[TREASURY], &ore_api::ID)?;
+    treasury_tokens_info.is_writable()?.is_empty()?;
     vault_info
         .is_writable()?
         .is_empty()?
         .has_address(&vault_pda().0)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
 
     // Create config account.
     create_program_account::<Config>(
@@ -41,9 +43,9 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     )?;
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     config.admin = *signer_info.key;
-    config.block_duration = 1500;
+    config.block_duration = INITIAL_BLOCK_DURATION;
     config.fee_collector = *signer_info.key;
-    config.fee_rate = 0;
+    config.fee_rate = FEE_LAMPORTS;
 
     // Initialize market.
     let initial_id: u64 = 0;
@@ -66,7 +68,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         balance_virtual: 0,
     };
     market.fee = FeeParams {
-        rate: FEE_RATE_BPS,
+        rate: 0,
         uncollected: 0,
         cumulative: 0,
     };
@@ -86,6 +88,21 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         &ore_api::ID,
         &[TREASURY],
     )?;
+
+    // Load treasury tokens.
+    if treasury_tokens_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            treasury_info,
+            treasury_tokens_info,
+            mint_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        treasury_tokens_info.as_associated_token_account(treasury_info.key, mint_info.key)?;
+    }
 
     // Initialize vault token account.
     if vault_info.data_is_empty() {

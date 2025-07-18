@@ -17,12 +17,6 @@ pub fn process_set_fee_rate(accounts: &[AccountInfo<'_>], data: &[u8]) -> Progra
         .assert_mut(|c| c.admin == *signer_info.key)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Limit fee rate.
-    assert!(
-        new_fee_rate <= FEE_RATE_BPS,
-        "Fee rate must be less than or equal to 100 bps"
-    );
-
     // Set fee rate.
     config.fee_rate = new_fee_rate;
 

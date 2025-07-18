@@ -4,6 +4,7 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
+    Claim = 0,
     Log = 1,
     Mine = 2,
     Swap = 3,
@@ -16,6 +17,12 @@ pub enum OreInstruction {
     SetAdmin = 8,
     SetFeeCollector = 9,
     SetFeeRate = 10,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Claim {
+    pub amount: [u8; 8],
 }
 
 #[repr(C)]
@@ -89,6 +96,7 @@ pub struct SetFeeRate {
     pub fee_rate: [u8; 8],
 }
 
+instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Reset);

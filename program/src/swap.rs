@@ -11,7 +11,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, market_info, miner_info, mint_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program] =
+    let [signer_info, block_info, config_info, fee_collector_info, market_info, miner_info, mint_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -21,6 +21,10 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.start_slot <= clock.slot)?
         .assert_mut(|b| b.end_slot > clock.slot)?;
+    let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
+    fee_collector_info
+        .is_writable()?
+        .has_address(&config.fee_collector)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.block_id == block.id)?
@@ -41,6 +45,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
 
+    // Pay swap fee.
+    if config.fee_rate > 0 {
+        signer_info.send(config.fee_rate, fee_collector_info);
+    }
+
     // Load token acccounts.
     if tokens_info.data_is_empty() {
         create_associated_token_account(
@@ -58,7 +67,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             .as_associated_token_account(signer_info.key, mint_info.key)?;
     }
 
-    // Update market state.
+    // Set the sniper fee based on time since the market began.
+    let fee_rate = calculate_sniper_fee(&clock, block);
+    market.fee.rate = fee_rate;
+
+    // Execute the swap
     let mut swap_event = market.swap(amount, direction, precision, clock)?;
     swap_event.authority = *signer_info.key;
     swap_event.block_id = block.id;
@@ -108,4 +121,54 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     Ok(())
+}
+
+fn calculate_sniper_fee(clock: &Clock, block: &Block) -> u64 {
+    let elapsed_slots = clock.slot.saturating_sub(block.start_slot);
+
+    if elapsed_slots >= 100 {
+        return 0;
+    }
+
+    // Linear decay from 5000 bps (50%) to 0 bps over 100 slots
+    // Using formula: y = mx + b
+    // Where:
+    // - x is elapsed_slots (0 to 100)
+    // - y is fee_bps (5000 to 0)
+    // - m = -50 (slope)
+    // - b = 5000 (y-intercept)
+
+    let remaining_fee = 5000 - (elapsed_slots * 50);
+    remaining_fee
+}
+
+#[test]
+fn test_sniper_fees() {
+    let mut clock = Clock {
+        slot: 0,
+        epoch_start_timestamp: 0,
+        epoch: 0,
+        leader_schedule_epoch: 0,
+        unix_timestamp: 0,
+    };
+
+    let block = Block {
+        id: 0,
+        opener: Pubkey::default(),
+        reward: 0,
+        best_hash: [0; 32],
+        best_hash_miner: Pubkey::default(),
+        start_slot: 0,
+        end_slot: u64::MAX,
+        slot_hash: [0; 32],
+        total_hashpower: 0,
+    };
+
+    for i in 0..200 {
+        clock.slot = i;
+        let fee = calculate_sniper_fee(&clock, &block);
+        println!("Slot {}: {} bps fee", i, fee);
+    }
+
+    // assert!(false);
 }

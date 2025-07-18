@@ -1,6 +1,13 @@
 # ORE
 
-**Mine blockspace. Trade hashpower. Earn rewards.**
+**Mine blocks. Trade hashpower. Earn rewards.**
+
+## Summary
+
+ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower a miner has, the greater their chances of finding the best hash and winning the block reward. 
+
+Rewards and  
+
 
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.
@@ -10,19 +17,32 @@
 
 ## Instructions
 
-- [`Open`](program/src/open.rs) - Open a new block.
-- [`Close`](program/src/close.rs) - Close a block and pay out the reward.
-- [`Mine`](program/src/mine.rs) - Mine the current block.
-- [`Swap`](program/src/swap.rs) - Trade in a hashpower market.
+#### User
+- [`Claim`](program/src/claim.rs) - Claims miner rewards. 
+- [`Close`](program/src/close.rs) - Closes a block account.
+- [`Initialize`](program/src/initialize.rs) - Initializes the program.
+- [`Log`](program/src/log.rs) – Logs events as non-truncatable data.
+- [`Mine`](program/src/mine.rs) - Submits hashes for scoring.
+- [`Open`](program/src/open.rs) - Opens a new block.
+- [`Reset`](program/src/reset.rs) – Resets the hashpower market for the next block.
+- [`Swap`](program/src/swap.rs) - Executes a buy or sell in the hashpower market.
+
+#### Admin
+- [`SetAdmin`](program/src/set_admin.rs) - Re-assigns the admin authority.
+- [`SetFeeCollector`](program/src/set_admin.rs) - Updates the fee collection address.
+- [`SetFeeRate`](program/src/set_admin.rs) - Updates the fee charged per swap.
 
 ## State
-- [`Block`](api/src/state/block.rs) - A period of time for mining.
+- [`Block`](api/src/state/block.rs) - A round in the game.
 - [`Config`](api/src/state/config.rs) - Global program configuration.
-- [`Market`](api/src/state/market.rs) - Hashpower market for a given block.
+- [`Market`](api/src/state/market.rs) - Hashpower market.
 - [`Miner`](api/src/state/miner.rs) - Tracks a miner state and history.
-- [`Permit`](api/src/state/permit.rs) - Tracks a miner's commitment to mine a block.
-- [`Stake`](api/src/state/stake.rs) - Tracks a miner's collateral for trading in a market.
 - [`Treasury`](api/src/state/treasury.rs) - The mint authority of the ORE token.
+
+## Block lifecycle
+
+- Open a block with an upcoming ID.
+- Reset the market to move it forward to the next ID. 
 
 
 ## Tests

@@ -1,3 +1,4 @@
+mod claim;
 mod close;
 mod initialize;
 mod log;
@@ -9,6 +10,7 @@ mod set_fee_collector;
 mod set_fee_rate;
 mod swap;
 
+use claim::*;
 use close::*;
 use initialize::*;
 use log::*;
@@ -32,6 +34,7 @@ pub fn process_instruction(
 
     match ix {
         // User
+        OreInstruction::Claim => process_claim(accounts, data)?,
         OreInstruction::Open => process_open(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,

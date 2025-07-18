@@ -134,7 +134,6 @@ account!(OreAccount, Market);
 
 #[cfg(test)]
 mod tests {
-    use crate::consts::FEE_RATE_BPS;
 
     use super::*;
 
@@ -441,7 +440,7 @@ mod tests {
             fee: FeeParams {
                 cumulative: 0,
                 uncollected: 0,
-                rate: FEE_RATE_BPS,
+                rate: 100, // 100 bps
             },
             snapshot: Snapshot {
                 enabled: 1,
