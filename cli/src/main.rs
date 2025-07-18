@@ -8,10 +8,12 @@ use solana_client::{
 };
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
+    keccak::hash,
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
     transaction::Transaction,
 };
+use spl_token::amount_to_ui_amount;
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -29,11 +31,26 @@ async fn main() {
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
+        "claim" => {
+            claim(&rpc, &payer).await.unwrap();
+        }
+        "close" => {
+            close(&rpc, &payer).await.unwrap();
+        }
+        "close_all" => {
+            close_all(&rpc, &payer).await.unwrap();
+        }
+        "market" => {
+            log_market(&rpc).await.unwrap();
+        }
         "block" => {
             log_block(&rpc).await.unwrap();
         }
         "blocks" => {
             log_blocks(&rpc).await.unwrap();
+        }
+        "mine" => {
+            mine(&rpc, &payer).await.unwrap();
         }
         "initialize" => {
             initialize(&rpc, &payer).await.unwrap();
@@ -43,6 +60,9 @@ async fn main() {
         }
         "swap" => {
             swap(&rpc, &payer).await.unwrap();
+        }
+        "reset" => {
+            reset(&rpc, &payer).await.unwrap();
         }
         "miner" => {
             log_miner(&rpc, payer.pubkey()).await.unwrap();
@@ -66,6 +86,96 @@ async fn initialize(
     Ok(())
 }
 
+async fn close(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let block = get_block(rpc, id).await?;
+    let ix = ore_api::sdk::close(payer.pubkey(), block.opener, block.best_hash_miner, id);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn claim(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::claim(payer.pubkey(), u64::MAX);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn close_all(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let clock = get_clock(rpc).await?;
+    let blocks = get_blocks(rpc).await?;
+    for (_, block) in blocks {
+        if clock.slot > block.end_slot + MINING_WINDOW {
+            let ix = ore_api::sdk::close(
+                payer.pubkey(),
+                block.opener,
+                block.best_hash_miner,
+                block.id,
+            );
+            submit_transaction(rpc, payer, &[ix]).await?;
+        }
+    }
+    Ok(())
+}
+
+async fn mine(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let miner = get_miner(rpc, payer.pubkey()).await?;
+    let block = get_block(rpc, miner.block_id).await?;
+    let clock = get_clock(rpc).await?;
+    if clock.slot < block.end_slot {
+        return Err(anyhow::anyhow!("Mining window is not yet open."));
+    }
+    if clock.slot >= block.end_slot + MINING_WINDOW {
+        return Err(anyhow::anyhow!("Mining window is closed."));
+    }
+    let mut best_hash = [u8::MAX; 32];
+    let mut best_nonce = 0;
+    for i in 0..miner.hashpower {
+        let mut seed = [0u8; 112];
+        seed[..8].copy_from_slice(&block.id.to_le_bytes());
+        seed[8..40].copy_from_slice(&block.slot_hash);
+        seed[40..72].copy_from_slice(&miner.authority.to_bytes());
+        seed[72..104].copy_from_slice(&miner.seed);
+        seed[104..].copy_from_slice(&i.to_le_bytes());
+        let h = hash(&seed).to_bytes();
+        if h < best_hash {
+            best_hash = h;
+            best_nonce = i;
+        }
+    }
+    if block.best_hash < best_hash {
+        return Err(anyhow::anyhow!("A better hash was already found."));
+    }
+    println!("Found best hash: {:?}", best_hash.to_ascii_lowercase());
+    let ix = ore_api::sdk::mine(payer.pubkey(), payer.pubkey(), block.id, best_nonce);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn reset(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let market = get_market(rpc).await?;
+    let id = market.block_id;
+    let open_ix = ore_api::sdk::open(payer.pubkey(), id + 1);
+    let reset_ix = ore_api::sdk::reset(payer.pubkey(), id);
+    submit_transaction(rpc, payer, &[open_ix, reset_ix]).await?;
+    Ok(())
+}
+
 async fn open(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
@@ -81,15 +191,15 @@ async fn swap(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let id_str = std::env::var("ID").expect("Missing ID env var");
-    let id = id_str.parse::<u64>()?;
+    let market = get_market(rpc).await?;
+    let id = market.block_id;
     let config = get_config(rpc).await?;
     let fee_collector = config.fee_collector;
     let ix = ore_api::sdk::swap(
         payer.pubkey(),
         id,
         fee_collector,
-        100_000_000,
+        1_000_000_000,
         SwapDirection::Buy,
         SwapPrecision::ExactIn,
         [0; 32],
@@ -129,6 +239,16 @@ async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+async fn log_market(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let market = get_market(&rpc).await?;
+    let block = get_block(&rpc, market.block_id).await?;
+    let clock = get_clock(rpc).await?;
+    print_market(market);
+    println!("");
+    print_block(block, &clock);
+    Ok(())
+}
+
 async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
@@ -139,11 +259,32 @@ async fn log_block(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 }
 
 fn print_block(block: Block, clock: &Clock) {
-    let address = block_pda(block.id).0;
     let current_slot = clock.slot;
-    println!("Address: {:?}", address);
+    println!("Block");
     println!("  Id: {:?}", block.id);
     println!("  Slot hash: {:?}", block.slot_hash);
+    println!("  Total hashpower: {}", block.total_hashpower);
+    println!("  Best hash: {:?}", block.best_hash);
+    println!("  Best hash miner: {:?}", block.best_hash_miner);
+    println!("  Start slot: {}", block.start_slot);
+    println!("  End slot: {}", block.end_slot);
+    println!("  Reward: {}", block.reward);
+    println!(
+        "  Time remaining: {} sec",
+        (block.end_slot.saturating_sub(current_slot) as f64) * 0.4
+    );
+}
+
+fn print_market(market: Market) {
+    println!("Market");
+    println!("  Block id: {}", market.block_id);
+    println!("  Base token: {:?}", market.base);
+    println!("  Quote token: {:?}", market.quote);
+    println!("  Fee: {:?}", market.fee);
+    println!("  Snapshot: {:?}", market.snapshot);
+    let price = amount_to_ui_amount(market.quote.liquidity() as u64, TOKEN_DECIMALS)
+        / market.base.liquidity() as f64;
+    println!("  Price: {:.11?} ORE / hash", price);
 }
 
 async fn log_blocks(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -168,6 +309,13 @@ async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     let account = rpc.get_account(&config_pda.0).await?;
     let config = Config::try_from_bytes(&account.data)?;
     Ok(*config)
+}
+
+async fn get_market(rpc: &RpcClient) -> Result<Market, anyhow::Error> {
+    let market_pda = ore_api::state::market_pda();
+    let account = rpc.get_account(&market_pda.0).await?;
+    let market = Market::try_from_bytes(&account.data)?;
+    Ok(*market)
 }
 
 async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {

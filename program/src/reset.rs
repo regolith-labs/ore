@@ -8,7 +8,7 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_prev_info, block_next_info, config_info, fee_collector_info, market_info, mint_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, block_prev_info, block_next_info, config_info, market_info, mint_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -16,9 +16,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     signer_info.is_signer()?;
     let block_next = block_next_info.as_account_mut::<Block>(&ore_api::ID)?;
     let config = config_info.as_account::<Config>(&ore_api::ID)?;
-    fee_collector_info
-        .is_writable()?
-        .as_associated_token_account(&config.fee_collector, &mint_info.key)?;
     let market = market_info
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.block_id == block_next.id - 1)?;

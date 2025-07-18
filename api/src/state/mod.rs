@@ -40,16 +40,9 @@ pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[MINER, &authority.to_bytes()], &crate::ID)
 }
 
-pub fn vault_pda() -> (Pubkey, u8) {
+pub fn vault_address() -> Pubkey {
     let market_address = market_pda().0;
-    Pubkey::find_program_address(
-        &[
-            &market_address.to_bytes(),
-            &spl_token::ID.to_bytes(),
-            &MINT_ADDRESS.to_bytes(),
-        ],
-        &crate::ID,
-    )
+    spl_associated_token_account::get_associated_token_address(&market_address, &MINT_ADDRESS)
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {

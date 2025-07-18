@@ -36,7 +36,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_mint()?;
     vault_info
         .is_writable()?
-        .has_address(&vault_pda().0)?
         .as_associated_token_account(market_info.key, mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -76,7 +75,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Pay swap fee.
     if config.fee_rate > 0 {
-        signer_info.send(config.fee_rate, fee_collector_info);
+        fee_collector_info.collect(config.fee_rate, &signer_info)?;
     }
 
     // Load token acccounts.

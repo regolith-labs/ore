@@ -31,7 +31,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     seed[..8].copy_from_slice(&block.id.to_le_bytes());
     seed[8..40].copy_from_slice(&block.slot_hash);
     seed[40..72].copy_from_slice(&miner.authority.to_bytes());
-    seed[72..].copy_from_slice(&miner.seed);
+    seed[72..104].copy_from_slice(&miner.seed);
     seed[104..].copy_from_slice(&nonce.to_le_bytes());
     let h = hash(&seed);
 

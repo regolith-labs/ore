@@ -27,7 +27,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
-    let vault_address = vault_pda().0;
+    let vault_address = vault_address();
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -82,6 +82,29 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
     }
 }
 
+pub fn claim(signer: Pubkey, amount: u64) -> Instruction {
+    let miner_address = miner_pda(signer).0;
+    let miner_tokens_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new(miner_tokens_address, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        ],
+        data: Claim {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn close(signer: Pubkey, opener: Pubkey, winner: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let miner_tokens_address = get_associated_token_address(&winner, &MINT_ADDRESS);
@@ -107,7 +130,7 @@ pub fn close(signer: Pubkey, opener: Pubkey, winner: Pubkey, id: u64) -> Instruc
     }
 }
 
-pub fn reset(signer: Pubkey, fee_collector: Pubkey, id: u64) -> Instruction {
+pub fn reset(signer: Pubkey, id: u64) -> Instruction {
     let block_prev_adddress = block_pda(id).0;
     let block_next_adddress = block_pda(id + 1).0;
     let config_address = config_pda().0;
@@ -115,7 +138,7 @@ pub fn reset(signer: Pubkey, fee_collector: Pubkey, id: u64) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
-    let vault_address = vault_pda().0;
+    let vault_address = vault_address();
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -123,7 +146,6 @@ pub fn reset(signer: Pubkey, fee_collector: Pubkey, id: u64) -> Instruction {
             AccountMeta::new(block_prev_adddress, false),
             AccountMeta::new(block_next_adddress, false),
             AccountMeta::new_readonly(config_address, false),
-            AccountMeta::new(fee_collector, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(mint_address, false),
             AccountMeta::new(treasury_address, false),
@@ -152,8 +174,8 @@ pub fn swap(
     let config_address = config_pda().0;
     let market_address = market_pda().0;
     let miner_address = miner_pda(signer).0;
-    let tokens_quote_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let vault_address = vault_pda().0;
+    let tokens_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let vault_address = vault_address();
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -164,7 +186,7 @@ pub fn swap(
             AccountMeta::new(market_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(tokens_quote_address, false),
+            AccountMeta::new(tokens_address, false),
             AccountMeta::new(vault_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),

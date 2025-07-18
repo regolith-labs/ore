@@ -35,7 +35,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
         block.id = id;
         block.opener = *signer_info.key;
-        block.best_hash = [0; 32];
+        block.best_hash = [u8::MAX; 32];
         block.best_hash_miner = Pubkey::default();
         block.reward = 0; // Set by reset instruction
         block.start_slot = u64::MAX; // Set by reset instruction
