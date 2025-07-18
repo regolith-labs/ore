@@ -56,7 +56,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         miner.authority = *signer_info.key;
         miner.block_id = block.id;
         miner.hashpower = 0;
-        miner.seed = [0; 32];
+        miner.seed = args.seed;
         miner.total_hashpower = 0;
         miner.total_rewards = 0;
         miner
