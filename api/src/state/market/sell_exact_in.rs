@@ -76,6 +76,8 @@ impl Market {
             quote_fee: quote_fee as u64,
             base_liquidity: self.base.liquidity() as u64,
             quote_liquidity: self.quote.liquidity() as u64,
+            miner_hashpower: 0,
+            block_hashpower: 0,
             ts: 0,
         };
 

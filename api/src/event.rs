@@ -71,6 +71,12 @@ pub struct SwapEvent {
     /// Amount of quote tokens in the market.
     pub quote_liquidity: u64,
 
+    /// Amount of hashpower the miner now has.
+    pub miner_hashpower: u64,
+
+    /// Amount of hashpower the block now has.
+    pub block_hashpower: u64,
+
     /// The timestamp of the event.
     pub ts: i64,
 }

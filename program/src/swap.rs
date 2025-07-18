@@ -122,6 +122,10 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let vault = vault_info.as_token_account()?;
     market.check_quote_vault(&vault)?;
 
+    // Update swap event hashpower.
+    swap_event.miner_hashpower = miner.hashpower;
+    swap_event.block_hashpower = block.total_hashpower;
+
     // Emit event.
     program_log(
         &[market_info.clone(), ore_program.clone()],
