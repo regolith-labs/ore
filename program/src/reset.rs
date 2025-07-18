@@ -69,7 +69,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         }
     }
 
-    // Burn vault liquidity.
+    // Burn all ORE in market liquidity vault.
     let burn_amount = vault.amount();
     burn_signed(
         vault_info,

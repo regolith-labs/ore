@@ -68,7 +68,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     }
 
     // Set the sniper fee based on time since the market began.
-    let fee_rate = calculate_sniper_fee(&clock, block);
+    let fee_rate = calculate_sniper_fee(block, &clock, config);
     market.fee.rate = fee_rate;
 
     // Execute the swap
@@ -105,7 +105,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             miner.total_hashpower -= swap_event.base_to_transfer;
             block.total_hashpower -= swap_event.base_to_transfer;
 
-            // Trasnfer ORE from market to signer.
+            // Transfer ORE from market to signer.
             transfer_signed(
                 market_info,
                 vault_info,
@@ -123,35 +123,32 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Emit event.
     program_log(
-        block.id,
-        &[block_info.clone(), ore_program.clone()],
+        &[market_info.clone(), ore_program.clone()],
         &swap_event.to_bytes(),
     )?;
 
     Ok(())
 }
 
-fn calculate_sniper_fee(clock: &Clock, block: &Block) -> u64 {
+fn calculate_sniper_fee(block: &Block, clock: &Clock, config: &Config) -> u64 {
     let elapsed_slots = clock.slot.saturating_sub(block.start_slot);
-
-    if elapsed_slots >= 100 {
+    if elapsed_slots >= config.sniper_fee_duration {
         return 0;
     }
-
-    // Linear decay from 5000 bps (50%) to 0 bps over 100 slots
-    // Using formula: y = mx + b
-    // Where:
-    // - x is elapsed_slots (0 to 100)
-    // - y is fee_bps (5000 to 0)
-    // - m = -50 (slope)
-    // - b = 5000 (y-intercept)
-
-    let remaining_fee = 5000 - (elapsed_slots * 50);
-    remaining_fee
+    let fee_bps = 5000 * (config.sniper_fee_duration - elapsed_slots) / config.sniper_fee_duration;
+    fee_bps
 }
 
 #[test]
 fn test_sniper_fees() {
+    let config = Config {
+        sniper_fee_duration: 100,
+        fee_rate: 0,
+        fee_collector: Pubkey::default(),
+        admin: Pubkey::default(),
+        block_duration: 0,
+    };
+
     let mut clock = Clock {
         slot: 0,
         epoch_start_timestamp: 0,
@@ -174,7 +171,7 @@ fn test_sniper_fees() {
 
     for i in 0..200 {
         clock.slot = i;
-        let fee = calculate_sniper_fee(&clock, &block);
+        let fee = calculate_sniper_fee(&block, &clock, &config);
         println!("Slot {}: {} bps fee", i, fee);
     }
 

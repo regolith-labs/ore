@@ -44,6 +44,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     config.admin = *signer_info.key;
     config.block_duration = INITIAL_BLOCK_DURATION;
+    config.sniper_fee_duration = INITIAL_SNIPER_FEE_DURATION;
     config.fee_collector = *signer_info.key;
     config.fee_rate = FEE_LAMPORTS;
 

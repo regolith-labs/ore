@@ -13,6 +13,9 @@ pub struct Config {
     // The block duration in slots.
     pub block_duration: u64,
 
+    // The duration in slots for which the sniper fee is applied.
+    pub sniper_fee_duration: u64,
+
     // The address that receives fees.
     pub fee_collector: Pubkey,
 

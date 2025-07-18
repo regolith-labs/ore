@@ -54,9 +54,7 @@ pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Log {
-    pub block_id: [u8; 8],
-}
+pub struct Log {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]

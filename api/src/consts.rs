@@ -68,6 +68,9 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 pub const INITIAL_BLOCK_DURATION: u64 = 1500;
 
 /// Window to submit hashes, in slots.
+pub const INITIAL_SNIPER_FEE_DURATION: u64 = 100;
+
+/// Window to submit hashes, in slots.
 pub const MINING_WINDOW: u64 = 1500;
 
 /// Slot window size, used for sandwich resistance.
