@@ -35,8 +35,17 @@ async fn main() {
         "blocks" => {
             log_blocks(&rpc).await.unwrap();
         }
+        "initialize" => {
+            initialize(&rpc, &payer).await.unwrap();
+        }
+        "open" => {
+            open(&rpc, &payer).await.unwrap();
+        }
         "swap" => {
             swap(&rpc, &payer).await.unwrap();
+        }
+        "miner" => {
+            log_miner(&rpc, payer.pubkey()).await.unwrap();
         }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
@@ -48,18 +57,42 @@ async fn main() {
     };
 }
 
+async fn initialize(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::initialize(payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn open(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let id_str = std::env::var("ID").expect("Missing ID env var");
+    let id = id_str.parse::<u64>()?;
+    let ix = ore_api::sdk::open(payer.pubkey(), id);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
 async fn swap(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let id_str = std::env::var("ID").expect("Missing ID env var");
     let id = id_str.parse::<u64>()?;
+    let config = get_config(rpc).await?;
+    let fee_collector = config.fee_collector;
     let ix = ore_api::sdk::swap(
         payer.pubkey(),
         id,
-        10000000,
+        fee_collector,
+        100_000_000,
         SwapDirection::Buy,
         SwapPrecision::ExactIn,
+        [0; 32],
     );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
@@ -71,6 +104,17 @@ async fn set_admin(
 ) -> Result<(), anyhow::Error> {
     let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn log_miner(rpc: &RpcClient, authority: Pubkey) -> Result<(), anyhow::Error> {
+    let miner = get_miner(&rpc, authority).await?;
+    println!("Miner");
+    println!("  authority: {}", authority);
+    println!("  block_id: {}", miner.block_id);
+    println!("  hashpower: {}", miner.hashpower);
+    println!("  total_hashpower: {}", miner.total_hashpower);
+    println!("  total_rewards: {}", miner.total_rewards);
     Ok(())
 }
 
@@ -124,6 +168,13 @@ async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     let account = rpc.get_account(&config_pda.0).await?;
     let config = Config::try_from_bytes(&account.data)?;
     Ok(*config)
+}
+
+async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {
+    let miner_pda = ore_api::state::miner_pda(authority);
+    let account = rpc.get_account(&miner_pda.0).await?;
+    let miner = Miner::try_from_bytes(&account.data)?;
+    Ok(*miner)
 }
 
 async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {

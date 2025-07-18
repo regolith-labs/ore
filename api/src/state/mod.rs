@@ -55,3 +55,7 @@ pub fn vault_pda() -> (Pubkey, u8) {
 pub fn treasury_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TREASURY], &crate::ID)
 }
+
+pub fn treasury_tokens_address() -> Pubkey {
+    spl_associated_token_account::get_associated_token_address(&TREASURY_ADDRESS, &MINT_ADDRESS)
+}

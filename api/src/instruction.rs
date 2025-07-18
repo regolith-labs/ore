@@ -68,6 +68,7 @@ pub struct Swap {
     pub amount: [u8; 8],
     pub direction: u8,
     pub precision: u8,
+    pub seed: [u8; 32],
 }
 
 #[repr(C)]

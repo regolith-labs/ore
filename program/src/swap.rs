@@ -30,9 +30,6 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|m| m.block_id == block.id)?
         .assert_mut(|m| m.base.liquidity() > 0)?
         .assert_mut(|m| m.quote.liquidity() > 0)?;
-    let miner = miner_info
-        .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_info
         .has_address(&market.quote.mint)?
         .has_address(&MINT_ADDRESS)?
@@ -46,10 +43,35 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
 
+    // Load miner.
+    let miner = if miner_info.data_is_empty() {
+        create_program_account::<Miner>(
+            miner_info,
+            system_program,
+            signer_info,
+            &ore_api::ID,
+            &[MINER, &signer_info.key.to_bytes()],
+        )?;
+        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        miner.authority = *signer_info.key;
+        miner.block_id = block.id;
+        miner.hashpower = 0;
+        miner.seed = [0; 32];
+        miner.total_hashpower = 0;
+        miner.total_rewards = 0;
+        miner
+    } else {
+        miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == *signer_info.key)?
+            .assert_mut(|m| m.block_id <= block.id)?
+    };
+
     // Reset miner.
     if miner.block_id != block.id {
         miner.block_id = block.id;
         miner.hashpower = 0;
+        miner.seed = args.seed;
     }
 
     // Pay swap fee.

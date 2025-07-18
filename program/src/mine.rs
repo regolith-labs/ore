@@ -38,7 +38,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // If hash is best hash, update best hash.
     if h < block.best_hash {
         block.best_hash = h;
-        block.best_hash_miner = miner.authority;
+        block.best_hash_miner = *miner_info.key;
     }
 
     Ok(())

@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, miner_tokens_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, miner_info, miner_tokens_info, mint_info, opener_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -41,11 +41,10 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Payout block reward to winning miner.
     if block.best_hash_miner != Pubkey::default() {
-        // Load recipient.
-        recipient_info.as_associated_token_account(&block.best_hash_miner, &mint_info.key)?;
+        // Load winning miner.
         let miner = miner_info
-            .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.authority == block.best_hash_miner)?;
+            .has_address(&block.best_hash_miner)?
+            .as_account_mut::<Miner>(&ore_api::ID)?;
 
         // Update stats.
         miner.total_rewards += block.reward;

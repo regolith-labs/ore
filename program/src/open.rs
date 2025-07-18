@@ -8,7 +8,7 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let id = u64::from_le_bytes(args.id);
 
     // Load accounts.
-    let [signer_info, block_info, market_info, system_program, ore_program] = accounts else {
+    let [signer_info, block_info, market_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
@@ -16,7 +16,6 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account::<Market>(&ore_api::ID)?
         .assert(|m| m.block_id < id)?; // Only allow opening blocks in forward bias
     system_program.is_program(&system_program::ID)?;
-    ore_program.is_program(&ore_api::ID)?;
 
     // Create block, if it doesn't exist.
     if block_info.data_is_empty() {

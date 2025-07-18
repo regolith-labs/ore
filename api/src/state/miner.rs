@@ -13,9 +13,6 @@ pub struct Miner {
     /// The ID of the last block this miner mined in.
     pub block_id: u64,
 
-    /// The hash of the last block this miner mined in.
-    pub hash: [u8; 32],
-
     /// The amount of hashpower this miner has committed to the current block.
     pub hashpower: u64,
 
