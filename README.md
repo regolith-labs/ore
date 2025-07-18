@@ -52,7 +52,7 @@ Step-by-step:
 - Trading ends automatically once the end slot is reached.
 - `Reset` to move market forward again, and record the slot hash for the ended block.
 - `Mine` to submit the best hash within your available nonce range.
-- `Close` to return rent and transfert block reward to the winning miner for claiming.
+- `Close` to return rent and transfer block reward to the winning miner for claiming.
 - `Claim` to claim block reward.
 
 
