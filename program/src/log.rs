@@ -2,20 +2,16 @@ use ore_api::prelude::*;
 use steel::*;
 
 /// No-op, use instruction data for logging w/o truncation.
-pub fn process_log(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    // Load data
-    let block_id_bytes = data[..8].try_into().unwrap();
-    let block_id = u64::from_le_bytes(block_id_bytes);
-
+pub fn process_log(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info
         .is_signer()?
-        .has_seeds(&[BLOCK, &block_id.to_le_bytes()], &ore_api::ID)?;
+        .as_account::<Market>(&ore_api::ID)?;
 
-    // For data integrity, only a block can log messages.
+    // For data integrity, only the market can log messages.
 
     Ok(())
 }

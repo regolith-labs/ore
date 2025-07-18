@@ -76,12 +76,19 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     swap_event.authority = *signer_info.key;
     swap_event.block_id = block.id;
 
+    // Reset miner.
+    if miner.block_id != block.id {
+        miner.block_id = block.id;
+        miner.hashpower = 0;
+    }
+
     // Transfer tokens
     match direction {
         SwapDirection::Buy => {
             // Update hashpower.
-            block.total_hashpower += swap_event.base_to_transfer;
+            miner.hashpower += swap_event.base_to_transfer;
             miner.total_hashpower += swap_event.base_to_transfer;
+            block.total_hashpower += swap_event.base_to_transfer;
 
             // Transfer ORE from signer to market.
             transfer(
@@ -94,8 +101,9 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         }
         SwapDirection::Sell => {
             // Update hashpower.
-            block.total_hashpower -= swap_event.base_to_transfer;
+            miner.hashpower -= swap_event.base_to_transfer;
             miner.total_hashpower -= swap_event.base_to_transfer;
+            block.total_hashpower -= swap_event.base_to_transfer;
 
             // Trasnfer ORE from market to signer.
             transfer_signed(

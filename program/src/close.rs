@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, miner_rewards_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
+    let [signer_info, block_info, miner_info, miner_rewards_info, mint_info, opener_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -23,7 +23,6 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
-    ore_program.is_program(&ore_api::ID)?;
 
     // Load miner rewards.
     if miner_rewards_info.data_is_empty() {
@@ -64,20 +63,6 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Close block.
     block_info.close(opener_info)?;
-
-    // Emit event.
-    // program_log(
-    //     block.id,
-    //     &[block_info.clone(), ore_program.clone()],
-    //     &CloseEvent {
-    //         authority: *signer_info.key,
-    //         id: block.id,
-    //         burned_base: base_burned,
-    //         burned_quote: quote_burned,
-    //         ts: clock.unix_timestamp,
-    //     }
-    //     .to_bytes(),
-    // )?;
 
     Ok(())
 }

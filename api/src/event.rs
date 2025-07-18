@@ -3,9 +3,7 @@ use steel::*;
 use crate::state::SwapDirection;
 
 pub enum OreEvent {
-    Mine = 1,
-    Reward = 2,
-    Swap = 3,
+    Swap = 1,
 }
 
 #[repr(C)]
@@ -60,53 +58,4 @@ impl SwapEvent {
     }
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-pub struct RewardEvent {
-    /// The event discriminator.
-    pub disc: u64,
-
-    /// The amount of ORE distributed as a reward.
-    pub amount: u64,
-
-    /// The authority who received the reward.
-    pub authority: Pubkey,
-
-    /// The block id.
-    pub block_id: u64,
-
-    /// The type of reward.
-    pub rewards_type: u64,
-
-    /// The timestamp of the event.
-    pub ts: i64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
-pub struct MineEvent {
-    /// The event discriminator.
-    pub disc: u64,
-
-    /// The authority who mined.
-    pub authority: Pubkey,
-
-    /// The block id.
-    pub block_id: u64,
-
-    /// The amount of hashes deployed.
-    pub deployed: u64,
-
-    /// The total amount of hashes deployed in the block.
-    pub total_deployed: u64,
-
-    /// The amount of hashpower remaining in the permit.
-    pub remaining_commitment: u64,
-
-    /// The timestamp of the event.
-    pub ts: i64,
-}
-
 event!(SwapEvent);
-event!(RewardEvent);
-event!(MineEvent);

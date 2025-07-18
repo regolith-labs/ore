@@ -33,30 +33,13 @@ pub fn process_open(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let block = block_info.as_account_mut::<Block>(&ore_api::ID)?;
     block.id = id;
     block.opener = *signer_info.key;
-    block.reward = 0;
     block.best_hash = [0; 32];
     block.best_hash_miner = Pubkey::default();
-    block.start_slot = u64::MAX; // Set by reset
-    block.end_slot = u64::MAX; // Set by reset
-    block.slot_hash = [0; 32]; // Set by mine
+    block.reward = 0; // Set by reset instruction
+    block.start_slot = u64::MAX; // Set by reset instruction
+    block.end_slot = u64::MAX; // Set by reset instruction
+    block.slot_hash = [0; 32]; // Set by reset instruction
     block.total_hashpower = 0;
-
-    // Emit event.
-    // program_log(
-    //     id,
-    //     &[block_info.clone(), ore_program.clone()],
-    //     &OpenEvent {
-    //         disc: OreEvent::Open as u64,
-    //         id,
-    //         start_slot,
-    //         signer: *signer_info.key,
-    //         reward_config: block.reward,
-    //         // liquidity_base: market.base.liquidity() as u64,
-    //         // liquidity_quote: market.quote.liquidity() as u64,
-    //         ts: clock.unix_timestamp,
-    //     }
-    //     .to_bytes(),
-    // )?;
 
     Ok(())
 }
