@@ -39,7 +39,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         miner_rewards_info.as_associated_token_account(&miner_info.key, &mint_info.key)?;
     }
 
-    // Payout block reward.
+    // Payout block reward to winning miner.
     if block.best_hash_miner != Pubkey::default() {
         // Load recipient.
         recipient_info.as_associated_token_account(&block.best_hash_miner, &mint_info.key)?;
