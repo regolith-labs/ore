@@ -107,6 +107,7 @@ pub fn claim(signer: Pubkey, amount: u64) -> Instruction {
 
 pub fn close(signer: Pubkey, opener: Pubkey, winner: Pubkey, id: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
+    let market_address = market_pda().0;
     let miner_tokens_address = get_associated_token_address(&winner, &MINT_ADDRESS);
     let mint_address = MINT_ADDRESS;
     let treasury_address = TREASURY_ADDRESS;
@@ -117,6 +118,7 @@ pub fn close(signer: Pubkey, opener: Pubkey, winner: Pubkey, id: u64) -> Instruc
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
             AccountMeta::new(winner, false),
+            AccountMeta::new_readonly(market_address, false),
             AccountMeta::new(miner_tokens_address, false),
             AccountMeta::new(mint_address, false),
             AccountMeta::new(opener, false),

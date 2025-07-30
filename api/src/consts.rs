@@ -59,7 +59,7 @@ pub const TREASURY_ADDRESS: Pubkey =
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
 
 /// Swap fee in lamports.
-pub const FEE_LAMPORTS: u64 = 1_000_000; // 0.001 SOL
+pub const FEE_LAMPORTS: u64 = 100_000; // 0.0001 SOL
 
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;

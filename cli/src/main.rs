@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use ore_api::prelude::*;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
@@ -65,7 +67,7 @@ async fn main() {
             reset(&rpc, &payer).await.unwrap();
         }
         "miner" => {
-            log_miner(&rpc, payer.pubkey()).await.unwrap();
+            log_miner(&rpc, &payer).await.unwrap();
         }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
@@ -113,7 +115,9 @@ async fn close_all(
 ) -> Result<(), anyhow::Error> {
     let clock = get_clock(rpc).await?;
     let blocks = get_blocks(rpc).await?;
+    println!("Closing all blocks... {}", blocks.len());
     for (_, block) in blocks {
+        println!("Closing block {}", block.id);
         if clock.slot > block.end_slot + MINING_WINDOW {
             let ix = ore_api::sdk::close(
                 payer.pubkey(),
@@ -217,9 +221,16 @@ async fn set_admin(
     Ok(())
 }
 
-async fn log_miner(rpc: &RpcClient, authority: Pubkey) -> Result<(), anyhow::Error> {
+async fn log_miner(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
+    let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
+    let miner_address = ore_api::state::miner_pda(authority).0;
     let miner = get_miner(&rpc, authority).await?;
     println!("Miner");
+    println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
     println!("  block_id: {}", miner.block_id);
     println!("  hashpower: {}", miner.hashpower);

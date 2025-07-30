@@ -158,7 +158,7 @@ fn calculate_block_reward(slot_hash: &[u8]) -> u64 {
     let r = r1 ^ r2 ^ r3 ^ r4;
     for (k, v) in block_distribution.iter() {
         if r <= *v {
-            return *k;
+            return *k * ONE_ORE;
         }
     }
     0

@@ -5,7 +5,7 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info, miner_tokens_info, mint_info, opener_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, block_info, miner_info, market_info, miner_tokens_info, mint_info, opener_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -14,6 +14,9 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.end_slot + MINING_WINDOW)?; // Window for submitting hashes has closed
+    market_info
+        .as_account::<Market>(&ore_api::ID)?
+        .assert(|m| m.block_id > block.id)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     opener_info.is_writable()?.has_address(&block.opener)?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
