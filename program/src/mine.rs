@@ -41,5 +41,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         block.best_hash_miner = *miner_info.key;
     }
 
+    // Only allow miners to submit 1 hash per block.
+    miner.hashpower = 0;
+
     Ok(())
 }
