@@ -143,6 +143,10 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let vault = vault_info.as_token_account()?;
     market.check_quote_vault(&vault)?;
 
+    // Update block reward.
+    let block_reward = vault.amount();
+    block.reward = block_reward;
+
     // Update swap event hashpower.
     swap_event.miner_hashpower = miner.hashpower;
     swap_event.block_hashpower = block.total_hashpower;

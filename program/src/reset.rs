@@ -62,10 +62,23 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 block_reward,
                 &[TREASURY],
             )?;
+
+            // Transfer any remaining ORE in market liquidity vault to the treasury as additional block reward.
+            let liq_amount = vault.amount();
+            block_prev.reward += liq_amount;
+            transfer_signed(
+                market_info,
+                vault_info,
+                treasury_tokens_info,
+                token_program,
+                liq_amount,
+                &[MARKET],
+            )?;
         }
     }
 
-    // Burn all ORE in market liquidity vault.
+    // Burn any remaining ORE in market liquidity vault.
+    let vault = vault_info.as_associated_token_account(&market_info.key, &mint_info.key)?;
     let burn_amount = vault.amount();
     burn_signed(
         vault_info,
