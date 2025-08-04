@@ -10,11 +10,10 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, block_info, miner_info] = accounts else {
+    let [signer_info, block_info, miner_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    authority_info.is_writable()?;
     let block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.end_slot)? // Block has stopped trading
@@ -22,7 +21,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|b| b.slot_hash != [0; 32])?; // Slot hash is set
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut(|m| m.authority == *authority_info.key)? // Account belongs to authority
+        .assert_mut(|m| m.authority == *signer_info.key)? // Account belongs to authority
         .assert_mut(|m| m.block_id == block.id)? // Only allow miner to submit hashes for their current block
         .assert_mut(|m| m.hashpower > nonce)?; // Only allow miner to submit nonces for their hashpower range
 
