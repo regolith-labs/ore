@@ -163,7 +163,7 @@ async fn mine(
         return Err(anyhow::anyhow!("A better hash was already found."));
     }
     println!("Found best hash: {:?}", best_hash.to_ascii_lowercase());
-    let ix = ore_api::sdk::mine(payer.pubkey(), payer.pubkey(), block.id, best_nonce);
+    let ix = ore_api::sdk::mine(payer.pubkey(), block.id, best_nonce);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
