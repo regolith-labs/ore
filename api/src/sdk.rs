@@ -83,7 +83,7 @@ pub fn open(signer: Pubkey, id: u64) -> Instruction {
 
 pub fn claim(signer: Pubkey, amount: u64) -> Instruction {
     let miner_address = miner_pda(signer).0;
-    let miner_tokens_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let miner_tokens_address = get_associated_token_address(&miner_address, &MINT_ADDRESS);
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
