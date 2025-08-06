@@ -37,7 +37,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // If hash is best hash, update best hash.
     if h < block.best_hash {
         block.best_hash = h;
-        block.best_hash_miner = *miner_info.key;
+        block.best_hash_miner = miner.authority;
     }
 
     // Only allow miners to submit 1 hash per block.

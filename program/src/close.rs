@@ -46,8 +46,8 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if block.best_hash_miner != Pubkey::default() {
         // Load winning miner.
         let miner = miner_info
-            .has_address(&block.best_hash_miner)?
-            .as_account_mut::<Miner>(&ore_api::ID)?;
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == block.best_hash_miner)?;
 
         // Update stats.
         miner.total_rewards += block.reward;
