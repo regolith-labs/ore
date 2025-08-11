@@ -2,7 +2,7 @@ use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
 use crate::{
-    consts::{MARKET, MINT_ADDRESS, TREASURY_ADDRESS},
+    consts::{BOOST_RESERVE_TOKEN, MARKET, MINT_ADDRESS, TREASURY_ADDRESS},
     instruction::*,
     state::*,
 };
@@ -131,6 +131,8 @@ pub fn close(signer: Pubkey, opener: Pubkey, winner: Pubkey, id: u64) -> Instruc
     }
 }
 
+// let [signer_info, block_prev_info, block_next_info, config_info, market_info, mint_info, reserve_tokens_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+
 pub fn reset(signer: Pubkey, id: u64) -> Instruction {
     let block_prev_adddress = block_pda(id).0;
     let block_next_adddress = block_pda(id + 1).0;
@@ -149,6 +151,7 @@ pub fn reset(signer: Pubkey, id: u64) -> Instruction {
             AccountMeta::new_readonly(config_address, false),
             AccountMeta::new(market_address, false),
             AccountMeta::new(mint_address, false),
+            AccountMeta::new(BOOST_RESERVE_TOKEN, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new(treasury_tokens_address, false),
             AccountMeta::new(vault_address, false),
