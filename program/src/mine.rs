@@ -1,6 +1,12 @@
 use ore_api::prelude::*;
 use solana_nostd_keccak::hash;
+use solana_program::pubkey;
 use steel::*;
+
+const AUTHORIZED_ACCOUNTS: [Pubkey; 2] = [
+    pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
+    pubkey!("6B9PjpHfbhPcSakS5UQ7ZctgbPujfsryVRpDecskGLiz"),
+];
 
 /// Mine a block.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -24,6 +30,11 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|m| m.authority == *signer_info.key)? // Account belongs to authority
         .assert_mut(|m| m.block_id == block.id)? // Only allow miner to submit hashes for their current block
         .assert_mut(|m| m.hashpower > nonce)?; // Only allow miner to submit nonces for their hashpower range
+
+    // Check if the signer is authorized.
+    if !AUTHORIZED_ACCOUNTS.contains(signer_info.key) {
+        return Err(ProgramError::InvalidAccountData);
+    }
 
     // Generate secure hash with provided nonce.
     let mut seed = [0u8; 112];
