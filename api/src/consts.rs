@@ -49,7 +49,7 @@ pub const CONFIG_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
 
 /// The address of the mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("FYuvS4wxYc8smjonhMXeX4VjFaUw8xRU4iHCgAaHaGkg");
+pub const MINT_ADDRESS: Pubkey = pubkey!("FYuvS4wxYc8smjonhMXeX4VjFaUw8xRU4iHCgAaHaGkg"); // TODO: change this
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
@@ -86,4 +86,4 @@ pub const ORE_LIQUIDITY: u64 = ONE_ORE * 100;
 pub const NUGGET_DIFFICULTY: u64 = 10;
 
 /// The address of the boost reserve token account.
-pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("11111111111111111111111111111111"); // TODO: change this
+pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("GnnjpuMboHVnsKLWEM5fKzoEqTnsfK889XN2wmiZggqv"); // TODO: change this
