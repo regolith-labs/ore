@@ -17,6 +17,7 @@ pub enum OreInstruction {
     SetAdmin = 8,
     SetFeeCollector = 9,
     SetFeeRate = 10,
+    SetSniperFeeDuration = 11,
 }
 
 #[repr(C)]
@@ -95,6 +96,12 @@ pub struct SetFeeRate {
     pub fee_rate: [u8; 8],
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetSniperFeeDuration {
+    pub sniper_fee_duration: [u8; 8],
+}
+
 instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Close);
@@ -106,3 +113,4 @@ instruction!(OreInstruction, Swap);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, SetFeeRate);
+instruction!(OreInstruction, SetSniperFeeDuration);

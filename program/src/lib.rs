@@ -8,6 +8,7 @@ mod reset;
 mod set_admin;
 mod set_fee_collector;
 mod set_fee_rate;
+mod set_sniper_fee_duration;
 mod swap;
 
 use claim::*;
@@ -20,6 +21,7 @@ use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
 use set_fee_rate::*;
+use set_sniper_fee_duration::*;
 use swap::*;
 
 use ore_api::instruction::*;
@@ -47,6 +49,7 @@ pub fn process_instruction(
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
         OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
+        OreInstruction::SetSniperFeeDuration => process_set_sniper_fee_duration(accounts, data)?,
     }
 
     Ok(())
