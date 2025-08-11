@@ -8,7 +8,7 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_prev_info, block_next_info, config_info, market_info, mint_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, block_prev_info, block_next_info, config_info, market_info, mint_info, reserve_tokens_info, treasury_info, treasury_tokens_info, vault_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -20,6 +20,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .as_account_mut::<Market>(&ore_api::ID)?
         .assert_mut(|m| m.block_id == block_next.id - 1)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    reserve_tokens_info
+        .has_address(&BOOST_RESERVE_TOKEN)?
+        .as_token_account()?
+        .assert(|t| t.mint() == MINT_ADDRESS)?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info
         .is_writable()?
@@ -106,6 +110,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Setup the next block start and end slots.
     block_next.start_slot = clock.slot;
     block_next.end_slot = clock.slot + config.block_duration;
+
+    // Mint tokens to the boost reserve.
+    mint_to_signed(
+        mint_info,
+        reserve_tokens_info,
+        treasury_info,
+        token_program,
+        ONE_ORE / 2,
+        &[TREASURY],
+    )?;
 
     // Emit event.
     program_log(

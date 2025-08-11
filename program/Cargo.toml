@@ -21,7 +21,6 @@ default = []
 bincode.workspace = true
 mpl-token-metadata.workspace = true
 ore-api.workspace = true
-ore-boost-api.workspace = true
 solana-nostd-keccak.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true

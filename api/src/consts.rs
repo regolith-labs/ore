@@ -85,8 +85,5 @@ pub const ORE_LIQUIDITY: u64 = ONE_ORE * 100;
 /// The minimum difficulty required for payout.
 pub const NUGGET_DIFFICULTY: u64 = 10;
 
-// The difficulty threshold for the motherlode payout.
-// pub const MOTHERLOAD_DIFFICULTY: u64 = 35;
-
-// The fee to open a block.
-// pub const OPEN_FEE: u64 = ONE_ORE / 100;
+/// The address of the boost reserve token account.
+pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("11111111111111111111111111111111"); // TODO: change this
