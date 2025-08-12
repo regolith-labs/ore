@@ -66,6 +66,9 @@ async fn main() {
         "reset" => {
             reset(&rpc, &payer).await.unwrap();
         }
+        "treasury" => {
+            log_treasury(&rpc).await.unwrap();
+        }
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
@@ -218,6 +221,13 @@ async fn set_admin(
 ) -> Result<(), anyhow::Error> {
     let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn log_treasury(_rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let treasury_address = ore_api::state::treasury_pda().0;
+    println!("Treasury");
+    println!("  address: {}", treasury_address);
     Ok(())
 }
 
