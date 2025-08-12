@@ -20,9 +20,6 @@ pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 /// The seed of the block account PDA.
 pub const BLOCK: &[u8] = b"block";
 
-/// The seed of the stake account PDA.
-pub const STAKE: &[u8] = b"stake";
-
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
 
@@ -31,12 +28,6 @@ pub const MARKET: &[u8] = b"market";
 
 /// The seed of the miner account PDA.
 pub const MINER: &[u8] = b"miner";
-
-/// The seed of the mint account PDA.
-pub const MINT: &[u8] = b"mint";
-
-/// The seed of the permit account PDA.
-pub const PERMIT: &[u8] = b"permit";
 
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
