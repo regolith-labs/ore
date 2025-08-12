@@ -224,6 +224,22 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
     }
 }
 
+pub fn set_block_duration(signer: Pubkey, block_duration: u64) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetBlockDuration {
+            block_duration: block_duration.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
     let config_address = config_pda().0;
     Instruction {
@@ -251,6 +267,22 @@ pub fn set_fee_rate(signer: Pubkey, fee_rate: u64) -> Instruction {
         ],
         data: SetFeeRate {
             fee_rate: fee_rate.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+pub fn set_sniper_fee_duration(signer: Pubkey, sniper_fee_duration: u64) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetSniperFeeDuration {
+            sniper_fee_duration: sniper_fee_duration.to_le_bytes(),
         }
         .to_bytes(),
     }
