@@ -13,6 +13,7 @@ pub enum OreInstruction {
 
     // Admin
     Initialize = 100,
+    TransferMintAuthority = 101,
 }
 
 #[repr(C)]
@@ -48,6 +49,12 @@ pub struct Update {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct TransferMintAuthority {
+    pub new_authority: Pubkey,
+}
+
 instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Mine);
@@ -55,3 +62,4 @@ instruction!(OreInstruction, Open);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, Update);
 instruction!(OreInstruction, Initialize);
+instruction!(OreInstruction, TransferMintAuthority);

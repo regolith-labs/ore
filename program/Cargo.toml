@@ -24,6 +24,7 @@ ore-api.workspace = true
 ore-boost-api.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true
+spl-token-2022.workspace = true
 spl-associated-token-account.workspace = true
 steel.workspace = true
 
