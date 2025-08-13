@@ -1,16 +1,10 @@
 # ORE
 
-**Mine blocks. Trade hashpower. Earn rewards.**
+**Mine. Trade. Win.**
 
 ## Summary
 
-ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower a miner acquires, the greater their chances of finding the best hash and winning the block reward. Will you play it safe or hit the motherlode?
-
-Step-by-step:
-
-1. Buy hashpower.
-2. Sell to lock in profits or losses.
-3. Hold until the end of the block to take a chance at striking gold.
+ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower you acquire, the greater your chances of generating the best hash and winning the block reward. Will you hit the motherlode?
 
 
 ## API
