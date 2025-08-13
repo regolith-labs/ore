@@ -74,4 +74,4 @@ pub const HASHPOWER_LIQUIDITY: u64 = 1_000_000;
 pub const ORE_LIQUIDITY: u64 = ONE_ORE * 100;
 
 /// The address of the boost reserve token account.
-pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("GnnjpuMboHVnsKLWEM5fKzoEqTnsfK889XN2wmiZggqv"); // TODO: change this
+pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("5zGJbZ4ZVJ2SNyk34cQoNrmuyJTqqCmTv9crseyFHeww"); // TODO: change this
