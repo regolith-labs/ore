@@ -117,7 +117,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         reserve_tokens_info,
         treasury_info,
         token_program,
-        ONE_ORE / 2,
+        ONE_ORE / 2, // TODO This should be about 2-5
         &[TREASURY],
     )?;
 
