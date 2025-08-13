@@ -36,8 +36,21 @@ async fn main() {
         "treasury" => {
             log_treasury(&rpc).await.unwrap();
         }
+        "transfer" => {
+            transfer_mint_authority(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn transfer_mint_authority(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let instruction = ore_api::sdk::transfer_mint_authority(payer.pubkey());
+    submit_transaction(rpc, payer, &[instruction]).await?;
+    // simulate_transaction(rpc, payer, &[instruction]).await;
+    Ok(())
 }
 
 async fn log_treasury(_rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -73,7 +86,7 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn _simulate_transaction(
+async fn simulate_transaction(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
     instructions: &[solana_sdk::instruction::Instruction],

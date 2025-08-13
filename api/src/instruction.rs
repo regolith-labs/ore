@@ -51,9 +51,7 @@ pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct TransferMintAuthority {
-    pub new_authority: Pubkey,
-}
+pub struct TransferMintAuthority {}
 
 instruction!(OreInstruction, Claim);
 instruction!(OreInstruction, Close);

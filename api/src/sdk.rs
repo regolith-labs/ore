@@ -1,4 +1,5 @@
 use drillx::Solution;
+use solana_program::pubkey;
 use steel::*;
 
 use crate::{
@@ -182,5 +183,23 @@ pub fn initialize(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(sysvar::rent::ID, false),
         ],
         data: Initialize {}.to_bytes(),
+    }
+}
+
+// signer_info, mint_info, treasury_info, new_treasury_info, token_program
+
+/// Builds a reset instruction.
+pub fn transfer_mint_authority(signer: Pubkey) -> Instruction {
+    let new_treasury_address = pubkey!("45db2FSR4mcXdSVVZbKbwojU6uYDpMyhpEi7cC8nHaWG");
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(TREASURY_ADDRESS, false),
+            AccountMeta::new(new_treasury_address, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: TransferMintAuthority {}.to_bytes(),
     }
 }
