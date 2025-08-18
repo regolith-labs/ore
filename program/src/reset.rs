@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use ore_api::prelude::*;
-use solana_program::slot_hashes::SlotHashes;
+use solana_program::{log::sol_log, slot_hashes::SlotHashes};
 use steel::*;
 
 /// Resets a block.
@@ -52,6 +52,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             // Limit the block reward to supply cap.
             let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
             let block_reward = block_reward.min(max_reward);
+
+            sol_log(&format!("slot_hash: {:?}", block_prev.slot_hash));
+            sol_log(&format!("max_reward: {}", max_reward));
+            sol_log(&format!("block_reward: {}", block_reward));
 
             // Set the block reward.
             block_prev.reward = block_reward;
@@ -183,6 +187,11 @@ fn calculate_block_reward(slot_hash: &[u8]) -> u64 {
     let r3 = u64::from_le_bytes(slot_hash[16..24].try_into().unwrap());
     let r4 = u64::from_le_bytes(slot_hash[24..32].try_into().unwrap());
     let r = r1 ^ r2 ^ r3 ^ r4;
+    sol_log(&format!("r1: {}", r1));
+    sol_log(&format!("r2: {}", r2));
+    sol_log(&format!("r3: {}", r3));
+    sol_log(&format!("r4: {}", r4));
+    sol_log(&format!("r: {}", r));
     for (k, v) in block_distribution.iter() {
         if r <= *v {
             return *k * ONE_ORE;

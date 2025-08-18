@@ -112,6 +112,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             miner.total_hashpower += swap_event.base_to_transfer;
             block.total_hashpower += swap_event.base_to_transfer;
 
+            // TODO if base to transfer is 0, then fail
+
             // Transfer ORE from signer to market.
             transfer(
                 signer_info,
@@ -126,6 +128,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             miner.hashpower -= swap_event.base_to_transfer;
             miner.total_hashpower -= swap_event.base_to_transfer;
             block.total_hashpower -= swap_event.base_to_transfer;
+
+            // TODO if quote to transfer is 0, then fail
 
             // Transfer ORE from market to signer.
             transfer_signed(
