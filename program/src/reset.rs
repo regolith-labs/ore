@@ -106,6 +106,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     market.fee.cumulative = 0;
 
     // Setup the next block start and end slots.
+    block_next.start_at = clock.unix_timestamp;
     block_next.start_slot = clock.slot;
     block_next.end_slot = clock.slot + config.block_duration;
 

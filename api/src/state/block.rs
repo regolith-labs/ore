@@ -22,6 +22,9 @@ pub struct Block {
     /// The authority of the miner who submitted the best hash.
     pub best_hash_miner: Pubkey,
 
+    /// The timestamp at which the block starts mining.
+    pub start_at: i64,
+
     /// The slot at which the block starts trading.
     pub start_slot: u64,
 

@@ -197,6 +197,7 @@ fn test_sniper_fees() {
         reward: 0,
         best_hash: [0; 32],
         best_hash_miner: Pubkey::default(),
+        start_at: 0,
         start_slot: 0,
         end_slot: u64::MAX,
         slot_hash: [0; 32],
