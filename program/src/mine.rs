@@ -1,12 +1,8 @@
 use ore_api::prelude::*;
 use solana_nostd_keccak::hash;
-use solana_program::pubkey;
 use steel::*;
 
-const AUTHORIZED_ACCOUNTS: [Pubkey; 2] = [
-    pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
-    pubkey!("6B9PjpHfbhPcSakS5UQ7ZctgbPujfsryVRpDecskGLiz"),
-];
+use crate::whitelist::AUTHORIZED_ACCOUNTS;
 
 /// Mine a block.
 pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {

@@ -11,6 +11,7 @@ mod set_fee_collector;
 mod set_fee_rate;
 mod set_sniper_fee_duration;
 mod swap;
+mod whitelist;
 
 use claim::*;
 use close::*;
