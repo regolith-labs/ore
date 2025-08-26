@@ -1,7 +1,7 @@
 use solana_program::pubkey;
 use steel::*;
 
-pub const AUTHORIZED_ACCOUNTS: [Pubkey; 204] = [
+pub const AUTHORIZED_ACCOUNTS: [Pubkey; 203] = [
     pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
     pubkey!("6B9PjpHfbhPcSakS5UQ7ZctgbPujfsryVRpDecskGLiz"),
     pubkey!("J89R2jNKbfkFoJjvkjnwwepvJRE2M8VPQ67RhPeQfVY8"),
@@ -180,7 +180,7 @@ pub const AUTHORIZED_ACCOUNTS: [Pubkey; 204] = [
     pubkey!("4DGxxu1fTbteKXm6USy3enW7S18iPFuJkqhKrSopGeBS"),
     pubkey!("AkmZXNFjEL6LgxGi1eM81iTXfwNJgeFG7iXUiFfmHni8"),
     pubkey!("297ogus15jvgePqXZCwT8nB1gvwgCJYdKcuXKiyH4TfS"),
-    pubkey!("3yKHWBKD5DeX7vG2ESJwWQWF4HgmgHumeXPhaZnqiore"),
+    // pubkey!("3yKHWBKD5DeX7vG2ESJwWQWF4HgmgHumeXPhaZnqiore"),
     pubkey!("4AQBsVmECmSBPh4JicNhGaT9waHETNxeNkaz72tezgSR"),
     pubkey!("6zWbGFC9WgPymyrTFM2MKAwLu8vKXwZJjFUcksikdabE"),
     pubkey!("Xp7Swytm55aTD8onDegFAVm4gC7zdCCkYMobRg5oHfr"),

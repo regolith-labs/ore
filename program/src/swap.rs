@@ -1,6 +1,8 @@
 use ore_api::prelude::*;
 use steel::*;
 
+use crate::whitelist::AUTHORIZED_ACCOUNTS;
+
 /// Swap in a hashpower market.
 pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
@@ -17,6 +19,11 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+
+    if !AUTHORIZED_ACCOUNTS.contains(signer_info.key) {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
         .assert_mut(|b| b.start_slot <= clock.slot)? // Block has started
