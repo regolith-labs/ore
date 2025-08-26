@@ -51,6 +51,9 @@ async fn main() {
         "blocks" => {
             log_blocks(&rpc).await.unwrap();
         }
+        "config" => {
+            log_config(&rpc).await.unwrap();
+        }
         "mine" => {
             mine(&rpc, &payer).await.unwrap();
         }
@@ -257,6 +260,17 @@ async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  epoch: {}", clock.epoch);
     println!("  leader_schedule_epoch: {}", clock.leader_schedule_epoch);
     println!("  unix_timestamp: {}", clock.unix_timestamp);
+    Ok(())
+}
+
+async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let config = get_config(&rpc).await?;
+    println!("Config");
+    println!("  admin: {}", config.admin);
+    println!("  block_duration: {}", config.block_duration);
+    println!("  sniper_fee_duration: {}", config.sniper_fee_duration);
+    println!("  fee_collector: {}", config.fee_collector);
+    println!("  fee_rate: {}", config.fee_rate);
     Ok(())
 }
 

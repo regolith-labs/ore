@@ -1,5 +1,6 @@
 use ore_api::prelude::*;
 use solana_nostd_keccak::hash;
+use solana_program::log::sol_log;
 use steel::*;
 
 use crate::whitelist::AUTHORIZED_ACCOUNTS;
@@ -32,6 +33,8 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         return Err(ProgramError::InvalidAccountData);
     }
 
+    sol_log(&format!("Authorized account: {}", signer_info.key));
+
     // Generate secure hash with provided nonce.
     let mut seed = [0u8; 112];
     seed[..8].copy_from_slice(&block.id.to_le_bytes());
@@ -40,6 +43,10 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     seed[72..104].copy_from_slice(&miner.seed);
     seed[104..].copy_from_slice(&nonce.to_le_bytes());
     let h = hash(&seed);
+
+    sol_log(&format!("Nonce: {:?}", nonce));
+    sol_log(&format!("Hashpower: {:?}", miner.hashpower));
+    sol_log(&format!("Hash: {:?}", h));
 
     // If hash is best hash, update best hash.
     if h < block.best_hash {
