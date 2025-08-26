@@ -5,6 +5,8 @@ use crate::whitelist::AUTHORIZED_ACCOUNTS;
 
 /// Swap in a hashpower market.
 pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    panic!("Program is currently paused");
+
     // Parse args.
     let args = Swap::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

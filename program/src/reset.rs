@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::slot_hashes::SlotHashes;
+use solana_program::{log::sol_log, slot_hashes::SlotHashes};
 use steel::*;
 
 /// Resets a block.
@@ -76,6 +76,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 liq_amount,
                 &[MARKET],
             )?;
+
+            sol_log(&format!("Block reward: {:?}", block_prev.reward));
+            sol_log(&format!("Liq amount: {:?}", liq_amount));
+            sol_log(&format!("Mint amount: {:?}", block_reward));
         }
     }
 
