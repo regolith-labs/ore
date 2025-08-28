@@ -287,20 +287,3 @@ pub fn set_sniper_fee_duration(signer: Pubkey, sniper_fee_duration: u64) -> Inst
         .to_bytes(),
     }
 }
-
-pub fn migrate_miner_account(signer: Pubkey, miner: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(miner, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: MigrateMinerAccount {
-            authority: miner.to_bytes(),
-        }
-        .to_bytes(),
-    }
-}

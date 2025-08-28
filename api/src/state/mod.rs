@@ -24,12 +24,6 @@ pub enum OreAccount {
     Treasury = 104,
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OreAccountOLD {
-    MinerOLD = 103,
-}
-
 pub fn block_pda(id: u64) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[BLOCK, &id.to_le_bytes()], &crate::ID)
 }

@@ -2,7 +2,6 @@ mod claim;
 mod close;
 mod initialize;
 mod log;
-mod migrate_miner_account;
 mod mine;
 mod open;
 mod reset;
@@ -18,7 +17,6 @@ use claim::*;
 use close::*;
 use initialize::*;
 use log::*;
-use migrate_miner_account::*;
 use mine::*;
 use open::*;
 use reset::*;
@@ -56,9 +54,6 @@ pub fn process_instruction(
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
         OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
         OreInstruction::SetSniperFeeDuration => process_set_sniper_fee_duration(accounts, data)?,
-
-        // Migration
-        OreInstruction::MigrateMinerAccount => process_migrate_miner_account(accounts, data)?,
     }
 
     Ok(())

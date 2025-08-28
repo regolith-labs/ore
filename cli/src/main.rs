@@ -81,12 +81,6 @@ async fn main() {
         "set_fee_collector" => {
             set_fee_collector(&rpc, &payer).await.unwrap();
         }
-        "migrate" => {
-            migrate(&rpc, &payer).await.unwrap();
-        }
-        "migrate_all" => {
-            migrate_all(&rpc, &payer).await.unwrap();
-        }
         "benchmark" => {
             benchmark_keccak().await.unwrap();
         }
@@ -247,36 +241,6 @@ async fn set_fee_collector(
     Ok(())
 }
 
-async fn migrate(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let address = std::env::var("ADDRESS").expect("Missing ADDRESS env var");
-    let address = Pubkey::from_str(&address).expect("Invalid ADDRESS");
-    let ix = ore_api::sdk::migrate_miner_account(payer.pubkey(), address);
-    simulate_transaction(rpc, payer, &[ix]).await;
-    Ok(())
-}
-
-async fn migrate_all(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let old_miners = get_old_miners(rpc).await?;
-    println!("Found {} old miners", old_miners.len());
-    for (i, (miner_address, _)) in old_miners.iter().enumerate() {
-        println!(
-            "[{} / {}] Migrating miner {}",
-            i,
-            old_miners.len(),
-            miner_address
-        );
-        let ix = ore_api::sdk::migrate_miner_account(payer.pubkey(), *miner_address);
-        let sig = submit_transaction(rpc, payer, &[ix]).await?;
-    }
-    Ok(())
-}
-
 async fn log_treasury(_rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury_address = ore_api::state::treasury_pda().0;
     println!("Treasury");
@@ -403,10 +367,10 @@ async fn get_market(rpc: &RpcClient) -> Result<Market, anyhow::Error> {
     Ok(*market)
 }
 
-async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<MinerOLD, anyhow::Error> {
+async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {
     let miner_pda = ore_api::state::miner_pda(authority);
     let account = rpc.get_account(&miner_pda.0).await?;
-    let miner = MinerOLD::try_from_bytes(&account.data)?;
+    let miner = Miner::try_from_bytes(&account.data)?;
     Ok(*miner)
 }
 
@@ -419,11 +383,6 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 async fn get_blocks(rpc: &RpcClient) -> Result<Vec<(Pubkey, Block)>, anyhow::Error> {
     let blocks = get_program_accounts::<Block>(rpc, ore_api::ID, vec![]).await?;
     Ok(blocks)
-}
-
-async fn get_old_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
-    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
-    Ok(miners)
 }
 
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
