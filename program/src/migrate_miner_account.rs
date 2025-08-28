@@ -1,7 +1,7 @@
 use std::mem::size_of;
 
 use ore_api::prelude::*;
-use solana_program::log::sol_log;
+use solana_program::{log::sol_log, rent::Rent};
 use steel::*;
 
 /// Migrates a miner account from the old format to the new format.
@@ -27,6 +27,12 @@ pub fn process_migrate_miner_account(accounts: &[AccountInfo<'_>], _data: &[u8])
 
     // Reallocate new account.
     miner_info.realloc(8 + size_of::<Miner>(), false)?;
+
+    // Transfer min required rent.
+    let rent = Rent::get()?;
+    let min_rent = rent.minimum_balance(8 + size_of::<Miner>());
+    let lamport_delta = min_rent.saturating_sub(miner_info.lamports());
+    miner_info.collect(lamport_delta, signer_info)?;
 
     // Copy new data.
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;

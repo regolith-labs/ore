@@ -84,6 +84,9 @@ async fn main() {
         "migrate" => {
             migrate(&rpc, &payer).await.unwrap();
         }
+        "migrate_all" => {
+            migrate_all(&rpc, &payer).await.unwrap();
+        }
         "benchmark" => {
             benchmark_keccak().await.unwrap();
         }
@@ -269,7 +272,7 @@ async fn migrate_all(
             miner_address
         );
         let ix = ore_api::sdk::migrate_miner_account(payer.pubkey(), *miner_address);
-        simulate_transaction(rpc, payer, &[ix]).await;
+        let sig = submit_transaction(rpc, payer, &[ix]).await?;
     }
     Ok(())
 }
