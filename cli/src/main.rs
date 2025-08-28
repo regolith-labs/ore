@@ -78,6 +78,9 @@ async fn main() {
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
         }
+        "set_fee_collector" => {
+            set_fee_collector(&rpc, &payer).await.unwrap();
+        }
         "benchmark" => {
             benchmark_keccak().await.unwrap();
         }
@@ -223,6 +226,17 @@ async fn set_admin(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn set_fee_collector(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let fee_collector = std::env::var("FEE_COLLECTOR").expect("Missing FEE_COLLECTOR env var");
+    let fee_collector = Pubkey::from_str(&fee_collector).expect("Invalid FEE_COLLECTOR");
+    let ix = ore_api::sdk::set_fee_collector(payer.pubkey(), fee_collector);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
