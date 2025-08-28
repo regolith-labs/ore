@@ -11,7 +11,7 @@ description = "Digial gold, unchained."
 documentation = "https://docs.rs/ore-api/latest/ore_api/"
 repository = "https://github.com/regolith-labs/ore"
 readme = "./README.md"
-keywords = ["solana", "crypto", "mining"]
+keywords = ["solana"]
 
 [workspace.dependencies]
 anyhow = "1.0"
