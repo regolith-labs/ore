@@ -11,6 +11,7 @@ use solana_client::{
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
     keccak::hash,
+    pubkey,
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
     transaction::Transaction,
@@ -83,6 +84,9 @@ async fn main() {
         }
         "benchmark" => {
             benchmark_keccak().await.unwrap();
+        }
+        "claim_seeker" => {
+            claim_seeker(&rpc, &payer).await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
@@ -218,6 +222,17 @@ async fn swap(
         [0; 32],
     );
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn claim_seeker(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let seeker_mint = pubkey!("5mXbkqKz883aufhAsx3p5Z1NcvD2ppZbdTTznM6oUKLj");
+    let ix = ore_api::sdk::claim_seeker(payer.pubkey(), seeker_mint);
+    // submit_transaction(rpc, payer, &[ix]).await?;
+    simulate_transaction(rpc, payer, &[ix]).await;
     Ok(())
 }
 

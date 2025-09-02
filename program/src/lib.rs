@@ -1,4 +1,5 @@
 mod claim;
+mod claim_seeker;
 mod close;
 mod initialize;
 mod log;
@@ -14,6 +15,7 @@ mod swap;
 mod whitelist;
 
 use claim::*;
+use claim_seeker::*;
 use close::*;
 use initialize::*;
 use log::*;
@@ -54,6 +56,9 @@ pub fn process_instruction(
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
         OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
         OreInstruction::SetSniperFeeDuration => process_set_sniper_fee_duration(accounts, data)?,
+
+        // Seeker
+        OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
     }
 
     Ok(())

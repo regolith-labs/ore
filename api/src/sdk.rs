@@ -287,3 +287,15 @@ pub fn set_sniper_fee_duration(signer: Pubkey, sniper_fee_duration: u64) -> Inst
         .to_bytes(),
     }
 }
+
+pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: ClaimSeeker {}.to_bytes(),
+    }
+}

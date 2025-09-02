@@ -2384,6 +2384,7 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token 4.0.2",
  "spl-token-2022 7.0.0",
+ "spl-token-metadata-interface 0.6.0",
  "steel",
 ]
 
