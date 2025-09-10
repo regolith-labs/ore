@@ -25,7 +25,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market_info.as_account::<Market>(&ore_api::ID)?;
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut(|m| m.authority == *signer_info.key)? // Account belongs to authority
+        .assert_mut(|m| m.authority == *signer_info.key || m.executor == *signer_info.key)? // Account belongs to authority
         .assert_mut(|m| m.block_id == block.id)? // Only allow miner to submit hashes for their current block
         .assert_mut(|m| m.hashpower > nonce)?; // Only allow miner to submit nonces for their hashpower range
     ore_program.is_program(&ore_api::ID)?;
@@ -47,6 +47,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let h = hash(&seed);
 
     sol_log(&format!("Slot hash: {:?}", block.slot_hash));
+    sol_log(&format!("Authority: {:?}", miner.authority));
     sol_log(&format!("Nonce: {:?}", nonce));
     sol_log(&format!("Seed: {:?}", miner.seed));
     sol_log(&format!("Hash: {:?}", h));
