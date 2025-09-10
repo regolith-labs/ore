@@ -62,7 +62,7 @@ pub const INITIAL_BLOCK_DURATION: u64 = 1500;
 pub const INITIAL_SNIPER_FEE_DURATION: u64 = 50;
 
 /// Window to submit hashes, in slots.
-pub const MINING_WINDOW: u64 = 1500;
+pub const MINING_WINDOW: u64 = 150; // 150 slots is 150 * 0.4 = 60 seconds
 
 /// Slot window size, used for sandwich resistance.
 pub const SLOT_WINDOW: u64 = 4;

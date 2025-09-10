@@ -1,3 +1,5 @@
+use core::panic;
+
 use ore_api::prelude::*;
 use steel::*;
 
@@ -5,7 +7,7 @@ use crate::whitelist::AUTHORIZED_ACCOUNTS;
 
 /// Swap in a hashpower market.
 pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    panic!("Program is currently paused");
+    // panic!("Program is currently paused");
 
     // Parse args.
     let args = Swap::try_from_bytes(data)?;
@@ -28,7 +30,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     let block: &mut Block = block_info
         .as_account_mut::<Block>(&ore_api::ID)?
-        .assert_mut(|b| b.start_slot <= clock.slot)? // Block has started
+        .assert_mut(|b| clock.slot >= b.start_slot + MINING_WINDOW)? // Block has started, mining window of last block has closed
         .assert_mut(|b| b.end_slot > clock.slot)?; // Block has not ended
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     fee_collector_info

@@ -2361,6 +2361,7 @@ dependencies = [
  "bytemuck",
  "ore-api",
  "serde_json",
+ "sha3",
  "solana-account-decoder",
  "solana-client",
  "solana-program",

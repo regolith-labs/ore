@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use ore_api::prelude::*;
+use sha3::{Digest, Sha3_256};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
     client_error::{reqwest::StatusCode, ClientErrorKind},
@@ -57,6 +58,9 @@ async fn main() {
         }
         "mine" => {
             mine(&rpc, &payer).await.unwrap();
+        }
+        "test_mine" => {
+            test_mine().await.unwrap();
         }
         "initialize" => {
             initialize(&rpc, &payer).await.unwrap();
@@ -141,6 +145,39 @@ async fn close_all(
             submit_transaction(rpc, payer, &[ix]).await?;
         }
     }
+    Ok(())
+}
+
+async fn test_mine() -> Result<(), anyhow::Error> {
+    let authority = Pubkey::from_str("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS").unwrap();
+    let slot_hash = [
+        14, 121, 1, 5, 83, 45, 216, 218, 6, 33, 58, 94, 210, 71, 56, 234, 151, 186, 182, 93, 202,
+        53, 201, 164, 136, 144, 1, 37, 228, 192, 96, 117,
+    ];
+    let noise = [0u8; 32];
+    let block_id: u64 = 3816;
+
+    // CLI
+    let mut best_hash = [u8::MAX; 32];
+    let mut best_nonce = 0;
+    for nonce in 0..99u64 {
+        let mut seed = [0u8; 112];
+        seed[..8].copy_from_slice(&block_id.to_le_bytes());
+        seed[8..40].copy_from_slice(&slot_hash);
+        seed[40..72].copy_from_slice(&authority.to_bytes());
+        seed[72..104].copy_from_slice(&noise);
+        seed[104..].copy_from_slice(&nonce.to_le_bytes());
+        let h1 = solana_program::keccak::hash(&seed).to_bytes();
+
+        if h1 < best_hash {
+            best_hash = h1;
+            best_nonce = nonce;
+        }
+    }
+
+    println!("Best hash: {:?}", best_hash);
+    println!("Best nonce: {:?}", best_nonce);
+
     Ok(())
 }
 
@@ -276,6 +313,7 @@ async fn log_miner(
     println!("  authority: {}", authority);
     println!("  block_id: {}", miner.block_id);
     println!("  hashpower: {}", miner.hashpower);
+    println!("  seed: {:?}", miner.seed);
     println!("  total_hashpower: {}", miner.total_hashpower);
     println!("  total_rewards: {}", miner.total_rewards);
     Ok(())
