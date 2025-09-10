@@ -49,12 +49,15 @@ pub fn initialize(signer: Pubkey) -> Instruction {
 pub fn mine(signer: Pubkey, id: u64, nonce: u64) -> Instruction {
     let block_adddress = block_pda(id).0;
     let miner_address = miner_pda(signer).0;
+    let market_address = market_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(block_adddress, false),
+            AccountMeta::new(market_address, false),
             AccountMeta::new(miner_address, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: Mine {
             nonce: nonce.to_le_bytes(),
