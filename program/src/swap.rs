@@ -176,7 +176,8 @@ fn calculate_sniper_fee(block: &Block, clock: &Clock, config: &Config) -> u64 {
     if elapsed_slots >= config.sniper_fee_duration {
         return 0;
     }
-    let fee_bps = 5000 * (config.sniper_fee_duration - elapsed_slots) / config.sniper_fee_duration;
+    let fee_bps =
+        10_000 * (config.sniper_fee_duration - elapsed_slots) / config.sniper_fee_duration; // 100% - 0%
     fee_bps
 }
 
