@@ -5,6 +5,7 @@ use crate::state::SwapDirection;
 pub enum OreEvent {
     Reset = 0,
     Swap = 1,
+    Mine = 2,
 }
 
 #[repr(C)]
@@ -81,6 +82,31 @@ pub struct SwapEvent {
     pub ts: i64,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct MineEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The authority of the mine.
+    pub authority: Pubkey,
+
+    /// The block that was mined.
+    pub block_id: u64,
+
+    /// The nonce that was mined.
+    pub nonce: u64,
+
+    /// The total hashpower the miner had.
+    pub hashpower: u64,
+
+    /// Whether or not the miner is the new best.
+    pub is_best: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 impl SwapEvent {
     pub fn direction(&self) -> SwapDirection {
         SwapDirection::try_from(self.direction as u8).unwrap()
@@ -89,3 +115,4 @@ impl SwapEvent {
 
 event!(ResetEvent);
 event!(SwapEvent);
+event!(MineEvent);

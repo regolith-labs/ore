@@ -13,7 +13,7 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, miner_info] = accounts else {
+    let [signer_info, block_info, market_info, miner_info, ore_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
@@ -22,11 +22,13 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .assert_mut(|b| clock.slot >= b.end_slot)? // Block has stopped trading
         .assert_mut(|b| clock.slot < b.end_slot + MINING_WINDOW)? // Give 1500 slots to submit hashes
         .assert_mut(|b| b.slot_hash != [0; 32])?; // Slot hash is set
+    market_info.as_account::<Market>(&ore_api::ID)?;
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
         .assert_mut(|m| m.authority == *signer_info.key)? // Account belongs to authority
         .assert_mut(|m| m.block_id == block.id)? // Only allow miner to submit hashes for their current block
         .assert_mut(|m| m.hashpower > nonce)?; // Only allow miner to submit nonces for their hashpower range
+    ore_program.is_program(&ore_api::ID)?;
 
     // Check if the signer is authorized.
     if !AUTHORIZED_ACCOUNTS.contains(signer_info.key) {
@@ -53,6 +55,22 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         block.best_hash = h;
         block.best_hash_miner = miner.authority;
     }
+
+    // Emit event.
+
+    program_log(
+        &[market_info.clone(), ore_program.clone()],
+        &MineEvent {
+            disc: 2,
+            authority: *signer_info.key,
+            block_id: block.id,
+            nonce,
+            hashpower: miner.hashpower,
+            is_best: (block.best_hash_miner == miner.authority) as u64,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     // Only allow miners to submit 1 hash per block.
     miner.hashpower = 0;
