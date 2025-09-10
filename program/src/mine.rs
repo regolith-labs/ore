@@ -46,8 +46,9 @@ pub fn process_mine(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     seed[104..].copy_from_slice(&nonce.to_le_bytes());
     let h = hash(&seed);
 
+    sol_log(&format!("Slot hash: {:?}", block.slot_hash));
     sol_log(&format!("Nonce: {:?}", nonce));
-    sol_log(&format!("Hashpower: {:?}", miner.hashpower));
+    sol_log(&format!("Seed: {:?}", miner.seed));
     sol_log(&format!("Hash: {:?}", h));
 
     // If hash is best hash, update best hash.
