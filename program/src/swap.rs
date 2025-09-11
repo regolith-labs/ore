@@ -1,7 +1,8 @@
 use ore_api::prelude::*;
+use solana_program::slot_hashes;
 use steel::*;
 
-use crate::whitelist::AUTHORIZED_ACCOUNTS;
+use crate::{reset::get_slot_hash, whitelist::AUTHORIZED_ACCOUNTS};
 
 /// Swap in a hashpower market.
 pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -13,7 +14,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, block_info, config_info, fee_collector_info, market_info, miner_info, mint_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program] =
+    let [signer_info, block_info, config_info, fee_collector_info, market_info, miner_info, mint_info, tokens_info, vault_info, system_program, token_program, associated_token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -48,6 +49,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+    slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Load miner.
     let miner = if miner_info.data_is_empty() {
@@ -155,8 +157,21 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     market.check_quote_vault(&vault)?;
 
     // Update block reward.
-    let block_reward = vault.amount();
-    block.reward = block_reward;
+    // Use first byte for limit on current probability disribution.
+    // Use second byte for steps taken so far.
+    let clock = Clock::get()?;
+    let reward_bytes = block.reward.to_le_bytes();
+    let limit = reward_bytes[0];
+    let steps = reward_bytes[1];
+    let (limit, steps) = update_block_reward(
+        limit as u64,
+        steps as u64,
+        slot_hashes_sysvar,
+        block.start_slot,
+        clock.slot,
+        block.end_slot,
+    );
+    block.reward = u64::from_le_bytes([limit, steps, 0, 0, 0, 0, 0, 0]);
 
     // Update swap event hashpower.
     swap_event.miner_hashpower = miner.hashpower;
@@ -169,6 +184,44 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     )?;
 
     Ok(())
+}
+
+fn update_block_reward(
+    mut limit: u64,
+    steps: u64,
+    slot_hash_sysvar: &AccountInfo<'_>,
+    start_slot: u64,
+    current_slot: u64,
+    end_slot: u64,
+) -> (u8, u8) {
+    // Calculate how many steps should be taken.
+    let d = end_slot.saturating_sub(start_slot).saturating_div(10);
+    let target_steps = current_slot.saturating_sub(start_slot).saturating_div(d);
+    if target_steps <= steps {
+        return (limit as u8, steps as u8);
+    }
+
+    // Calculate new limit on probability distribution.
+    for i in (steps + 1)..target_steps {
+        let sample_slot = start_slot + (i * d);
+        if let Ok(slot_hash) = get_slot_hash(sample_slot, slot_hash_sysvar) {
+            // Use slot hash to generate a random u64
+            let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
+            let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
+            let r3 = u64::from_le_bytes(slot_hash[16..24].try_into().unwrap());
+            let r4 = u64::from_le_bytes(slot_hash[24..32].try_into().unwrap());
+            let r = r1 ^ r2 ^ r3 ^ r4;
+
+            // Use random number to get a 30% chance (3/10)
+            // Since r is random u64, checking if r <= (u64::MAX * 3/10)
+            let threshold = u64::MAX / 10 * 3;
+            if r <= threshold {
+                limit += 5;
+            }
+        }
+    }
+
+    (limit as u8, target_steps as u8)
 }
 
 fn calculate_sniper_fee(block: &Block, clock: &Clock, config: &Config) -> u64 {

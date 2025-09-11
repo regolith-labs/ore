@@ -45,7 +45,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             block_prev.slot_hash = slot_hash;
 
             // Calculate the block reward.
-            let block_reward = calculate_block_reward(&block_prev.slot_hash);
+            let limit = block_prev.reward.to_le_bytes()[0] as u64;
+            let block_reward = calculate_block_reward(&block_prev.slot_hash, limit);
 
             // Limit the block reward to supply cap.
             let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
@@ -65,20 +66,18 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 &[TREASURY],
             )?;
 
-            // Transfer any remaining ORE in market liquidity vault to the treasury as additional block reward.
-            let liq_amount = vault.amount();
-            block_prev.reward += liq_amount;
-            transfer_signed(
-                market_info,
+            // Burn any remaining ORE in market liquidity vault.
+            let burn_amount = vault.amount();
+            burn_signed(
                 vault_info,
-                treasury_tokens_info,
+                mint_info,
+                market_info,
                 token_program,
-                liq_amount,
+                burn_amount,
                 &[MARKET],
             )?;
 
-            sol_log(&format!("Block reward: {:?}", block_prev.reward));
-            sol_log(&format!("Liq amount: {:?}", liq_amount));
+            sol_log(&format!("Burn amount: {:?}", burn_amount));
             sol_log(&format!("Mint amount: {:?}", block_reward));
         }
     }
@@ -113,6 +112,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     block_next.start_at = clock.unix_timestamp;
     block_next.start_slot = clock.slot;
     block_next.end_slot = clock.slot + config.block_duration;
+    block_next.reward = u64::from_le_bytes([5, 0, 0, 0, 0, 0, 0, 0]);
 
     // Mint tokens to the boost reserve.
     mint_to_signed(
@@ -141,7 +141,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     Ok(())
 }
 
-fn get_slot_hash(
+pub fn get_slot_hash(
     slot: u64,
     slot_hashes_sysvar: &AccountInfo<'_>,
 ) -> Result<[u8; 32], ProgramError> {
@@ -156,40 +156,15 @@ fn get_slot_hash(
     Ok(slot_hash)
 }
 
-fn calculate_block_reward(slot_hash: &[u8]) -> u64 {
-    let block_distribution = [
-        (1u64, 737869762948382064),     // 4%
-        (2u64, 1641760222560150093),    // 4.9%
-        (3u64, 2564097426245627674),    // 5%
-        (4u64, 3486434629931105255),    // 5%
-        (5u64, 4408771833616582835),    // 5%
-        (6u64, 5331109037302060416),    // 5%
-        (7u64, 6253446240987537997),    // 5%
-        (8u64, 7175783444673015578),    // 5%
-        (9u64, 8098120648358493158),    // 5%
-        (10u64, 9020457852043970739),   // 5%
-        (11u64, 9942795055729448320),   // 5%
-        (12u64, 10865132259414925901),  // 5%
-        (13u64, 11787469463100403481),  // 5%
-        (14u64, 12709806666785881062),  // 5%
-        (15u64, 13632143870471358643),  // 5%
-        (16u64, 14554481074156836224),  // 5%
-        (17u64, 15476818277842313804),  // 5%
-        (18u64, 16399155481527791385),  // 5%
-        (19u64, 17321492685213268966),  // 5%
-        (20u64, 18243829888898746547),  // 5%
-        (100u64, 18428297329635842063), // 1%
-        (1000u64, u64::MAX),            // 0.1%
-    ];
+fn calculate_block_reward(slot_hash: &[u8], limit: u64) -> u64 {
+    // Use slot hash to generate a random u64
     let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
     let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
     let r3 = u64::from_le_bytes(slot_hash[16..24].try_into().unwrap());
     let r4 = u64::from_le_bytes(slot_hash[24..32].try_into().unwrap());
     let r = r1 ^ r2 ^ r3 ^ r4;
-    for (k, v) in block_distribution.iter() {
-        if r <= *v {
-            return *k * ONE_ORE;
-        }
-    }
-    0
+
+    // Use modulo to get a number between 0 and (limit-1), then add 1
+    let k = (r % limit) + 1;
+    k * ONE_ORE
 }
