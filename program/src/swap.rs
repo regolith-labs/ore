@@ -1,5 +1,4 @@
 use ore_api::prelude::*;
-use solana_program::slot_hashes;
 use steel::*;
 
 use crate::{reset::get_slot_hash, whitelist::AUTHORIZED_ACCOUNTS};
@@ -186,7 +185,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     Ok(())
 }
 
-fn update_block_reward(
+pub fn update_block_reward(
     mut limit: u64,
     steps: u64,
     slot_hash_sysvar: &AccountInfo<'_>,

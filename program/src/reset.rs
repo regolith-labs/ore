@@ -2,6 +2,8 @@ use ore_api::prelude::*;
 use solana_program::{log::sol_log, slot_hashes::SlotHashes};
 use steel::*;
 
+use crate::swap::update_block_reward;
+
 /// Resets a block.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
@@ -44,9 +46,22 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             // Set the block slot hash.
             block_prev.slot_hash = slot_hash;
 
-            // Calculate the block reward.
-            let limit = block_prev.reward.to_le_bytes()[0] as u64;
-            let block_reward = calculate_block_reward(&block_prev.slot_hash, limit);
+            // Update the block reward.
+            let clock = Clock::get()?;
+            let reward_bytes = block_prev.reward.to_le_bytes();
+            let limit = reward_bytes[0];
+            let steps = reward_bytes[1];
+            let (limit, _) = update_block_reward(
+                limit as u64,
+                steps as u64,
+                slot_hashes_sysvar,
+                block_prev.start_slot,
+                clock.slot,
+                block_prev.end_slot,
+            );
+
+            // Calculate the final block reward.
+            let block_reward = finalize_block_reward(&block_prev.slot_hash, limit as u64);
 
             // Limit the block reward to supply cap.
             let max_reward = MAX_SUPPLY.saturating_sub(ore_mint.supply());
@@ -156,7 +171,7 @@ pub fn get_slot_hash(
     Ok(slot_hash)
 }
 
-fn calculate_block_reward(slot_hash: &[u8], limit: u64) -> u64 {
+fn finalize_block_reward(slot_hash: &[u8], limit: u64) -> u64 {
     // Use slot hash to generate a random u64
     let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
     let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
