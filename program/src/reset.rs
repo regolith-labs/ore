@@ -42,7 +42,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .assert_mut(|b| b.end_slot <= clock.slot)?;
 
         // Get the slot hash, given the end slot of the previous block.
-        if let Ok(slot_hash) = get_slot_hash(block_prev.end_slot, slot_hashes_sysvar) {
+        let slot_hashes =
+            bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
+        if let Some(slot_hash) = slot_hashes.get(&block_prev.end_slot) {
+            let slot_hash = slot_hash.to_bytes();
+
             // Set the block slot hash.
             block_prev.slot_hash = slot_hash;
 
@@ -54,7 +58,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             let (limit, _) = update_block_reward(
                 limit as u64,
                 steps as u64,
-                slot_hashes_sysvar,
+                &slot_hashes,
                 block_prev.start_slot,
                 clock.slot,
                 block_prev.end_slot,
@@ -156,20 +160,20 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     Ok(())
 }
 
-pub fn get_slot_hash(
-    slot: u64,
-    slot_hashes_sysvar: &AccountInfo<'_>,
-) -> Result<[u8; 32], ProgramError> {
-    let slot_hashes =
-        bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
-    let Some(slot_hash) = slot_hashes.get(&slot) else {
-        // If reset is not called within ~2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and secure hashes cannot be generated.
-        return Err(ProgramError::InvalidAccountData);
-    };
-    let slot_hash = slot_hash.to_bytes();
-    Ok(slot_hash)
-}
+// pub fn get_slot_hash(
+//     slot: u64,
+//     slot_hashes_sysvar: &AccountInfo<'_>,
+// ) -> Result<[u8; 32], ProgramError> {
+//     let slot_hashes =
+//         bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
+//     let Some(slot_hash) = slot_hashes.get(&slot) else {
+//         // If reset is not called within ~2.5 minutes of the block ending,
+//         // then the slot hash will be unavailable and secure hashes cannot be generated.
+//         return Err(ProgramError::InvalidAccountData);
+//     };
+//     let slot_hash = slot_hash.to_bytes();
+//     Ok(slot_hash)
+// }
 
 fn finalize_block_reward(slot_hash: &[u8], limit: u64) -> u64 {
     // Use slot hash to generate a random u64

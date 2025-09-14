@@ -1,13 +1,14 @@
 use ore_api::prelude::*;
+use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
-use crate::{reset::get_slot_hash, whitelist::AUTHORIZED_ACCOUNTS};
+use crate::whitelist::AUTHORIZED_ACCOUNTS;
 
 /// Swap in a hashpower market.
 pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse args.
     let args = Swap::try_from_bytes(data)?;
-    let amount = u64::from_le_bytes(args.amount);
+    let mut amount = u64::from_le_bytes(args.amount);
     let direction = SwapDirection::try_from(args.direction).unwrap();
     let precision = SwapPrecision::try_from(args.precision).unwrap();
 
@@ -107,6 +108,17 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let fee_rate = calculate_sniper_fee(block, &clock, config);
     market.fee.rate = fee_rate;
 
+    // If selling, limit the amount of ORE that can be transferred to the market in 1 swap.
+    // if direction == SwapDirection::Sell {
+    //     if miner.hashpower > ONE_ORE * 10 {
+    //         // Scale down linearly from 10 ORE to 0.01 ORE
+    //         let scale_numerator = (ONE_ORE * 50).saturating_sub(miner.hashpower);
+    //         let scale_denominator = ONE_ORE * 90;
+    //         amount = (ONE_ORE * 10).saturating_mul(scale_numerator) / scale_denominator;
+    //         amount = amount.max(ONE_ORE / 100); // Minimum 0.01 ORE
+    //     }
+    // }
+
     // Execute the swap
     let mut swap_event = market.swap(amount, direction, precision, clock)?;
     swap_event.authority = *signer_info.key;
@@ -158,6 +170,8 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Update block reward.
     // Use first byte for limit on current probability disribution.
     // Use second byte for steps taken so far.
+    let slot_hashes =
+        bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
     let clock = Clock::get()?;
     let reward_bytes = block.reward.to_le_bytes();
     let limit = reward_bytes[0];
@@ -165,7 +179,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let (limit, steps) = update_block_reward(
         limit as u64,
         steps as u64,
-        slot_hashes_sysvar,
+        &slot_hashes,
         block.start_slot,
         clock.slot,
         block.end_slot,
@@ -188,7 +202,7 @@ pub fn process_swap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 pub fn update_block_reward(
     mut limit: u64,
     steps: u64,
-    slot_hash_sysvar: &AccountInfo<'_>,
+    slot_hashes: &SlotHashes,
     start_slot: u64,
     current_slot: u64,
     end_slot: u64,
@@ -203,7 +217,11 @@ pub fn update_block_reward(
     // Calculate new limit on probability distribution.
     for i in (steps + 1)..target_steps {
         let sample_slot = start_slot + (i * d);
-        if let Ok(slot_hash) = get_slot_hash(sample_slot, slot_hash_sysvar) {
+        // If reset is not called within ~2.5 minutes of the block ending,
+        // then the slot hash will be unavailable and secure hashes cannot be generated.
+        if let Some(slot_hash) = slot_hashes.get(&sample_slot) {
+            let slot_hash = slot_hash.to_bytes();
+
             // Use slot hash to generate a random u64
             let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
             let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
@@ -217,7 +235,7 @@ pub fn update_block_reward(
             if r <= threshold {
                 limit += 5;
             }
-        }
+        };
     }
 
     (limit as u8, target_steps as u8)
