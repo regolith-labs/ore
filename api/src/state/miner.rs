@@ -13,14 +13,20 @@ pub struct Miner {
     /// The miner's committed square in the current round round.
     pub commits: [u64; 25],
 
+    /// The amount of SOL this miner can claim.
+    pub rewards_sol: u64,
+
     /// The amount of ORE this miner can claim.
-    pub rewards: u64,
+    pub rewards_ore: u64,
 
     /// The ID of the round this miner last played in.
     pub round_id: u64,
 
+    /// The total amount of SOL this miner has mined across all blocks.
+    pub lifetime_rewards_sol: u64,
+
     /// The total amount of ORE this miner has mined across all blocks.
-    pub total_rewards: u64,
+    pub lifetime_rewards_ore: u64,
 }
 
 impl Miner {

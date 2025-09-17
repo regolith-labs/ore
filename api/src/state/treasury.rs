@@ -8,7 +8,9 @@ use super::OreAccount;
 /// the program's global token account.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct Treasury {}
+pub struct Treasury {
+    pub balance: u64,
+}
 
 impl Treasury {
     pub fn pda() -> (Pubkey, u8) {

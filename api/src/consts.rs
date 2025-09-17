@@ -17,17 +17,11 @@ pub const ONE_MINUTE: i64 = 60;
 /// The maximum token supply (5 million).
 pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 
-/// The seed of the block account PDA.
-pub const BLOCK: &[u8] = b"block";
-
 /// The seed of the board account PDA.
 pub const BOARD: &[u8] = b"board";
 
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
-
-/// The seed of the market account PDA.
-pub const MARKET: &[u8] = b"market";
 
 /// The seed of the miner account PDA.
 pub const MINER: &[u8] = b"miner";
@@ -55,29 +49,8 @@ pub const TREASURY_ADDRESS: Pubkey =
 /// The address of the treasury account.
 pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
 
-/// Swap fee in lamports.
-pub const FEE_LAMPORTS: u64 = 100_000; // 0.0001 SOL
-
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
-
-/// Window to submit hashes, in slots.
-pub const INITIAL_BLOCK_DURATION: u64 = 1500;
-
-/// Window to submit hashes, in slots.
-pub const INITIAL_SNIPER_FEE_DURATION: u64 = 50;
-
-/// Window to submit hashes, in slots.
-pub const MINING_WINDOW: u64 = 150; // 150 slots is 150 * 0.4 = 60 seconds
-
-/// Slot window size, used for sandwich resistance.
-pub const SLOT_WINDOW: u64 = 4;
-
-/// Amount of hash tokens to mint to market.
-pub const HASHPOWER_LIQUIDITY: u64 = 1_000_000;
-
-/// The ORE liquidity to seed the markets with.
-pub const ORE_LIQUIDITY: u64 = ONE_ORE * 100;
 
 /// The address of the boost reserve token account.
 pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGunofStvxFx6rBiD");

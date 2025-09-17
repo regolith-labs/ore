@@ -4,11 +4,13 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Claim = 0,
-    Initialize = 1,
-    InitializeSquare = 2,
-    Prospect = 3,
-    Reset = 4,
+    ClaimSOL = 0,
+    ClaimORE = 1,
+    Initialize = 2,
+    InitializeSquares = 3,
+    Prospect = 4,
+    Redeem = 5,
+    Reset = 6,
 
     // Admin
     SetAdmin = 8,
@@ -20,7 +22,13 @@ pub enum OreInstruction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Claim {
+pub struct ClaimSOL {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct ClaimORE {
     pub amount: [u8; 8],
 }
 
@@ -30,7 +38,13 @@ pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct InitializeSquare {}
+pub struct InitializeSquares {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Redeem {
+    pub amount: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -97,11 +111,13 @@ pub struct SetSniperFeeDuration {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
-instruction!(OreInstruction, Claim);
+instruction!(OreInstruction, ClaimSOL);
+instruction!(OreInstruction, ClaimORE);
+instruction!(OreInstruction, Redeem);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, Prospect);
 instruction!(OreInstruction, Initialize);
-instruction!(OreInstruction, InitializeSquare);
+instruction!(OreInstruction, InitializeSquares);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);

@@ -25,13 +25,16 @@ pub struct Board {
     /// The hash of the end slot, provided by solana, used for random number generation.
     pub slot_hash: [u8; 32],
 
-    /// The total amount of ORE burned for the round.
-    pub total_burned: u64,
+    /// The top winner of the round.
+    pub top_winner: Pubkey,
 
-    /// The total amount of ORE committed for the round.
-    pub total_commits: u64,
+    /// The total amount of SOL prospected in the round.
+    pub total_prospects: u64,
 
-    /// The total amount of ORE won by miners for the round.
+    /// The total amount of SOL put in the ORE vault.
+    pub total_vaulted: u64,
+
+    /// The total amount of SOL won by miners for the round.
     pub total_winnings: u64,
 }
 

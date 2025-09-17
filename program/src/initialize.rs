@@ -4,7 +4,7 @@ use steel::*;
 /// Initializes the program.
 pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, board_info, config_info, mint_info, treasury_info, vault_info, system_program, token_program, associated_token_program] =
+    let [signer_info, board_info, config_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -14,7 +14,7 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     config_info.has_seeds(&[CONFIG], &ore_api::ID)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info.has_seeds(&[TREASURY], &ore_api::ID)?;
-    vault_info.has_address(&vault_address())?;
+    treasury_tokens_info.has_address(&treasury_tokens_address())?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
@@ -35,8 +35,10 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         board.start_slot = 0;
         board.end_slot = 0;
         board.slot_hash = [0; 32];
-        board.total_commits = 0;
-        board.total_burned = 0;
+        board.top_winner = Pubkey::default();
+        board.total_prospects = 0;
+        board.total_vaulted = 0;
+        board.total_winnings = 0;
     } else {
         board_info.as_account::<Board>(&ore_api::ID)?;
     }
@@ -52,10 +54,10 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         )?;
         let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
         config.admin = *signer_info.key;
-        config.block_duration = INITIAL_BLOCK_DURATION;
-        config.sniper_fee_duration = INITIAL_SNIPER_FEE_DURATION;
+        config.block_duration = 0;
+        config.sniper_fee_duration = 0;
         config.fee_collector = *signer_info.key;
-        config.fee_rate = FEE_LAMPORTS;
+        config.fee_rate = 0;
     } else {
         config_info.as_account::<Config>(&ore_api::ID)?;
     }
@@ -69,23 +71,25 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             &ore_api::ID,
             &[TREASURY],
         )?;
+        let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+        treasury.balance = 0;
     } else {
         treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     }
 
     // Initialize vault token account.
-    if vault_info.data_is_empty() {
+    if treasury_tokens_info.data_is_empty() {
         create_associated_token_account(
             signer_info,
-            board_info,
-            vault_info,
+            treasury_info,
+            treasury_tokens_info,
             mint_info,
             system_program,
             token_program,
             associated_token_program,
         )?;
     } else {
-        vault_info.as_associated_token_account(board_info.key, mint_info.key)?;
+        treasury_tokens_info.as_associated_token_account(treasury_info.key, mint_info.key)?;
     }
 
     Ok(())

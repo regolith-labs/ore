@@ -1,18 +1,22 @@
-mod claim;
+mod claim_ore;
 mod claim_seeker;
+mod claim_sol;
 mod initialize;
-mod initialize_square;
+mod initialize_squares;
 mod prospect;
+mod redeem;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
 mod whitelist;
 
-use claim::*;
+use claim_ore::*;
 use claim_seeker::*;
+use claim_sol::*;
 use initialize::*;
-use initialize_square::*;
+use initialize_squares::*;
 use prospect::*;
+use redeem::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -29,10 +33,12 @@ pub fn process_instruction(
 
     match ix {
         // User
-        OreInstruction::Claim => process_claim(accounts, data)?,
+        OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
+        OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
-        OreInstruction::InitializeSquare => process_initialize_square(accounts, data)?,
+        OreInstruction::InitializeSquares => process_initialize_squares(accounts, data)?,
         OreInstruction::Prospect => process_prospect(accounts, data)?,
+        OreInstruction::Redeem => process_redeem(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Admin
@@ -41,8 +47,6 @@ pub fn process_instruction(
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
-
-        _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

@@ -2,7 +2,7 @@ use ore_api::prelude::*;
 use steel::*;
 
 /// Initializes the program.
-pub fn process_initialize_square(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+pub fn process_initialize_squares(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let (required_accounts, square_accounts) = accounts.split_at(2);
     let [signer_info, system_program] = required_accounts else {

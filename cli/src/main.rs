@@ -33,8 +33,11 @@ async fn main() {
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
-        "claim" => {
-            claim(&rpc, &payer).await.unwrap();
+        "claim_sol" => {
+            claim_sol(&rpc, &payer).await.unwrap();
+        }
+        "claim_ore" => {
+            claim_ore(&rpc, &payer).await.unwrap();
         }
         "board" => {
             log_board(&rpc).await.unwrap();
@@ -89,6 +92,7 @@ async fn keys() -> Result<(), anyhow::Error> {
     println!("Config: {}", config_address);
     // let keys = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
     // println!("Keys: {:?}", keys);
+
     Ok(())
 }
 
@@ -110,11 +114,20 @@ async fn initialize_squares(
     Ok(())
 }
 
-async fn claim(
+async fn claim_sol(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::claim(payer.pubkey(), u64::MAX);
+    let ix = ore_api::sdk::claim_sol(payer.pubkey(), u64::MAX);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn claim_ore(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::claim_ore(payer.pubkey(), u64::MAX);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -199,10 +212,12 @@ async fn set_fee_collector(
     Ok(())
 }
 
-async fn log_treasury(_rpc: &RpcClient) -> Result<(), anyhow::Error> {
+async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury_address = ore_api::state::treasury_pda().0;
+    let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
+    println!("  balance: {}", treasury.balance);
     Ok(())
 }
 
@@ -230,9 +245,11 @@ async fn log_miner(
     println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
     println!("  commits: {:?}", miner.commits);
-    println!("  rewards: {}", miner.rewards);
+    println!("  rewards_sol: {}", miner.rewards_sol);
+    println!("  rewards_ore: {}", miner.rewards_ore);
     println!("  round_id: {}", miner.round_id);
-    println!("  total_rewards: {}", miner.total_rewards);
+    println!("  lifetime_rewards_sol: {}", miner.lifetime_rewards_sol);
+    println!("  lifetime_rewards_ore: {}", miner.lifetime_rewards_ore);
     Ok(())
 }
 
@@ -270,11 +287,12 @@ fn print_board(board: Board, clock: &Clock) {
     println!("Board");
     println!("  Id: {:?}", board.id);
     println!("  Slot hash: {:?}", board.slot_hash);
-    println!("  Total commits: {}", board.total_commits);
-    println!("  Total burned: {}", board.total_burned);
     println!("  Start slot: {}", board.start_slot);
     println!("  End slot: {}", board.end_slot);
     println!("  Commits: {:?}", board.commits);
+    println!("  Total prospects: {}", board.total_prospects);
+    println!("  Total vaulted: {}", board.total_vaulted);
+    println!("  Total winnings: {}", board.total_winnings);
     if board.slot_hash != [0; 32] {
         println!("  Winning square: {}", get_winning_square(&board.slot_hash));
     }
@@ -304,6 +322,13 @@ async fn get_square(rpc: &RpcClient, id: u64) -> Result<Square, anyhow::Error> {
     let account = rpc.get_account(&square_pda.0).await?;
     let square = Square::try_from_bytes(&account.data)?;
     Ok(*square)
+}
+
+async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
+    let treasury_pda = ore_api::state::treasury_pda();
+    let account = rpc.get_account(&treasury_pda.0).await?;
+    let treasury = Treasury::try_from_bytes(&account.data)?;
+    Ok(*treasury)
 }
 
 async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {

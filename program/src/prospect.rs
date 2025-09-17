@@ -10,7 +10,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, board_info, config_info, fee_collector_info, miner_info, sender_info, square_info, vault_info, system_program, token_program] =
+    let [signer_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -27,13 +27,10 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .has_address(&config.fee_collector)?
         .is_writable()?;
     miner_info.is_writable()?;
-    sender_info.as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
     let square = square_info
         .as_account_mut::<Square>(&ore_api::ID)?
         .assert_mut(|s| s.id == square_id)?;
-    vault_info.has_address(&vault_address())?;
     system_program.is_program(&system_program::ID)?;
-    token_program.is_program(&spl_token::ID)?;
 
     // Create miner.
     let miner = if miner_info.data_is_empty() {
@@ -47,9 +44,11 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.commits = [0; 25];
-        miner.rewards = 0;
+        miner.rewards_sol = 0;
+        miner.rewards_ore = 0;
         miner.round_id = board.id;
-        miner.total_rewards = 0;
+        miner.lifetime_rewards_sol = 0;
+        miner.lifetime_rewards_ore = 0;
         miner
     } else {
         miner_info
@@ -64,8 +63,9 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         board.slot_hash = [0; 32];
         board.start_slot = clock.slot;
         board.end_slot = clock.slot + 150; // one minute
-        board.total_commits = 0;
-        board.total_burned = 0;
+        board.total_prospects = 0;
+        board.total_vaulted = 0;
+        board.total_winnings = 0;
     }
 
     // Reset miner
@@ -81,6 +81,10 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         square.round_id = board.id;
     }
 
+    // Normalize amount.
+    let fee = amount / 100;
+    let amount = amount - fee;
+
     // Update miner
     let is_first_play_on_square = miner.commits[square_id as usize] == 0;
     miner.commits[square_id as usize] += amount;
@@ -93,15 +97,11 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Update board
     board.commits[square_id as usize] += amount;
-    board.total_commits += amount;
+    board.total_prospects += amount;
 
-    // Transfer tokens.
-    transfer(signer_info, sender_info, vault_info, token_program, amount)?;
-
-    // Pay fee.
-    if config.fee_rate > 0 {
-        fee_collector_info.collect(config.fee_rate, &signer_info)?;
-    }
+    // Transfer prospects.
+    board_info.collect(amount, &signer_info)?;
+    fee_collector_info.collect(fee, &signer_info)?;
 
     Ok(())
 }
