@@ -10,20 +10,14 @@ pub struct Miner {
     /// The authority of this miner account.
     pub authority: Pubkey,
 
-    /// The ID of the last block this miner mined in.
-    pub block_id: u64,
+    /// The miner's committed square in the current round round.
+    pub commits: [u64; 25],
 
-    /// An account authorized to execute actions on behalf of this miner.
-    pub executor: Pubkey,
+    /// The amount of ORE this miner can claim.
+    pub rewards: u64,
 
-    /// The amount of hashpower this miner has committed to the current block.
-    pub hashpower: u64,
-
-    /// A user-supplied seed for random number generation.
-    pub seed: [u8; 32],
-
-    /// The total amount of hashpower this miner has committed across all blocks.
-    pub total_hashpower: u64,
+    /// The ID of the round this miner last played in.
+    pub round_id: u64,
 
     /// The total amount of ORE this miner has mined across all blocks.
     pub total_rewards: u64,

@@ -1,33 +1,21 @@
 mod claim;
 mod claim_seeker;
-mod close;
 mod initialize;
-mod log;
-mod mine;
-mod open;
+mod initialize_square;
+mod prospect;
 mod reset;
 mod set_admin;
-mod set_block_duration;
 mod set_fee_collector;
-mod set_fee_rate;
-mod set_sniper_fee_duration;
-mod swap;
 mod whitelist;
 
 use claim::*;
 use claim_seeker::*;
-use close::*;
 use initialize::*;
-use log::*;
-use mine::*;
-use open::*;
+use initialize_square::*;
+use prospect::*;
 use reset::*;
 use set_admin::*;
-use set_block_duration::*;
 use set_fee_collector::*;
-use set_fee_rate::*;
-use set_sniper_fee_duration::*;
-use swap::*;
 
 use ore_api::instruction::*;
 use steel::*;
@@ -42,23 +30,19 @@ pub fn process_instruction(
     match ix {
         // User
         OreInstruction::Claim => process_claim(accounts, data)?,
-        OreInstruction::Open => process_open(accounts, data)?,
-        OreInstruction::Close => process_close(accounts, data)?,
-        OreInstruction::Log => process_log(accounts, data)?,
-        OreInstruction::Mine => process_mine(accounts, data)?,
-        OreInstruction::Swap => process_swap(accounts, data)?,
-        OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
+        OreInstruction::InitializeSquare => process_initialize_square(accounts, data)?,
+        OreInstruction::Prospect => process_prospect(accounts, data)?,
+        OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Admin
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
-        OreInstruction::SetBlockDuration => process_set_block_duration(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
-        OreInstruction::SetFeeRate => process_set_fee_rate(accounts, data)?,
-        OreInstruction::SetSniperFeeDuration => process_set_sniper_fee_duration(accounts, data)?,
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
+
+        _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

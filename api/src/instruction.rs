@@ -5,20 +5,14 @@ use steel::*;
 pub enum OreInstruction {
     // User
     Claim = 0,
-    Log = 1,
-    Mine = 2,
-    Swap = 3,
-    Initialize = 4,
-    Open = 5,
-    Close = 6,
-    Reset = 7,
+    Initialize = 1,
+    InitializeSquare = 2,
+    Prospect = 3,
+    Reset = 4,
 
     // Admin
     SetAdmin = 8,
-    SetBlockDuration = 9,
     SetFeeCollector = 10,
-    SetFeeRate = 11,
-    SetSniperFeeDuration = 12,
 
     // Seeker
     ClaimSeeker = 13,
@@ -32,13 +26,11 @@ pub struct Claim {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Open {
-    pub id: [u8; 8],
-}
+pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Close {}
+pub struct InitializeSquare {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -46,12 +38,10 @@ pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Initialize {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Log {}
-
+pub struct Prospect {
+    pub amount: [u8; 8],
+    pub square_id: [u8; 8],
+}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
@@ -108,16 +98,10 @@ pub struct SetSniperFeeDuration {
 pub struct ClaimSeeker {}
 
 instruction!(OreInstruction, Claim);
-instruction!(OreInstruction, Open);
-instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Reset);
+instruction!(OreInstruction, Prospect);
 instruction!(OreInstruction, Initialize);
-instruction!(OreInstruction, Log);
-instruction!(OreInstruction, Mine);
-instruction!(OreInstruction, Swap);
+instruction!(OreInstruction, InitializeSquare);
 instruction!(OreInstruction, SetAdmin);
-instruction!(OreInstruction, SetBlockDuration);
 instruction!(OreInstruction, SetFeeCollector);
-instruction!(OreInstruction, SetFeeRate);
-instruction!(OreInstruction, SetSniperFeeDuration);
 instruction!(OreInstruction, ClaimSeeker);
