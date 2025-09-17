@@ -16,7 +16,6 @@ pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Progr
     };
     signer_info.is_signer()?;
     mint_info.has_owner(&spl_token_2022::ID)?;
-    // token_info.as_associated_token_account(&signer_info.key, &mint_info.key)?;
 
     // Load mint.
     let mint_data = mint_info.try_borrow_data()?;

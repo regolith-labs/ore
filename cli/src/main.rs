@@ -51,6 +51,9 @@ async fn main() {
         "initialize_squares" => {
             initialize_squares(&rpc, &payer).await.unwrap();
         }
+        "redeem" => {
+            redeem(&rpc, &payer).await.unwrap();
+        }
         "reset" => {
             reset(&rpc, &payer).await.unwrap();
         }
