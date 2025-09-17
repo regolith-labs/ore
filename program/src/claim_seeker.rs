@@ -8,7 +8,7 @@ use spl_token_2022::{
     pod::{PodCOption, PodMint},
 };
 
-/// Claims ore for seeker device.
+/// Claims ORE for seeker device.
 pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, mint_info, _token_info] = accounts else {

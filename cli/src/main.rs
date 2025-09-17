@@ -132,6 +132,17 @@ async fn claim_ore(
     Ok(())
 }
 
+async fn redeem(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
+    let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
+    let ix = ore_api::sdk::redeem(payer.pubkey(), amount);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
 async fn reset(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
@@ -244,7 +255,7 @@ async fn log_miner(
     println!("Miner");
     println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
-    println!("  commits: {:?}", miner.commits);
+    println!("  prospects: {:?}", miner.prospects);
     println!("  rewards_sol: {}", miner.rewards_sol);
     println!("  rewards_ore: {}", miner.rewards_ore);
     println!("  round_id: {}", miner.round_id);
@@ -289,7 +300,7 @@ fn print_board(board: Board, clock: &Clock) {
     println!("  Slot hash: {:?}", board.slot_hash);
     println!("  Start slot: {}", board.start_slot);
     println!("  End slot: {}", board.end_slot);
-    println!("  Commits: {:?}", board.commits);
+    println!("  Prospects: {:?}", board.prospects);
     println!("  Total prospects: {}", board.total_prospects);
     println!("  Total vaulted: {}", board.total_vaulted);
     println!("  Total winnings: {}", board.total_winnings);

@@ -7,11 +7,11 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Board {
-    /// The commits for the round.
-    pub commits: [u64; 25],
-
     /// The round number.
     pub id: u64,
+
+    /// The prospects for the round.
+    pub prospects: [u64; 25],
 
     /// The timestamp at which the block starts mining.
     pub start_at: i64,
@@ -25,8 +25,8 @@ pub struct Board {
     /// The hash of the end slot, provided by solana, used for random number generation.
     pub slot_hash: [u8; 32],
 
-    /// The top winner of the round.
-    pub top_winner: Pubkey,
+    /// The top miner of the round.
+    pub top_miner: Pubkey,
 
     /// The total amount of SOL prospected in the round.
     pub total_prospects: u64,

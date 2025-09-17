@@ -113,6 +113,27 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
     }
 }
 
+pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
+    let mint_address = MINT_ADDRESS;
+    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let treasury_address = TREASURY_ADDRESS;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(sender_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: Redeem {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 // let [signer_info, board_info, mint_info, treasury_info, reserve_tokens_info, vault_info, system_program, token_program, slot_hashes_sysvar] =
 
 pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {

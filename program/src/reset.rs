@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, slot_hashes::SlotHashes};
+use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Claims a block reward.
@@ -28,9 +28,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
-    sol_log("A");
-
-    // Mint tokens to the boost reserve.
+    // Mint tokens to the boost program.
     mint_to_signed(
         mint_info,
         reserve_tokens_info,
@@ -40,102 +38,78 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
-    sol_log("B");
-
-    // Sample slot hashes.
-    let (winning_square, square_commits) =
+    // Sample slot hash.
+    let (winning_square, square_prospects) =
         if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
             board.slot_hash = slot_hash;
             let winning_square = get_winning_square(&slot_hash);
-            let square_commits = board.commits[winning_square as usize];
-            (winning_square, square_commits)
+            let square_prospects = board.prospects[winning_square as usize];
+            (winning_square, square_prospects)
         } else {
             // Cannot get slot hash. No one wins.
             board.slot_hash = [u8::MAX; 32];
             (u64::MAX, 0)
         };
 
-    sol_log("C");
-
     // No one won. Vault all prospects.
-    if square_commits == 0 {
+    if square_prospects == 0 {
         board.total_vaulted = board.total_prospects;
         treasury.balance += board.total_prospects;
         board_info.send(board.total_prospects, &treasury_info);
         return Ok(());
     }
 
-    sol_log("D");
-
     // Get winnings amount (prospects on all non-winning squares).
     let mut winnings = 0;
-    for (i, commits) in board.commits.iter().enumerate() {
+    for (i, prospects) in board.prospects.iter().enumerate() {
         if i as u64 != winning_square {
-            winnings += commits;
+            winnings += prospects;
         }
     }
 
-    sol_log("E");
-
-    // Get vault amount.
-    let vault_amount = winnings / 10; // Vault 10% of winnings.
-    board.total_vaulted = vault_amount;
+    // Get vault amount (backing ORE floor price with SOL).
+    let vault_amount = winnings / 10; // 10% of winnings.
     let winnings = winnings - vault_amount;
-    // board_info.send(vault_amount, &treasury_info);
+    board.total_vaulted = vault_amount;
     treasury.balance += vault_amount;
 
-    sol_log("F");
-
-    // Payout winnings to miners.
-    let mut top_winner = None;
-    let mut top_winner_commits = 0;
+    // Record miner rewards.
+    let mut top_miner = None;
+    let mut top_miner_prospects = 0;
     let mut rewards_sol = [0; 16];
     let mut checksum = 0;
     for (i, miner_info) in miner_accounts.iter().enumerate() {
-        sol_log("G");
-        // Transfer winnings to miner.
         let miner = miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.round_id == board.id)?;
-        let miner_commits = miner.commits[winning_square as usize];
-        let rewards = miner_commits + (winnings * miner_commits / square_commits); // Winners get their own prospect back plus their share of the winnings.
+        let miner_prospects = miner.prospects[winning_square as usize];
+        let rewards = miner_prospects + (winnings * miner_prospects / square_prospects); // Winners get their own prospect back plus their share of the winnings.
+        checksum += miner_prospects;
         miner.rewards_sol += rewards;
         miner.lifetime_rewards_sol += rewards;
-        checksum += miner_commits;
         rewards_sol[i] = rewards;
-        // board_info.send(rewards, &miner_info);
 
         // Find the top winner.
-        if miner_commits > top_winner_commits {
-            sol_log("H");
-            top_winner_commits = miner_commits;
-            top_winner = Some(i);
-            // top_winner = Some(miner);
+        if miner_prospects > top_miner_prospects {
+            top_miner_prospects = miner_prospects;
+            top_miner = Some(i);
         }
     }
 
-    sol_log("I");
-
     // Verify checksum.
-    if checksum != square_commits {
+    if checksum != square_prospects {
         // This can only happen if the caller didn't provide full set of winning miners.
-        sol_log("J");
         return Err(ProgramError::InvalidAccountData);
     }
 
-    sol_log("K");
-
-    // Payout reward to top winner.
-    if let Some(i) = top_winner {
-        sol_log("L");
+    // Payout reward to top miner.
+    if let Some(i) = top_miner {
         let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
         let mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
         if mint_amount > 0 {
-            // sol_log("M");
             miner.rewards_ore += mint_amount;
             miner.lifetime_rewards_ore += mint_amount;
-            board.top_winner = miner.authority;
-            // sol_log("M2");
+            board.top_miner = miner.authority;
             mint_to_signed(
                 mint_info,
                 treasury_tokens_info,
@@ -144,37 +118,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 mint_amount,
                 &[TREASURY],
             )?;
-            // sol_log("N");
         }
-
-        // miner.rewards_ore += rewards_sol[i];
-        // miner.lifetime_rewards_ore += rewards_sol[i];
-        // board.top_winner = miner.authority;
     }
-
-    // if let Some(miner) = top_winner {
-    //     sol_log("L");
-    //     let mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
-    //     sol_log(&format!("mint_amount: {}", mint_amount));
-    //     if mint_amount > 0 {
-    //         sol_log("M");
-    //         miner.rewards_ore += mint_amount;
-    //         miner.lifetime_rewards_ore += mint_amount;
-    //         board.top_winner = miner.authority;
-    //         sol_log("M2");
-    //         mint_to_signed(
-    //             mint_info,
-    //             treasury_tokens_info,
-    //             treasury_info,
-    //             token_program,
-    //             mint_amount,
-    //             &[TREASURY],
-    //         )?;
-    //         sol_log("N");
-    //     }
-    // }
-
-    sol_log("O");
 
     // Update board.
     board.total_winnings = winnings;
@@ -184,8 +129,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     for (i, miner_info) in miner_accounts.iter().enumerate() {
         board_info.send(rewards_sol[i], &miner_info);
     }
-
-    // Send vault amount to treasury.
 
     Ok(())
 }

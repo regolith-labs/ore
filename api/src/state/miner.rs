@@ -10,8 +10,8 @@ pub struct Miner {
     /// The authority of this miner account.
     pub authority: Pubkey,
 
-    /// The miner's committed square in the current round round.
-    pub commits: [u64; 25],
+    /// The miner's prospects in the current round.
+    pub prospects: [u64; 25],
 
     /// The amount of SOL this miner can claim.
     pub rewards_sol: u64,

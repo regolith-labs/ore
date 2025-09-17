@@ -43,7 +43,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         )?;
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
-        miner.commits = [0; 25];
+        miner.prospects = [0; 25];
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
         miner.round_id = board.id;
@@ -58,7 +58,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Reset board.
     if board.slot_hash != [0; 32] {
-        board.commits = [0; 25];
+        board.prospects = [0; 25];
         board.id += 1;
         board.slot_hash = [0; 32];
         board.start_slot = clock.slot;
@@ -70,7 +70,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Reset miner
     if miner.round_id != board.id {
-        miner.commits = [0; 25];
+        miner.prospects = [0; 25];
         miner.round_id = board.id;
     }
 
@@ -86,17 +86,17 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let amount = amount - fee;
 
     // Update miner
-    let is_first_play_on_square = miner.commits[square_id as usize] == 0;
-    miner.commits[square_id as usize] += amount;
+    let is_first_move = miner.prospects[square_id as usize] == 0;
+    miner.prospects[square_id as usize] += amount;
 
     // Update square
-    if is_first_play_on_square {
+    if is_first_move {
         square.miners[square.count as usize] = *signer_info.key;
         square.count += 1;
     }
 
     // Update board
-    board.commits[square_id as usize] += amount;
+    board.prospects[square_id as usize] += amount;
     board.total_prospects += amount;
 
     // Transfer prospects.
