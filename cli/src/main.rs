@@ -30,6 +30,9 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
+        "boost" => {
+            boost(&rpc, &payer).await.unwrap();
+        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -86,6 +89,15 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn boost(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::boost(payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn keys() -> Result<(), anyhow::Error> {
@@ -282,7 +294,7 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let config = get_config(&rpc).await?;
     println!("Config");
     println!("  admin: {}", config.admin);
-    println!("  block_duration: {}", config.block_duration);
+    println!("  last_boost: {}", config.last_boost);
     println!("  sniper_fee_duration: {}", config.sniper_fee_duration);
     println!("  fee_collector: {}", config.fee_collector);
     println!("  fee_rate: {}", config.fee_rate);

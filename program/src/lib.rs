@@ -1,3 +1,4 @@
+mod boost;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
@@ -10,6 +11,7 @@ mod set_admin;
 mod set_fee_collector;
 mod whitelist;
 
+use boost::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
@@ -33,6 +35,7 @@ pub fn process_instruction(
 
     match ix {
         // User
+        OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,

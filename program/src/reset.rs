@@ -7,7 +7,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Load accounts.
     let clock = Clock::get()?;
     let (required_accounts, miner_accounts) = accounts.split_at(9);
-    let [signer_info, board_info, mint_info, reserve_tokens_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -18,25 +18,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|b| b.slot_hash == [0; 32])?
         .assert_mut(|b| clock.slot >= b.end_slot)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    reserve_tokens_info
-        .has_address(&BOOST_RESERVE_TOKEN)?
-        .as_token_account()?
-        .assert(|t| t.mint() == MINT_ADDRESS)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
-
-    // Mint tokens to the boost program.
-    mint_to_signed(
-        mint_info,
-        reserve_tokens_info,
-        treasury_info,
-        token_program,
-        ONE_ORE / 3,
-        &[TREASURY],
-    )?;
 
     // Sample slot hash.
     let (winning_square, square_prospects) =

@@ -4,13 +4,14 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    ClaimSOL = 0,
-    ClaimORE = 1,
-    Initialize = 2,
-    InitializeSquares = 3,
-    Prospect = 4,
-    Redeem = 5,
-    Reset = 6,
+    Boost = 0,
+    ClaimSOL = 1,
+    ClaimORE = 2,
+    Initialize = 3,
+    InitializeSquares = 4,
+    Prospect = 5,
+    Redeem = 6,
+    Reset = 7,
 
     // Admin
     SetAdmin = 8,
@@ -19,6 +20,10 @@ pub enum OreInstruction {
     // Seeker
     ClaimSeeker = 13,
 }
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Boost {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -111,6 +116,7 @@ pub struct SetSniperFeeDuration {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
+instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
 instruction!(OreInstruction, Redeem);
