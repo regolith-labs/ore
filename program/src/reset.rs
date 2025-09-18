@@ -35,7 +35,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         } else {
             // Cannot get slot hash. No one wins.
             board.slot_hash = [u8::MAX; 32];
-            (u64::MAX, 0)
+            (u64::MAX as usize, 0)
         };
 
     // No one won. Vault all prospects.
@@ -49,7 +49,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Get winnings amount (prospects on all non-winning squares).
     let mut winnings = 0;
     for (i, prospects) in board.prospects.iter().enumerate() {
-        if i as u64 != winning_square {
+        if i != winning_square {
             winnings += prospects;
         }
     }
