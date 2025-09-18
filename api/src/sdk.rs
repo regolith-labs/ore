@@ -29,6 +29,47 @@ pub fn boost(signer: Pubkey) -> Instruction {
     }
 }
 
+// let [signer_info, authority_info, miner_info, miner_tokens_info, mint_info, recipient_info, system_program, token_program, associated_token_program] =
+
+pub fn migrate_miner(signer: Pubkey, authority: Pubkey) -> Instruction {
+    let miner_address = miner_pda(authority).0;
+    let miner_tokens_address = get_associated_token_address(&miner_address, &MINT_ADDRESS);
+    let recipient_address = get_associated_token_address(&authority, &MINT_ADDRESS);
+    let mint_address = MINT_ADDRESS;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(authority, false),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new(miner_tokens_address, false),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        ],
+        data: MigrateMiner {}.to_bytes(),
+    }
+}
+
+// let [signer_info, config_info, treasury_info, system_program] = accounts else {
+
+pub fn migrate_treasury(signer: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    let treasury_address = treasury_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateTreasury {}.to_bytes(),
+    }
+}
+
 // let [signer_info, board_info, config_info, mint_info, treasury_info, vault_info, system_program, token_program, associated_token_program] =
 
 pub fn initialize(signer: Pubkey) -> Instruction {

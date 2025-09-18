@@ -66,6 +66,15 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
+        "migrate_all_miners" => {
+            migrate_all_miners(&rpc, &payer).await.unwrap();
+        }
+        "migrate_miner" => {
+            migrate_miner(&rpc, &payer).await.unwrap();
+        }
+        "migrate_treasury" => {
+            migrate_treasury(&rpc, &payer).await.unwrap();
+        }
         "prospect" => {
             prospect(&rpc, &payer).await.unwrap();
         }
@@ -103,8 +112,12 @@ async fn boost(
 async fn keys() -> Result<(), anyhow::Error> {
     let treasury_address = ore_api::state::treasury_pda().0;
     let config_address = ore_api::state::config_pda().0;
+    let address = pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS");
+    let miner_address = ore_api::state::miner_pda(address).0;
     println!("Treasury: {}", treasury_address);
     println!("Config: {}", config_address);
+    println!("Miner: {}", miner_address);
+
     // let keys = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
     // println!("Keys: {:?}", keys);
 
@@ -174,6 +187,43 @@ async fn reset(
     };
     let reset_ix = ore_api::sdk::reset(payer.pubkey(), miners);
     submit_transaction(rpc, payer, &[reset_ix]).await?;
+    Ok(())
+}
+
+async fn migrate_miner(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let address = pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS");
+    let ix = ore_api::sdk::migrate_miner(payer.pubkey(), address);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn migrate_all_miners(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let miners_old = get_miners_old(rpc).await?;
+    for (i, miner) in miners_old.iter().enumerate() {
+        println!(
+            "[{}/{}] Migrating miner: {}",
+            i + 1,
+            miners_old.len(),
+            miner.1.authority
+        );
+        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), miner.1.authority);
+        submit_transaction(rpc, payer, &[ix]).await?;
+    }
+    Ok(())
+}
+
+async fn migrate_treasury(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::migrate_treasury(payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
@@ -371,6 +421,13 @@ async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::
     Ok(*miner)
 }
 
+async fn get_miner_old(rpc: &RpcClient, authority: Pubkey) -> Result<MinerOLD, anyhow::Error> {
+    let miner_pda = ore_api::state::miner_pda(authority);
+    let account = rpc.get_account(&miner_pda.0).await?;
+    let miner = MinerOLD::try_from_bytes(&account.data)?;
+    Ok(*miner)
+}
+
 async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     let data = rpc.get_account_data(&solana_sdk::sysvar::clock::ID).await?;
     let clock = bincode::deserialize::<Clock>(&data)?;
@@ -379,6 +436,11 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
+    Ok(miners)
+}
+
+async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
+    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 

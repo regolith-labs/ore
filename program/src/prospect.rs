@@ -1,6 +1,8 @@
 use ore_api::prelude::*;
 use steel::*;
 
+use crate::whitelist::AUTHORIZED_ACCOUNTS;
+
 /// Claims a block reward.
 pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -31,6 +33,11 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .as_account_mut::<Square>(&ore_api::ID)?
         .assert_mut(|s| s.id == square_id)?;
     system_program.is_program(&system_program::ID)?;
+
+    // Chekc whitelist
+    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
+        return Err(ProgramError::InvalidAccountData);
+    }
 
     // Create miner.
     let miner = if miner_info.data_is_empty() {
