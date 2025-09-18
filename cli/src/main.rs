@@ -375,13 +375,6 @@ async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::
     Ok(*miner)
 }
 
-async fn get_miner_old(rpc: &RpcClient, authority: Pubkey) -> Result<MinerOLD, anyhow::Error> {
-    let miner_pda = ore_api::state::miner_pda(authority);
-    let account = rpc.get_account(&miner_pda.0).await?;
-    let miner = MinerOLD::try_from_bytes(&account.data)?;
-    Ok(*miner)
-}
-
 async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     let data = rpc.get_account_data(&solana_sdk::sysvar::clock::ID).await?;
     let clock = bincode::deserialize::<Clock>(&data)?;
@@ -390,11 +383,6 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
-    Ok(miners)
-}
-
-async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
-    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 
