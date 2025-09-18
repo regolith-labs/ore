@@ -335,7 +335,7 @@ async fn get_slot_hashes(rpc: &RpcClient) -> Result<SlotHashes, anyhow::Error> {
 }
 
 async fn get_square(rpc: &RpcClient) -> Result<Square, anyhow::Error> {
-    let square_pda = ore_api::state::square_pda(0);
+    let square_pda = ore_api::state::square_pda();
     let account = rpc.get_account(&square_pda.0).await?;
     let square = Square::try_from_bytes(&account.data)?;
     Ok(*square)

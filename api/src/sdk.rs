@@ -123,12 +123,14 @@ pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
 pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
     let board_address = board_pda().0;
     let mint_address = MINT_ADDRESS;
+    let square_address = square_pda().0;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
     let mut accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
         AccountMeta::new(mint_address, false),
+        AccountMeta::new(square_address, false),
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_tokens_address, false),
         AccountMeta::new_readonly(system_program::ID, false),
@@ -153,7 +155,7 @@ pub fn prospect(signer: Pubkey, fee_collector: Pubkey, amount: u64, square_id: u
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let miner_address = miner_pda(signer).0;
-    let square_address = square_pda(0).0;
+    let square_address = square_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![

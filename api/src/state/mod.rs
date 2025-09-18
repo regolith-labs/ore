@@ -44,8 +44,8 @@ pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[MINER, &authority.to_bytes()], &crate::ID)
 }
 
-pub fn square_pda(id: u64) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[SQUARE, &id.to_le_bytes()], &crate::ID)
+pub fn square_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[SQUARE], &crate::ID)
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {
