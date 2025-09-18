@@ -66,15 +66,6 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
-        "migrate_all_miners" => {
-            migrate_all_miners(&rpc, &payer).await.unwrap();
-        }
-        "migrate_miner" => {
-            migrate_miner(&rpc, &payer).await.unwrap();
-        }
-        "migrate_treasury" => {
-            migrate_treasury(&rpc, &payer).await.unwrap();
-        }
         "prospect" => {
             prospect(&rpc, &payer).await.unwrap();
         }
@@ -187,43 +178,6 @@ async fn reset(
     };
     let reset_ix = ore_api::sdk::reset(payer.pubkey(), miners);
     submit_transaction(rpc, payer, &[reset_ix]).await?;
-    Ok(())
-}
-
-async fn migrate_miner(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let address = pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS");
-    let ix = ore_api::sdk::migrate_miner(payer.pubkey(), address);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn migrate_all_miners(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let miners_old = get_miners_old(rpc).await?;
-    for (i, miner) in miners_old.iter().enumerate() {
-        println!(
-            "[{}/{}] Migrating miner: {}",
-            i + 1,
-            miners_old.len(),
-            miner.1.authority
-        );
-        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), miner.1.authority);
-        submit_transaction(rpc, payer, &[ix]).await?;
-    }
-    Ok(())
-}
-
-async fn migrate_treasury(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::migrate_treasury(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
