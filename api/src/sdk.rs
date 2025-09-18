@@ -156,19 +156,17 @@ pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
     }
 }
 
-// let [signer_info, board_info, mint_info, treasury_info, reserve_tokens_info, vault_info, system_program, token_program, slot_hashes_sysvar] =
+// let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
 
 pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
     let board_address = board_pda().0;
     let mint_address = MINT_ADDRESS;
     let treasury_address = TREASURY_ADDRESS;
-    let reserve_tokens_address = BOOST_RESERVE_TOKEN;
     let treasury_tokens_address = treasury_tokens_address();
     let mut accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
         AccountMeta::new(mint_address, false),
-        AccountMeta::new(reserve_tokens_address, false),
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_tokens_address, false),
         AccountMeta::new_readonly(system_program::ID, false),

@@ -70,6 +70,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         board.slot_hash = [0; 32];
         board.start_slot = clock.slot;
         board.end_slot = clock.slot + 150; // one minute
+        board.top_miner = Pubkey::default();
         board.total_prospects = 0;
         board.total_vaulted = 0;
         board.total_winnings = 0;

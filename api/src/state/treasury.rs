@@ -1,7 +1,5 @@
 use steel::*;
 
-use crate::state::treasury_pda;
-
 use super::OreAccount;
 
 /// Treasury is a singleton account which is the mint authority for the ORE token and the authority of

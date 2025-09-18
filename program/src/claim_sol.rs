@@ -17,7 +17,7 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         .assert_mut(|m| m.authority == *signer_info.key)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Load amount.
+    // Normalize amount.
     let amount = miner.rewards_sol.min(amount);
 
     // Update miner.

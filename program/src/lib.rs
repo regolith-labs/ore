@@ -41,7 +41,7 @@ pub fn process_instruction(
         OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::InitializeSquares => process_initialize_squares(accounts, data)?,
         OreInstruction::Prospect => process_prospect(accounts, data)?,
-        OreInstruction::Redeem => process_redeem(accounts, data)?,
+        OreInstruction::Redeem => panic!("not allowed"),
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Admin

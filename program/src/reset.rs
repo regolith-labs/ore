@@ -6,7 +6,7 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(9);
+    let (required_accounts, miner_accounts) = accounts.split_at(8);
     let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
         required_accounts
     else {

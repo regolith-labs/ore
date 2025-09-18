@@ -40,7 +40,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         recipient_info.as_associated_token_account(signer_info.key, mint_info.key)?;
     }
 
-    // Load amount.
+    // Normalize amount.
     let amount = miner.rewards_ore.min(amount);
 
     // Update miner.
