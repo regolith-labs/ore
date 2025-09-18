@@ -8,7 +8,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Parse data.
     let args = Prospect::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
-    let square_id = u64::from_le_bytes(args.square_id);
+    let square_id = usize::from_le_bytes(args.square_id);
 
     // Load accounts.
     let clock = Clock::get()?;
@@ -29,12 +29,10 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .has_address(&config.fee_collector)?
         .is_writable()?;
     miner_info.is_writable()?;
-    let square = square_info
-        .as_account_mut::<Square>(&ore_api::ID)?
-        .assert_mut(|s| s.id == square_id)?;
+    let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Chekc whitelist
+    // Check whitelist
     if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -65,6 +63,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Reset board.
     if board.slot_hash != [0; 32] {
+        // Reset board
         board.prospects = [0; 25];
         board.id += 1;
         board.slot_hash = [0; 32];
@@ -74,6 +73,10 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         board.total_prospects = 0;
         board.total_vaulted = 0;
         board.total_winnings = 0;
+
+        // Reset squares
+        square.count = [0; 25];
+        square.miners = [[Pubkey::default(); 16]; 25];
     }
 
     // Reset miner
@@ -82,29 +85,22 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         miner.round_id = board.id;
     }
 
-    // Reset square
-    if square.round_id != board.id {
-        square.count = 0;
-        square.miners = [Pubkey::default(); 16];
-        square.round_id = board.id;
-    }
-
     // Normalize amount.
     let fee = amount / 100;
     let amount = amount - fee;
 
     // Update miner
-    let is_first_move = miner.prospects[square_id as usize] == 0;
-    miner.prospects[square_id as usize] += amount;
+    let is_first_move = miner.prospects[square_id] == 0;
+    miner.prospects[square_id] += amount;
 
     // Update square
     if is_first_move {
-        square.miners[square.count as usize] = *signer_info.key;
-        square.count += 1;
+        square.miners[square_id][square.count[square_id]] = *signer_info.key;
+        square.count[square_id] += 1;
     }
 
     // Update board
-    board.prospects[square_id as usize] += amount;
+    board.prospects[square_id] += amount;
     board.total_prospects += amount;
 
     // Transfer prospects.

@@ -7,7 +7,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Load accounts.
     let clock = Clock::get()?;
     let (required_accounts, miner_accounts) = accounts.split_at(8);
-    let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -18,6 +18,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .assert_mut(|b| b.slot_hash == [0; 32])?
         .assert_mut(|b| clock.slot >= b.end_slot)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
@@ -29,7 +30,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
             board.slot_hash = slot_hash;
             let winning_square = get_winning_square(&slot_hash);
-            let square_prospects = board.prospects[winning_square as usize];
+            let square_prospects = board.prospects[winning_square];
             (winning_square, square_prospects)
         } else {
             // Cannot get slot hash. No one wins.
@@ -68,12 +69,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         let miner = miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.round_id == board.id)?;
-        let miner_prospects = miner.prospects[winning_square as usize];
+        let miner_prospects = miner.prospects[winning_square];
         let rewards = miner_prospects + (winnings * miner_prospects / square_prospects); // Winners get their own prospect back plus their share of the winnings.
         checksum += miner_prospects;
         miner.rewards_sol += rewards;
         miner.lifetime_rewards_sol += rewards;
         rewards_sol[i] = rewards;
+
+        // Check if miner was provided in correct order.
+        if miner.authority != square.miners[winning_square][i] {
+            return Err(ProgramError::InvalidAccountData);
+        }
 
         // Find the top winner.
         if miner_prospects > top_miner_prospects {
@@ -134,7 +140,7 @@ pub fn get_slot_hash(
     Ok(slot_hash)
 }
 
-fn get_winning_square(slot_hash: &[u8]) -> u64 {
+fn get_winning_square(slot_hash: &[u8]) -> usize {
     // Use slot hash to generate a random u64
     let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
     let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
@@ -143,5 +149,5 @@ fn get_winning_square(slot_hash: &[u8]) -> u64 {
     let r = r1 ^ r2 ^ r3 ^ r4;
 
     // Returns a value in the range [0, 24] inclusive
-    r % 25
+    (r % 25) as usize
 }

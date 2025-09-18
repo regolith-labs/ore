@@ -51,9 +51,6 @@ async fn main() {
         "initialize" => {
             initialize(&rpc, &payer).await.unwrap();
         }
-        "initialize_squares" => {
-            initialize_squares(&rpc, &payer).await.unwrap();
-        }
         "redeem" => {
             redeem(&rpc, &payer).await.unwrap();
         }
@@ -124,15 +121,6 @@ async fn initialize(
     Ok(())
 }
 
-async fn initialize_squares(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::initialize_squares(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
 async fn claim_sol(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
@@ -171,10 +159,10 @@ async fn reset(
     let mut miners = vec![];
     if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
         let id = get_winning_square(&slot_hash.to_bytes());
-        let square = get_square(rpc, id).await?;
+        let square = get_square(rpc).await?;
         println!("Winning square: {}", id);
         println!("Miners: {:?}", square.miners);
-        miners = square.miners.to_vec();
+        miners = square.miners[id as usize].to_vec();
     };
     let reset_ix = ore_api::sdk::reset(payer.pubkey(), miners);
     submit_transaction(rpc, payer, &[reset_ix]).await?;
@@ -253,13 +241,11 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 
 async fn log_square(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let id = std::env::var("ID").expect("Missing ID env var");
-    let id = u64::from_str(&id).expect("Invalid ID");
-    let square = get_square(rpc, id).await?;
+    let id = usize::from_str(&id).expect("Invalid ID");
+    let square = get_square(rpc).await?;
     println!("Square");
-    println!("  id: {}", square.id);
-    println!("  count: {}", square.count);
-    println!("  round_id: {}", square.round_id);
-    println!("  miners: {:?}", square.miners);
+    println!("  count: {:?}", square.count[id]);
+    println!("  miners: {:?}", square.miners[id]);
     Ok(())
 }
 
@@ -320,6 +306,7 @@ fn print_board(board: Board, clock: &Clock) {
     println!("  Start slot: {}", board.start_slot);
     println!("  End slot: {}", board.end_slot);
     println!("  Prospects: {:?}", board.prospects);
+    println!("  Top miner: {:?}", board.top_miner);
     println!("  Total prospects: {}", board.total_prospects);
     println!("  Total vaulted: {}", board.total_vaulted);
     println!("  Total winnings: {}", board.total_winnings);
@@ -347,8 +334,8 @@ async fn get_slot_hashes(rpc: &RpcClient) -> Result<SlotHashes, anyhow::Error> {
     Ok(slot_hashes)
 }
 
-async fn get_square(rpc: &RpcClient, id: u64) -> Result<Square, anyhow::Error> {
-    let square_pda = ore_api::state::square_pda(id);
+async fn get_square(rpc: &RpcClient) -> Result<Square, anyhow::Error> {
+    let square_pda = ore_api::state::square_pda(0);
     let account = rpc.get_account(&square_pda.0).await?;
     let square = Square::try_from_bytes(&account.data)?;
     Ok(*square)

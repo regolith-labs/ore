@@ -54,44 +54,6 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     }
 }
 
-// let [signer_info, square_info, system_program] = accounts else {
-
-pub fn initialize_squares(signer: Pubkey) -> Instruction {
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new(square_pda(0).0, false),
-            AccountMeta::new(square_pda(1).0, false),
-            AccountMeta::new(square_pda(2).0, false),
-            AccountMeta::new(square_pda(3).0, false),
-            AccountMeta::new(square_pda(4).0, false),
-            AccountMeta::new(square_pda(5).0, false),
-            AccountMeta::new(square_pda(6).0, false),
-            AccountMeta::new(square_pda(7).0, false),
-            AccountMeta::new(square_pda(8).0, false),
-            AccountMeta::new(square_pda(9).0, false),
-            AccountMeta::new(square_pda(10).0, false),
-            AccountMeta::new(square_pda(11).0, false),
-            AccountMeta::new(square_pda(12).0, false),
-            AccountMeta::new(square_pda(13).0, false),
-            AccountMeta::new(square_pda(14).0, false),
-            AccountMeta::new(square_pda(15).0, false),
-            AccountMeta::new(square_pda(16).0, false),
-            AccountMeta::new(square_pda(17).0, false),
-            AccountMeta::new(square_pda(18).0, false),
-            AccountMeta::new(square_pda(19).0, false),
-            AccountMeta::new(square_pda(20).0, false),
-            AccountMeta::new(square_pda(21).0, false),
-            AccountMeta::new(square_pda(22).0, false),
-            AccountMeta::new(square_pda(23).0, false),
-            AccountMeta::new(square_pda(24).0, false),
-        ],
-        data: InitializeSquares {}.to_bytes(),
-    }
-}
-
 pub fn claim_sol(signer: Pubkey, amount: u64) -> Instruction {
     let miner_address = miner_pda(signer).0;
     Instruction {
@@ -191,7 +153,7 @@ pub fn prospect(signer: Pubkey, fee_collector: Pubkey, amount: u64, square_id: u
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let miner_address = miner_pda(signer).0;
-    let square_address = square_pda(square_id).0;
+    let square_address = square_pda(0).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
