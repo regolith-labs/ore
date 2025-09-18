@@ -95,7 +95,7 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Update square
     if is_first_move {
-        square.miners[square_id][square.count[square_id]] = *signer_info.key;
+        square.miners[square_id][square.count[square_id] as usize] = *signer_info.key;
         square.count[square_id] += 1;
     }
 

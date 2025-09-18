@@ -26,12 +26,6 @@ pub enum OreAccount {
     Square = 106,
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OreAccountOLD {
-    SquareOLD = 106,
-}
-
 pub fn board_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[BOARD], &crate::ID)
 }
