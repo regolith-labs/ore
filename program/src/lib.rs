@@ -3,6 +3,7 @@ mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
 mod initialize;
+mod log;
 mod prospect;
 mod redeem;
 mod reset;
@@ -15,6 +16,7 @@ use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
 use initialize::*;
+use log::*;
 use prospect::*;
 use redeem::*;
 use reset::*;
@@ -36,6 +38,7 @@ pub fn process_instruction(
         OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
+        OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Prospect => process_prospect(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
