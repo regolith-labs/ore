@@ -136,6 +136,7 @@ pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
 
 pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
     let board_address = board_pda().0;
+    let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
     let square_address = square_pda().0;
     let treasury_address = TREASURY_ADDRESS;
@@ -143,6 +144,7 @@ pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
+        AccountMeta::new(config_address, false),
         AccountMeta::new(mint_address, false),
         AccountMeta::new(square_address, false),
         AccountMeta::new(treasury_address, false),
