@@ -14,7 +14,7 @@ pub fn process_boost(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let config = config_info
         .as_account_mut::<Config>(&ore_api::ID)?
         .assert_mut(|c| clock.unix_timestamp >= c.last_boost + (10 * ONE_MINUTE))?;
-    mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     reserve_tokens_info
         .has_address(&BOOST_RESERVE_TOKEN)?
         .as_token_account()?
@@ -26,12 +26,13 @@ pub fn process_boost(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     config.last_boost = clock.unix_timestamp;
 
     // Mint tokens to the boost program.
+    let mint_amount = (3 * ONE_ORE).min(MAX_SUPPLY - mint.supply());
     mint_to_signed(
         mint_info,
         reserve_tokens_info,
         treasury_info,
         token_program,
-        ONE_ORE * 3,
+        mint_amount,
         &[TREASURY],
     )?;
 
