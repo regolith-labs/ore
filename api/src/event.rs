@@ -1,11 +1,11 @@
+use serde::{Deserialize, Serialize};
 use steel::*;
-
 pub enum OreEvent {
     Reset = 0,
 }
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct ResetEvent {
     /// The event discriminator.
     pub disc: u64,

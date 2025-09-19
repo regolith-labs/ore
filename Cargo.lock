@@ -2378,6 +2378,7 @@ dependencies = [
  "const-crypto",
  "mpl-token-metadata",
  "num_enum",
+ "serde",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
