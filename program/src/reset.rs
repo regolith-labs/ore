@@ -41,9 +41,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // No one won. Vault all prospects.
     if square_prospects == 0 {
+        // Update board.
         board.total_vaulted = board.total_prospects;
         treasury.balance += board.total_prospects;
-        board_info.send(board.total_prospects, &treasury_info);
 
         // Emit event.
         program_log(
@@ -63,6 +63,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             }
             .to_bytes(),
         )?;
+
+        // Do SOL transfers.
+        board_info.send(board.total_prospects, &treasury_info);
 
         return Ok(());
     }
@@ -138,12 +141,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Update board.
     board.total_winnings = winnings;
 
-    // Do SOL transfers.
-    board_info.send(vault_amount, &treasury_info);
-    for (i, miner_info) in miner_accounts.iter().enumerate() {
-        board_info.send(rewards_sol[i], &miner_info);
-    }
-
     // Emit event.
     program_log(
         &[board_info.clone(), ore_program.clone()],
@@ -162,6 +159,12 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         }
         .to_bytes(),
     )?;
+
+    // Do SOL transfers.
+    board_info.send(vault_amount, &treasury_info);
+    for (i, miner_info) in miner_accounts.iter().enumerate() {
+        board_info.send(rewards_sol[i], &miner_info);
+    }
 
     Ok(())
 }
