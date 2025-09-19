@@ -16,6 +16,7 @@ use solana_sdk::{
     slot_hashes::SlotHashes,
     transaction::Transaction,
 };
+use spl_associated_token_account::get_associated_token_address;
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -78,6 +79,9 @@ async fn main() {
         "set_fee_collector" => {
             set_fee_collector(&rpc, &payer).await.unwrap();
         }
+        "ata" => {
+            ata(&rpc, &payer).await.unwrap();
+        }
         "claim_seeker" => {
             claim_seeker(&rpc, &payer).await.unwrap();
         }
@@ -86,6 +90,26 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn ata(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let user = pubkey!("TatxmzjCpMFurJuPbw4kGXK25MSYUVLgFy5A1o76mwS");
+    let token = pubkey!("8H8rPiWW4iTFCfEkSnf7jpqeNpFfvdH9gLouAL3Fe2Zx");
+    let ata = get_associated_token_address(&user, &token);
+    let ix = spl_associated_token_account::instruction::create_associated_token_account(
+        &payer.pubkey(),
+        &user,
+        &token,
+        &spl_token::ID,
+    );
+    submit_transaction(rpc, payer, &[ix]).await?;
+    let account = rpc.get_account(&ata).await?;
+    println!("ATA: {}", ata);
+    println!("Account: {:?}", account);
+    Ok(())
 }
 
 async fn boost(

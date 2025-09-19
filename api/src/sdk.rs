@@ -2,10 +2,24 @@ use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
 use crate::{
-    consts::{BOOST_RESERVE_TOKEN, MINT_ADDRESS, TREASURY_ADDRESS},
+    consts::{BOARD, BOOST_RESERVE_TOKEN, MINT_ADDRESS, TREASURY_ADDRESS},
     instruction::*,
     state::*,
 };
+
+pub fn log(signer: Pubkey, msg: &[u8]) -> Instruction {
+    let mut data = Log {}.to_bytes();
+    data.extend_from_slice(msg);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![AccountMeta::new(signer, true)],
+        data: data,
+    }
+}
+
+pub fn program_log(accounts: &[AccountInfo], msg: &[u8]) -> Result<(), ProgramError> {
+    invoke_signed(&log(*accounts[0].key, msg), accounts, &crate::ID, &[BOARD])
+}
 
 // let [signer_info, config_info, mint_info, reserve_tokens_info, treasury_info, system_program, token_program] =
 
@@ -135,6 +149,7 @@ pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
         AccountMeta::new(treasury_tokens_address, false),
         AccountMeta::new_readonly(system_program::ID, false),
         AccountMeta::new_readonly(spl_token::ID, false),
+        AccountMeta::new_readonly(crate::ID, false),
         AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
     ];
     for miner in miners {

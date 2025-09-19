@@ -6,8 +6,8 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(9);
-    let [signer_info, board_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
+    let (required_accounts, miner_accounts) = accounts.split_at(10);
+    let [signer_info, board_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -23,6 +23,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
     // Sample slot hash.
@@ -43,6 +44,26 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         board.total_vaulted = board.total_prospects;
         treasury.balance += board.total_prospects;
         board_info.send(board.total_prospects, &treasury_info);
+
+        // Emit event.
+        program_log(
+            &[board_info.clone(), ore_program.clone()],
+            ResetEvent {
+                disc: 0,
+                round_id: board.id,
+                start_slot: board.start_slot,
+                end_slot: board.end_slot,
+                winning_square: winning_square as u64,
+                top_miner: board.top_miner,
+                total_prospects: board.total_prospects,
+                total_vaulted: board.total_vaulted,
+                total_winnings: board.total_winnings,
+                total_minted: 0,
+                ts: clock.unix_timestamp,
+            }
+            .to_bytes(),
+        )?;
+
         return Ok(());
     }
 
@@ -95,9 +116,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Payout reward to top miner.
+    let mut mint_amount = 0;
     if let Some(i) = top_miner {
         let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
-        let mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
+        mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
         if mint_amount > 0 {
             miner.rewards_ore += mint_amount;
             miner.lifetime_rewards_ore += mint_amount;
@@ -121,6 +143,25 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     for (i, miner_info) in miner_accounts.iter().enumerate() {
         board_info.send(rewards_sol[i], &miner_info);
     }
+
+    // Emit event.
+    program_log(
+        &[board_info.clone(), ore_program.clone()],
+        ResetEvent {
+            disc: 0,
+            round_id: board.id,
+            start_slot: board.start_slot,
+            end_slot: board.end_slot,
+            winning_square: winning_square as u64,
+            top_miner: board.top_miner,
+            total_prospects: board.total_prospects,
+            total_vaulted: board.total_vaulted,
+            total_winnings: board.total_winnings,
+            total_minted: mint_amount,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

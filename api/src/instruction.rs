@@ -8,12 +8,13 @@ pub enum OreInstruction {
     ClaimSOL = 1,
     ClaimORE = 2,
     Initialize = 3,
+    Log = 4,
     Prospect = 5,
     Redeem = 6,
     Reset = 7,
 
     // Admin
-    SetAdmin = 8,
+    SetAdmin = 9,
     SetFeeCollector = 10,
 
     // Seeker
@@ -42,7 +43,7 @@ pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct InitializeSquares {}
+pub struct Log {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -115,17 +116,14 @@ pub struct SetSniperFeeDuration {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MigrateSquares {}
-
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
+instruction!(OreInstruction, Initialize);
+instruction!(OreInstruction, Log);
+instruction!(OreInstruction, Prospect);
 instruction!(OreInstruction, Redeem);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, Prospect);
-instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);
