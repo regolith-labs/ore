@@ -25,6 +25,9 @@ pub struct ResetEvent {
     /// The top miner of the round.
     pub top_miner: Pubkey,
 
+    /// The number of miners on the winning square.
+    pub num_winners: u64,
+
     /// The total amount of SOL prospected in the round.
     pub total_prospects: u64,
 
