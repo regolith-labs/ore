@@ -13,9 +13,8 @@ pub struct Config {
     // The last boost timestamp.
     pub last_boost: i64,
 
-    // The duration in slots for which the sniper fee is applied.
-    #[deprecated(since = "1.0.0", note = "Unused")]
-    pub sniper_fee_duration: u64,
+    // The minimum amount of SOL that can be prospect.
+    pub min_prospect_amount: u64,
 
     // The address that receives fees.
     pub fee_collector: Pubkey,

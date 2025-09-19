@@ -6,8 +6,8 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(10);
-    let [signer_info, board_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let (required_accounts, miner_accounts) = accounts.split_at(11);
+    let [signer_info, board_info, config_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -17,6 +17,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| b.slot_hash == [0; 32])?
         .assert_mut(|b| clock.slot >= b.end_slot)?;
+    let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
@@ -142,6 +143,24 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Update board.
     board.total_winnings = winnings;
 
+    // Update min prospect amount.
+    let capacity: u64 = 16 * 25;
+    let limit = capacity / 4;
+    let mut availability = 0;
+    for i in 0..25 {
+        availability += 16 - square.count[i];
+    }
+    if availability == 0 {
+        // If board is full, double the minimum prospect amount.
+        config.min_prospect_amount *= 2;
+    } else if availability < limit {
+        // If board is more than 75% full, reduce minimum prospect amount linearly.
+        let pct = (availability * 100) / capacity;
+        let chg = (25u64.saturating_sub(pct) * 100) / 75;
+        let dif = (config.min_prospect_amount * chg) / 100;
+        config.min_prospect_amount = config.min_prospect_amount.saturating_sub(dif);
+    }
+
     // Emit event.
     program_log(
         &[board_info.clone(), ore_program.clone()],
@@ -196,4 +215,29 @@ fn get_winning_square(slot_hash: &[u8]) -> usize {
 
     // Returns a value in the range [0, 24] inclusive
     (r % 25) as usize
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_winning_square() {
+        let capacity = 400u64;
+        let current = 1000u64;
+        let limit = capacity / 4;
+        for occupancy in 0..=capacity {
+            let available = capacity.saturating_sub(occupancy);
+            if available == 0 {
+                println!("[{}/{}] New: {}", occupancy, capacity, current * 2);
+            } else if available < limit {
+                let pct = (available * 100) / capacity;
+                let chg = (25u64.saturating_sub(pct) * 100) / 75;
+                let dif = (current * chg) / 100;
+                let new = current.saturating_sub(dif);
+                println!("[{}/{}] New: {}", occupancy, capacity, new);
+            } else {
+                println!("[{}/{}] New: {}", occupancy, capacity, current);
+            }
+        }
+        // assert!(false);
+    }
 }

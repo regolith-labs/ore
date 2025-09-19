@@ -37,6 +37,11 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         return Err(ProgramError::InvalidAccountData);
     }
 
+    // Check minimum amount.
+    if amount < config.min_prospect_amount {
+        return Err(ProgramError::InvalidAccountData);
+    }
+
     // Create miner.
     let miner = if miner_info.data_is_empty() {
         create_program_account::<Miner>(

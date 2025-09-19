@@ -309,9 +309,8 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("Config");
     println!("  admin: {}", config.admin);
     println!("  last_boost: {}", config.last_boost);
-    println!("  sniper_fee_duration: {}", config.sniper_fee_duration);
+    println!("  min_prospect_amount: {}", config.min_prospect_amount);
     println!("  fee_collector: {}", config.fee_collector);
-    println!("  fee_rate: {}", config.fee_rate);
     Ok(())
 }
 
