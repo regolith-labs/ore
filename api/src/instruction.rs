@@ -7,9 +7,9 @@ pub enum OreInstruction {
     Boost = 0,
     ClaimSOL = 1,
     ClaimORE = 2,
-    Initialize = 3,
-    Log = 4,
-    Prospect = 5,
+    Deploy = 3,
+    Initialize = 4,
+    Log = 5,
     Redeem = 6,
     Reset = 7,
 
@@ -39,6 +39,13 @@ pub struct ClaimORE {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Deploy {
+    pub amount: [u8; 8],
+    pub square_id: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Initialize {}
 
 #[repr(C)]
@@ -55,12 +62,6 @@ pub struct Redeem {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Reset {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Prospect {
-    pub amount: [u8; 8],
-    pub square_id: [u8; 8],
-}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Mine {
@@ -119,9 +120,9 @@ pub struct ClaimSeeker {}
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
+instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
-instruction!(OreInstruction, Prospect);
 instruction!(OreInstruction, Redeem);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);

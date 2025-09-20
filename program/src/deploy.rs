@@ -3,10 +3,10 @@ use steel::*;
 
 use crate::whitelist::AUTHORIZED_ACCOUNTS;
 
-/// Claims a block reward.
-pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+/// Deploys capital to prospect on a square.
+pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
-    let args = Prospect::try_from_bytes(data)?;
+    let args = Deploy::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
     let square_id = usize::from_le_bytes(args.square_id);
 
@@ -34,12 +34,12 @@ pub fn process_prospect(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Check whitelist
     if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(ProgramError::InvalidAccountData);
+        return Err(OreError::NotAuthorized.into());
     }
 
     // Check minimum amount.
-    if amount < config.min_prospect_amount {
-        return Err(ProgramError::InvalidAccountData);
+    if amount < config.min_deploy_amount {
+        return Err(OreError::AmountTooSmall.into());
     }
 
     // Create miner.

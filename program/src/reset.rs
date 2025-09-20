@@ -143,22 +143,22 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Update board.
     board.total_winnings = winnings;
 
-    // Update min prospect amount.
+    // Update min deploy amount.
     let capacity: u64 = 16 * 25;
-    let limit = capacity / 4;
+    let threshold = capacity / 4;
     let mut availability = 0;
     for i in 0..25 {
         availability += 16 - square.count[i];
     }
     if availability == 0 {
-        // If board is full, double the minimum prospect amount.
-        config.min_prospect_amount *= 2;
-    } else if availability < limit {
-        // If board is more than 75% full, reduce minimum prospect amount linearly.
+        // If board is full, double the minimum deploy amount.
+        config.min_deploy_amount *= 2;
+    } else if availability < threshold {
+        // If board is more than 75% full, reduce minimum deploy amount linearly.
         let pct = (availability * 100) / capacity;
         let chg = (25u64.saturating_sub(pct) * 100) / 75;
-        let dif = (config.min_prospect_amount * chg) / 100;
-        config.min_prospect_amount = config.min_prospect_amount.saturating_sub(dif);
+        let dif = (config.min_deploy_amount * chg) / 100;
+        config.min_deploy_amount = config.min_deploy_amount.saturating_sub(dif);
     }
 
     // Emit event.

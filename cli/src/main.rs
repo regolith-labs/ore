@@ -64,11 +64,11 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
-        "prospect" => {
-            prospect(&rpc, &payer).await.unwrap();
+        "deploy" => {
+            deploy(&rpc, &payer).await.unwrap();
         }
-        "prospect_some" => {
-            prospect_some(&rpc, &payer).await.unwrap();
+        "deploy_some" => {
+            deploy_some(&rpc, &payer).await.unwrap();
         }
         "square" => {
             log_square(&rpc).await.unwrap();
@@ -193,7 +193,7 @@ async fn reset(
     Ok(())
 }
 
-async fn prospect(
+async fn deploy(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
@@ -202,12 +202,12 @@ async fn prospect(
     let square_id = std::env::var("SQUARE").expect("Missing SQUARE env var");
     let square_id = u64::from_str(&square_id).expect("Invalid SQUARE");
     let config = get_config(rpc).await?;
-    let ix = ore_api::sdk::prospect(payer.pubkey(), config.fee_collector, amount, square_id);
+    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, square_id);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
-async fn prospect_some(
+async fn deploy_some(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
@@ -216,7 +216,7 @@ async fn prospect_some(
     let config = get_config(rpc).await?;
     let mut ixs = vec![];
     for i in 0..8 {
-        let ix = ore_api::sdk::prospect(payer.pubkey(), config.fee_collector, amount, i as u64);
+        let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, i as u64);
         ixs.push(ix);
     }
     submit_transaction(rpc, payer, &ixs).await?;
@@ -309,7 +309,7 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("Config");
     println!("  admin: {}", config.admin);
     println!("  last_boost: {}", config.last_boost);
-    println!("  min_prospect_amount: {}", config.min_prospect_amount);
+    println!("  min_deploy_amount: {}", config.min_deploy_amount);
     println!("  fee_collector: {}", config.fee_collector);
     Ok(())
 }

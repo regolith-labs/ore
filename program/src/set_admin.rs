@@ -14,7 +14,10 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     signer_info.is_signer()?;
     let config = config_info
         .as_account_mut::<Config>(&ore_api::ID)?
-        .assert_mut(|c| c.admin == *signer_info.key)?;
+        .assert_mut_err(
+            |c| c.admin == *signer_info.key,
+            OreError::NotAuthorized.into(),
+        )?;
     system_program.is_program(&system_program::ID)?;
 
     // Set admin.

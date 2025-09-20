@@ -13,8 +13,8 @@ pub struct Config {
     // The last boost timestamp.
     pub last_boost: i64,
 
-    // The minimum amount of SOL that can be prospect.
-    pub min_prospect_amount: u64,
+    // The minimum amount of SOL that can be deploy.
+    pub min_deploy_amount: u64,
 
     // The address that receives fees.
     pub fee_collector: Pubkey,

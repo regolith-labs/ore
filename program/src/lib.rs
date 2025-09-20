@@ -2,10 +2,9 @@ mod boost;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
+mod deploy;
 mod initialize;
 mod log;
-mod prospect;
-mod redeem;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
@@ -15,10 +14,9 @@ use boost::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
+use deploy::*;
 use initialize::*;
 use log::*;
-use prospect::*;
-use redeem::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -38,9 +36,9 @@ pub fn process_instruction(
         OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
+        OreInstruction::Deploy => process_deploy(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
-        OreInstruction::Prospect => process_prospect(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Admin
