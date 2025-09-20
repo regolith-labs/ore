@@ -29,7 +29,7 @@ pub struct ResetEvent {
     pub num_winners: u64,
 
     /// The total amount of SOL prospected in the round.
-    pub total_prospects: u64,
+    pub total_deployed: u64,
 
     /// The total amount of SOL put in the ORE vault.
     pub total_vaulted: u64,

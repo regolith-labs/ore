@@ -53,7 +53,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         )?;
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
-        miner.prospects = [0; 25];
+        miner.deployed = [0; 25];
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
         miner.round_id = board.id;
@@ -69,13 +69,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Reset board.
     if board.slot_hash != [0; 32] {
         // Reset board
-        board.prospects = [0; 25];
+        board.deployed = [0; 25];
         board.id += 1;
         board.slot_hash = [0; 32];
         board.start_slot = clock.slot;
         board.end_slot = clock.slot + 150; // one minute
         board.top_miner = Pubkey::default();
-        board.total_prospects = 0;
+        board.total_deployed = 0;
         board.total_vaulted = 0;
         board.total_winnings = 0;
 
@@ -86,7 +86,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Reset miner
     if miner.round_id != board.id {
-        miner.prospects = [0; 25];
+        miner.deployed = [0; 25];
         miner.round_id = board.id;
     }
 
@@ -95,8 +95,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let amount = amount - fee;
 
     // Update miner
-    let is_first_move = miner.prospects[square_id] == 0;
-    miner.prospects[square_id] += amount;
+    let is_first_move = miner.deployed[square_id] == 0;
+    miner.deployed[square_id] += amount;
 
     // Update square
     if is_first_move {
@@ -105,10 +105,10 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     }
 
     // Update board
-    board.prospects[square_id] += amount;
-    board.total_prospects += amount;
+    board.deployed[square_id] += amount;
+    board.total_deployed += amount;
 
-    // Transfer prospects.
+    // Transfer deployed.
     board_info.collect(amount, &signer_info)?;
     fee_collector_info.collect(fee, &signer_info)?;
 

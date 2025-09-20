@@ -32,7 +32,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
             board.slot_hash = slot_hash;
             let winning_square = get_winning_square(&slot_hash);
-            let square_prospects = board.prospects[winning_square];
+            let square_prospects = board.deployed[winning_square];
             (winning_square, square_prospects)
         } else {
             // Cannot get slot hash. No one wins.
@@ -40,11 +40,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             (u64::MAX as usize, 0)
         };
 
-    // No one won. Vault all prospects.
+    // No one won. Vault all deployed.
     if square_prospects == 0 {
         // Update board.
-        board.total_vaulted = board.total_prospects;
-        treasury.balance += board.total_prospects;
+        board.total_vaulted = board.total_deployed;
+        treasury.balance += board.total_deployed;
 
         // Emit event.
         program_log(
@@ -57,7 +57,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 winning_square: winning_square as u64,
                 top_miner: board.top_miner,
                 num_winners: 0,
-                total_prospects: board.total_prospects,
+                total_deployed: board.total_deployed,
                 total_vaulted: board.total_vaulted,
                 total_winnings: board.total_winnings,
                 total_minted: 0,
@@ -67,16 +67,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         )?;
 
         // Do SOL transfers.
-        board_info.send(board.total_prospects, &treasury_info);
+        board_info.send(board.total_deployed, &treasury_info);
 
         return Ok(());
     }
 
-    // Get winnings amount (prospects on all non-winning squares).
+    // Get winnings amount (deployed on all non-winning squares).
     let mut winnings = 0;
-    for (i, prospects) in board.prospects.iter().enumerate() {
+    for (i, deployed) in board.deployed.iter().enumerate() {
         if i != winning_square {
-            winnings += prospects;
+            winnings += deployed;
         }
     }
 
@@ -95,7 +95,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         let miner = miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.round_id == board.id)?;
-        let miner_prospects = miner.prospects[winning_square];
+        let miner_prospects = miner.deployed[winning_square];
         let rewards = miner_prospects + (winnings * miner_prospects / square_prospects); // Winners get their own prospect back plus their share of the winnings.
         checksum += miner_prospects;
         miner.rewards_sol += rewards;
@@ -172,7 +172,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             winning_square: winning_square as u64,
             top_miner: board.top_miner,
             num_winners: square.count[winning_square],
-            total_prospects: board.total_prospects,
+            total_deployed: board.total_deployed,
             total_vaulted: board.total_vaulted,
             total_winnings: board.total_winnings,
             total_minted: mint_amount,

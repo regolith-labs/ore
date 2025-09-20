@@ -29,14 +29,14 @@ pub fn process_initialize(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             &[BOARD],
         )?;
         let board = board_info.as_account_mut::<Board>(&ore_api::ID)?;
-        board.prospects = [0; 25];
+        board.deployed = [0; 25];
         board.id = 0;
         board.start_at = 0;
         board.start_slot = 0;
         board.end_slot = 0;
         board.slot_hash = [0; 32];
         board.top_miner = Pubkey::default();
-        board.total_prospects = 0;
+        board.total_deployed = 0;
         board.total_vaulted = 0;
         board.total_winnings = 0;
     } else {

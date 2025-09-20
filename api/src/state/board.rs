@@ -10,8 +10,8 @@ pub struct Board {
     /// The round number.
     pub id: u64,
 
-    /// The prospects for the round.
-    pub prospects: [u64; 25],
+    /// The deployed SOL for the round.
+    pub deployed: [u64; 25],
 
     /// The timestamp at which the block starts mining.
     pub start_at: i64,
@@ -28,8 +28,8 @@ pub struct Board {
     /// The top miner of the round.
     pub top_miner: Pubkey,
 
-    /// The total amount of SOL prospected in the round.
-    pub total_prospects: u64,
+    /// The total amount of SOL deployed in the round.
+    pub total_deployed: u64,
 
     /// The total amount of SOL put in the ORE vault.
     pub total_vaulted: u64,

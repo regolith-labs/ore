@@ -11,7 +11,7 @@ pub struct Miner {
     pub authority: Pubkey,
 
     /// The miner's prospects in the current round.
-    pub prospects: [u64; 25],
+    pub deployed: [u64; 25],
 
     /// The amount of SOL this miner can claim.
     pub rewards_sol: u64,
