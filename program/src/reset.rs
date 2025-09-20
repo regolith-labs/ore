@@ -104,7 +104,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
         // Check if miner was provided in correct order.
         if miner.authority != square.miners[winning_square][i] {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(trace(
+                "Incorrect miner order",
+                ProgramError::InvalidAccountData,
+            ));
         }
 
         // Find the top winner.
@@ -117,7 +120,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Verify checksum.
     if checksum != square_prospects {
         // This can only happen if the caller didn't provide full set of winning miners.
-        return Err(ProgramError::InvalidAccountData);
+        return Err(trace("Invalid checksum", ProgramError::InvalidAccountData));
     }
 
     // Payout reward to top miner.
@@ -199,7 +202,10 @@ pub fn get_slot_hash(
     let Some(slot_hash) = slot_hashes.get(&slot) else {
         // If reset is not called within ~2.5 minutes of the block ending,
         // then the slot hash will be unavailable and secure hashes cannot be generated.
-        return Err(ProgramError::InvalidAccountData);
+        return Err(trace(
+            "Slot hash unavailable",
+            ProgramError::InvalidAccountData,
+        ));
     };
     let slot_hash = slot_hash.to_bytes();
     Ok(slot_hash)

@@ -34,12 +34,12 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Check whitelist
     if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(OreError::NotAuthorized.into());
+        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
     }
 
     // Check minimum amount.
     if amount < config.min_deploy_amount {
-        return Err(OreError::AmountTooSmall.into());
+        return Err(trace("Amount too small", OreError::AmountTooSmall.into()));
     }
 
     // Create miner.
