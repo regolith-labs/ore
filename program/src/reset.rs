@@ -156,10 +156,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if availability == 0 {
         // If board is full, double the minimum deploy amount.
         config.min_deploy_amount *= 2;
-    } else if availability < threshold {
-        // If board is more than 75% full, reduce minimum deploy amount linearly.
+    } else if availability > threshold {
+        // If board is less than 75% full, reduce minimum deploy amount linearly.
         let pct = (availability * 100) / capacity;
-        let chg = (25u64.saturating_sub(pct) * 100) / 75;
+        let chg = (pct.saturating_sub(25) * 100) / 75;
         let dif = (config.min_deploy_amount * chg) / 100;
         config.min_deploy_amount = config.min_deploy_amount.saturating_sub(dif);
     }
@@ -231,12 +231,12 @@ mod tests {
         let current = 1000u64;
         let limit = capacity / 4;
         for occupancy in 0..=capacity {
-            let available = capacity.saturating_sub(occupancy);
-            if available == 0 {
+            let availability = capacity.saturating_sub(occupancy);
+            if availability == 0 {
                 println!("[{}/{}] New: {}", occupancy, capacity, current * 2);
-            } else if available < limit {
-                let pct = (available * 100) / capacity;
-                let chg = (25u64.saturating_sub(pct) * 100) / 75;
+            } else if availability >= limit {
+                let pct = (availability * 100) / capacity;
+                let chg = (pct.saturating_sub(25) * 100) / 75;
                 let dif = (current * chg) / 100;
                 let new = current.saturating_sub(dif);
                 println!("[{}/{}] New: {}", occupancy, capacity, new);
