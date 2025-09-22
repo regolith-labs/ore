@@ -13,6 +13,9 @@ pub struct Miner {
     /// The miner's prospects in the current round.
     pub deployed: [u64; 25],
 
+    /// The executor with permmission to deploy capital with this account.
+    pub executor: Pubkey,
+
     /// The amount of SOL this miner can claim.
     pub rewards_sol: u64,
 
