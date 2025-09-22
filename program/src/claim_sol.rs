@@ -1,4 +1,5 @@
 use ore_api::prelude::*;
+use solana_program::{log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
 /// Claims a block reward.
@@ -19,6 +20,8 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
 
     // Normalize amount.
     let amount = miner.rewards_sol.min(amount);
+
+    sol_log(&format!("Claiming {} SOL", lamports_to_sol(amount)).as_str());
 
     // Update miner.
     miner.rewards_sol -= amount;

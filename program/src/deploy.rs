@@ -1,4 +1,5 @@
 use ore_api::prelude::*;
+use solana_program::{log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
 use crate::whitelist::AUTHORIZED_ACCOUNTS;
@@ -10,11 +11,22 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let amount = u64::from_le_bytes(args.amount);
     let mask = u32::from_le_bytes(args.squares);
 
-    // Parse squares.
+    // Convert 32-bit mask into array of 25 booleans, where each bit in the mask
+    // determines if that square index is selected (true) or not (false)
     let mut squares = [false; 25];
     for i in 0..25 {
         squares[i] = (mask & (1 << i)) != 0;
     }
+
+    sol_log(
+        &format!(
+            "Deploying {} SOL to {} squares: {:?}",
+            lamports_to_sol(amount),
+            squares.iter().filter(|&&s| s).count(),
+            squares
+        )
+        .as_str(),
+    );
 
     // Load accounts.
     let clock = Clock::get()?;

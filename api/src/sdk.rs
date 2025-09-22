@@ -124,6 +124,8 @@ pub fn deploy(
     let miner_address = miner_pda(signer).0;
     let square_address = square_pda().0;
 
+    // Convert array of 25 booleans into a 32-bit mask where each bit represents whether
+    // that square index is selected (1) or not (0)
     let mut mask: u32 = 0;
     for (i, &square) in squares.iter().enumerate() {
         if square {
