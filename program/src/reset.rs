@@ -16,7 +16,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| b.slot_hash == [0; 32])?
-        .assert_mut(|b| clock.slot >= b.end_slot)?;
+        .assert_mut(|b| clock.slot > b.end_slot)?;
     let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;

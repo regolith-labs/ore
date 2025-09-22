@@ -20,7 +20,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         .as_account_mut::<Miner>(&ore_api::ID)?
         .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    recipient_info.as_associated_token_account(&signer_info.key, &mint_info.key)?;
+    recipient_info.is_writable()?;
     treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;

@@ -20,10 +20,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     sol_log(
         &format!(
-            "Deploying {} SOL to {} squares: {:?}",
+            "Deploying {} SOL to {} squares",
             lamports_to_sol(amount),
             squares.iter().filter(|&&s| s).count(),
-            squares
         )
         .as_str(),
     );
