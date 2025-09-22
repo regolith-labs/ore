@@ -124,14 +124,13 @@ async fn boost(
 async fn keys() -> Result<(), anyhow::Error> {
     let treasury_address = ore_api::state::treasury_pda().0;
     let config_address = ore_api::state::config_pda().0;
+    let board_address = ore_api::state::board_pda().0;
     let address = pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS");
     let miner_address = ore_api::state::miner_pda(address).0;
     println!("Treasury: {}", treasury_address);
     println!("Config: {}", config_address);
+    println!("Board: {}", board_address);
     println!("Miner: {}", miner_address);
-
-    // let keys = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
-    // println!("Keys: {:?}", keys);
 
     Ok(())
 }

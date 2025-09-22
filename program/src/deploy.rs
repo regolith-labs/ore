@@ -22,7 +22,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| {
             (clock.slot >= b.start_slot && clock.slot < b.end_slot && b.slot_hash == [0; 32])
-                || (clock.slot >= b.end_slot + 25 && b.slot_hash != [0; 32])
+                || (clock.slot >= b.end_slot + INTERMISSION_SLOTS && b.slot_hash != [0; 32])
         })?;
     let config = config_info.as_account::<Config>(&ore_api::ID)?;
     fee_collector_info

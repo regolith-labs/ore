@@ -14,6 +14,9 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
+/// The number of slots for breather between rounds.
+pub const INTERMISSION_SLOTS: u64 = 25;
+
 /// The maximum token supply (5 million).
 pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 
