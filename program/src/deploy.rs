@@ -8,7 +8,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Parse data.
     let args = Deploy::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
-    let square_id = usize::from_le_bytes(args.square_id);
+    let mask = u32::from_le_bytes(args.squares);
+
+    // Parse squares.
+    let mut squares = [false; 25];
+    for i in 0..25 {
+        squares[i] = (mask & (1 << i)) != 0;
+    }
 
     // Load accounts.
     let clock = Clock::get()?;
@@ -94,23 +100,36 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let fee = amount / 100;
     let amount = amount - fee;
 
-    // Update miner
-    let is_first_move = miner.deployed[square_id] == 0;
-    miner.deployed[square_id] += amount;
+    // Make all deployments.
+    let mut total_fee = 0;
+    let mut total_amount = 0;
+    for (square_id, &should_deploy) in squares.iter().enumerate() {
+        if square_id > 24 {
+            break;
+        }
+        if should_deploy {
+            total_fee += fee;
+            total_amount += amount;
 
-    // Update square
-    if is_first_move {
-        square.miners[square_id][square.count[square_id] as usize] = *signer_info.key;
-        square.count[square_id] += 1;
+            // Update miner
+            let is_first_move = miner.deployed[square_id] == 0;
+            miner.deployed[square_id] += amount;
+
+            // Update square
+            if is_first_move {
+                square.miners[square_id][square.count[square_id] as usize] = *signer_info.key;
+                square.count[square_id] += 1;
+            }
+
+            // Update board
+            board.deployed[square_id] += amount;
+            board.total_deployed += amount;
+        }
     }
 
-    // Update board
-    board.deployed[square_id] += amount;
-    board.total_deployed += amount;
-
     // Transfer deployed.
-    board_info.collect(amount, &signer_info)?;
-    fee_collector_info.collect(fee, &signer_info)?;
+    board_info.collect(total_amount, &signer_info)?;
+    fee_collector_info.collect(total_fee, &signer_info)?;
 
     Ok(())
 }

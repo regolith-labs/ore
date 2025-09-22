@@ -10,10 +10,10 @@ pub enum OreInstruction {
     Deploy = 3,
     Initialize = 4,
     Log = 5,
-    Redeem = 6,
     Reset = 7,
 
     // Admin
+    Bury = 8,
     SetAdmin = 9,
     SetFeeCollector = 10,
 
@@ -41,7 +41,7 @@ pub struct ClaimORE {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Deploy {
     pub amount: [u8; 8],
-    pub square_id: [u8; 8],
+    pub squares: [u8; 4],
 }
 
 #[repr(C)]
@@ -51,12 +51,6 @@ pub struct Initialize {}
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Log {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Redeem {
-    pub amount: [u8; 8],
-}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -91,12 +85,6 @@ pub struct SetAdmin {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetBlockDuration {
-    pub block_duration: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetFeeCollector {
     pub fee_collector: [u8; 32],
 }
@@ -109,8 +97,8 @@ pub struct SetFeeRate {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetSniperFeeDuration {
-    pub sniper_fee_duration: [u8; 8],
+pub struct Bury {
+    pub min_amount_out: [u8; 8],
 }
 
 #[repr(C)]
@@ -123,7 +111,7 @@ instruction!(OreInstruction, ClaimORE);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
-instruction!(OreInstruction, Redeem);
+instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);

@@ -1,4 +1,5 @@
 mod boost;
+// mod bury;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
@@ -11,6 +12,7 @@ mod set_fee_collector;
 mod whitelist;
 
 use boost::*;
+// use bury::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;

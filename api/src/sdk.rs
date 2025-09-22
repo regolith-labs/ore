@@ -113,11 +113,24 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
 
 // let [signer_info, board_info, config_info, fee_collector_info, miner_info, sender_info, square_info, system_program] =
 
-pub fn deploy(signer: Pubkey, fee_collector: Pubkey, amount: u64, square_id: u64) -> Instruction {
+pub fn deploy(
+    signer: Pubkey,
+    fee_collector: Pubkey,
+    amount: u64,
+    squares: [bool; 25],
+) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let miner_address = miner_pda(signer).0;
     let square_address = square_pda().0;
+
+    let mut mask: u32 = 0;
+    for (i, &square) in squares.iter().enumerate() {
+        if square {
+            mask |= 1 << i;
+        }
+    }
+
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -131,13 +144,13 @@ pub fn deploy(signer: Pubkey, fee_collector: Pubkey, amount: u64, square_id: u64
         ],
         data: Deploy {
             amount: amount.to_le_bytes(),
-            square_id: square_id.to_le_bytes(),
+            squares: mask.to_le_bytes(),
         }
         .to_bytes(),
     }
 }
 
-pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
+pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let treasury_address = TREASURY_ADDRESS;
@@ -151,8 +164,8 @@ pub fn redeem(signer: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
         ],
-        data: Redeem {
-            amount: amount.to_le_bytes(),
+        data: Bury {
+            min_amount_out: min_amount_out.to_le_bytes(),
         }
         .to_bytes(),
     }

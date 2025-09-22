@@ -52,8 +52,8 @@ async fn main() {
         "initialize" => {
             initialize(&rpc, &payer).await.unwrap();
         }
-        "redeem" => {
-            redeem(&rpc, &payer).await.unwrap();
+        "bury" => {
+            bury(&rpc, &payer).await.unwrap();
         }
         "reset" => {
             reset(&rpc, &payer).await.unwrap();
@@ -67,8 +67,8 @@ async fn main() {
         "deploy" => {
             deploy(&rpc, &payer).await.unwrap();
         }
-        "deploy_some" => {
-            deploy_some(&rpc, &payer).await.unwrap();
+        "deploy_all" => {
+            deploy_all(&rpc, &payer).await.unwrap();
         }
         "square" => {
             log_square(&rpc).await.unwrap();
@@ -162,13 +162,13 @@ async fn claim_ore(
     Ok(())
 }
 
-async fn redeem(
+async fn bury(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
-    let ix = ore_api::sdk::redeem(payer.pubkey(), amount);
+    let ix = ore_api::sdk::bury(payer.pubkey(), amount);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -201,24 +201,25 @@ async fn deploy(
     let square_id = std::env::var("SQUARE").expect("Missing SQUARE env var");
     let square_id = u64::from_str(&square_id).expect("Invalid SQUARE");
     let config = get_config(rpc).await?;
-    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, square_id);
+
+    let mut squares = [false; 25];
+    squares[square_id as usize] = true;
+
+    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, squares);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
-async fn deploy_some(
+async fn deploy_all(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
     let config = get_config(rpc).await?;
-    let mut ixs = vec![];
-    for i in 0..8 {
-        let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, i as u64);
-        ixs.push(ix);
-    }
-    submit_transaction(rpc, payer, &ixs).await?;
+    let squares = [true; 25];
+    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, squares);
+    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
