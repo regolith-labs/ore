@@ -148,16 +148,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Update min deploy amount.
     let capacity: u64 = 16 * 25;
-    let threshold = capacity / 4;
-    let mut availability = 0;
+    let threshold = (capacity * 3) / 4;
+    let mut occupancy = 0;
     for i in 0..25 {
-        availability += 16 - square.count[i];
+        occupancy += square.count[i];
     }
-    if availability == 0 {
+    if occupancy == capacity {
         // If board is full, double the minimum deploy amount.
-        config.min_deploy_amount *= 2;
-    } else if availability > threshold {
+        config.min_deploy_amount = 1u64.max(config.min_deploy_amount * 2);
+    } else if occupancy < threshold {
         // If board is less than 75% full, reduce minimum deploy amount linearly.
+        let availability = capacity.saturating_sub(occupancy);
         let pct = (availability * 100) / capacity;
         let chg = (pct.saturating_sub(25) * 100) / 75;
         let dif = (config.min_deploy_amount * chg) / 100;

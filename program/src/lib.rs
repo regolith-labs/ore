@@ -47,7 +47,6 @@ pub fn process_instruction(
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
-
         _ => return Err(ProgramError::InvalidInstructionData),
     }
 
