@@ -4,22 +4,32 @@ use steel::*;
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
     // User
-    Boost = 0,
-    ClaimSOL = 1,
-    ClaimORE = 2,
-    Deploy = 3,
-    Initialize = 4,
-    Log = 5,
+    Automate = 0,
+    Boost = 1,
+    ClaimSOL = 2,
+    ClaimORE = 3,
+    Deploy = 4,
+    Initialize = 5,
+    Log = 6,
     Reset = 7,
-    SetExecutor = 9,
 
     // Admin
-    Bury = 10,
-    SetAdmin = 11,
-    SetFeeCollector = 12,
+    Bury = 9,
+    SetAdmin = 10,
+    SetFeeCollector = 11,
 
     // Seeker
     ClaimSeeker = 14,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Automate {
+    pub amount: [u8; 8],
+    pub deposit: [u8; 8],
+    pub fee: [u8; 8],
+    pub mask: [u8; 8],
+    pub strategy: u8,
 }
 
 #[repr(C)]
@@ -80,12 +90,6 @@ pub struct Uncommit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetExecutor {
-    pub executor: [u8; 32],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetAdmin {
     pub admin: [u8; 32],
 }
@@ -112,6 +116,7 @@ pub struct Bury {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
+instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
@@ -120,7 +125,6 @@ instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, SetExecutor);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);

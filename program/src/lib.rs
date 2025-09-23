@@ -1,5 +1,6 @@
 mod boost;
 // mod bury;
+mod automate;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
@@ -8,12 +9,12 @@ mod initialize;
 mod log;
 mod reset;
 mod set_admin;
-mod set_executor;
 mod set_fee_collector;
 mod whitelist;
 
 use boost::*;
 // use bury::*;
+use automate::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
@@ -22,7 +23,6 @@ use initialize::*;
 use log::*;
 use reset::*;
 use set_admin::*;
-use set_executor::*;
 use set_fee_collector::*;
 
 use ore_api::instruction::*;
@@ -37,6 +37,7 @@ pub fn process_instruction(
 
     match ix {
         // User
+        OreInstruction::Automate => process_automate(accounts, data)?,
         OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
@@ -44,7 +45,6 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::SetExecutor => process_set_executor(accounts, data)?,
 
         // Admin
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,

@@ -14,6 +14,7 @@ pub struct Miner {
     pub deployed: [u64; 25],
 
     /// The executor with permmission to deploy capital with this account.
+    #[deprecated(note = "Use automation executor instead")]
     pub executor: Pubkey,
 
     /// The amount of SOL this miner can claim.

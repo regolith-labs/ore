@@ -20,6 +20,9 @@ pub const INTERMISSION_SLOTS: u64 = 35;
 /// The maximum token supply (5 million).
 pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
 
+/// The seed of the automation account PDA.
+pub const AUTOMATION: &[u8] = b"automation";
+
 /// The seed of the board account PDA.
 pub const BOARD: &[u8] = b"board";
 

@@ -205,7 +205,13 @@ async fn deploy(
     let mut squares = [false; 25];
     squares[square_id as usize] = true;
 
-    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, squares);
+    let ix = ore_api::sdk::deploy(
+        payer.pubkey(),
+        payer.pubkey(),
+        config.fee_collector,
+        amount,
+        squares,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -218,7 +224,13 @@ async fn deploy_all(
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
     let config = get_config(rpc).await?;
     let squares = [true; 25];
-    let ix = ore_api::sdk::deploy(payer.pubkey(), config.fee_collector, amount, squares);
+    let ix = ore_api::sdk::deploy(
+        payer.pubkey(),
+        payer.pubkey(),
+        config.fee_collector,
+        amount,
+        squares,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }

@@ -1,9 +1,11 @@
+mod automation;
 mod board;
 mod config;
 mod miner;
 mod square;
 mod treasury;
 
+pub use automation::*;
 pub use board::*;
 pub use config::*;
 pub use miner::*;
@@ -17,6 +19,7 @@ use steel::*;
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccount {
+    Automation = 100,
     Config = 101,
     Miner = 103,
     Treasury = 104,
@@ -24,6 +27,10 @@ pub enum OreAccount {
     //
     Board = 105,
     Square = 106,
+}
+
+pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[AUTOMATION, &authority.to_bytes()], &crate::ID)
 }
 
 pub fn board_pda() -> (Pubkey, u8) {

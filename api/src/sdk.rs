@@ -21,6 +21,39 @@ pub fn program_log(accounts: &[AccountInfo], msg: &[u8]) -> Result<(), ProgramEr
     invoke_signed(&log(*accounts[0].key, msg), accounts, &crate::ID, &[BOARD])
 }
 
+// let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
+
+pub fn automate(
+    signer: Pubkey,
+    amount: u64,
+    deposit: u64,
+    executor: Pubkey,
+    fee: u64,
+    mask: u64,
+    strategy: u8,
+) -> Instruction {
+    let automation_address = automation_pda(signer).0;
+    let miner_address = miner_pda(signer).0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(automation_address, false),
+            AccountMeta::new(executor, false),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: Automate {
+            amount: amount.to_le_bytes(),
+            deposit: deposit.to_le_bytes(),
+            fee: fee.to_le_bytes(),
+            mask: mask.to_le_bytes(),
+            strategy: strategy as u8,
+        }
+        .to_bytes(),
+    }
+}
+
 // let [signer_info, config_info, mint_info, reserve_tokens_info, treasury_info, system_program, token_program] =
 
 pub fn boost(signer: Pubkey) -> Instruction {
@@ -115,13 +148,15 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
 
 pub fn deploy(
     signer: Pubkey,
+    authority: Pubkey,
     fee_collector: Pubkey,
     amount: u64,
     squares: [bool; 25],
 ) -> Instruction {
+    let automation_address = automation_pda(authority).0;
     let board_address = board_pda().0;
     let config_address = config_pda().0;
-    let miner_address = miner_pda(signer).0;
+    let miner_address = miner_pda(authority).0;
     let square_address = square_pda().0;
 
     // Convert array of 25 booleans into a 32-bit mask where each bit represents whether
@@ -137,6 +172,7 @@ pub fn deploy(
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(automation_address, false),
             AccountMeta::new(board_address, false),
             AccountMeta::new(config_address, false),
             AccountMeta::new(fee_collector, false),

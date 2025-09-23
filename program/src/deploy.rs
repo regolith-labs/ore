@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, native_token::lamports_to_sol, rent::Rent};
+use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
 use crate::whitelist::AUTHORIZED_ACCOUNTS;
@@ -8,33 +8,18 @@ use crate::whitelist::AUTHORIZED_ACCOUNTS;
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = Deploy::try_from_bytes(data)?;
-    let amount = u64::from_le_bytes(args.amount);
+    let mut amount = u64::from_le_bytes(args.amount);
     let mask = u32::from_le_bytes(args.squares);
-
-    // Convert 32-bit mask into array of 25 booleans, where each bit in the mask
-    // determines if that square index is selected (true) or not (false)
-    let mut squares = [false; 25];
-    for i in 0..25 {
-        squares[i] = (mask & (1 << i)) != 0;
-    }
-
-    sol_log(
-        &format!(
-            "Deploying {} SOL to {} squares",
-            lamports_to_sol(amount),
-            squares.iter().filter(|&&s| s).count(),
-        )
-        .as_str(),
-    );
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
+    let [signer_info, automation_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    automation_info.is_writable()?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| {
@@ -54,10 +39,59 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         return Err(trace("Not authorized", OreError::NotAuthorized.into()));
     }
 
+    // Check if signer is the automation executor.
+    let automation = if !automation_info.data_is_empty() {
+        let automation = automation_info
+            .as_account_mut::<Automation>(&ore_api::ID)?
+            .assert_mut(|a| a.executor == *signer_info.key)?;
+        Some(automation)
+    } else {
+        None
+    };
+
+    // Update amount and mask for automation.
+    let mut squares = [false; 25];
+    if let Some(automation) = &automation {
+        // Set amount
+        amount = automation.amount;
+
+        // Set squares
+        match AutomationStrategy::from_u64(automation.strategy as u64) {
+            AutomationStrategy::Preferred => {
+                // Preferred automation strategy. Use the miner authority's provided mask.
+                for i in 0..25 {
+                    squares[i] = (automation.mask & (1 << i)) != 0;
+                }
+            }
+            AutomationStrategy::Random => {
+                // Random automation strategy. Generate a random mask based on number of squares user wants to deploy to.
+                let num_squares = ((automation.mask & 0xFF) as u64).min(25);
+                let r = hashv(&[&automation.authority.to_bytes(), &board.id.to_le_bytes()]).0;
+                squares = generate_random_mask(num_squares, &r);
+            }
+        }
+    } else {
+        // Convert provided 32-bit mask into array of 25 booleans, where each bit in the mask
+        // determines if that square index is selected (true) or not (false)
+        for i in 0..25 {
+            squares[i] = (mask & (1 << i)) != 0;
+        }
+    }
+
     // Check minimum amount.
     if amount < config.min_deploy_amount {
         return Err(trace("Amount too small", OreError::AmountTooSmall.into()));
     }
+
+    // Log
+    sol_log(
+        &format!(
+            "Deploying {} SOL to {} squares",
+            lamports_to_sol(amount),
+            squares.iter().filter(|&&s| s).count(),
+        )
+        .as_str(),
+    );
 
     // Create miner.
     let miner = if miner_info.data_is_empty() {
@@ -80,7 +114,14 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     } else {
         miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.authority == *signer_info.key || m.executor == *signer_info.key)?
+            .assert_mut(|m| {
+                if let Some(automation) = &automation {
+                    // only run automation once per round
+                    m.authority == automation.authority && m.round_id < board.id
+                } else {
+                    m.authority == *signer_info.key
+                }
+            })?
     };
 
     // Reset board.
@@ -111,7 +152,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let fee = amount / 100;
     let amount = amount - fee;
 
-    // Make all deployments.
+    // Calculate all deployments.
     let mut total_fee = 0;
     let mut total_amount = 0;
     for (square_id, &should_deploy) in squares.iter().enumerate() {
@@ -138,25 +179,33 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         }
     }
 
-    // Check total amount.
-    if *signer_info.key == miner.executor {
-        let account_size = 8 + std::mem::size_of::<Miner>();
-        let min_rent = Rent::get()?.minimum_balance(account_size);
-        let claimable_sol = miner.rewards_sol;
-        let obligations = min_rent + claimable_sol;
-        let total_transfer = total_amount + total_fee;
-        let new_lamports = miner_info.lamports().saturating_sub(total_transfer);
-        if new_lamports < obligations {
-            return Err(trace(
-                "Miner account has insufficient SOL",
-                ProgramError::InsufficientFunds,
-            ));
-        }
+    // Transfer SOL.
+    if let Some(automation) = automation {
+        automation.balance -= total_amount + total_fee + automation.fee;
+        automation_info.send(total_amount, &board_info);
+        automation_info.send(total_fee, &fee_collector_info);
+        automation_info.send(automation.fee, &signer_info);
+    } else {
+        board_info.collect(total_amount, &signer_info)?;
+        fee_collector_info.collect(total_fee, &signer_info)?;
     }
 
-    // Transfer deployed.
-    board_info.collect(total_amount, &signer_info)?;
-    fee_collector_info.collect(total_fee, &signer_info)?;
-
     Ok(())
+}
+
+fn generate_random_mask(num_squares: u64, r: &[u8]) -> [bool; 25] {
+    let mut new_mask = [false; 25];
+    let mut selected = 0;
+    for i in 0..25 {
+        let rand_byte = r[i];
+        let remaining_needed = num_squares as u64 - selected as u64;
+        let remaining_positions = 25 - i;
+        if remaining_needed > 0
+            && (rand_byte as u64) * (remaining_positions as u64) < (remaining_needed * 256)
+        {
+            new_mask[i] = true;
+            selected += 1;
+        }
+    }
+    new_mask
 }
