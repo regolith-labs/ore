@@ -11,14 +11,15 @@ pub enum OreInstruction {
     Initialize = 4,
     Log = 5,
     Reset = 7,
+    Reimburse = 8,
 
     // Admin
-    Bury = 8,
-    SetAdmin = 9,
-    SetFeeCollector = 10,
+    Bury = 9,
+    SetAdmin = 10,
+    SetFeeCollector = 11,
 
     // Seeker
-    ClaimSeeker = 13,
+    ClaimSeeker = 14,
 }
 
 #[repr(C)]
@@ -105,6 +106,12 @@ pub struct Bury {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Reimburse {
+    pub amount: [u8; 8],
+}
+
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
@@ -113,6 +120,7 @@ instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
+instruction!(OreInstruction, Reimburse);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);

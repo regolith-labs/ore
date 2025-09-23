@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, native_token::lamports_to_sol};
+use solana_program::{log::sol_log, native_token::lamports_to_sol, rent::Rent};
 use steel::*;
 
 use crate::whitelist::AUTHORIZED_ACCOUNTS;
@@ -80,7 +80,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     } else {
         miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.authority == *signer_info.key)?
+            .assert_mut(|m| m.authority == *signer_info.key || m.executor == *signer_info.key)?
     };
 
     // Reset board.
@@ -135,6 +135,22 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             // Update board
             board.deployed[square_id] += amount;
             board.total_deployed += amount;
+        }
+    }
+
+    // Check total amount.
+    if *signer_info.key == miner.executor {
+        let account_size = 8 + std::mem::size_of::<Miner>();
+        let min_rent = Rent::get()?.minimum_balance(account_size);
+        let claimable_sol = miner.rewards_sol;
+        let obligations = min_rent + claimable_sol;
+        let total_transfer = total_amount + total_fee;
+        let new_lamports = miner_info.lamports().saturating_sub(total_transfer);
+        if new_lamports < obligations {
+            return Err(trace(
+                "Miner account has insufficient SOL",
+                ProgramError::InsufficientFunds,
+            ));
         }
     }
 
