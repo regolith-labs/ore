@@ -172,6 +172,7 @@ pub fn deploy(
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(authority, false),
             AccountMeta::new(automation_address, false),
             AccountMeta::new(board_address, false),
             AccountMeta::new(config_address, false),

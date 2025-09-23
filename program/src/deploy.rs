@@ -13,12 +13,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, automation_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
+    let [signer_info, authority_info, automation_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    authority_info.is_writable()?;
     automation_info.is_writable()?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
@@ -43,7 +44,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
             .as_account_mut::<Automation>(&ore_api::ID)?
-            .assert_mut(|a| a.executor == *signer_info.key)?;
+            .assert_mut(|a| a.executor == *signer_info.key)?
+            .assert_mut(|a| a.authority == *authority_info.key)?;
         Some(automation)
     } else {
         None
@@ -186,6 +188,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         automation_info.send(total_amount, &board_info);
         automation_info.send(total_fee, &fee_collector_info);
         automation_info.send(automation.fee, &signer_info);
+
+        // Close automation if balance is 0.
+        if automation.balance == 0 {
+            automation_info.close(authority_info)?;
+        }
     } else {
         board_info.collect(total_amount, &signer_info)?;
         fee_collector_info.collect(total_fee, &signer_info)?;
