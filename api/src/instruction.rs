@@ -11,12 +11,12 @@ pub enum OreInstruction {
     Initialize = 4,
     Log = 5,
     Reset = 7,
-    Reimburse = 8,
+    SetExecutor = 9,
 
     // Admin
-    Bury = 9,
-    SetAdmin = 10,
-    SetFeeCollector = 11,
+    Bury = 10,
+    SetAdmin = 11,
+    SetFeeCollector = 12,
 
     // Seeker
     ClaimSeeker = 14,
@@ -80,6 +80,12 @@ pub struct Uncommit {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetExecutor {
+    pub executor: [u8; 32],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetAdmin {
     pub admin: [u8; 32],
 }
@@ -106,12 +112,6 @@ pub struct Bury {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Reimburse {
-    pub amount: [u8; 8],
-}
-
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
@@ -120,7 +120,7 @@ instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, Reimburse);
+instruction!(OreInstruction, SetExecutor);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);

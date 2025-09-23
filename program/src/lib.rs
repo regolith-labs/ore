@@ -6,9 +6,9 @@ mod claim_sol;
 mod deploy;
 mod initialize;
 mod log;
-mod reimburse;
 mod reset;
 mod set_admin;
+mod set_executor;
 mod set_fee_collector;
 mod whitelist;
 
@@ -20,9 +20,9 @@ use claim_sol::*;
 use deploy::*;
 use initialize::*;
 use log::*;
-use reimburse::*;
 use reset::*;
 use set_admin::*;
+use set_executor::*;
 use set_fee_collector::*;
 
 use ore_api::instruction::*;
@@ -44,7 +44,7 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::Reimburse => process_reimburse(accounts, data)?,
+        OreInstruction::SetExecutor => process_set_executor(accounts, data)?,
 
         // Admin
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
