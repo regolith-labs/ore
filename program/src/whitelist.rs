@@ -1,8 +1,9 @@
 use solana_program::pubkey;
 use steel::*;
 
-pub const AUTHORIZED_ACCOUNTS: [Pubkey; 3] = [
+pub const AUTHORIZED_ACCOUNTS: [Pubkey; 4] = [
     pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
+    pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),
     pubkey!("6B9PjpHfbhPcSakS5UQ7ZctgbPujfsryVRpDecskGLiz"),
     pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk"),
     // pubkey!("By5JFFueXCqeqLk5MzR8ZSwFxASz3SKWX2TVfT1LTFbX"),

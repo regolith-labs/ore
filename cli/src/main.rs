@@ -31,6 +31,9 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
+        "automations" => {
+            log_automations(&rpc).await.unwrap();
+        }
         "boost" => {
             boost(&rpc, &payer).await.unwrap();
         }
@@ -266,6 +269,21 @@ async fn set_fee_collector(
     Ok(())
 }
 
+async fn log_automations(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let automations = get_automations(rpc).await?;
+    for (i, (address, automation)) in automations.iter().enumerate() {
+        println!("[{}/{}] {}", i + 1, automations.len(), address);
+        println!("  authority: {}", automation.authority);
+        println!("  balance: {}", automation.balance);
+        println!("  executor: {}", automation.executor);
+        println!("  fee: {}", automation.fee);
+        println!("  mask: {}", automation.mask);
+        println!("  strategy: {}", automation.strategy);
+        println!();
+    }
+    Ok(())
+}
+
 async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury_address = ore_api::state::treasury_pda().0;
     let treasury = get_treasury(rpc).await?;
@@ -352,6 +370,16 @@ fn print_board(board: Board, clock: &Clock) {
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
     );
+}
+
+async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {
+    const REGOLITH_EXECUTOR: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
+    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
+        56,
+        &REGOLITH_EXECUTOR.to_bytes(),
+    ));
+    let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![filter]).await?;
+    Ok(automations)
 }
 
 async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {

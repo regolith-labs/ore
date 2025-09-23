@@ -117,7 +117,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             .assert_mut(|m| {
                 if let Some(automation) = &automation {
                     // only run automation once per round
-                    m.authority == automation.authority && m.round_id < board.id
+                    m.authority == automation.authority
+                        && (m.round_id < board.id || board.slot_hash != [0; 32])
                 } else {
                     m.authority == *signer_info.key
                 }
@@ -169,7 +170,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
             // Update square
             if is_first_move {
-                square.miners[square_id][square.count[square_id] as usize] = *signer_info.key;
+                square.miners[square_id][square.count[square_id] as usize] = miner.authority;
                 square.count[square_id] += 1;
             }
 
