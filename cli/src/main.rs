@@ -391,6 +391,7 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
+#[allow(dead_code)]
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
