@@ -21,6 +21,7 @@ bytemuck = "1.14.3"
 bytemuck_derive = "1.7.0"
 const-crypto = "0.1.0"
 meteora-pools-sdk = "0.1"
+meteora-vault-sdk = "0.1"
 mpl-token-metadata = "5.1"
 num_enum = "0.7.2"
 ore-api = { path = "./api" }
@@ -42,6 +43,7 @@ tokio = { version = "1.37.0", features = ["full"] }
 
 [patch.crates-io]
 meteora-pools-sdk = { git = "https://github.com/regolith-labs/meteora-pools-sdk", branch = "master" }
+meteora-vault-sdk = { git = "https://github.com/regolith-labs/meteora-vault-sdk", branch = "master" }
 
 [profile.release]
 overflow-checks = true

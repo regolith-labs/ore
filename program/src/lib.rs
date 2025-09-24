@@ -1,6 +1,6 @@
-mod boost;
-// mod bury;
 mod automate;
+mod boost;
+mod bury;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
@@ -11,10 +11,11 @@ mod reset;
 mod set_admin;
 mod set_fee_collector;
 mod whitelist;
+mod wrap;
 
-use boost::*;
-// use bury::*;
 use automate::*;
+use boost::*;
+use bury::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
@@ -24,6 +25,7 @@ use log::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
+use wrap::*;
 
 use ore_api::instruction::*;
 use steel::*;
@@ -47,12 +49,13 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Admin
+        OreInstruction::Bury => process_bury(accounts, data)?,
+        OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
-        _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

@@ -15,8 +15,9 @@ pub enum OreInstruction {
 
     // Admin
     Bury = 9,
-    SetAdmin = 10,
-    SetFeeCollector = 11,
+    Wrap = 10,
+    SetAdmin = 11,
+    SetFeeCollector = 12,
 
     // Seeker
     ClaimSeeker = 14,
@@ -108,6 +109,10 @@ pub struct SetFeeRate {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Wrap {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Bury {
     pub min_amount_out: [u8; 8],
 }
@@ -123,6 +128,7 @@ instruction!(OreInstruction, ClaimORE);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
+instruction!(OreInstruction, Wrap);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);

@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use meteora_pools_sdk::accounts::Pool;
+use meteora_vault_sdk::accounts::Vault;
 use ore_api::prelude::*;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
@@ -67,6 +69,9 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
+        "pool" => {
+            log_meteora_pool(&rpc).await.unwrap();
+        }
         "deploy" => {
             deploy(&rpc, &payer).await.unwrap();
         }
@@ -99,8 +104,8 @@ async fn ata(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let user = pubkey!("TatxmzjCpMFurJuPbw4kGXK25MSYUVLgFy5A1o76mwS");
-    let token = pubkey!("8H8rPiWW4iTFCfEkSnf7jpqeNpFfvdH9gLouAL3Fe2Zx");
+    let user = pubkey!("45db2FSR4mcXdSVVZbKbwojU6uYDpMyhpEi7cC8nHaWG");
+    let token = pubkey!("So11111111111111111111111111111111111111112");
     let ata = get_associated_token_address(&user, &token);
     let ix = spl_associated_token_account::instruction::create_associated_token_account(
         &payer.pubkey(),
@@ -171,8 +176,10 @@ async fn bury(
 ) -> Result<(), anyhow::Error> {
     let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
-    let ix = ore_api::sdk::bury(payer.pubkey(), amount);
-    submit_transaction(rpc, payer, &[ix]).await?;
+    let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
+    let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount);
+    // submit_transaction(rpc, payer, &[ix]).await?;
+    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
@@ -266,6 +273,46 @@ async fn set_fee_collector(
     let fee_collector = Pubkey::from_str(&fee_collector).expect("Invalid FEE_COLLECTOR");
     let ix = ore_api::sdk::set_fee_collector(payer.pubkey(), fee_collector);
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn log_meteora_pool(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let address = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
+    let pool = get_meteora_pool(rpc, address).await?;
+    let vault_a = get_meteora_vault(rpc, pool.a_vault).await?;
+    let vault_b = get_meteora_vault(rpc, pool.b_vault).await?;
+
+    println!("Pool");
+    println!("  address: {}", address);
+    println!("  lp_mint: {}", pool.lp_mint);
+    println!("  token_a_mint: {}", pool.token_a_mint);
+    println!("  token_b_mint: {}", pool.token_b_mint);
+    println!("  a_vault: {}", pool.a_vault);
+    println!("  b_vault: {}", pool.b_vault);
+    println!("  a_token_vault: {}", vault_a.token_vault);
+    println!("  b_token_vault: {}", vault_b.token_vault);
+    println!("  a_vault_lp_mint: {}", vault_a.lp_mint);
+    println!("  b_vault_lp_mint: {}", vault_b.lp_mint);
+    println!("  a_vault_lp: {}", pool.a_vault_lp);
+    println!("  b_vault_lp: {}", pool.b_vault_lp);
+    println!("  protocol_token_fee: {}", pool.protocol_token_b_fee);
+
+    // pool: *pool.key,
+    // user_source_token: *user_source_token.key,
+    // user_destination_token: *user_destination_token.key,
+    // a_vault: *a_vault.key,
+    // b_vault: *b_vault.key,
+    // a_token_vault: *a_token_vault.key,
+    // b_token_vault: *b_token_vault.key,
+    // a_vault_lp_mint: *a_vault_lp_mint.key,
+    // b_vault_lp_mint: *b_vault_lp_mint.key,
+    // a_vault_lp: *a_vault_lp.key,
+    // b_vault_lp: *b_vault_lp.key,
+    // protocol_token_fee: *protocol_token_fee.key,
+    // user: *user.key,
+    // vault_program: *vault_program.key,
+    // token_program: *token_program.key,
+
     Ok(())
 }
 
@@ -380,6 +427,18 @@ async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, a
     ));
     let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(automations)
+}
+
+async fn get_meteora_pool(rpc: &RpcClient, address: Pubkey) -> Result<Pool, anyhow::Error> {
+    let data = rpc.get_account_data(&address).await?;
+    let pool = Pool::from_bytes(&data)?;
+    Ok(pool)
+}
+
+async fn get_meteora_vault(rpc: &RpcClient, address: Pubkey) -> Result<Vault, anyhow::Error> {
+    let data = rpc.get_account_data(&address).await?;
+    let vault = Vault::from_bytes(&data)?;
+    Ok(vault)
 }
 
 async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {

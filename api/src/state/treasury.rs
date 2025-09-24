@@ -7,6 +7,7 @@ use super::OreAccount;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Treasury {
+    // The amount of SOL collected for buy-bury operations.
     pub balance: u64,
 }
 

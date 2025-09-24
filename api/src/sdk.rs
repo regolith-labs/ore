@@ -1,3 +1,5 @@
+use solana_program::pubkey;
+use solana_program::pubkey::Pubkey;
 use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
@@ -189,24 +191,83 @@ pub fn deploy(
     }
 }
 
+const POOL_ADDRESS: Pubkey = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
+const TOKEN_A_MINT: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
+const TOKEN_B_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+const A_VAULT: Pubkey = pubkey!("3s6ki6dQSM8FuqWiPsnGkgVsAEo8BTAfUR1Vvt1TPiJN");
+const B_VAULT: Pubkey = pubkey!("FERjPVNEa7Udq8CEv68h6tPL46Tq7ieE49HrE2wea3XT");
+const A_TOKEN_VAULT: Pubkey = pubkey!("BtJuiRG44vew5nYBVeUhuBawPTZLyYYxdzTYzerkfnto");
+const B_TOKEN_VAULT: Pubkey = pubkey!("HZeLxbZ9uHtSpwZC3LBr4Nubd14iHwz7bRSghRZf5VCG");
+const A_VAULT_LP_MINT: Pubkey = pubkey!("6Av9sdKvnjwoDHVnhEiz6JEq8e6SGzmhCsCncT2WJ7nN");
+const B_VAULT_LP_MINT: Pubkey = pubkey!("FZN7QZ8ZUUAxMPfxYEYkH3cXUASzH8EqA6B4tyCL8f1j");
+const A_VAULT_LP: Pubkey = pubkey!("2k7V1NtM1krwh1sdt5wWqBRcvNQ5jzxj3J2rV78zdTsL");
+const B_VAULT_LP: Pubkey = pubkey!("CFATQFgkKXJyU3MdCNvQqN79qorNSMJFF8jrF66a7r6i");
+const PROTOCOL_TOKEN_FEE: Pubkey = pubkey!("6kzYo2LMo2q2bkLAD8ienoG5NC1MkNXNTfm8sdyHuX3h");
+const METEORA_PROGRAM: Pubkey = pubkey!("Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB");
+
+// let [signer_info, config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, token_program] =
+
+// let [pool, user_source_token, user_destination_token, a_vault, b_vault, a_token_vault, b_token_vault, a_vault_lp_mint, b_vault_lp_mint, a_vault_lp, b_vault_lp, protocol_token_fee, user_key, vault_program, token_program] =
+
 pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
+    let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
-    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let treasury_address = TREASURY_ADDRESS;
+    let treasury_ore_address = get_associated_token_address(&treasury_address, &TOKEN_A_MINT);
+    let treasury_sol_address = get_associated_token_address(&treasury_address, &TOKEN_B_MINT);
+    println!("treasury_sol_address: {}", treasury_sol_address);
+    println!("treasury_ore_address: {}", treasury_ore_address);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
+            // Ore accounts
             AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(config_address, false),
             AccountMeta::new(mint_address, false),
-            AccountMeta::new(sender_address, false),
             AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_ore_address, false),
+            AccountMeta::new(treasury_sol_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(METEORA_PROGRAM, false),
+            // Meteora accounts
+            AccountMeta::new(POOL_ADDRESS, false),
+            AccountMeta::new(treasury_sol_address, false),
+            AccountMeta::new(treasury_ore_address, false),
+            AccountMeta::new(A_VAULT, false),
+            AccountMeta::new(B_VAULT, false),
+            AccountMeta::new(A_TOKEN_VAULT, false),
+            AccountMeta::new(B_TOKEN_VAULT, false),
+            AccountMeta::new(A_VAULT_LP_MINT, false),
+            AccountMeta::new(B_VAULT_LP_MINT, false),
+            AccountMeta::new(A_VAULT_LP, false),
+            AccountMeta::new(B_VAULT_LP, false),
+            AccountMeta::new(PROTOCOL_TOKEN_FEE, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(meteora_vault_sdk::programs::VAULT_ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
         ],
         data: Bury {
             min_amount_out: min_amount_out.to_le_bytes(),
         }
         .to_bytes(),
+    }
+}
+
+pub fn wrap(signer: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_sol_address = get_associated_token_address(&treasury_address, &TOKEN_B_MINT);
+    Instruction {
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new_readonly(config_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_sol_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        program_id: crate::ID,
+        data: Wrap {}.to_bytes(),
     }
 }
 

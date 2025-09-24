@@ -2057,6 +2057,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "meteora-vault-sdk"
+version = "0.1.0"
+source = "git+https://github.com/regolith-labs/meteora-vault-sdk?branch=master#97853a8c8a59fb89bada201c3104f709ae638070"
+dependencies = [
+ "borsh 0.10.4",
+ "num-derive 0.4.2",
+ "num-traits",
+ "solana-program",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2388,6 +2400,7 @@ dependencies = [
  "base64 0.22.1",
  "bytemuck",
  "const-crypto",
+ "meteora-vault-sdk",
  "mpl-token-metadata",
  "num_enum",
  "serde",
@@ -2406,6 +2419,8 @@ dependencies = [
  "base64 0.22.1",
  "bincode",
  "bytemuck",
+ "meteora-pools-sdk",
+ "meteora-vault-sdk",
  "ore-api",
  "serde_json",
  "sha3",
