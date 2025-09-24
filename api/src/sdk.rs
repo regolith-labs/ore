@@ -209,6 +209,7 @@ const PROTOCOL_TOKEN_FEE: Pubkey = pubkey!("6kzYo2LMo2q2bkLAD8ienoG5NC1MkNXNTfm8
 // let [pool, user_source_token, user_destination_token, a_vault, b_vault, a_token_vault, b_token_vault, a_vault_lp_mint, b_vault_lp_mint, a_vault_lp, b_vault_lp, protocol_token_fee, user_key, vault_program, token_program] =
 
 pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
+    let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
     let treasury_address = TREASURY_ADDRESS;
@@ -221,6 +222,7 @@ pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
         accounts: vec![
             // Ore accounts
             AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
             AccountMeta::new_readonly(config_address, false),
             AccountMeta::new(mint_address, false),
             AccountMeta::new(treasury_address, false),
@@ -228,6 +230,7 @@ pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
             AccountMeta::new(treasury_sol_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
             AccountMeta::new_readonly(meteora_pools_sdk::programs::AMM_ID, false),
             // Meteora accounts
             AccountMeta::new(POOL_ADDRESS, false),

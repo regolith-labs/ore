@@ -12,13 +12,14 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let min_amount_out = u64::from_le_bytes(args.min_amount_out);
 
     // Load accounts.
-    let (ore_accounts, meteora_accounts) = accounts.split_at(9);
-    let [signer_info, config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, system_program, token_program, meteora_program] =
+    let (ore_accounts, meteora_accounts) = accounts.split_at(11);
+    let [signer_info, board_info, config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, system_program, token_program, ore_program, meteora_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    board_info.as_account_mut::<Board>(&ore_api::ID)?;
     config_info
         .as_account::<Config>(&ore_api::ID)?
         .assert(|c| c.admin == *signer_info.key)?;
@@ -29,6 +30,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
     meteora_program.is_program(&meteora_pools_sdk::programs::AMM_ID)?;
 
     // Load meteora accounts.
@@ -106,6 +108,20 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         )
         .as_str(),
     );
+
+    // Emit event.
+    let mint = mint_info.as_mint()?;
+    program_log(
+        &[board_info.clone(), ore_program.clone()],
+        BuryEvent {
+            disc: 1,
+            ore_amount: burn_amount,
+            sol_amount: pre_swap_sol_balance,
+            new_circulating_supply: mint.supply(),
+            ts: Clock::get()?.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
 
     Ok(())
 }

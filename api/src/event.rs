@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use steel::*;
 pub enum OreEvent {
     Reset = 0,
+    Bury = 1,
 }
 
 #[repr(C)]
@@ -44,4 +45,24 @@ pub struct ResetEvent {
     pub ts: i64,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+pub struct BuryEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The amount of ORE buried.
+    pub ore_amount: u64,
+
+    /// The amount of SOL swapped.
+    pub sol_amount: u64,
+
+    /// The new circulating supply of ORE.
+    pub new_circulating_supply: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(ResetEvent);
+event!(BuryEvent);
