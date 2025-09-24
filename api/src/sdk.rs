@@ -215,8 +215,6 @@ pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
     let treasury_address = TREASURY_ADDRESS;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &TOKEN_A_MINT);
     let treasury_sol_address = get_associated_token_address(&treasury_address, &TOKEN_B_MINT);
-    println!("treasury_sol_address: {}", treasury_sol_address);
-    println!("treasury_ore_address: {}", treasury_ore_address);
     Instruction {
         program_id: crate::ID,
         accounts: vec![

@@ -19,6 +19,7 @@ use solana_sdk::{
     transaction::Transaction,
 };
 use spl_associated_token_account::get_associated_token_address;
+use spl_token::ui_amount_to_amount;
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -174,12 +175,13 @@ async fn bury(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
-    let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
+    let amount_str = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
+    let amount_f64 = f64::from_str(&amount_str).expect("Invalid AMOUNT");
+    let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
-    let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount);
-    // submit_transaction(rpc, payer, &[ix]).await?;
-    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
+    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
