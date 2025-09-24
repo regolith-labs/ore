@@ -2,14 +2,8 @@ use meteora_pools_sdk::instructions::SwapInstructionArgs;
 use ore_api::prelude::*;
 use solana_program::log::sol_log;
 use solana_program::native_token::lamports_to_sol;
-use solana_program::pubkey;
-use solana_program::pubkey::Pubkey;
 use spl_token::amount_to_ui_amount;
 use steel::*;
-
-const TOKEN_A_MINT: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
-const TOKEN_B_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
-const METEORA_PROGRAM: Pubkey = pubkey!("Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB");
 
 /// Swap vaulted SOL to ORE, and burn the ORE.
 pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -31,11 +25,11 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
-        treasury_ore_info.as_associated_token_account(treasury_info.key, &TOKEN_A_MINT)?;
-    treasury_sol_info.as_associated_token_account(treasury_info.key, &TOKEN_B_MINT)?;
+        treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
+    treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
-    meteora_program.is_program(&METEORA_PROGRAM)?;
+    meteora_program.is_program(&meteora_pools_sdk::programs::AMM_ID)?;
 
     // Load meteora accounts.
     let [pool, user_source_token, user_destination_token, a_vault, b_vault, a_token_vault, b_token_vault, a_vault_lp_mint, b_vault_lp_mint, a_vault_lp, b_vault_lp, protocol_token_fee, user_key, vault_program, token_program] =
@@ -49,7 +43,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Record pre-swap balances.
     let treasury_sol =
-        treasury_sol_info.as_associated_token_account(treasury_info.key, &TOKEN_B_MINT)?;
+        treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     let pre_swap_ore_balance = treasury_ore.amount();
     let pre_swap_sol_balance = treasury_sol.amount();
     assert!(pre_swap_sol_balance > 0);
@@ -87,9 +81,9 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // Record post-swap balances.
     let treasury_ore =
-        treasury_ore_info.as_associated_token_account(treasury_info.key, &TOKEN_A_MINT)?;
+        treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     let treasury_sol =
-        treasury_sol_info.as_associated_token_account(treasury_info.key, &TOKEN_B_MINT)?;
+        treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     let post_swap_ore_balance = treasury_ore.amount();
     let post_swap_sol_balance = treasury_sol.amount();
     assert_eq!(post_swap_sol_balance, 0);

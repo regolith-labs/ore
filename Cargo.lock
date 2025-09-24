@@ -2400,6 +2400,7 @@ dependencies = [
  "base64 0.22.1",
  "bytemuck",
  "const-crypto",
+ "meteora-pools-sdk",
  "meteora-vault-sdk",
  "mpl-token-metadata",
  "num_enum",

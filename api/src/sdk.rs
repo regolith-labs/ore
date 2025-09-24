@@ -4,7 +4,7 @@ use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
 use crate::{
-    consts::{BOARD, BOOST_RESERVE_TOKEN, MINT_ADDRESS, TREASURY_ADDRESS},
+    consts::{BOARD, BOOST_RESERVE_TOKEN, MINT_ADDRESS, SOL_MINT, TREASURY_ADDRESS},
     instruction::*,
     state::*,
 };
@@ -192,8 +192,8 @@ pub fn deploy(
 }
 
 const POOL_ADDRESS: Pubkey = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
-const TOKEN_A_MINT: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
-const TOKEN_B_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+const TOKEN_A_MINT: Pubkey = MINT_ADDRESS; // pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
+const TOKEN_B_MINT: Pubkey = SOL_MINT; //pubkey!("So11111111111111111111111111111111111111112");
 const A_VAULT: Pubkey = pubkey!("3s6ki6dQSM8FuqWiPsnGkgVsAEo8BTAfUR1Vvt1TPiJN");
 const B_VAULT: Pubkey = pubkey!("FERjPVNEa7Udq8CEv68h6tPL46Tq7ieE49HrE2wea3XT");
 const A_TOKEN_VAULT: Pubkey = pubkey!("BtJuiRG44vew5nYBVeUhuBawPTZLyYYxdzTYzerkfnto");
@@ -203,7 +203,6 @@ const B_VAULT_LP_MINT: Pubkey = pubkey!("FZN7QZ8ZUUAxMPfxYEYkH3cXUASzH8EqA6B4tyC
 const A_VAULT_LP: Pubkey = pubkey!("2k7V1NtM1krwh1sdt5wWqBRcvNQ5jzxj3J2rV78zdTsL");
 const B_VAULT_LP: Pubkey = pubkey!("CFATQFgkKXJyU3MdCNvQqN79qorNSMJFF8jrF66a7r6i");
 const PROTOCOL_TOKEN_FEE: Pubkey = pubkey!("6kzYo2LMo2q2bkLAD8ienoG5NC1MkNXNTfm8sdyHuX3h");
-const METEORA_PROGRAM: Pubkey = pubkey!("Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB");
 
 // let [signer_info, config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, token_program] =
 
@@ -229,7 +228,7 @@ pub fn bury(signer: Pubkey, min_amount_out: u64) -> Instruction {
             AccountMeta::new(treasury_sol_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
-            AccountMeta::new_readonly(METEORA_PROGRAM, false),
+            AccountMeta::new_readonly(meteora_pools_sdk::programs::AMM_ID, false),
             // Meteora accounts
             AccountMeta::new(POOL_ADDRESS, false),
             AccountMeta::new(treasury_sol_address, false),

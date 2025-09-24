@@ -48,6 +48,9 @@ pub const CONFIG_ADDRESS: Pubkey =
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
 
+/// The address of the sol mint account.
+pub const SOL_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
     Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);
