@@ -219,6 +219,11 @@ fn get_winning_square(r: u64) -> usize {
 /// Each miner's chance of winning is proportional to their deposit amount relative to total deposits.
 /// Returns the index of the winning miner, or None if no miners have deposits.
 fn get_winning_miner(r: u64, total_deployed: u64, miner_deployed: [u64; 16]) -> Option<usize> {
+    // If no miners have deposits, return None.
+    if total_deployed == 0 {
+        return None;
+    }
+
     // Returns a value in the range [0, total_deployed)
     let x = (r % total_deployed) as u64;
 

@@ -34,9 +34,6 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
-        "test_kick" => {
-            test_kick(&rpc, &payer).await.unwrap();
-        }
         "automations" => {
             log_automations(&rpc).await.unwrap();
         }
@@ -82,6 +79,9 @@ async fn main() {
         "square" => {
             log_square(&rpc).await.unwrap();
         }
+        "test_kick" => {
+            test_kick(&rpc).await.unwrap();
+        }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
         }
@@ -121,34 +121,18 @@ async fn main() {
 // CJmSeXLA2LrX8qLehn1vaMHGj2pX3hXmnJstgU3uhNeM
 // 34QyjRFFU2Vp7ZAxdNm3FRCChEMbStAh9Zf58W84q7Fh
 
-async fn test_kick(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let kps = [
-        read_keypair_file("~/.config/solana/tester-1.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-2.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-3.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-4.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-5.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-6.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-7.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-8.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-9.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-10.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-11.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-12.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-13.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-14.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-15.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-16.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-17.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-18.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-19.json").unwrap(),
-        read_keypair_file("~/.config/solana/tester-20.json").unwrap(),
-    ];
-
-    let alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
+async fn test_kick(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let mut kps = vec![];
+    for i in 1..=20 {
+        let home_dir = dirs::home_dir()
+            .expect("Could not find home directory")
+            .display()
+            .to_string();
+        let path = format!("{}/.config/solana/tester-{}.json", home_dir, i);
+        kps.push(read_keypair_file(&path).unwrap());
+    }
+    let mut alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
+    alt_miners.push(pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"));
 
     for (i, kp) in kps.iter().enumerate() {
         let amount = 1000 + i as u64;
