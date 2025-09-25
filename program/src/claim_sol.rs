@@ -19,12 +19,16 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     system_program.is_program(&system_program::ID)?;
 
     // Normalize amount.
-    let amount = miner.rewards_sol.min(amount);
+    let total_claimable = miner.rewards_sol + miner.refund_sol;
+    let amount = total_claimable.min(amount);
 
     sol_log(&format!("Claiming {} SOL", lamports_to_sol(amount)).as_str());
 
-    // Update miner.
-    miner.rewards_sol -= amount;
+    // Update miner. Deduct from refund first, then from rewards.
+    let from_refund = amount.min(miner.refund_sol);
+    miner.refund_sol -= from_refund;
+    let from_rewards = amount - from_refund;
+    miner.rewards_sol -= from_rewards;
 
     // Transfer reward to recipient.
     miner_info.send(amount, signer_info);

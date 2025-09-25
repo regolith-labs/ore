@@ -29,6 +29,14 @@ pub enum OreAccount {
     Square = 106,
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
+pub enum OreAccountOLD {
+    MinerOLD = 103,
+    TreasuryOLD = 104,
+    SquareOLD = 106,
+}
+
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[AUTOMATION, &authority.to_bytes()], &crate::ID)
 }
