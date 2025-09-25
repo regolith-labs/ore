@@ -225,6 +225,7 @@ fn get_winning_miner(r: u64, total_deployed: u64, miner_deployed: [u64; 16]) -> 
     }
 
     // Returns a value in the range [0, total_deployed)
+    let r = r.reverse_bits();
     let x = (r % total_deployed) as u64;
 
     // Find the miner that deposited the winning amount.
