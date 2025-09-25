@@ -151,13 +151,12 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
 pub fn deploy(
     signer: Pubkey,
     authority: Pubkey,
-    fee_collector: Pubkey,
     amount: u64,
     squares: [bool; 25],
+    alt_miners: Vec<Pubkey>,
 ) -> Instruction {
     let automation_address = automation_pda(authority).0;
     let board_address = board_pda().0;
-    let config_address = config_pda().0;
     let miner_address = miner_pda(authority).0;
     let square_address = square_pda().0;
 
@@ -170,19 +169,26 @@ pub fn deploy(
         }
     }
 
+    let mut accounts = vec![
+        AccountMeta::new(signer, true),
+        AccountMeta::new(authority, false),
+        AccountMeta::new(automation_address, false),
+        AccountMeta::new(board_address, false),
+        AccountMeta::new(miner_address, false),
+        AccountMeta::new(square_address, false),
+        AccountMeta::new_readonly(system_program::ID, false),
+    ];
+
+    // Add miners that might need to be refunded.
+    for miner in alt_miners {
+        if miner != Pubkey::default() {
+            accounts.push(AccountMeta::new(miner_pda(miner).0, false));
+        }
+    }
+
     Instruction {
         program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(authority, false),
-            AccountMeta::new(automation_address, false),
-            AccountMeta::new(board_address, false),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(fee_collector, false),
-            AccountMeta::new(miner_address, false),
-            AccountMeta::new(square_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
+        accounts,
         data: Deploy {
             amount: amount.to_le_bytes(),
             squares: mask.to_le_bytes(),
@@ -273,7 +279,7 @@ pub fn wrap(signer: Pubkey) -> Instruction {
 
 // let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
 
-pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
+pub fn reset(signer: Pubkey, fee_collector: Pubkey, miners: Vec<Pubkey>) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
@@ -284,6 +290,7 @@ pub fn reset(signer: Pubkey, miners: Vec<Pubkey>) -> Instruction {
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
         AccountMeta::new(config_address, false),
+        AccountMeta::new(fee_collector, false),
         AccountMeta::new(mint_address, false),
         AccountMeta::new(square_address, false),
         AccountMeta::new(treasury_address, false),

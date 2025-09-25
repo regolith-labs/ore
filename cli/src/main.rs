@@ -34,11 +34,8 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
-        "migrate_squares" => {
-            migrate_squares(&rpc, &payer).await.unwrap();
-        }
-        "migrate_miners" => {
-            migrate_miners(&rpc, &payer).await.unwrap();
+        "test_kick" => {
+            test_kick(&rpc, &payer).await.unwrap();
         }
         "automations" => {
             log_automations(&rpc).await.unwrap();
@@ -49,11 +46,8 @@ async fn main() {
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
-        "claim_sol" => {
-            claim_sol(&rpc, &payer).await.unwrap();
-        }
-        "claim_ore" => {
-            claim_ore(&rpc, &payer).await.unwrap();
+        "claim" => {
+            claim(&rpc, &payer).await.unwrap();
         }
         "board" => {
             log_board(&rpc).await.unwrap();
@@ -106,46 +100,56 @@ async fn main() {
         _ => panic!("Invalid command"),
     };
 }
+// Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR
+// Az9Xia5f6EXU9MGHuuMCKyHMy3MfNnsoyTbh7HTuFw5G
+// 5muLAbcjsAMcP8438KPfo2Jqw2vgAtuSDvMFNWb6Bexi
+// FRYaFLiE384yeqqjM9smbz17HrJAWGVmicmWYCEMAL16
+// 9D3hfN4FJWVdCMZStAhJbx93m2WLYXVEbkwdehsjihSK
+// GNVEy8fcCwfDFHFXiKBrnmxDwQDFq9JfACgnjirWvzXa
+// 7sBX4kPzB87tBw7xGsaLMyUjbPvoKRz2HA5kgxruUYfr
+// BeqD2wuermavKMivfRMw3eFaXpAosh5pCVotF89PLfZk
+// 3xrxQD2DcxiTeBKQqu129aijrVt6iAJ9yiEAV83yd61a
+// GQA2EL4FJhFvKrQwLTUvq2kczS8t4MxpAzfbgroUX8oP
+// Ddh1CP9vA3kjizVsr2J18VetznQiaY3EjPs8uPLVDFSd
+// A21sYbqWbURRnUQEsVnyjEJq1hackmspp7RYaZFh4dw8
+// 9fhLoSqzG9dfBja9mCHeYo4pG3jNyw47xqoZ9R3sihug
+// FuWRwcvKBs3EHq9eUNy3xUSYETwhoK4jCHq93rFRas1i
+// 8N8xX3dX4QhYtsmkU1jH6qPhT46or8TU8gvk9sF7PKrA
+// Da6QdrpoSsZUffj7RBmVmnvP4HJZTBwcDv47YQErm45E
+// Fjyo6xK6KdfaejYdZnb46aEXxmKHgkb3JoAW41ydF6gA
+// EYuhVmfAG6WoKVkwnb1TEeXKek5J14YAkJn4VTEgu4ip
+// CJmSeXLA2LrX8qLehn1vaMHGj2pX3hXmnJstgU3uhNeM
+// 34QyjRFFU2Vp7ZAxdNm3FRCChEMbStAh9Zf58W84q7Fh
 
 async fn test_kick(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let kps = [
-        read_keypair_file(&std::env::var("KEYPAIR_1").expect("Missing KEYPAIR_1 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_2").expect("Missing KEYPAIR_2 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_3").expect("Missing KEYPAIR_3 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_4").expect("Missing KEYPAIR_4 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_5").expect("Missing KEYPAIR_5 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_6").expect("Missing KEYPAIR_6 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_7").expect("Missing KEYPAIR_7 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_8").expect("Missing KEYPAIR_8 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_9").expect("Missing KEYPAIR_9 env var")).unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_10").expect("Missing KEYPAIR_10 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_11").expect("Missing KEYPAIR_11 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_12").expect("Missing KEYPAIR_12 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_13").expect("Missing KEYPAIR_13 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_14").expect("Missing KEYPAIR_14 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_15").expect("Missing KEYPAIR_15 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_16").expect("Missing KEYPAIR_16 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_17").expect("Missing KEYPAIR_17 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_18").expect("Missing KEYPAIR_18 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_19").expect("Missing KEYPAIR_19 env var"))
-            .unwrap(),
-        read_keypair_file(&std::env::var("KEYPAIR_20").expect("Missing KEYPAIR_20 env var"))
-            .unwrap(),
+        read_keypair_file("~/.config/solana/tester-1.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-2.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-3.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-4.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-5.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-6.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-7.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-8.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-9.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-10.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-11.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-12.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-13.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-14.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-15.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-16.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-17.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-18.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-19.json").unwrap(),
+        read_keypair_file("~/.config/solana/tester-20.json").unwrap(),
     ];
 
-    let config = get_config(rpc).await?;
+    let alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
+
     for (i, kp) in kps.iter().enumerate() {
         let amount = 1000 + i as u64;
         let mut squares = [false; 25];
@@ -153,42 +157,14 @@ async fn test_kick(
         let deploy_ix = ore_api::sdk::deploy(
             kp.pubkey(),
             kp.pubkey(),
-            config.fee_collector,
             amount,
             squares,
+            alt_miners.clone(),
         );
         println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
-        submit_transaction(rpc, &kp, &[deploy_ix]).await?;
+        submit_transaction_no_confirm(rpc, &kp, &[deploy_ix]).await?;
     }
 
-    Ok(())
-}
-
-async fn migrate_miners(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let miners = get_old_miners(rpc).await?;
-    for (i, (address, miner)) in miners.iter().enumerate() {
-        println!(
-            "[{}/{}] Migrating miner: {}",
-            i + 1,
-            miners.len(),
-            miner.authority
-        );
-        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), *address);
-        submit_transaction(rpc, payer, &[ix]).await?;
-    }
-    Ok(())
-}
-
-async fn migrate_squares(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::migrate_squares(payer.pubkey());
-    // simulate_transaction(rpc, payer, &[ix]).await;
-    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
@@ -244,21 +220,13 @@ async fn initialize(
     Ok(())
 }
 
-async fn claim_sol(
+async fn claim(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::claim_sol(payer.pubkey(), u64::MAX);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn claim_ore(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::claim_ore(payer.pubkey(), u64::MAX);
-    submit_transaction(rpc, payer, &[ix]).await?;
+    let ix_sol = ore_api::sdk::claim_sol(payer.pubkey(), u64::MAX);
+    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey(), u64::MAX);
+    submit_transaction(rpc, payer, &[ix_sol, ix_ore]).await?;
     Ok(())
 }
 
@@ -281,16 +249,17 @@ async fn reset(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let board = get_board(rpc).await?;
+    let config = get_config(rpc).await?;
     let slot_hashes = get_slot_hashes(rpc).await?;
     let mut miners = vec![];
     if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
         let id = get_winning_square(&slot_hash.to_bytes());
         let square = get_square(rpc).await?;
         println!("Winning square: {}", id);
-        println!("Miners: {:?}", square.miners);
+        // println!("Miners: {:?}", square.miners);
         miners = square.miners[id as usize].to_vec();
     };
-    let reset_ix = ore_api::sdk::reset(payer.pubkey(), miners);
+    let reset_ix = ore_api::sdk::reset(payer.pubkey(), config.fee_collector, miners);
     submit_transaction(rpc, payer, &[reset_ix]).await?;
     Ok(())
 }
@@ -303,18 +272,11 @@ async fn deploy(
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
     let square_id = std::env::var("SQUARE").expect("Missing SQUARE env var");
     let square_id = u64::from_str(&square_id).expect("Invalid SQUARE");
-    let config = get_config(rpc).await?;
 
     let mut squares = [false; 25];
     squares[square_id as usize] = true;
 
-    let ix = ore_api::sdk::deploy(
-        payer.pubkey(),
-        payer.pubkey(),
-        config.fee_collector,
-        amount,
-        squares,
-    );
+    let ix = ore_api::sdk::deploy(payer.pubkey(), payer.pubkey(), amount, squares, vec![]);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -325,15 +287,8 @@ async fn deploy_all(
 ) -> Result<(), anyhow::Error> {
     let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
-    let config = get_config(rpc).await?;
     let squares = [true; 25];
-    let ix = ore_api::sdk::deploy(
-        payer.pubkey(),
-        payer.pubkey(),
-        config.fee_collector,
-        amount,
-        squares,
-    );
+    let ix = ore_api::sdk::deploy(payer.pubkey(), payer.pubkey(), amount, squares, vec![]);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -439,6 +394,7 @@ async fn log_square(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let square = get_square(rpc).await?;
     println!("Square");
     println!("  count: {:?}", square.count[id]);
+    println!("  deployed: {:?}", square.deployed[id]);
     println!("  miners: {:?}", square.miners[id]);
     Ok(())
 }
@@ -590,11 +546,6 @@ async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Err
     Ok(miners)
 }
 
-async fn get_old_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
-    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
-    Ok(miners)
-}
-
 fn get_winning_square(slot_hash: &[u8]) -> u64 {
     // Use slot hash to generate a random u64
     let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
@@ -644,6 +595,36 @@ async fn submit_transaction(
     );
 
     match rpc.send_and_confirm_transaction(&transaction).await {
+        Ok(signature) => {
+            println!("Transaction submitted: {:?}", signature);
+            Ok(signature)
+        }
+        Err(e) => {
+            println!("Error submitting transaction: {:?}", e);
+            Err(e.into())
+        }
+    }
+}
+
+async fn submit_transaction_no_confirm(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+    instructions: &[solana_sdk::instruction::Instruction],
+) -> Result<solana_sdk::signature::Signature, anyhow::Error> {
+    let blockhash = rpc.get_latest_blockhash().await?;
+    let mut all_instructions = vec![
+        ComputeBudgetInstruction::set_compute_unit_limit(1_400_000),
+        ComputeBudgetInstruction::set_compute_unit_price(1_000_000),
+    ];
+    all_instructions.extend_from_slice(instructions);
+    let transaction = Transaction::new_signed_with_payer(
+        &all_instructions,
+        Some(&payer.pubkey()),
+        &[payer],
+        blockhash,
+    );
+
+    match rpc.send_transaction(&transaction).await {
         Ok(signature) => {
             println!("Transaction submitted: {:?}", signature);
             Ok(signature)

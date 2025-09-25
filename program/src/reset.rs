@@ -2,12 +2,12 @@ use ore_api::prelude::*;
 use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
-/// Claims a block reward.
+/// Pays out the winners and block reward.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(11);
-    let [signer_info, board_info, config_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let (required_accounts, miner_accounts) = accounts.split_at(12);
+    let [signer_info, board_info, config_info, fee_collector_info, mint_info, square_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -17,7 +17,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| b.slot_hash == [0; 32])?
         .assert_mut(|b| clock.slot > b.end_slot)?;
-    config_info.as_account::<Config>(&ore_api::ID)?;
+    let config = config_info.as_account::<Config>(&ore_api::ID)?;
+    fee_collector_info
+        .is_writable()?
+        .has_address(&config.fee_collector)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
@@ -41,6 +44,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             board.slot_hash = [u8::MAX; 32];
             (u64::MAX as usize, 0)
         };
+
+    // Collect fees.
+    let fee = board.total_deployed / 100;
 
     // No one won. Vault all deployed.
     if square_deployed == 0 {
@@ -69,7 +75,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         )?;
 
         // Do SOL transfers.
-        board_info.send(board.total_deployed, &treasury_info);
+        board_info.send(fee, &fee_collector_info);
+        board_info.send(board.total_deployed - fee, &treasury_info);
         return Ok(());
     }
 
@@ -77,7 +84,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let mut winnings = 0;
     for (i, deployed) in board.deployed.iter().enumerate() {
         if i != winning_square {
-            winnings += deployed;
+            winnings += deployed - (deployed / 100);
         }
     }
 
@@ -86,6 +93,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let winnings = winnings - vault_amount;
     board.total_vaulted = vault_amount;
     treasury.balance += vault_amount;
+
+    // Assert
+    assert!(board.total_deployed >= vault_amount + winnings + fee);
 
     // Record miner rewards.
     let mut miner_deployments = [0; 16];
@@ -162,6 +172,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     )?;
 
     // Do SOL transfers.
+    board_info.send(fee, &fee_collector_info);
     board_info.send(vault_amount, &treasury_info);
     for (i, miner_info) in miner_accounts.iter().enumerate() {
         board_info.send(rewards_sol[i], &miner_info);

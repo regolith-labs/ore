@@ -1,8 +1,29 @@
 use solana_program::pubkey;
 use steel::*;
 
-pub const AUTHORIZED_ACCOUNTS: [Pubkey; 1] = [
+pub const AUTHORIZED_ACCOUNTS: [Pubkey; 21] = [
     pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
+    // TESTERS
+    pubkey!("Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR"),
+    pubkey!("Az9Xia5f6EXU9MGHuuMCKyHMy3MfNnsoyTbh7HTuFw5G"),
+    pubkey!("5muLAbcjsAMcP8438KPfo2Jqw2vgAtuSDvMFNWb6Bexi"),
+    pubkey!("FRYaFLiE384yeqqjM9smbz17HrJAWGVmicmWYCEMAL16"),
+    pubkey!("9D3hfN4FJWVdCMZStAhJbx93m2WLYXVEbkwdehsjihSK"),
+    pubkey!("GNVEy8fcCwfDFHFXiKBrnmxDwQDFq9JfACgnjirWvzXa"),
+    pubkey!("7sBX4kPzB87tBw7xGsaLMyUjbPvoKRz2HA5kgxruUYfr"),
+    pubkey!("BeqD2wuermavKMivfRMw3eFaXpAosh5pCVotF89PLfZk"),
+    pubkey!("3xrxQD2DcxiTeBKQqu129aijrVt6iAJ9yiEAV83yd61a"),
+    pubkey!("GQA2EL4FJhFvKrQwLTUvq2kczS8t4MxpAzfbgroUX8oP"),
+    pubkey!("Ddh1CP9vA3kjizVsr2J18VetznQiaY3EjPs8uPLVDFSd"),
+    pubkey!("A21sYbqWbURRnUQEsVnyjEJq1hackmspp7RYaZFh4dw8"),
+    pubkey!("9fhLoSqzG9dfBja9mCHeYo4pG3jNyw47xqoZ9R3sihug"),
+    pubkey!("FuWRwcvKBs3EHq9eUNy3xUSYETwhoK4jCHq93rFRas1i"),
+    pubkey!("8N8xX3dX4QhYtsmkU1jH6qPhT46or8TU8gvk9sF7PKrA"),
+    pubkey!("Da6QdrpoSsZUffj7RBmVmnvP4HJZTBwcDv47YQErm45E"),
+    pubkey!("Fjyo6xK6KdfaejYdZnb46aEXxmKHgkb3JoAW41ydF6gA"),
+    pubkey!("EYuhVmfAG6WoKVkwnb1TEeXKek5J14YAkJn4VTEgu4ip"),
+    pubkey!("CJmSeXLA2LrX8qLehn1vaMHGj2pX3hXmnJstgU3uhNeM"),
+    pubkey!("34QyjRFFU2Vp7ZAxdNm3FRCChEMbStAh9Zf58W84q7Fh"),
     // pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),
     // pubkey!("6B9PjpHfbhPcSakS5UQ7ZctgbPujfsryVRpDecskGLiz"),
     // pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk"),

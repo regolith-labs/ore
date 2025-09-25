@@ -13,8 +13,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(9);
-    let [signer_info, authority_info, automation_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
+    let (required_accounts, miner_accounts) = accounts.split_at(7);
+    let [signer_info, authority_info, automation_info, board_info, miner_info, square_info, system_program] =
         required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -28,10 +28,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             (clock.slot >= b.start_slot && clock.slot < b.end_slot && b.slot_hash == [0; 32])
                 || (clock.slot >= b.end_slot + INTERMISSION_SLOTS && b.slot_hash != [0; 32])
         })?;
-    let config = config_info.as_account::<Config>(&ore_api::ID)?;
-    fee_collector_info
-        .has_address(&config.fee_collector)?
-        .is_writable()?;
     miner_info.is_writable()?;
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
@@ -149,14 +145,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.round_id = board.id;
     }
 
-    // Normalize amount.
-    let fee = amount / 100;
-    let amount = amount - fee;
-
     // Calculate all deployments.
     let mut refund_amounts = [0; 25];
     let mut refund_miner_infos = [None; 25];
-    let mut total_fee = 0;
     let mut total_amount = 0;
     'deploy: for (square_id, &should_deploy) in squares.iter().enumerate() {
         // Skip if square index is out of bounds.
@@ -233,6 +224,14 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     square.deployed[square_id][idx] -= smallest_deployment;
                     square.miners[square_id][idx] = Pubkey::default();
                     square.count[square_id] -= 1;
+
+                    sol_log(
+                        &format!(
+                            "Kicking miner {} from square {}. Refunding: {}",
+                            smallest_miner.authority, square_id, smallest_deployment
+                        )
+                        .as_str(),
+                    );
                     break 'refund;
                 }
             }
@@ -245,6 +244,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         // Safety check.
         // Skip if square count is still >= 16. This can only happen if the signer didn't provide a miner account to refund.
         if square.count[square_id] >= 16 {
+            sol_log(&format!("Square {} is full. Skipping deployment.", square_id).as_str());
             continue 'deploy;
         }
 
@@ -264,23 +264,14 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         // Update square deployed
         square.deployed[square_id][idx] += amount;
 
-        // Update total fee and amount
-        total_fee += fee;
+        // Update total amount
         total_amount += amount;
-    }
-
-    // Transfer SOL refunds.
-    for (square_id, refund_amount) in refund_amounts.iter().enumerate() {
-        if let Some(refund_miner_info) = refund_miner_infos[square_id] {
-            board_info.send(*refund_amount, &refund_miner_info);
-        }
     }
 
     // Transfer SOL.
     if let Some(automation) = automation {
-        automation.balance -= total_amount + total_fee + automation.fee;
+        automation.balance -= total_amount + automation.fee;
         automation_info.send(total_amount, &board_info);
-        automation_info.send(total_fee, &fee_collector_info);
         automation_info.send(automation.fee, &signer_info);
 
         // Close automation if balance is 0.
@@ -289,7 +280,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         }
     } else {
         board_info.collect(total_amount, &signer_info)?;
-        fee_collector_info.collect(total_fee, &signer_info)?;
+    }
+
+    // Transfer SOL refunds.
+    for (square_id, refund_amount) in refund_amounts.iter().enumerate() {
+        if let Some(refund_miner_info) = refund_miner_infos[square_id] {
+            board_info.send(*refund_amount, &refund_miner_info);
+        }
     }
 
     Ok(())
