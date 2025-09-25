@@ -244,6 +244,7 @@ async fn reset(
         miners = square.miners[id as usize].to_vec();
     };
     let reset_ix = ore_api::sdk::reset(payer.pubkey(), config.fee_collector, miners);
+    // simulate_transaction(rpc, payer, &[reset_ix]).await;
     submit_transaction(rpc, payer, &[reset_ix]).await?;
     Ok(())
 }

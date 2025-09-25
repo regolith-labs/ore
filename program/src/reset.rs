@@ -52,7 +52,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if square_deployed == 0 {
         // Update board.
         board.total_vaulted = board.total_deployed;
-        treasury.balance += board.total_deployed;
+        treasury.balance += board.total_deployed - fee;
 
         // Emit event.
         program_log(
@@ -84,7 +84,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let mut winnings = 0;
     for (i, deployed) in board.deployed.iter().enumerate() {
         if i != winning_square {
-            winnings += deployed - (deployed / 100);
+            let fee = deployed / 100;
+            winnings += deployed - fee;
         }
     }
 
@@ -106,7 +107,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.round_id == board.id)?;
         let miner_deployed = miner.deployed[winning_square];
-        let rewards = miner_deployed + (winnings * miner_deployed / square_deployed); // Winners get their own prospect back plus their share of the winnings.
+        let fee = miner_deployed / 100;
+        let miner_winnings = winnings * miner_deployed / square_deployed;
+        let rewards = (miner_deployed - fee) + miner_winnings; // Winners get their own deployment back, minus fee, plus their share of the winnings.
         checksum += miner_deployed;
         miner.rewards_sol += rewards;
         miner.lifetime_rewards_sol += rewards;
