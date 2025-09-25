@@ -34,6 +34,12 @@ async fn main() {
         .expect("Missing COMMAND env var")
         .as_str()
     {
+        "migrate_squares" => {
+            migrate_squares(&rpc, &payer).await.unwrap();
+        }
+        "migrate_miners" => {
+            migrate_miners(&rpc, &payer).await.unwrap();
+        }
         "automations" => {
             log_automations(&rpc).await.unwrap();
         }
@@ -99,6 +105,91 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn test_kick(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let kps = [
+        read_keypair_file(&std::env::var("KEYPAIR_1").expect("Missing KEYPAIR_1 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_2").expect("Missing KEYPAIR_2 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_3").expect("Missing KEYPAIR_3 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_4").expect("Missing KEYPAIR_4 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_5").expect("Missing KEYPAIR_5 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_6").expect("Missing KEYPAIR_6 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_7").expect("Missing KEYPAIR_7 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_8").expect("Missing KEYPAIR_8 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_9").expect("Missing KEYPAIR_9 env var")).unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_10").expect("Missing KEYPAIR_10 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_11").expect("Missing KEYPAIR_11 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_12").expect("Missing KEYPAIR_12 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_13").expect("Missing KEYPAIR_13 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_14").expect("Missing KEYPAIR_14 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_15").expect("Missing KEYPAIR_15 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_16").expect("Missing KEYPAIR_16 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_17").expect("Missing KEYPAIR_17 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_18").expect("Missing KEYPAIR_18 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_19").expect("Missing KEYPAIR_19 env var"))
+            .unwrap(),
+        read_keypair_file(&std::env::var("KEYPAIR_20").expect("Missing KEYPAIR_20 env var"))
+            .unwrap(),
+    ];
+
+    let config = get_config(rpc).await?;
+    for (i, kp) in kps.iter().enumerate() {
+        let amount = 1000 + i as u64;
+        let mut squares = [false; 25];
+        squares[0] = true;
+        let deploy_ix = ore_api::sdk::deploy(
+            kp.pubkey(),
+            kp.pubkey(),
+            config.fee_collector,
+            amount,
+            squares,
+        );
+        println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
+        submit_transaction(rpc, &kp, &[deploy_ix]).await?;
+    }
+
+    Ok(())
+}
+
+async fn migrate_miners(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let miners = get_old_miners(rpc).await?;
+    for (i, (address, miner)) in miners.iter().enumerate() {
+        println!(
+            "[{}/{}] Migrating miner: {}",
+            i + 1,
+            miners.len(),
+            miner.authority
+        );
+        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), *address);
+        submit_transaction(rpc, payer, &[ix]).await?;
+    }
+    Ok(())
+}
+
+async fn migrate_squares(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::migrate_squares(payer.pubkey());
+    // simulate_transaction(rpc, payer, &[ix]).await;
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn ata(
@@ -180,8 +271,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
@@ -364,6 +455,7 @@ async fn log_miner(
     println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
     println!("  deployed: {:?}", miner.deployed);
+    println!("  refund_sol: {}", miner.refund_sol);
     println!("  rewards_sol: {}", miner.rewards_sol);
     println!("  rewards_ore: {}", miner.rewards_ore);
     println!("  round_id: {}", miner.round_id);
@@ -495,6 +587,11 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
 #[allow(dead_code)]
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
+    Ok(miners)
+}
+
+async fn get_old_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
+    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 

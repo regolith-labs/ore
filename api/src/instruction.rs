@@ -18,8 +18,6 @@ pub enum OreInstruction {
     Wrap = 10,
     SetAdmin = 11,
     SetFeeCollector = 12,
-    MigrateMiner = 13,
-    MigrateSquares = 14,
 
     // Seeker
     ClaimSeeker = 15,
@@ -123,14 +121,6 @@ pub struct Bury {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MigrateMiner {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MigrateSquares {}
-
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
@@ -144,5 +134,3 @@ instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, ClaimSeeker);
-instruction!(OreInstruction, MigrateMiner);
-instruction!(OreInstruction, MigrateSquares);

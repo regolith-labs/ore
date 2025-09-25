@@ -1,7 +1,5 @@
 use steel::*;
 
-use crate::state::OreAccountOLD;
-
 use super::OreAccount;
 
 /// Treasury is a singleton account which is the mint authority for the ORE token and the authority of
@@ -24,4 +22,3 @@ pub struct TreasuryOLD {
 }
 
 account!(OreAccount, Treasury);
-account!(OreAccountOLD, TreasuryOLD);

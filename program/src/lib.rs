@@ -7,8 +7,6 @@ mod claim_sol;
 mod deploy;
 mod initialize;
 mod log;
-mod migrate_miner;
-mod migrate_squares;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
@@ -24,8 +22,6 @@ use claim_sol::*;
 use deploy::*;
 use initialize::*;
 use log::*;
-use migrate_miner::*;
-use migrate_squares::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -57,11 +53,10 @@ pub fn process_instruction(
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
-        OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
-        OreInstruction::MigrateSquares => process_migrate_squares(accounts, data)?,
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
+        // _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

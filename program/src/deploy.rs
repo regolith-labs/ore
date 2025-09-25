@@ -91,7 +91,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .as_str(),
     );
 
-    // Create miner.
+    // Open miner account.
     let miner = if miner_info.data_is_empty() {
         create_program_account::<Miner>(
             miner_info,
@@ -103,6 +103,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
+        miner.refund_sol = 0;
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
         miner.round_id = board.id;
@@ -138,6 +139,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
         // Reset squares
         square.count = [0; 25];
+        square.deployed = [[0; 16]; 25];
         square.miners = [[Pubkey::default(); 16]; 25];
     }
 
@@ -174,13 +176,20 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             square.count[square_id] as usize
         } else {
             // Find the miner's index in the list.
+            let mut found = false;
             let mut idx = 0;
             for i in 0..16 {
                 if square.miners[square_id][i] == miner.authority {
                     idx = i;
+                    found = true;
                     break;
                 }
             }
+
+            // Safety check.
+            // This should never happen.
+            assert!(found);
+
             idx
         };
 
@@ -207,8 +216,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             }
 
             // Refund the smallest miner and kick them off the square.
-            for miner_info in miner_accounts {
+            'refund: for miner_info in miner_accounts {
                 if *miner_info.key == miner_pda(smallest_miner).0 {
+                    // Refund the smallest miner.
                     let smallest_miner = miner_info
                         .as_account_mut::<Miner>(&ore_api::ID)?
                         .assert_mut(|m| m.authority == smallest_miner)?;
@@ -217,14 +227,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     refund_amounts[square_id] = smallest_deployment;
                     refund_miner_infos[square_id] = Some(miner_info);
 
-                    // Remove smallest miner from square
+                    // Kick the smallest miner from the square.
                     board.deployed[square_id] -= smallest_deployment;
                     board.total_deployed -= smallest_deployment;
                     square.deployed[square_id][idx] -= smallest_deployment;
                     square.miners[square_id][idx] = Pubkey::default();
                     square.count[square_id] -= 1;
-
-                    break;
+                    break 'refund;
                 }
             }
         }
@@ -234,7 +243,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         assert!(idx < 16);
 
         // Safety check.
-        // Skip if square count is >= 16. This can only happen if the signer didn't provide a miner account to refund.
+        // Skip if square count is still >= 16. This can only happen if the signer didn't provide a miner account to refund.
         if square.count[square_id] >= 16 {
             continue 'deploy;
         }
