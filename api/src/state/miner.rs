@@ -17,6 +17,9 @@ pub struct Miner {
     #[deprecated(note = "Use automation executor instead")]
     pub executor: Pubkey,
 
+    /// The amount of SOL this miner has had refunded and may claim.
+    pub refund_sol: u64,
+
     /// The amount of SOL this miner can claim.
     pub rewards_sol: u64,
 

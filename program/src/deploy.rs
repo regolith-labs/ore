@@ -13,8 +13,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
+    let (required_accounts, miner_accounts) = accounts.split_at(9);
     let [signer_info, authority_info, automation_info, board_info, config_info, fee_collector_info, miner_info, square_info, system_program] =
-        accounts
+        required_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -78,11 +79,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         for i in 0..25 {
             squares[i] = (mask & (1 << i)) != 0;
         }
-    }
-
-    // Check minimum amount.
-    if amount < config.min_deploy_amount {
-        return Err(trace("Amount too small", OreError::AmountTooSmall.into()));
     }
 
     // Log
@@ -156,29 +152,118 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let amount = amount - fee;
 
     // Calculate all deployments.
+    let mut refund_amounts = [0; 25];
+    let mut refund_miner_infos = [None; 25];
     let mut total_fee = 0;
     let mut total_amount = 0;
-    for (square_id, &should_deploy) in squares.iter().enumerate() {
+    'deploy: for (square_id, &should_deploy) in squares.iter().enumerate() {
+        // Skip if square index is out of bounds.
         if square_id > 24 {
             break;
         }
-        if should_deploy {
-            total_fee += fee;
-            total_amount += amount;
 
-            // Update miner
-            let is_first_move = miner.deployed[square_id] == 0;
-            miner.deployed[square_id] += amount;
+        // Skip if square is not deployed to.
+        if !should_deploy {
+            continue;
+        }
 
-            // Update square
-            if is_first_move {
-                square.miners[square_id][square.count[square_id] as usize] = miner.authority;
-                square.count[square_id] += 1;
+        // Get deployment metadata.
+        let is_first_move = miner.deployed[square_id] == 0;
+        let mut idx = if is_first_move {
+            // Insert at end of the list.
+            square.count[square_id] as usize
+        } else {
+            // Find the miner's index in the list.
+            let mut idx = 0;
+            for i in 0..16 {
+                if square.miners[square_id][i] == miner.authority {
+                    idx = i;
+                    break;
+                }
+            }
+            idx
+        };
+
+        // If the square is full, refund the miner with the smallest deployment and kick them off the square.
+        if idx == 16 {
+            // Find miner with the smallest deployment.
+            let mut smallest_miner = Pubkey::default();
+            let mut smallest_deployment = u64::MAX;
+            for i in 0..16 {
+                if square.deployed[square_id][i] < smallest_deployment {
+                    smallest_deployment = square.deployed[square_id][i];
+                    smallest_miner = square.miners[square_id][i];
+                    idx = i;
+                }
             }
 
-            // Update board
-            board.deployed[square_id] += amount;
-            board.total_deployed += amount;
+            // Safety check.
+            // This should never happen.
+            assert!(smallest_miner != Pubkey::default());
+
+            // If deploy amount is less than smallest deployment, skip this square.
+            if amount < smallest_deployment {
+                continue 'deploy;
+            }
+
+            // Refund the smallest miner and kick them off the square.
+            for miner_info in miner_accounts {
+                if *miner_info.key == miner_pda(smallest_miner).0 {
+                    let smallest_miner = miner_info
+                        .as_account_mut::<Miner>(&ore_api::ID)?
+                        .assert_mut(|m| m.authority == smallest_miner)?;
+                    smallest_miner.refund_sol += smallest_deployment;
+                    smallest_miner.deployed[square_id] -= smallest_deployment;
+                    refund_amounts[square_id] = smallest_deployment;
+                    refund_miner_infos[square_id] = Some(miner_info);
+
+                    // Remove smallest miner from square
+                    board.deployed[square_id] -= smallest_deployment;
+                    board.total_deployed -= smallest_deployment;
+                    square.deployed[square_id][idx] -= smallest_deployment;
+                    square.miners[square_id][idx] = Pubkey::default();
+                    square.count[square_id] -= 1;
+
+                    break;
+                }
+            }
+        }
+
+        // Safety check.
+        // This should never happen.
+        assert!(idx < 16);
+
+        // Safety check.
+        // Skip if square count is >= 16. This can only happen if the signer didn't provide a miner account to refund.
+        if square.count[square_id] >= 16 {
+            continue 'deploy;
+        }
+
+        // Update miner
+        miner.deployed[square_id] += amount;
+
+        // Update square
+        if is_first_move {
+            square.miners[square_id][idx] = miner.authority;
+            square.count[square_id] += 1;
+        }
+
+        // Update board
+        board.deployed[square_id] += amount;
+        board.total_deployed += amount;
+
+        // Update square deployed
+        square.deployed[square_id][idx] += amount;
+
+        // Update total fee and amount
+        total_fee += fee;
+        total_amount += amount;
+    }
+
+    // Transfer SOL refunds.
+    for (square_id, refund_amount) in refund_amounts.iter().enumerate() {
+        if let Some(refund_miner_info) = refund_miner_infos[square_id] {
+            board_info.send(*refund_amount, &refund_miner_info);
         }
     }
 

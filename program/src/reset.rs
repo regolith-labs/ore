@@ -17,7 +17,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| b.slot_hash == [0; 32])?
         .assert_mut(|b| clock.slot > b.end_slot)?;
-    let config = config_info.as_account_mut::<Config>(&ore_api::ID)?;
+    config_info.as_account::<Config>(&ore_api::ID)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
@@ -140,25 +140,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Update board.
     board.total_winnings = winnings;
-
-    // Update min deploy amount.
-    let capacity: u64 = 16 * 25;
-    let threshold = (capacity * 3) / 4;
-    let mut occupancy = 0;
-    for i in 0..25 {
-        occupancy += square.count[i];
-    }
-    if occupancy == capacity {
-        // If board is full, double the minimum deploy amount.
-        config.min_deploy_amount = 1u64.max(config.min_deploy_amount * 2);
-    } else if occupancy < threshold {
-        // If board is less than 75% full, reduce minimum deploy amount linearly.
-        let availability = capacity.saturating_sub(occupancy);
-        let pct = (availability * 100) / capacity;
-        let chg = (pct.saturating_sub(25) * 100) / 75;
-        let dif = (config.min_deploy_amount * chg) / 100;
-        config.min_deploy_amount = config.min_deploy_amount.saturating_sub(dif);
-    }
 
     // Emit event.
     program_log(

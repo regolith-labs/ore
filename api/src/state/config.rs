@@ -14,6 +14,7 @@ pub struct Config {
     pub last_boost: i64,
 
     // The minimum amount of SOL that can be deploy.
+    #[deprecated(since = "1.0.0", note = "Unused")]
     pub min_deploy_amount: u64,
 
     // The address that receives fees.
