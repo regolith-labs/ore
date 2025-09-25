@@ -420,7 +420,6 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("Config");
     println!("  admin: {}", config.admin);
     println!("  last_boost: {}", config.last_boost);
-    println!("  min_deploy_amount: {}", config.min_deploy_amount);
     println!("  fee_collector: {}", config.fee_collector);
     Ok(())
 }
