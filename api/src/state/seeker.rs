@@ -2,11 +2,11 @@ use steel::*;
 
 use super::OreAccount;
 
-/// Seeker is an account which prevents multiple Seeker genesis tokens from being claimed.
+/// Seeker tracks which Seeker genesis tokens have been claimed.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
 pub struct Seeker {
-    // The mint address of the Seeker token.
+    // The mint address of a Seeker genesis token.
     pub mint: Pubkey,
 }
 

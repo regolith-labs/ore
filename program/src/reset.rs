@@ -183,7 +183,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode = 0;
     }
 
-    // If activation is enabled, pay out 1 ORE to all Seeker miners, proportional to their deployment.
+    // If Seeker activation is enabled, pay out 1 ORE to all winning Seeker miners, proportional to their deployment.
     let mint = mint_info.as_mint()?;
     let seeker_mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
     if config.is_seeker_activation_enabled == 1

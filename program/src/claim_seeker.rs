@@ -12,7 +12,7 @@ use spl_token_2022::{
     pod::{PodCOption, PodMint},
 };
 
-/// Claims ORE for seeker device.
+/// Claims a Seeker genesis token for a miner.
 pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, miner_info, mint_info, seeker_info, token_account_info, system_program] =
@@ -65,6 +65,7 @@ pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Progr
         miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| m.authority == *signer_info.key)?
+            .assert_mut(|m| m.is_seeker == 0)?
     };
 
     // Load mint.
@@ -89,7 +90,7 @@ pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Progr
         "metadata address mismatch"
     );
 
-    // Give miner a Seeker designation.
+    // Flag the miner as a Seeker.
     miner.is_seeker = 1;
 
     Ok(())
