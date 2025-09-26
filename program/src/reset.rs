@@ -132,7 +132,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Safety check.
-    // This can only happen if the caller didn't provide complete set of winning miners.
+    // This can only happen if the caller didn't provide complete set of winning miner accounts.
     assert!(checksum == square_deployed, "Invalid checksum");
 
     // Payout 1 ORE to the winning miner.
@@ -175,9 +175,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode = 0;
     }
 
-    // Top up the motherlode.
+    // Top up the motherlode rewards pool.
     let mint = mint_info.as_mint()?;
-    let motherlode_mint_amount = 0; // (ONE_ORE / 5).min(MAX_SUPPLY - mint.supply());
+    let motherlode_mint_amount = (ONE_ORE / 5).min(MAX_SUPPLY - mint.supply());
     if motherlode_mint_amount > 0 {
         mint_to_signed(
             mint_info,
