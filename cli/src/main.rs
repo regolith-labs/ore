@@ -80,6 +80,9 @@ async fn main() {
         "square" => {
             log_square(&rpc).await.unwrap();
         }
+        "migrate_miners" => {
+            migrate_miners(&rpc, &payer).await.unwrap();
+        }
         "test_kick" => {
             test_kick(&rpc).await.unwrap();
         }
@@ -101,6 +104,25 @@ async fn main() {
         _ => panic!("Invalid command"),
     };
 }
+
+async fn migrate_miners(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let miners = get_miners(rpc).await?;
+    for (i, (address, miner)) in miners.iter().enumerate() {
+        println!(
+            "[{}/{}] Migrating miner {}",
+            i + 1,
+            miners.len(),
+            miner.authority
+        );
+        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), *address);
+        submit_transaction(rpc, payer, &[ix]).await?;
+    }
+    Ok(())
+}
+
 // Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR
 // Az9Xia5f6EXU9MGHuuMCKyHMy3MfNnsoyTbh7HTuFw5G
 // 5muLAbcjsAMcP8438KPfo2Jqw2vgAtuSDvMFNWb6Bexi

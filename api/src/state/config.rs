@@ -13,9 +13,8 @@ pub struct Config {
     // The last boost timestamp.
     pub last_boost: i64,
 
-    // The minimum amount of SOL that can be deploy.
-    #[deprecated(since = "1.0.0", note = "Unused")]
-    pub min_deploy_amount: u64,
+    // Whether seeker activation is enabled.
+    pub is_seeker_activation_enabled: u64,
 
     // The address that receives fees.
     pub fee_collector: Pubkey,

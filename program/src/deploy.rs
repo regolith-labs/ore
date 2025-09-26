@@ -100,6 +100,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
+        miner.is_seeker = 0;
         miner.refund_sol = 0;
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;

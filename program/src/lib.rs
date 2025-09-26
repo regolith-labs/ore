@@ -7,6 +7,7 @@ mod claim_sol;
 mod deploy;
 mod initialize;
 mod log;
+mod migrate_miner;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
@@ -22,6 +23,7 @@ use claim_sol::*;
 use deploy::*;
 use initialize::*;
 use log::*;
+use migrate_miner::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -56,6 +58,7 @@ pub fn process_instruction(
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
+        OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
         // _ => return Err(ProgramError::InvalidInstructionData),
     }
 

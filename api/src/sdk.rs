@@ -359,3 +359,17 @@ pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
         data: ClaimSeeker {}.to_bytes(),
     }
 }
+
+pub fn migrate_miner(signer: Pubkey, address: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateMiner {}.to_bytes(),
+    }
+}
