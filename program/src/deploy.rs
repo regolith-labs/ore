@@ -80,7 +80,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Log
     sol_log(
         &format!(
-            "Deploying {} SOL to {} squares",
+            "Round {}. Deploying {} SOL to {} squares",
+            board.id,
             lamports_to_sol(amount),
             squares.iter().filter(|&&s| s).count(),
         )

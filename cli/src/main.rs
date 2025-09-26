@@ -12,6 +12,7 @@ use solana_client::{
 };
 use solana_sdk::{
     compute_budget::ComputeBudgetInstruction,
+    native_token::lamports_to_sol,
     pubkey,
     pubkey::Pubkey,
     signature::{read_keypair_file, Signer},
@@ -19,7 +20,7 @@ use solana_sdk::{
     transaction::Transaction,
 };
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::ui_amount_to_amount;
+use spl_token::{amount_to_ui_amount, ui_amount_to_amount};
 use steel::{AccountDeserialize, Clock, Discriminator};
 
 #[tokio::main]
@@ -223,8 +224,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
@@ -369,7 +370,11 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
-    println!("  balance: {}", treasury.balance);
+    println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
+    println!(
+        "  motherlode: {} ORE",
+        amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
+    );
     Ok(())
 }
 

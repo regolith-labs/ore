@@ -98,14 +98,21 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Assert
     assert!(board.total_deployed >= vault_amount + winnings + fee);
 
+    // Check if motherlode was activated.
+    let motherlode_activated = is_motherlode_activated(r);
+
     // Record miner rewards.
     let mut miner_deployments = [0; 16];
     let mut rewards_sol = [0; 16];
     let mut checksum = 0;
     for (i, miner_info) in miner_accounts.iter().enumerate() {
+        // Load miner.
         let miner = miner_info
             .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.round_id == board.id)?;
+            .assert_mut(|m| m.round_id == board.id)?
+            .assert_mut(|m| m.authority == square.miners[winning_square][i])?;
+
+        // Record SOL winnings.
         let miner_deployed = miner.deployed[winning_square];
         let fee = miner_deployed / 100;
         let miner_winnings = winnings * miner_deployed / square_deployed;
@@ -116,22 +123,20 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         rewards_sol[i] = rewards;
         miner_deployments[i] = miner_deployed;
 
-        // Check if miner was provided in correct order.
-        if miner.authority != square.miners[winning_square][i] {
-            return Err(trace(
-                "Incorrect miner order",
-                ProgramError::InvalidAccountData,
-            ));
+        // Record ORE motherlode winnings.
+        if motherlode_activated {
+            let motherlode_winnings = treasury.motherlode * miner_deployed / square_deployed;
+            miner.rewards_ore += motherlode_winnings;
+            miner.lifetime_rewards_ore += motherlode_winnings;
         }
     }
 
-    // Verify checksum.
-    if checksum != square_deployed {
-        // This can only happen if the caller didn't provide full set of winning miners.
-        return Err(trace("Invalid checksum", ProgramError::InvalidAccountData));
-    }
+    // Safety check.
+    // This can only happen if the caller didn't provide complete set of winning miners.
+    assert!(checksum == square_deployed, "Invalid checksum");
 
-    // Payout 1 ORE to the winning miner, proportional to their deployed amount on the winning square.
+    // Payout 1 ORE to the winning miner.
+    // Each miner's chance of winning is proportional to their deposit amount relative to total deposits on the winning square.
     let mut mint_amount = 0;
     if let Some(i) = get_winning_miner(r, square_deployed, miner_deployments) {
         let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
@@ -151,6 +156,40 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         }
     }
 
+    // Reset the motherlode if it was activated.
+    if motherlode_activated {
+        // Log the motherlode event.
+        program_log(
+            &[board_info.clone(), ore_program.clone()],
+            MotherlodeEvent {
+                disc: 2,
+                amount: treasury.motherlode,
+                round_id: board.id,
+                num_miners: square.count[winning_square],
+                ts: clock.unix_timestamp,
+            }
+            .to_bytes(),
+        )?;
+
+        // Reset the motherlode.
+        treasury.motherlode = 0;
+    }
+
+    // Top up the motherlode.
+    let mint = mint_info.as_mint()?;
+    let motherlode_mint_amount = 0; // (ONE_ORE / 5).min(MAX_SUPPLY - mint.supply());
+    if motherlode_mint_amount > 0 {
+        mint_to_signed(
+            mint_info,
+            treasury_tokens_info,
+            treasury_info,
+            token_program,
+            motherlode_mint_amount,
+            &[TREASURY],
+        )?;
+        treasury.motherlode += motherlode_mint_amount;
+    }
+
     // Update board.
     board.total_winnings = winnings;
 
@@ -168,7 +207,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_deployed: board.total_deployed,
             total_vaulted: board.total_vaulted,
             total_winnings: board.total_winnings,
-            total_minted: mint_amount,
+            total_minted: mint_amount + motherlode_mint_amount,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),
@@ -215,6 +254,12 @@ fn rng(slot_hash: &[u8]) -> u64 {
 fn get_winning_square(r: u64) -> usize {
     // Returns a value in the range [0, 25)
     (r % 25) as usize
+}
+
+fn is_motherlode_activated(r: u64) -> bool {
+    // Returns true if the motherlode was activated with 1/625 chance.
+    let r = r.reverse_bits();
+    (r % 625) == 0
 }
 
 /// Randomly selects a winning miner based on their proportional deposits.

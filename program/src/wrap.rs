@@ -1,4 +1,5 @@
 use ore_api::prelude::*;
+use solana_program::rent::Rent;
 use steel::*;
 
 /// Send SOL from the treasury to the WSOL account.
@@ -20,6 +21,13 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
 
     // Send SOL to the WSOL account.
     treasury_info.send(treasury.balance, treasury_sol_info);
+
+    // Check min balance.
+    let min_balance = Rent::get()?.minimum_balance(std::mem::size_of::<Treasury>());
+    assert!(
+        treasury_sol_info.lamports() >= min_balance,
+        "Insufficient SOL balance"
+    );
 
     // Update treasury.
     treasury.balance = 0;

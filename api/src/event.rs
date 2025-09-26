@@ -3,6 +3,7 @@ use steel::*;
 pub enum OreEvent {
     Reset = 0,
     Bury = 1,
+    Motherlode = 2,
 }
 
 #[repr(C)]
@@ -64,5 +65,25 @@ pub struct BuryEvent {
     pub ts: i64,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+pub struct MotherlodeEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The amount of ORE minted to the motherlode.
+    pub amount: u64,
+
+    /// The round id.
+    pub round_id: u64,
+
+    /// The number of winners.
+    pub num_miners: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(ResetEvent);
 event!(BuryEvent);
+event!(MotherlodeEvent);
