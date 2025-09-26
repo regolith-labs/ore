@@ -126,21 +126,21 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         miner_deployments[i] = miner_deployed;
         is_seeker[i] = miner.is_seeker == 1;
 
-        // Record Seeker deployed balance.
-        if is_seeker[i] {
-            total_seeker_deployed += miner_deployed;
-        }
-
         // Record ORE motherlode winnings.
         if motherlode_activated {
             let motherlode_winnings = treasury.motherlode * miner_deployed / square_deployed;
             miner.rewards_ore += motherlode_winnings;
             miner.lifetime_rewards_ore += motherlode_winnings;
         }
+
+        // Record Seeker deployed balance.
+        if is_seeker[i] {
+            total_seeker_deployed += miner_deployed;
+        }
     }
 
     // Safety check.
-    // This can only happen if the caller didn't provide complete set of winning miner accounts.
+    // This can only happen if the caller didn't provide a complete set of winning miner accounts.
     assert!(checksum == square_deployed, "Invalid checksum");
 
     // Payout 1 ORE to the winning miner.
@@ -150,9 +150,12 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
         mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
         if mint_amount > 0 {
+            // Record rewards of the winning miner.
             miner.rewards_ore += mint_amount;
             miner.lifetime_rewards_ore += mint_amount;
             board.top_miner = miner.authority;
+
+            // Mint 1 ORE for the winning miner.
             mint_to_signed(
                 mint_info,
                 treasury_tokens_info,
@@ -190,7 +193,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         && total_seeker_deployed > 0
         && seeker_mint_amount > 0
     {
-        // Record Seeker rewards.
+        // Record rewards of Seeker miners.
         for (i, is_seeker) in is_seeker.iter().enumerate() {
             if *is_seeker {
                 let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
@@ -200,7 +203,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             }
         }
 
-        // Mint 1 ORE to Seeker miners.
+        // Mint 1 ORE for Seeker miners.
         mint_to_signed(
             mint_info,
             treasury_tokens_info,
