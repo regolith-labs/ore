@@ -14,11 +14,4 @@ pub struct Treasury {
     pub motherlode: u64,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct TreasuryOLD {
-    // The amount of SOL collected for buy-bury operations.
-    pub balance: u64,
-}
-
 account!(OreAccount, Treasury);

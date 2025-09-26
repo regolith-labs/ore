@@ -345,12 +345,16 @@ pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
 }
 
 pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
+    let seeker_address = seeker_pda(mint).0;
+    let token_account_address = get_associated_token_address(&signer, &mint);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new(seeker_address, false),
+            AccountMeta::new(token_account_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: ClaimSeeker {}.to_bytes(),
     }

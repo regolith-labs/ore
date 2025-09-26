@@ -32,6 +32,9 @@ pub const CONFIG: &[u8] = b"config";
 /// The seed of the miner account PDA.
 pub const MINER: &[u8] = b"miner";
 
+/// The seed of the seeker account PDA.
+pub const SEEKER: &[u8] = b"seeker";
+
 /// The seed of the square account PDA.
 pub const SQUARE: &[u8] = b"square";
 

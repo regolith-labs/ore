@@ -2,6 +2,7 @@ mod automation;
 mod board;
 mod config;
 mod miner;
+mod seeker;
 mod square;
 mod treasury;
 
@@ -9,6 +10,7 @@ pub use automation::*;
 pub use board::*;
 pub use config::*;
 pub use miner::*;
+pub use seeker::*;
 pub use square::*;
 pub use treasury::*;
 
@@ -27,6 +29,7 @@ pub enum OreAccount {
     //
     Board = 105,
     Square = 106,
+    Seeker = 107,
 }
 
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {
@@ -43,6 +46,10 @@ pub fn config_pda() -> (Pubkey, u8) {
 
 pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[MINER, &authority.to_bytes()], &crate::ID)
+}
+
+pub fn seeker_pda(mint: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[SEEKER, &mint.to_bytes()], &crate::ID)
 }
 
 pub fn square_pda() -> (Pubkey, u8) {

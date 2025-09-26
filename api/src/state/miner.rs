@@ -13,9 +13,12 @@ pub struct Miner {
     /// The miner's prospects in the current round.
     pub deployed: [u64; 25],
 
-    /// The executor with permmission to deploy capital with this account.
+    /// Unused buffer.
     #[deprecated(note = "Use automation executor instead")]
-    pub executor: Pubkey,
+    pub buffer: [u8; 24],
+
+    /// Whether this miner is associated with a Solana Seeker.
+    pub is_seeker: u64,
 
     /// The amount of SOL this miner has had refunded and may claim.
     pub refund_sol: u64,
