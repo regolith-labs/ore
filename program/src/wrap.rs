@@ -25,7 +25,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     // Check min balance.
     let min_balance = Rent::get()?.minimum_balance(std::mem::size_of::<Treasury>());
     assert!(
-        treasury_sol_info.lamports() >= min_balance,
+        treasury_info.lamports() >= min_balance,
         "Insufficient SOL balance"
     );
 

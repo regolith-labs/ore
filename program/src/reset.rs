@@ -128,7 +128,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
         // Record ORE motherlode winnings.
         if motherlode_activated {
-            let motherlode_winnings = treasury.motherlode * miner_deployed / square_deployed;
+            let motherlode_winnings = ((treasury.motherlode as u128 * miner_deployed as u128)
+                / square_deployed as u128) as u64;
             miner.rewards_ore += motherlode_winnings;
             miner.lifetime_rewards_ore += motherlode_winnings;
         }
@@ -295,12 +296,12 @@ fn get_winning_square(r: u64) -> usize {
     (r % 25) as usize
 }
 
+// Returns true if the motherlode was activated, with 1 in 625 chance.
 fn is_motherlode_activated(r: u64) -> bool {
-    // Returns true if the motherlode was activated with 1/625 chance.
     let r = r.reverse_bits();
     let x = r % 625;
     if x == 0 {
-        sol_log("Motherlode was activated");
+        sol_log("Motherlode hit!");
     } else {
         sol_log(&format!("Motherlode missed by {}", x).as_str());
     }
@@ -335,6 +336,9 @@ fn get_winning_miner(r: u64, total_deployed: u64, miner_deployed: [u64; 16]) -> 
 
 #[cfg(test)]
 mod tests {
+    use ore_api::consts::ONE_ORE;
+    use solana_program::native_token::sol_to_lamports;
+
     #[test]
     fn test_get_winning_square() {
         let capacity = 400u64;
@@ -355,5 +359,15 @@ mod tests {
             }
         }
         // assert!(false);
+    }
+
+    #[test]
+    fn test_motherlode_math() {
+        let motherlode = ONE_ORE * 250;
+        let sol_deployed = sol_to_lamports(1.0);
+        let total_sol_deploy = sol_deployed * 2;
+        let motherlode_winnings =
+            ((motherlode as u128 * sol_deployed as u128) / total_sol_deploy as u128) as u64;
+        println!("Motherlode winnings: {}", motherlode_winnings);
     }
 }
