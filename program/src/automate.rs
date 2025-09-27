@@ -1,8 +1,6 @@
 use ore_api::prelude::*;
 use steel::*;
 
-use crate::whitelist::AUTHORIZED_ACCOUNTS;
-
 /// Sets the executor.
 pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -27,10 +25,10 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         )?;
     system_program.is_program(&system_program::ID)?;
 
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
+    // // Check whitelist
+    // if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
+    //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
+    // }
 
     // Close account if executor is Pubkey::default().
     if *executor_info.key == Pubkey::default() {

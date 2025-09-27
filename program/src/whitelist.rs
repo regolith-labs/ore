@@ -1,6 +1,7 @@
 use solana_program::pubkey;
 use steel::*;
 
+#[deprecated(note = "No longer used")]
 pub const AUTHORIZED_ACCOUNTS: [Pubkey; 280] = [
     pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"),
     pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),

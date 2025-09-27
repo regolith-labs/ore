@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::slot_hashes::SlotHashes;
+use solana_program::{log::sol_log, slot_hashes::SlotHashes};
 use steel::*;
 
 /// Pays out the winners and block reward.
@@ -298,7 +298,13 @@ fn get_winning_square(r: u64) -> usize {
 fn is_motherlode_activated(r: u64) -> bool {
     // Returns true if the motherlode was activated with 1/625 chance.
     let r = r.reverse_bits();
-    (r % 625) == 0
+    let x = r % 625;
+    if x == 0 {
+        sol_log("Motherlode was activated");
+    } else {
+        sol_log(&format!("Motherlode missed by {}", x).as_str());
+    }
+    x == 0
 }
 
 /// Randomly selects a winning miner based on their proportional deposits.

@@ -11,7 +11,6 @@ mod migrate_miner;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
-mod whitelist;
 mod wrap;
 
 use automate::*;
@@ -59,7 +58,6 @@ pub fn process_instruction(
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
         OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
-        // _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

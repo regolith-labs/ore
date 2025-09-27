@@ -14,7 +14,7 @@ pub struct Miner {
     pub deployed: [u64; 25],
 
     /// Unused buffer.
-    #[deprecated(note = "Use automation executor instead")]
+    #[deprecated(note = "No longer used")]
     pub buffer: [u8; 24],
 
     /// Whether this miner is associated with a Solana Seeker.

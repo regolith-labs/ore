@@ -2,8 +2,6 @@ use ore_api::prelude::*;
 use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
-use crate::whitelist::AUTHORIZED_ACCOUNTS;
-
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -32,10 +30,10 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
+    // // Check whitelist
+    // if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
+    //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
+    // }
 
     // Check if signer is the automation executor.
     let automation = if !automation_info.data_is_empty() {
