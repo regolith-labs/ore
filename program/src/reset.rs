@@ -117,7 +117,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Record SOL winnings.
         let miner_deployed = miner.deployed[winning_square];
         let fee = miner_deployed / 100;
-        let miner_winnings = winnings * miner_deployed / square_deployed;
+        let miner_winnings =
+            ((winnings as u128 * miner_deployed as u128) / square_deployed as u128) as u64;
         let rewards = (miner_deployed - fee) + miner_winnings; // Winners get their own deployment back, minus fee, plus their share of the winnings.
         checksum += miner_deployed;
         miner.rewards_sol += rewards;
@@ -198,7 +199,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         for (i, is_seeker) in is_seeker.iter().enumerate() {
             if *is_seeker {
                 let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
-                let reward = seeker_mint_amount * miner_deployments[i] / total_seeker_deployed;
+                let reward = ((seeker_mint_amount as u128 * miner_deployments[i] as u128)
+                    / total_seeker_deployed as u128) as u64;
                 miner.rewards_ore += reward;
                 miner.lifetime_rewards_ore += reward;
             }
