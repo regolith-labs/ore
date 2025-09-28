@@ -102,8 +102,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let motherlode_activated = is_motherlode_activated(r);
 
     // Record miner rewards.
-    let mut total_seeker_deployed = 0;
-    let mut is_seeker = [false; 16];
     let mut miner_deployments = [0; 16];
     let mut rewards_sol = [0; 16];
     let mut checksum = 0;
@@ -125,7 +123,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         miner.lifetime_rewards_sol += rewards;
         rewards_sol[i] = rewards;
         miner_deployments[i] = miner_deployed;
-        is_seeker[i] = miner.is_seeker == 1;
 
         // Record ORE motherlode winnings.
         if motherlode_activated {
@@ -133,11 +130,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 / square_deployed as u128) as u64;
             miner.rewards_ore += motherlode_winnings;
             miner.lifetime_rewards_ore += motherlode_winnings;
-        }
-
-        // Record Seeker deployed balance.
-        if is_seeker[i] {
-            total_seeker_deployed += miner_deployed;
         }
     }
 
@@ -188,35 +180,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode = 0;
     }
 
-    // If Seeker activation is enabled, pay out 1 ORE to all winning Seeker miners, proportional to their deployment.
-    let mint = mint_info.as_mint()?;
-    let seeker_mint_amount = ONE_ORE.min(MAX_SUPPLY - mint.supply());
-    if config.is_seeker_activation_enabled == 1
-        && total_seeker_deployed > 0
-        && seeker_mint_amount > 0
-    {
-        // Record rewards of Seeker miners.
-        for (i, is_seeker) in is_seeker.iter().enumerate() {
-            if *is_seeker {
-                let miner = miner_accounts[i].as_account_mut::<Miner>(&ore_api::ID)?;
-                let reward = ((seeker_mint_amount as u128 * miner_deployments[i] as u128)
-                    / total_seeker_deployed as u128) as u64;
-                miner.rewards_ore += reward;
-                miner.lifetime_rewards_ore += reward;
-            }
-        }
-
-        // Mint 1 ORE for Seeker miners.
-        mint_to_signed(
-            mint_info,
-            treasury_tokens_info,
-            treasury_info,
-            token_program,
-            seeker_mint_amount,
-            &[TREASURY],
-        )?;
-    }
-
     // Top up the motherlode rewards pool.
     let mint = mint_info.as_mint()?;
     let motherlode_mint_amount = (ONE_ORE / 5).min(MAX_SUPPLY - mint.supply());
@@ -249,7 +212,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_deployed: board.total_deployed,
             total_vaulted: board.total_vaulted,
             total_winnings: board.total_winnings,
-            total_minted: mint_amount + motherlode_mint_amount + seeker_mint_amount,
+            total_minted: mint_amount + motherlode_mint_amount,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),
