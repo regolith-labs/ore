@@ -1,6 +1,6 @@
 # ORE
 
-ORE is a crypto mining game. Players compete to earn cryptocurrency by prospecting on blocks that contain digital treasure.
+ORE is a crypto mining game.
 
 
 ## API
