@@ -1,6 +1,7 @@
 # ORE
 
-ORE is a crypto mining game on the Solana blockchain. Players compete to earn cryptocurrency by prospecting on blocks rich with digital treasure.
+ORE is a crypto mining game. Players compete to earn cryptocurrency by prospecting on blocks that contain digital treasure.
+
 
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.
