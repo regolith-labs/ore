@@ -72,7 +72,7 @@ impl Stake {
         amount
     }
 
-    fn update_rewards(&mut self, treasury: &Treasury) {
+    pub fn update_rewards(&mut self, treasury: &Treasury) {
         // Accumulate rewards, weighted by stake balance.
         if treasury.rewards_factor > self.rewards_factor {
             let accumulated_rewards = treasury.rewards_factor - self.rewards_factor;
