@@ -74,14 +74,17 @@ async fn main() {
         "deploy" => {
             deploy(&rpc, &payer).await.unwrap();
         }
+        "stake" => {
+            log_stake(&rpc, &payer).await.unwrap();
+        }
         "deploy_all" => {
             deploy_all(&rpc, &payer).await.unwrap();
         }
         "square" => {
             log_square(&rpc).await.unwrap();
         }
-        "migrate_miners" => {
-            migrate_miners(&rpc, &payer).await.unwrap();
+        "seeker" => {
+            log_seeker(&rpc).await.unwrap();
         }
         "test_kick" => {
             test_kick(&rpc).await.unwrap();
@@ -103,24 +106,6 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn migrate_miners(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let miners = get_miners(rpc).await?;
-    for (i, (address, miner)) in miners.iter().enumerate() {
-        println!(
-            "[{}/{}] Migrating miner {}",
-            i + 1,
-            miners.len(),
-            miner.authority
-        );
-        let ix = ore_api::sdk::migrate_miner(payer.pubkey(), *address);
-        submit_transaction(rpc, payer, &[ix]).await?;
-    }
-    Ok(())
 }
 
 // Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR
@@ -171,6 +156,32 @@ async fn test_kick(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
         submit_transaction_no_confirm(rpc, &kp, &[deploy_ix]).await?;
     }
+
+    Ok(())
+}
+
+async fn log_stake(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
+    let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
+    let staker_address = ore_api::state::stake_pda(authority).0;
+    let stake = get_stake(rpc, authority).await?;
+    println!("Stake");
+    println!("  address: {}", staker_address);
+    println!("  authority: {}", authority);
+    println!("  balance: {}", stake.balance);
+    println!("  last_claim_at: {}", stake.last_claim_at);
+    println!("  last_deposit_at: {}", stake.last_deposit_at);
+    println!("  last_withdraw_at: {}", stake.last_withdraw_at);
+    println!(
+        "  rewards_factor: {}",
+        stake.rewards_factor.to_i80f48().to_string()
+    );
+    println!("  rewards: {}", stake.rewards);
+    println!("  lifetime_rewards: {}", stake.lifetime_rewards);
+    println!("  is_seeker: {}", stake.is_seeker);
 
     Ok(())
 }
@@ -397,6 +408,11 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         "  motherlode: {} ORE",
         amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
     );
+    println!(
+        "  rewards_factor: {}",
+        treasury.rewards_factor.to_i80f48().to_string()
+    );
+    println!("  total_staked: {}", treasury.total_staked);
     Ok(())
 }
 
@@ -429,6 +445,17 @@ async fn log_miner(
     println!("  round_id: {}", miner.round_id);
     println!("  lifetime_rewards_sol: {}", miner.lifetime_rewards_sol);
     println!("  lifetime_rewards_ore: {}", miner.lifetime_rewards_ore);
+    Ok(())
+}
+
+async fn log_seeker(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let mint = std::env::var("MINT").unwrap();
+    let mint = Pubkey::from_str(&mint).expect("Invalid MINT");
+    let seeker = get_seeker(&rpc, mint).await?;
+    let seeker_address = ore_api::state::seeker_pda(mint).0;
+    println!("Seeker");
+    println!("  address: {}", seeker_address);
+    println!("  mint: {}", seeker.mint);
     Ok(())
 }
 
@@ -549,6 +576,20 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     let data = rpc.get_account_data(&solana_sdk::sysvar::clock::ID).await?;
     let clock = bincode::deserialize::<Clock>(&data)?;
     Ok(clock)
+}
+
+async fn get_seeker(rpc: &RpcClient, mint: Pubkey) -> Result<Seeker, anyhow::Error> {
+    let seeker_pda = ore_api::state::seeker_pda(mint);
+    let account = rpc.get_account(&seeker_pda.0).await?;
+    let seeker = Seeker::try_from_bytes(&account.data)?;
+    Ok(*seeker)
+}
+
+async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::Error> {
+    let stake_pda = ore_api::state::stake_pda(authority);
+    let account = rpc.get_account(&stake_pda.0).await?;
+    let stake = Stake::try_from_bytes(&account.data)?;
+    Ok(*stake)
 }
 
 #[allow(dead_code)]

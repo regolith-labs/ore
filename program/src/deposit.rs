@@ -61,6 +61,9 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             .assert_mut(|s| s.authority == *signer_info.key)?
     };
 
+    // Only allow deposits from seekers.
+    assert!(stake.is_seeker == 1, "Only seekers can deposit stake");
+
     // Deposit into stake account.
     let amount = stake.deposit(amount, &clock, treasury, &sender);
 

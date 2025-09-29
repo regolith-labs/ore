@@ -26,7 +26,6 @@ pub enum OreInstruction {
 
     // Seeker
     ClaimSeeker = 15,
-    MigrateMiner = 16,
 }
 
 #[repr(C)]
@@ -145,10 +144,6 @@ pub struct ClaimYield {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MigrateMiner {}
-
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, ClaimSOL);
@@ -165,4 +160,3 @@ instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, ClaimSeeker);
-instruction!(OreInstruction, MigrateMiner);

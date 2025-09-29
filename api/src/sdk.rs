@@ -1,6 +1,8 @@
 use solana_program::pubkey;
 use solana_program::pubkey::Pubkey;
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{
+    get_associated_token_address, get_associated_token_address_with_program_id,
+};
 use steel::*;
 
 use crate::{
@@ -344,32 +346,23 @@ pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
     }
 }
 
+// let [signer_info, mint_info, seeker_info, stake_info, token_account_info, system_program] =
+
 pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
     let seeker_address = seeker_pda(mint).0;
-    let token_account_address = get_associated_token_address(&signer, &mint);
+    let stake_address = stake_pda(signer).0;
+    let token_account_address =
+        get_associated_token_address_with_program_id(&signer, &mint, &spl_token_2022::ID);
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new(seeker_address, false),
+            AccountMeta::new(stake_address, false),
             AccountMeta::new(token_account_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: ClaimSeeker {}.to_bytes(),
-    }
-}
-
-pub fn migrate_miner(signer: Pubkey, address: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: MigrateMiner {}.to_bytes(),
     }
 }

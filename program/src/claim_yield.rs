@@ -3,8 +3,6 @@ use solana_program::log::sol_log;
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
-use crate::AUTHORIZED_ACCOUNTS;
-
 /// Claims yield from the staking contract.
 pub fn process_claim_yield(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -33,11 +31,6 @@ pub fn process_claim_yield(accounts: &[AccountInfo<'_>], data: &[u8]) -> Program
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
-
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
 
     // Open recipient token account.
     if recipient_info.data_is_empty() {
