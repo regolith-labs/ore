@@ -1,6 +1,6 @@
 use ore_api::{
-    consts::{MINER, SEEKER, STAKE},
-    state::{Miner, Seeker, Stake},
+    consts::{SEEKER, STAKE},
+    state::{Seeker, Stake},
 };
 use solana_program::pubkey;
 use steel::*;

@@ -71,7 +71,6 @@ pub fn process_instruction(
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
         OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
-        _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

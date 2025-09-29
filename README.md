@@ -6,8 +6,6 @@
 
 ORE is a crypto mining game on the Solana blockchain. Players compete to earn cryptocurrency by prospecting on blocks rich with digital treasure.
 
-
-
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.
 - [`Error`](api/src/error.rs) – Custom program errors.
@@ -16,39 +14,38 @@ ORE is a crypto mining game on the Solana blockchain. Players compete to earn cr
 
 ## Instructions
 
-#### User
-- [`Claim`](program/src/claim.rs) - Claims miner rewards. 
-- [`Close`](program/src/close.rs) - Closes a block account.
-- [`Initialize`](program/src/initialize.rs) - Initializes the program.
-- [`Log`](program/src/log.rs) – Logs events as non-truncatable data.
-- [`Mine`](program/src/mine.rs) - Submits hashes for scoring.
-- [`Open`](program/src/open.rs) - Opens a new block.
-- [`Reset`](program/src/reset.rs) – Resets the hashpower market for the next block.
-- [`Swap`](program/src/swap.rs) - Executes a buy or sell in the hashpower market.
+#### Mining
+- [`Automate`](program/src/automate.rs) - Configures a new automation.
+- [`ClaimORE`](program/src/claim_ore.rs) - Claims ORE mining rewards.
+- [`ClaimSOL`](program/src/claim_sol.rs) - Claims SOL mining rewards.
+- [`Deploy`](program/src/deploy.rs) – Deploys SOL to claim space on the board.
+- [`Initialize`](program/src/initialize.rs) - Initializes program variables.
+- [`Log`](program/src/log.rs) – Logs non-truncatable event data.
+- [`Reset`](program/src/reset.rs) - Resets the board for a new round.
+- [`Reset`](program/src/reset.rs) - Resets the board for a new round.
+
+#### Staking
+- [`Deposit`](program/src/deposit.rs) - Deposits ORE into a stake account.
+- [`Withdraw`](program/src/withdraw.rs) - Withdraws ORE from a stake account.
+- [`ClaimSeeker`](program/src/claim_seeker.rs) - Claims a Seeker genesis token. 
+- [`ClaimYield`](program/src/claim_yield.rs) - Claims staking yield.
 
 #### Admin
+- [`Bury`](program/src/bury.rs) - Executes a buy-and-bury transaction.
+- [`Wrap`](program/src/wrap.rs) - Wraps SOL in the treasury for swap transactions. 
 - [`SetAdmin`](program/src/set_admin.rs) - Re-assigns the admin authority.
 - [`SetFeeCollector`](program/src/set_admin.rs) - Updates the fee collection address.
 - [`SetFeeRate`](program/src/set_admin.rs) - Updates the fee charged per swap.
 
 ## State
-- [`Block`](api/src/state/block.rs) - A round in the game.
-- [`Config`](api/src/state/config.rs) - Global program configuration.
-- [`Market`](api/src/state/market.rs) - Hashpower market.
-- [`Miner`](api/src/state/miner.rs) - Tracks a miner state and history.
-- [`Treasury`](api/src/state/treasury.rs) - The mint authority of the ORE token.
-
-
-## Block lifecycle
-
-- `Open` a block with an upcoming ID.
-- `Reset` to move the market forward, and begin trading. 
-- `Swap` to trade hashpower in the market for the current block.
-- Trading ends automatically once the end slot is reached.
-- `Reset` to move market forward again, and record the slot hash for the ended block.
-- `Mine` to submit the best hash within your available nonce range.
-- `Close` to return rent and transfer block reward to the winning miner for claiming.
-- `Claim` to claim block reward.
+- [`Automation`](api/src/state/automation.rs) - Tracks automation configs. 
+- [`Board`](api/src/state/board.rs) - Holds current game state.
+- [`Config`](api/src/state/config.rs) - Global program configs.
+- [`Miner`](api/src/state/miner.rs) - Tracks a miner's game state.
+- [`Seeker`](api/src/state/seeker.rs) - Tracks whether a Seeker token has been claimed.
+- [`Square`](api/src/state/square.rs) - The blockspace state and claims.
+- [`Stake`](api/src/state/stake.rs) - Manages a user's staking activity.
+- [`Treasury`](api/src/state/treasury.rs) - Mints, burns, and escrows ORE tokens. 
 
 
 ## Tests
