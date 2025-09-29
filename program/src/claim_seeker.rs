@@ -1,6 +1,6 @@
 use ore_api::{
-    consts::{MINER, SEEKER},
-    state::{Miner, Seeker},
+    consts::{MINER, SEEKER, STAKE},
+    state::{Miner, Seeker, Stake},
 };
 use solana_program::pubkey;
 use steel::*;
@@ -15,17 +15,17 @@ use spl_token_2022::{
 /// Claims a Seeker genesis token for a miner.
 pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, miner_info, mint_info, seeker_info, token_account_info, system_program] =
+    let [signer_info, mint_info, seeker_info, stake_info, token_account_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    miner_info.is_writable()?;
     mint_info.has_owner(&spl_token_2022::ID)?;
     seeker_info
         .is_writable()?
         .has_seeds(&[SEEKER, &mint_info.key.to_bytes()], &ore_api::ID)?;
+    stake_info.is_writable()?;
     token_account_info
         .as_associated_token_account(signer_info.key, mint_info.key)?
         .assert(|t| t.amount() == 1)?;
@@ -68,35 +68,35 @@ pub fn process_claim_seeker(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Progr
     let seeker = seeker_info.as_account_mut::<Seeker>(&ore_api::ID)?;
     seeker.mint = *mint_info.key;
 
-    // Open miner account.
-    let miner = if miner_info.data_is_empty() {
-        create_program_account::<Miner>(
-            miner_info,
+    // Open stake account.
+    let stake = if stake_info.data_is_empty() {
+        create_program_account::<Stake>(
+            stake_info,
             system_program,
             signer_info,
             &ore_api::ID,
-            &[MINER, &signer_info.key.to_bytes()],
+            &[STAKE, &signer_info.key.to_bytes()],
         )?;
-        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
-        miner.authority = *signer_info.key;
-        miner.deployed = [0; 25];
-        miner.is_seeker = 0;
-        miner.refund_sol = 0;
-        miner.rewards_sol = 0;
-        miner.rewards_ore = 0;
-        miner.round_id = 0;
-        miner.lifetime_rewards_sol = 0;
-        miner.lifetime_rewards_ore = 0;
-        miner
+        let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
+        stake.authority = *signer_info.key;
+        stake.balance = 0;
+        stake.last_claim_at = 0;
+        stake.last_deposit_at = 0;
+        stake.last_withdraw_at = 0;
+        stake.rewards_factor = Numeric::from_u64(0);
+        stake.rewards = 0;
+        stake.lifetime_rewards = 0;
+        stake.is_seeker = 0;
+        stake
     } else {
-        miner_info
-            .as_account_mut::<Miner>(&ore_api::ID)?
-            .assert_mut(|m| m.authority == *signer_info.key)?
-            .assert_mut(|m| m.is_seeker == 0)?
+        stake_info
+            .as_account_mut::<Stake>(&ore_api::ID)?
+            .assert_mut(|s| s.authority == *signer_info.key)?
+            .assert_mut(|s| s.is_seeker == 0)?
     };
 
     // Flag the miner as a Seeker.
-    miner.is_seeker = 1;
+    stake.is_seeker = 1;
 
     Ok(())
 }

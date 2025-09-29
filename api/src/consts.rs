@@ -38,6 +38,9 @@ pub const SEEKER: &[u8] = b"seeker";
 /// The seed of the square account PDA.
 pub const SQUARE: &[u8] = b"square";
 
+/// The seed of the stake account PDA.
+pub const STAKE: &[u8] = b"stake";
+
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
 

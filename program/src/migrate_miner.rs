@@ -20,9 +20,7 @@ pub fn process_migrate_miner(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Prog
     // Set seeker activation flag.
     config.is_seeker_activation_enabled = 0;
 
-    // Set seeker flag.
-    miner.is_seeker = 0;
-    miner.buffer = [0; 24];
+    // No op
 
     Ok(())
 }

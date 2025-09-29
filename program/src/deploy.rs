@@ -30,11 +30,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
-    // // Check whitelist
-    // if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-    //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    // }
-
     // Check if signer is the automation executor.
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
@@ -98,7 +93,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
-        miner.is_seeker = 0;
         miner.refund_sol = 0;
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;

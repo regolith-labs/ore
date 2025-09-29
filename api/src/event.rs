@@ -53,7 +53,10 @@ pub struct BuryEvent {
     pub disc: u64,
 
     /// The amount of ORE buried.
-    pub ore_amount: u64,
+    pub ore_buried: u64,
+
+    /// The amount of ORE shared with stakers.
+    pub ore_shared: u64,
 
     /// The amount of SOL swapped.
     pub sol_amount: u64,

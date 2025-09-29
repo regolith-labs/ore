@@ -24,7 +24,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_account::<Config>(&ore_api::ID)?
         .assert(|c| c.admin == *signer_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
         treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
@@ -88,10 +88,18 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     let post_swap_ore_balance = treasury_ore.amount();
     let post_swap_sol_balance = treasury_sol.amount();
+    let total_ore = post_swap_ore_balance - pre_swap_ore_balance;
     assert_eq!(post_swap_sol_balance, 0);
 
+    // Share some ORE with stakers.
+    let mut shared_amount = 0;
+    if treasury.total_staked > 0 {
+        shared_amount = 0; // TODO: calculate shared amount
+        treasury.rewards_factor += Numeric::from_fraction(shared_amount, treasury.total_staked);
+    }
+
     // Burn ORE.
-    let burn_amount = post_swap_ore_balance - pre_swap_ore_balance;
+    let burn_amount = total_ore - shared_amount;
     burn_signed(
         treasury_ore_info,
         mint_info,
@@ -115,7 +123,8 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &[board_info.clone(), ore_program.clone()],
         BuryEvent {
             disc: 1,
-            ore_amount: burn_amount,
+            ore_buried: burn_amount,
+            ore_shared: shared_amount,
             sol_amount: pre_swap_sol_balance,
             new_circulating_supply: mint.supply(),
             ts: Clock::get()?.unix_timestamp,

@@ -15,10 +15,7 @@ pub struct Miner {
 
     /// Unused buffer.
     #[deprecated(note = "No longer used")]
-    pub buffer: [u8; 24],
-
-    /// Whether this miner is associated with a Solana Seeker.
-    pub is_seeker: u64,
+    pub buffer: [u8; 32],
 
     /// The amount of SOL this miner has had refunded and may claim.
     pub refund_sol: u64,

@@ -4,13 +4,17 @@ mod bury;
 mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
+mod claim_yield;
 mod deploy;
+mod deposit;
 mod initialize;
 mod log;
 mod migrate_miner;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
+mod whitelist;
+mod withdraw;
 mod wrap;
 
 use automate::*;
@@ -19,13 +23,17 @@ use bury::*;
 use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
+use claim_yield::*;
 use deploy::*;
+use deposit::*;
 use initialize::*;
 use log::*;
 use migrate_miner::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
+use whitelist::*;
+use withdraw::*;
 use wrap::*;
 
 use ore_api::instruction::*;
@@ -39,7 +47,7 @@ pub fn process_instruction(
     let (ix, data) = parse_instruction(&ore_api::ID, program_id, data)?;
 
     match ix {
-        // User
+        // Miner
         OreInstruction::Automate => process_automate(accounts, data)?,
         OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
@@ -48,6 +56,11 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
+
+        // Staker
+        OreInstruction::Deposit => process_deposit(accounts, data)?,
+        OreInstruction::Withdraw => process_withdraw(accounts, data)?,
+        OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
 
         // Admin
         OreInstruction::Bury => process_bury(accounts, data)?,
@@ -58,6 +71,7 @@ pub fn process_instruction(
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
         OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
+        _ => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

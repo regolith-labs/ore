@@ -3,7 +3,7 @@ use steel::*;
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
-    // User
+    // Miner
     Automate = 0,
     Boost = 1,
     ClaimSOL = 2,
@@ -13,11 +13,16 @@ pub enum OreInstruction {
     Log = 6,
     Reset = 7,
 
+    // Staker
+    Deposit = 8,
+    Withdraw = 9,
+    ClaimYield = 10,
+
     // Admin
-    Bury = 9,
-    Wrap = 10,
-    SetAdmin = 11,
-    SetFeeCollector = 12,
+    Bury = 11,
+    Wrap = 12,
+    SetAdmin = 13,
+    SetFeeCollector = 14,
 
     // Seeker
     ClaimSeeker = 15,
@@ -120,6 +125,24 @@ pub struct Bury {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Deposit {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Withdraw {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct ClaimYield {
+    pub amount: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
 #[repr(C)]
@@ -138,5 +161,8 @@ instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, SetFeeCollector);
+instruction!(OreInstruction, Deposit);
+instruction!(OreInstruction, Withdraw);
+instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, ClaimSeeker);
 instruction!(OreInstruction, MigrateMiner);

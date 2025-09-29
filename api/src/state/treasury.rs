@@ -10,8 +10,14 @@ pub struct Treasury {
     // The amount of SOL collected for buy-bury operations.
     pub balance: u64,
 
-    /// The amount of ORE in the motherlode.
+    /// The amount of ORE in the motherlode rewards pool.
     pub motherlode: u64,
+
+    /// The cumulative ORE distributed to stakers, divided by the total stake at the time of distribution.
+    pub rewards_factor: Numeric,
+
+    /// The current total amount of ORE staked.
+    pub total_staked: u64,
 }
 
 account!(OreAccount, Treasury);
