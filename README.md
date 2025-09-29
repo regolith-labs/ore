@@ -1,10 +1,11 @@
 # ORE
 
-**Mine. Trade. Win.**
+**It's time to mine.**
 
 ## Summary
 
-ORE is a cryptocurrency mining and trading game. Miners compete to earn block rewards by buying and selling hashpower in an open market. The more hashpower you acquire, the greater your chances of generating the best hash and winning the block reward. Will you hit the motherlode?
+ORE is a crypto mining game on the Solana blockchain. Players compete to earn cryptocurrency by prospecting on blocks rich with digital treasure.
+
 
 
 ## API
