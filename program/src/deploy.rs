@@ -139,6 +139,17 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.round_id = board.id;
     }
 
+    // Close early if estimated automation balance is less than required.
+    if let Some(automation) = &automation {
+        let num_squares = squares.iter().filter(|&&s| s).count();
+        let estimated_cost = (num_squares as u64 * amount) + automation.fee;
+        if estimated_cost > automation.balance {
+            sol_log("Automation balance too low.");
+            automation_info.close(authority_info)?;
+            return Ok(());
+        }
+    }
+
     // Calculate all deployments.
     let mut refund_amounts = [0; 25];
     let mut refund_miner_infos = [None; 25];

@@ -49,13 +49,6 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let pre_swap_ore_balance = treasury_ore.amount();
     let pre_swap_sol_balance = treasury_sol.amount();
     assert!(pre_swap_sol_balance > 0);
-    sol_log(
-        &format!(
-            "Swapping {} SOL into ORE",
-            lamports_to_sol(pre_swap_sol_balance),
-        )
-        .as_str(),
-    );
 
     // Execute swap from SOL to ORE in Meteora
     let swap_ix = meteora_pools_sdk::instructions::Swap {
@@ -90,6 +83,14 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let post_swap_sol_balance = treasury_sol.amount();
     let total_ore = post_swap_ore_balance - pre_swap_ore_balance;
     assert_eq!(post_swap_sol_balance, 0);
+    sol_log(
+        &format!(
+            "📈 Swapped {} SOL into {} ORE",
+            lamports_to_sol(pre_swap_sol_balance),
+            amount_to_ui_amount(total_ore, TOKEN_DECIMALS),
+        )
+        .as_str(),
+    );
 
     // Share some ORE with stakers.
     let mut shared_amount = 0;
@@ -97,6 +98,11 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         shared_amount = 0; // TODO: calculate shared amount
         treasury.rewards_factor += Numeric::from_fraction(shared_amount, treasury.total_staked);
     }
+
+    sol_log(&format!(
+        "💰 Shared {} ORE",
+        amount_to_ui_amount(shared_amount, TOKEN_DECIMALS)
+    ));
 
     // Burn ORE.
     let burn_amount = total_ore - shared_amount;
@@ -111,7 +117,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     sol_log(
         &format!(
-            "Buried {} ORE",
+            "🔥 Buried {} ORE",
             amount_to_ui_amount(burn_amount, TOKEN_DECIMALS)
         )
         .as_str(),
