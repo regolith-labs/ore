@@ -366,3 +366,84 @@ pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
         data: ClaimSeeker {}.to_bytes(),
     }
 }
+
+// let [signer_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
+
+pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
+    let stake_address = stake_pda(signer).0;
+    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_tokens_address = treasury_tokens_address();
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(sender_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_tokens_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: Deposit {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+// let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+
+pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
+    let stake_address = stake_pda(signer).0;
+    let mint_address = MINT_ADDRESS;
+    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_tokens_address = treasury_tokens_address();
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_tokens_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        ],
+        data: Withdraw {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+// let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+
+pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
+    let stake_address = stake_pda(signer).0;
+    let mint_address = MINT_ADDRESS;
+    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_tokens_address = treasury_tokens_address();
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(recipient_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_tokens_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        ],
+        data: ClaimYield {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
