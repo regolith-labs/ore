@@ -257,8 +257,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
