@@ -160,7 +160,7 @@ pub fn deploy(
     let automation_address = automation_pda(authority).0;
     let board_address = board_pda().0;
     let miner_address = miner_pda(authority).0;
-    let square_address = square_pda().0;
+    // let square_address = square_pda().0;
 
     // Convert array of 25 booleans into a 32-bit mask where each bit represents whether
     // that square index is selected (1) or not (0)
@@ -177,7 +177,7 @@ pub fn deploy(
         AccountMeta::new(automation_address, false),
         AccountMeta::new(board_address, false),
         AccountMeta::new(miner_address, false),
-        AccountMeta::new(square_address, false),
+        // AccountMeta::new(square_address, false),
         AccountMeta::new_readonly(system_program::ID, false),
     ];
 
@@ -285,7 +285,7 @@ pub fn reset(signer: Pubkey, fee_collector: Pubkey, miners: Vec<Pubkey>) -> Inst
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
-    let square_address = square_pda().0;
+    // let square_address = square_pda().0;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
     let mut accounts = vec![
@@ -294,7 +294,7 @@ pub fn reset(signer: Pubkey, fee_collector: Pubkey, miners: Vec<Pubkey>) -> Inst
         AccountMeta::new(config_address, false),
         AccountMeta::new(fee_collector, false),
         AccountMeta::new(mint_address, false),
-        AccountMeta::new(square_address, false),
+        // AccountMeta::new(square_address, false),
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_tokens_address, false),
         AccountMeta::new_readonly(system_program::ID, false),

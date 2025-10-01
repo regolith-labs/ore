@@ -11,9 +11,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
-    let (required_accounts, miner_accounts) = accounts.split_at(7);
-    let [signer_info, authority_info, automation_info, board_info, miner_info, square_info, system_program] =
-        required_accounts
+    let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, round_prev_info, system_program] =
+        accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -22,12 +21,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     automation_info.is_writable()?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
-        .assert_mut(|b| {
-            (clock.slot >= b.start_slot && clock.slot < b.end_slot && b.slot_hash == [0; 32])
-                || (clock.slot >= b.end_slot + INTERMISSION_SLOTS && b.slot_hash != [0; 32])
-        })?;
+        .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
+    let round = round_info
+        .as_account_mut::<Round>(&ore_api::ID)?
+        .assert_mut(|r| r.id == board.round_id)?;
     miner_info.is_writable()?;
-    let square = square_info.as_account_mut::<Square>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // Check if signer is the automation executor.
@@ -58,7 +56,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             AutomationStrategy::Random => {
                 // Random automation strategy. Generate a random mask based on number of squares user wants to deploy to.
                 let num_squares = ((automation.mask & 0xFF) as u64).min(25);
-                let r = hashv(&[&automation.authority.to_bytes(), &board.id.to_le_bytes()]).0;
+                let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
                 squares = generate_random_mask(num_squares, &r);
             }
         }
@@ -74,7 +72,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     sol_log(
         &format!(
             "Round {}. Deploying {} SOL to {} squares",
-            board.id,
+            round.id,
             lamports_to_sol(amount),
             squares.iter().filter(|&&s| s).count(),
         )
@@ -93,10 +91,12 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
+        miner.cumulative = [0; 25];
         miner.refund_sol = 0;
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
-        miner.round_id = board.id;
+        miner.round_id = round.id;
+        miner.checkpoint_id = round.id;
         miner.lifetime_rewards_sol = 0;
         miner.lifetime_rewards_ore = 0;
         miner
@@ -105,56 +105,30 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut(|m| {
                 if let Some(automation) = &automation {
-                    // only run automation once per round
                     m.authority == automation.authority
-                        && (m.round_id < board.id || board.slot_hash != [0; 32])
                 } else {
                     m.authority == *signer_info.key
                 }
             })?
     };
 
-    // Reset board.
-    if board.slot_hash != [0; 32] {
-        // Reset board
-        board.deployed = [0; 25];
-        board.id += 1;
-        board.slot_hash = [0; 32];
-        board.start_slot = clock.slot;
-        board.end_slot = clock.slot + 150; // one minute
-        board.top_miner = Pubkey::default();
-        board.total_deployed = 0;
-        board.total_vaulted = 0;
-        board.total_winnings = 0;
-
-        // Reset squares
-        square.count = [0; 25];
-        square.deployed = [[0; 16]; 25];
-        square.miners = [[Pubkey::default(); 16]; 25];
-    }
-
     // Reset miner
-    if miner.round_id != board.id {
-        miner.deployed = [0; 25];
-        miner.round_id = board.id;
-    }
+    if miner.round_id != round.id {
+        // Assert miner has checkpointed prior round.
+        assert!(
+            miner.checkpoint_id == miner.round_id,
+            "Miner has not checkpointed"
+        );
 
-    // Close early if estimated automation balance is less than required.
-    if let Some(automation) = &automation {
-        let num_squares = squares.iter().filter(|&&s| s).count();
-        let estimated_cost = (num_squares as u64 * amount) + automation.fee;
-        if estimated_cost > automation.balance {
-            sol_log("Automation balance too low.");
-            automation_info.close(authority_info)?;
-            return Ok(());
-        }
+        // Reset miner for new round.
+        miner.deployed = [0; 25];
+        miner.cumulative = round.deployed;
+        miner.round_id = round.id;
     }
 
     // Calculate all deployments.
-    let mut refund_amounts = [0; 25];
-    let mut refund_miner_infos = [None; 25];
     let mut total_amount = 0;
-    'deploy: for (square_id, &should_deploy) in squares.iter().enumerate() {
+    for (square_id, &should_deploy) in squares.iter().enumerate() {
         // Skip if square index is out of bounds.
         if square_id > 24 {
             break;
@@ -165,118 +139,36 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             continue;
         }
 
-        // Get deployment metadata.
-        let is_first_move = miner.deployed[square_id] == 0;
-        let mut idx = if is_first_move {
-            // Insert at end of the list.
-            square.count[square_id] as usize
-        } else {
-            // Find the miner's index in the list.
-            let mut found = false;
-            let mut idx = 0;
-            for i in 0..16 {
-                if square.miners[square_id][i] == miner.authority {
-                    idx = i;
-                    found = true;
-                    break;
-                }
-            }
-
-            // Safety check.
-            // This should never happen.
-            assert!(found);
-
-            idx
-        };
-
-        // If the square is full, refund the miner with the smallest deployment and kick them off the square.
-        if idx == 16 {
-            // Find miner with the smallest deployment.
-            let mut smallest_miner = Pubkey::default();
-            let mut smallest_deployment = u64::MAX;
-            for i in 0..16 {
-                if square.deployed[square_id][i] < smallest_deployment {
-                    smallest_deployment = square.deployed[square_id][i];
-                    smallest_miner = square.miners[square_id][i];
-                    idx = i;
-                }
-            }
-
-            // Safety check.
-            // This should never happen.
-            assert!(smallest_miner != Pubkey::default());
-
-            // If deploy amount is less than smallest deployment, skip this square.
-            if amount < smallest_deployment {
-                continue 'deploy;
-            }
-
-            // Refund the smallest miner and kick them off the square.
-            'refund: for miner_info in miner_accounts {
-                if *miner_info.key == miner_pda(smallest_miner).0 {
-                    // Refund the smallest miner.
-                    let smallest_miner = miner_info
-                        .as_account_mut::<Miner>(&ore_api::ID)?
-                        .assert_mut(|m| m.authority == smallest_miner)?;
-                    smallest_miner.refund_sol += smallest_deployment;
-                    smallest_miner.deployed[square_id] -= smallest_deployment;
-                    refund_amounts[square_id] = smallest_deployment;
-                    refund_miner_infos[square_id] = Some(miner_info);
-
-                    // Kick the smallest miner from the square.
-                    board.deployed[square_id] -= smallest_deployment;
-                    board.total_deployed -= smallest_deployment;
-                    square.deployed[square_id][idx] -= smallest_deployment;
-                    square.miners[square_id][idx] = Pubkey::default();
-                    square.count[square_id] -= 1;
-
-                    sol_log(
-                        &format!(
-                            "Kicking miner {} from square {}. Refunding: {}",
-                            smallest_miner.authority, square_id, smallest_deployment
-                        )
-                        .as_str(),
-                    );
-                    break 'refund;
-                }
-            }
+        // Skip if miner already deployed to this square.
+        if miner.deployed[square_id] > 0 {
+            continue;
         }
 
-        // Safety check.
-        // This should never happen.
-        assert!(idx < 16);
-
-        // Safety check.
-        // Skip if square count is still >= 16. This can only happen if the signer didn't provide a miner account to refund.
-        if square.count[square_id] >= 16 {
-            sol_log(&format!("Square {} is full. Skipping deployment.", square_id).as_str());
-            continue 'deploy;
-        }
+        // Record cumulative amount.
+        miner.cumulative[square_id] = round.deployed[square_id];
 
         // Update miner
-        miner.deployed[square_id] += amount;
-
-        // Update square
-        if is_first_move {
-            square.miners[square_id][idx] = miner.authority;
-            square.count[square_id] += 1;
-        }
+        miner.deployed[square_id] = amount;
 
         // Update board
-        board.deployed[square_id] += amount;
-        board.total_deployed += amount;
-
-        // Update square deployed
-        square.deployed[square_id][idx] += amount;
+        round.deployed[square_id] += amount;
+        round.total_deployed += amount;
 
         // Update total amount
         total_amount += amount;
+
+        // Exit early if automation does not have enough balance for another square.
+        if let Some(automation) = &automation {
+            if total_amount + automation.fee + amount > automation.balance {
+                break;
+            }
+        }
     }
 
     // Transfer SOL.
     if let Some(automation) = automation {
         automation.balance -= total_amount + automation.fee;
-        automation_info.send(total_amount, &board_info);
+        automation_info.send(total_amount, &round_info);
         automation_info.send(automation.fee, &signer_info);
 
         // Close automation if balance is 0.
@@ -284,14 +176,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             automation_info.close(authority_info)?;
         }
     } else {
-        board_info.collect(total_amount, &signer_info)?;
-    }
-
-    // Transfer SOL refunds.
-    for (square_id, refund_amount) in refund_amounts.iter().enumerate() {
-        if let Some(refund_miner_info) = refund_miner_infos[square_id] {
-            board_info.send(*refund_amount, &refund_miner_info);
-        }
+        round_info.collect(total_amount, &signer_info)?;
     }
 
     Ok(())

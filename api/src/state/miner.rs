@@ -13,9 +13,14 @@ pub struct Miner {
     /// The miner's prospects in the current round.
     pub deployed: [u64; 25],
 
-    /// Unused buffer.
-    #[deprecated(note = "No longer used")]
-    pub buffer: [u8; 32],
+    /// The cumulative amount of SOL deployed on each square prior to this miner's move.
+    pub cumulative: [u64; 25],
+
+    /// SOL witheld in reserve to pay for checkpointing.
+    pub checkpoint_fee: u64,
+
+    /// The last round that this miner checkpointed.
+    pub checkpoint_id: u64,
 
     /// The amount of SOL this miner has had refunded and may claim.
     pub refund_sol: u64,

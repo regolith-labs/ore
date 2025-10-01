@@ -6,26 +6,27 @@ pub enum OreInstruction {
     // Miner
     Automate = 0,
     Boost = 1,
-    ClaimSOL = 2,
-    ClaimORE = 3,
-    Deploy = 4,
-    Initialize = 5,
-    Log = 6,
-    Reset = 7,
+    Checkpoint = 2,
+    ClaimSOL = 3,
+    ClaimORE = 4,
+    Deploy = 5,
+    Initialize = 6,
+    Log = 7,
+    Reset = 8,
 
     // Staker
-    Deposit = 8,
-    Withdraw = 9,
-    ClaimYield = 10,
+    Deposit = 9,
+    Withdraw = 10,
+    ClaimYield = 11,
 
     // Admin
-    Bury = 11,
-    Wrap = 12,
-    SetAdmin = 13,
-    SetFeeCollector = 14,
+    Bury = 12,
+    Wrap = 13,
+    SetAdmin = 14,
+    SetFeeCollector = 15,
 
     // Seeker
-    ClaimSeeker = 15,
+    ClaimSeeker = 16,
 }
 
 #[repr(C)]
@@ -144,8 +145,13 @@ pub struct ClaimYield {
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ClaimSeeker {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Checkpoint {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
+instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
 instruction!(OreInstruction, Deploy);
