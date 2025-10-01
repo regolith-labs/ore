@@ -16,6 +16,9 @@ pub struct Round {
     /// The hash of the end slot, provided by solana, used for random number generation.
     pub slot_hash: [u8; 32],
 
+    /// The count of miners on each square.
+    pub count: [u64; 25],
+
     /// The slot at which claims for this round account end.
     pub expires_at: u64,
 

@@ -2,8 +2,6 @@ use ore_api::prelude::*;
 use solana_program::rent::Rent;
 use steel::*;
 
-// TODO Bot fees
-
 /// Checkpoints a miner's rewards.
 pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
@@ -36,7 +34,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Ensure round is not expired.
     if clock.slot >= round.expires_at {
         // In this case, the miner forfeits any potential rewards and their checkpoint is recorded.
-        miner.checkpoint_id = round.id;
+        miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
 
@@ -116,7 +114,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         miner_info.send(bot_fee, &signer_info);
     }
 
-    // Assert round has sufficient funds for rent.
+    // Assert round has sufficient funds for rent + debts.
+    // TODO Debts
     let account_size = 8 + std::mem::size_of::<Round>();
     let required_rent = Rent::get()?.minimum_balance(account_size);
     assert!(
@@ -127,8 +126,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     let account_size = 8 + std::mem::size_of::<Miner>();
     let required_rent = Rent::get()?.minimum_balance(account_size);
     assert!(
-        miner_info.lamports() >= required_rent,
-        "Miner does not have sufficient funds for rent"
+        miner_info.lamports() >= required_rent + miner.checkpoint_fee + miner.rewards_sol,
+        "Miner does not have sufficient funds for rent and rewards"
     );
 
     Ok(())

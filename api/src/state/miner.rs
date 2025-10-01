@@ -23,6 +23,7 @@ pub struct Miner {
     pub checkpoint_id: u64,
 
     /// The amount of SOL this miner has had refunded and may claim.
+    #[deprecated]
     pub refund_sol: u64,
 
     /// The amount of SOL this miner can claim.

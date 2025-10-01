@@ -153,6 +153,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         // Update board
         round.deployed[square_id] += amount;
         round.total_deployed += amount;
+        round.count[square_id] += 1;
 
         // Update total amount
         total_amount += amount;
@@ -165,7 +166,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         }
     }
 
-    // Pay checkpoint fee.
+    // Top up checkpoint fee.
     if miner.checkpoint_fee == 0 {
         miner.checkpoint_fee = CHECKPOINT_FEE;
         miner_info.collect(CHECKPOINT_FEE, &signer_info)?;

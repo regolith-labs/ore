@@ -6,7 +6,7 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -67,7 +67,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 start_slot: board.start_slot,
                 end_slot: board.end_slot,
                 winning_square: winning_square as u64,
-                top_miner: round.top_miner,
+                top_miner: Pubkey::default(),
                 num_winners: 0,
                 total_deployed: round.total_deployed,
                 total_vaulted: round.total_vaulted,
@@ -107,6 +107,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Mint 1 ORE for the winning miner.
     let mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE);
+    round.top_miner_reward = mint_amount;
     mint_to_signed(
         mint_info,
         treasury_tokens_info,
@@ -151,6 +152,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode += motherlode_mint_amount;
     }
 
+    // Validate top miner.
+    // TODO Safety checks here.
+    let top_miner_sample = round.top_miner_sample(r, winning_square);
+    let top_miner = top_miner_info
+        .as_account::<Miner>(&ore_api::ID)?
+        .assert(|m| m.round_id == round.id)?
+        .assert(|m| {
+            m.cumulative[winning_square] >= top_miner_sample
+                && top_miner_sample < m.cumulative[winning_square] + m.deployed[winning_square]
+        })?;
+
     // Emit event.
     program_log(
         &[board_info.clone(), ore_program.clone()],
@@ -160,8 +172,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: Pubkey::default(), // Unknown
-            num_winners: 0,               // Unknown
+            top_miner: top_miner.authority,
+            num_winners: round.count[winning_square],
             total_deployed: round.total_deployed,
             total_vaulted: round.total_vaulted,
             total_winnings: round.total_winnings,
@@ -182,12 +194,13 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         ore_program,
         signer_info,
         &ore_api::ID,
-        &[ROUND, &(board.round_id + 1).to_le_bytes()],
+        &[ROUND, &board.round_id.to_le_bytes()],
     )?;
     let round_next = round_next_info.as_account_mut::<Round>(&ore_api::ID)?;
-    round_next.id = board.round_id + 1;
+    round_next.id = board.round_id;
     round_next.deployed = [0; 25];
     round_next.slot_hash = [0; 32];
+    round_next.count = [0; 25];
     round_next.expires_at = board.end_slot + ONE_WEEK_SLOTS;
     round_next.rent_payer = *signer_info.key;
     round_next.motherlode = 0;

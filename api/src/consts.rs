@@ -95,4 +95,4 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGunofStvxFx6rBiD");
 
 /// The fee paid to bots if they checkpoint a user.
-pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 SOL
+pub const CHECKPOINT_FEE: u64 = 100_000; // 0.0001 SOL
