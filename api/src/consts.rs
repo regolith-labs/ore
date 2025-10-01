@@ -14,6 +14,9 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
+/// The duration of one day, in seconds.
+pub const ONE_DAY: i64 = 24 * 60 * 60;
+
 /// The number of slots for breather between rounds.
 pub const INTERMISSION_SLOTS: u64 = 35;
 
@@ -72,3 +75,6 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 
 /// The address of the boost reserve token account.
 pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGunofStvxFx6rBiD");
+
+/// The fee paid to bots if they checkpoint a user.
+pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 SOL

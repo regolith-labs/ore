@@ -165,6 +165,12 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         }
     }
 
+    // Pay checkpoint fee.
+    if miner.checkpoint_fee == 0 {
+        miner.checkpoint_fee = CHECKPOINT_FEE;
+        miner_info.collect(CHECKPOINT_FEE, &signer_info)?;
+    }
+
     // Transfer SOL.
     if let Some(automation) = automation {
         automation.balance -= total_amount + automation.fee;

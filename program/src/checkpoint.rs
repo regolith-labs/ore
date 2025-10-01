@@ -8,7 +8,8 @@ use steel::*;
 pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, board_info, miner_info, round_info, treasury_info, system_program] = accounts
+    let [signer_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
+        accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -37,6 +38,32 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         // In this case, the miner forfeits any potential rewards and their checkpoint is recorded.
         miner.checkpoint_id = round.id;
         return Ok(());
+    }
+
+    // Calculate bot fee permissions.
+    let mut bot_fee = 0;
+    if clock.unix_timestamp > round.expires_at - ONE_DAY {
+        // We are in the last day before the round expires.
+        // Anyone is allowed to checkpoint and may collect the bot fee.
+        bot_fee = miner.checkpoint_fee;
+        miner.checkpoint_fee = 0;
+    } else {
+        // There is still time before the round expires. Bots may not yet checkpoint this account.
+        automation_info.has_seeds(&[AUTOMATION, &miner.authority.to_bytes()], &ore_api::ID)?;
+        if !automation_info.data_is_empty() {
+            let automation = automation_info
+                .as_account::<Automation>(&ore_api::ID)?
+                .assert(|a| a.authority == miner.authority)?;
+            assert!(
+                *signer_info.key == miner.authority || *signer_info.key == automation.executor,
+                "Only the miner or automation executor can checkpoint this account"
+            );
+        } else {
+            assert!(
+                *signer_info.key == miner.authority,
+                "Only the miner can checkpoint this account"
+            );
+        }
     }
 
     // Calculate miner rewards.
@@ -84,6 +111,9 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     if rewards_sol > 0 {
         round_info.send(rewards_sol, &miner_info);
     }
+    if bot_fee > 0 {
+        miner_info.send(bot_fee, &signer_info);
+    }
 
     // Assert round has sufficient funds for rent.
     let account_size = 8 + std::mem::size_of::<Round>();
@@ -91,6 +121,13 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     assert!(
         round_info.lamports() >= required_rent,
         "Round does not have sufficient funds for rent"
+    );
+
+    let account_size = 8 + std::mem::size_of::<Miner>();
+    let required_rent = Rent::get()?.minimum_balance(account_size);
+    assert!(
+        miner_info.lamports() >= required_rent,
+        "Miner does not have sufficient funds for rent"
     );
 
     Ok(())
