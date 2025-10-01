@@ -11,7 +11,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, round_prev_info, system_program] =
+    let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);

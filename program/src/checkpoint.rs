@@ -34,7 +34,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     system_program.is_program(&system_program::ID)?;
 
     // Ensure round is not expired.
-    if clock.unix_timestamp >= round.expires_at {
+    if clock.slot >= round.expires_at {
         // In this case, the miner forfeits any potential rewards and their checkpoint is recorded.
         miner.checkpoint_id = round.id;
         return Ok(());
@@ -42,13 +42,14 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
 
     // Calculate bot fee permissions.
     let mut bot_fee = 0;
-    if clock.unix_timestamp > round.expires_at - ONE_DAY {
-        // We are in the last day before the round expires.
-        // Anyone is allowed to checkpoint and may collect the bot fee.
+    if clock.slot >= round.expires_at - ONE_DAY_SLOTS {
+        // The round expires in less than 24h.
+        // Anyone is allowed to checkpoint this account and may collect the bot fee.
         bot_fee = miner.checkpoint_fee;
         miner.checkpoint_fee = 0;
     } else {
-        // There is still time before the round expires. Bots may not yet checkpoint this account.
+        // There is still time remaining before the round expires.
+        // Bots may not yet checkpoint this account.
         automation_info.has_seeds(&[AUTOMATION, &miner.authority.to_bytes()], &ore_api::ID)?;
         if !automation_info.data_is_empty() {
             let automation = automation_info

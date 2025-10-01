@@ -6,6 +6,7 @@ mod claim_ore;
 mod claim_seeker;
 mod claim_sol;
 mod claim_yield;
+mod close;
 mod deploy;
 mod deposit;
 // mod initialize;
@@ -25,6 +26,7 @@ use claim_ore::*;
 use claim_seeker::*;
 use claim_sol::*;
 use claim_yield::*;
+use close::*;
 use deploy::*;
 use deposit::*;
 // use initialize::*;
@@ -55,6 +57,7 @@ pub fn process_instruction(
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
         OreInstruction::Deploy => process_deploy(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,
+        OreInstruction::Close => process_close(accounts, data)?,
         // OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
 

@@ -14,8 +14,26 @@ pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
 
+/// The duration of one hour, in seconds.
+pub const ONE_HOUR: i64 = 60 * ONE_MINUTE;
+
 /// The duration of one day, in seconds.
-pub const ONE_DAY: i64 = 24 * 60 * 60;
+pub const ONE_DAY: i64 = 24 * ONE_HOUR;
+
+/// The number of seconds for when the winning square expires.
+pub const ONE_WEEK: i64 = 7 * ONE_DAY;
+
+/// The number of slots in one week.
+pub const ONE_MINUTE_SLOTS: u64 = 150;
+
+/// The number of slots in one hour.
+pub const ONE_HOUR_SLOTS: u64 = 60 * ONE_MINUTE_SLOTS;
+
+/// The number of slots in one day.
+pub const ONE_DAY_SLOTS: u64 = 24 * ONE_HOUR_SLOTS;
+
+/// The number of slots in one week.
+pub const ONE_WEEK_SLOTS: u64 = 7 * ONE_DAY_SLOTS;
 
 /// The number of slots for breather between rounds.
 pub const INTERMISSION_SLOTS: u64 = 35;

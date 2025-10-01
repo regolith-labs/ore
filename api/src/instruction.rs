@@ -9,24 +9,25 @@ pub enum OreInstruction {
     Checkpoint = 2,
     ClaimSOL = 3,
     ClaimORE = 4,
-    Deploy = 5,
-    Initialize = 6,
-    Log = 7,
-    Reset = 8,
+    Close = 5,
+    Deploy = 6,
+    Initialize = 7,
+    Log = 8,
+    Reset = 9,
 
     // Staker
-    Deposit = 9,
-    Withdraw = 10,
-    ClaimYield = 11,
+    Deposit = 10,
+    Withdraw = 11,
+    ClaimYield = 12,
 
     // Admin
-    Bury = 12,
-    Wrap = 13,
-    SetAdmin = 14,
-    SetFeeCollector = 15,
+    Bury = 13,
+    Wrap = 14,
+    SetAdmin = 15,
+    SetFeeCollector = 16,
 
     // Seeker
-    ClaimSeeker = 16,
+    ClaimSeeker = 17,
 }
 
 #[repr(C)]
@@ -149,8 +150,13 @@ pub struct ClaimSeeker {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Checkpoint {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Close {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
+instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);

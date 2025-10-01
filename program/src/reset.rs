@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, slot_hashes::SlotHashes};
+use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Pays out the winners and block reward.
@@ -14,7 +14,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     signer_info.is_signer()?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
-        .assert_mut(|b| clock.slot > b.end_slot)?;
+        .assert_mut(|b| clock.slot >= b.end_slot + INTERMISSION_SLOTS)?;
     let config = config_info.as_account::<Config>(&ore_api::ID)?;
     fee_collector_info
         .is_writable()?
@@ -160,8 +160,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: Pubkey::default(), // board.top_miner,
-            num_winners: 0,               // square.count[winning_square],
+            top_miner: Pubkey::default(), // Unknown
+            num_winners: 0,               // Unknown
             total_deployed: round.total_deployed,
             total_vaulted: round.total_vaulted,
             total_winnings: round.total_winnings,
@@ -170,6 +170,32 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         }
         .to_bytes(),
     )?;
+
+    // Reset board.
+    board.round_id += 1;
+    board.start_slot = clock.slot + 1;
+    board.end_slot = board.start_slot + 150;
+
+    // Open next round account.
+    create_program_account::<Round>(
+        round_next_info,
+        ore_program,
+        signer_info,
+        &ore_api::ID,
+        &[ROUND, &(board.round_id + 1).to_le_bytes()],
+    )?;
+    let round_next = round_next_info.as_account_mut::<Round>(&ore_api::ID)?;
+    round_next.id = board.round_id + 1;
+    round_next.deployed = [0; 25];
+    round_next.slot_hash = [0; 32];
+    round_next.expires_at = board.end_slot + ONE_WEEK_SLOTS;
+    round_next.rent_payer = *signer_info.key;
+    round_next.motherlode = 0;
+    round_next.top_miner = Pubkey::default();
+    round_next.top_miner_reward = round.top_miner_reward;
+    round_next.total_deployed = 0;
+    round_next.total_vaulted = 0;
+    round_next.total_winnings = 0;
 
     // Do SOL transfers.
     round_info.send(total_admin_fee, &fee_collector_info);
