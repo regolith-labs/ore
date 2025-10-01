@@ -270,37 +270,40 @@ pub fn wrap(signer: Pubkey) -> Instruction {
     }
 }
 
-// let [signer_info, board_info, mint_info, treasury_info, treasury_tokens_info, system_program, token_program, slot_hashes_sysvar] =
+// let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
 
-pub fn reset(signer: Pubkey, fee_collector: Pubkey, miners: Vec<Pubkey>) -> Instruction {
+pub fn reset(
+    signer: Pubkey,
+    fee_collector: Pubkey,
+    round_id: u64,
+    top_miner: Pubkey,
+) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
-    // let square_address = square_pda().0;
+    let round_address = round_pda(round_id).0;
+    let round_next_address = round_pda(round_id + 1).0;
+    let top_miner_address = miner_pda(top_miner).0;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
-    let mut accounts = vec![
-        AccountMeta::new(signer, true),
-        AccountMeta::new(board_address, false),
-        AccountMeta::new(config_address, false),
-        AccountMeta::new(fee_collector, false),
-        AccountMeta::new(mint_address, false),
-        // AccountMeta::new(square_address, false),
-        AccountMeta::new(treasury_address, false),
-        AccountMeta::new(treasury_tokens_address, false),
-        AccountMeta::new_readonly(system_program::ID, false),
-        AccountMeta::new_readonly(spl_token::ID, false),
-        AccountMeta::new_readonly(crate::ID, false),
-        AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
-    ];
-    for miner in miners {
-        if miner != Pubkey::default() {
-            accounts.push(AccountMeta::new(miner_pda(miner).0, false));
-        }
-    }
     Instruction {
         program_id: crate::ID,
-        accounts,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(fee_collector, false),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(round_address, false),
+            AccountMeta::new(round_next_address, false),
+            AccountMeta::new(top_miner_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_tokens_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
+            AccountMeta::new_readonly(sysvar::slot_hashes::ID, false),
+        ],
         data: Reset {}.to_bytes(),
     }
 }
