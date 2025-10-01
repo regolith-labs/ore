@@ -91,7 +91,7 @@ impl Round {
         total_winnings
     }
 
-    pub fn did_motherlode_hit(&self, rng: u64) -> bool {
+    pub fn did_hit_motherlode(&self, rng: u64) -> bool {
         rng.reverse_bits() % 625 == 0
     }
 }

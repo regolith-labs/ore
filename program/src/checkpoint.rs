@@ -52,7 +52,10 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         );
 
         // Calculate SOL rewards.
-        rewards_sol = ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
+        let original_deployment = miner.deployed[winning_square];
+        let admin_fee = original_deployment / 100;
+        rewards_sol = original_deployment - admin_fee;
+        rewards_sol += ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
             / round.deployed[winning_square] as u128) as u64;
 
         // Calculate ORE rewards.
