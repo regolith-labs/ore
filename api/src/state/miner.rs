@@ -22,10 +22,6 @@ pub struct Miner {
     /// The last round that this miner checkpointed.
     pub checkpoint_id: u64,
 
-    /// The amount of SOL this miner has had refunded and may claim.
-    #[deprecated]
-    pub refund_sol: u64,
-
     /// The amount of SOL this miner can claim.
     pub rewards_sol: u64,
 

@@ -92,7 +92,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
         miner.cumulative = [0; 25];
-        miner.refund_sol = 0;
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
         miner.round_id = round.id;
