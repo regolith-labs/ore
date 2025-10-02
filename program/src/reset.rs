@@ -34,15 +34,43 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     ore_program.is_program(&ore_api::ID)?;
     slot_hashes_sysvar.is_sysvar(&sysvar::slot_hashes::ID)?;
 
+    // Open next round account.
+    create_program_account::<Round>(
+        round_next_info,
+        ore_program,
+        signer_info,
+        &ore_api::ID,
+        &[ROUND, &(board.round_id + 1).to_le_bytes()],
+    )?;
+    let round_next = round_next_info.as_account_mut::<Round>(&ore_api::ID)?;
+    round_next.id = board.round_id + 1;
+    round_next.deployed = [0; 25];
+    round_next.slot_hash = [0; 32];
+    round_next.count = [0; 25];
+    round_next.expires_at = clock.slot + 150 + ONE_WEEK_SLOTS;
+    round_next.rent_payer = *signer_info.key;
+    round_next.motherlode = 0;
+    round_next.top_miner = Pubkey::default();
+    round_next.top_miner_reward = 0;
+    round_next.total_deployed = 0;
+    round_next.total_vaulted = 0;
+    round_next.total_winnings = 0;
+
     // Sample slot hash.
     let mut r = 0;
     let (winning_square, square_deployed) =
         if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
             round.slot_hash = slot_hash;
-            r = round.rng();
-            let winning_square = round.winning_square(r);
-            let square_deployed = round.deployed[winning_square];
-            (winning_square, square_deployed)
+            if let Some(rng) = round.rng() {
+                r = rng;
+                let winning_square = round.winning_square(r);
+                let square_deployed = round.deployed[winning_square];
+                (winning_square, square_deployed)
+            } else {
+                // Cannot get slot hash. No one wins.
+                round.slot_hash = [u8::MAX; 32];
+                (u64::MAX as usize, 0)
+            }
         } else {
             // Cannot get slot hash. No one wins.
             round.slot_hash = [u8::MAX; 32];
@@ -54,8 +82,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // No one won. Vault all deployed.
     if square_deployed == 0 {
-        // Update board.
-        round.total_vaulted = round.total_deployed;
+        // Vault all deployed.
+        round.total_vaulted = round.total_deployed - total_admin_fee;
         treasury.balance += round.total_deployed - total_admin_fee;
 
         // Emit event.
@@ -78,9 +106,14 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .to_bytes(),
         )?;
 
+        // Update board
+        board.round_id += 1;
+        board.start_slot = clock.slot + 1;
+        board.end_slot = board.start_slot + 150;
+
         // Do SOL transfers.
-        board_info.send(total_admin_fee, &fee_collector_info);
-        board_info.send(round.total_deployed - total_admin_fee, &treasury_info);
+        round_info.send(total_admin_fee, &fee_collector_info);
+        round_info.send(round.total_deployed - total_admin_fee, &treasury_info);
         return Ok(());
     }
 
@@ -153,15 +186,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Validate top miner.
-    // TODO Safety checks here.
-    let top_miner_sample = round.top_miner_sample(r, winning_square);
-    let top_miner = top_miner_info
-        .as_account::<Miner>(&ore_api::ID)?
-        .assert(|m| m.round_id == round.id)?
-        .assert(|m| {
-            m.cumulative[winning_square] >= top_miner_sample
-                && top_miner_sample < m.cumulative[winning_square] + m.deployed[winning_square]
-        })?;
+    // TODO Safety checks here (if no one won).
+    // let mut top_miner_address = Pubkey::default();
+    // let top_miner_sample = round.top_miner_sample(r, winning_square);
+    // let top_miner = top_miner_info
+    //     .as_account::<Miner>(&ore_api::ID)?
+    //     .assert(|m| m.round_id == round.id)?
+    //     .assert(|m| {
+    //         m.cumulative[winning_square] >= top_miner_sample
+    //             && top_miner_sample < m.cumulative[winning_square] + m.deployed[winning_square]
+    //     })?;
 
     // Emit event.
     program_log(
@@ -172,7 +206,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: top_miner.authority,
+            top_miner: Pubkey::default(), // top_miner.authority,
             num_winners: round.count[winning_square],
             total_deployed: round.total_deployed,
             total_vaulted: round.total_vaulted,
@@ -187,28 +221,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     board.round_id += 1;
     board.start_slot = clock.slot + 1;
     board.end_slot = board.start_slot + 150;
-
-    // Open next round account.
-    create_program_account::<Round>(
-        round_next_info,
-        ore_program,
-        signer_info,
-        &ore_api::ID,
-        &[ROUND, &board.round_id.to_le_bytes()],
-    )?;
-    let round_next = round_next_info.as_account_mut::<Round>(&ore_api::ID)?;
-    round_next.id = board.round_id;
-    round_next.deployed = [0; 25];
-    round_next.slot_hash = [0; 32];
-    round_next.count = [0; 25];
-    round_next.expires_at = board.end_slot + ONE_WEEK_SLOTS;
-    round_next.rent_payer = *signer_info.key;
-    round_next.motherlode = 0;
-    round_next.top_miner = Pubkey::default();
-    round_next.top_miner_reward = round.top_miner_reward;
-    round_next.total_deployed = 0;
-    round_next.total_vaulted = 0;
-    round_next.total_winnings = 0;
 
     // Do SOL transfers.
     round_info.send(total_admin_fee, &fee_collector_info);

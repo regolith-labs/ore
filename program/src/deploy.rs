@@ -2,6 +2,8 @@ use ore_api::prelude::*;
 use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
+use crate::AUTHORIZED_ACCOUNTS;
+
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -18,15 +20,24 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     };
     signer_info.is_signer()?;
     authority_info.is_writable()?;
-    automation_info.is_writable()?;
+    automation_info
+        .is_writable()?
+        .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
     let round = round_info
         .as_account_mut::<Round>(&ore_api::ID)?
         .assert_mut(|r| r.id == board.round_id)?;
-    miner_info.is_writable()?;
+    miner_info
+        .is_writable()?
+        .has_seeds(&[MINER, &authority_info.key.to_bytes()], &ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
+
+    // Check whitelist
+    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
+        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
+    }
 
     // Check if signer is the automation executor.
     let automation = if !automation_info.data_is_empty() {
@@ -67,17 +78,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             squares[i] = (mask & (1 << i)) != 0;
         }
     }
-
-    // Log
-    sol_log(
-        &format!(
-            "Round {}. Deploying {} SOL to {} squares",
-            round.id,
-            lamports_to_sol(amount),
-            squares.iter().filter(|&&s| s).count(),
-        )
-        .as_str(),
-    );
 
     // Open miner account.
     let miner = if miner_info.data_is_empty() {
@@ -127,6 +127,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Calculate all deployments.
     let mut total_amount = 0;
+    let mut total_squares = 0;
     for (square_id, &should_deploy) in squares.iter().enumerate() {
         // Skip if square index is out of bounds.
         if square_id > 24 {
@@ -154,8 +155,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         round.total_deployed += amount;
         round.count[square_id] += 1;
 
-        // Update total amount
+        // Update totals.
         total_amount += amount;
+        total_squares += 1;
 
         // Exit early if automation does not have enough balance for another square.
         if let Some(automation) = &automation {
@@ -184,6 +186,17 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     } else {
         round_info.collect(total_amount, &signer_info)?;
     }
+
+    // Log
+    sol_log(
+        &format!(
+            "Round #{}: deploying {} SOL to {} squares",
+            round.id,
+            lamports_to_sol(amount),
+            total_squares,
+        )
+        .as_str(),
+    );
 
     Ok(())
 }

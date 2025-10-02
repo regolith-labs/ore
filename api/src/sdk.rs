@@ -307,11 +307,11 @@ pub fn reset(
         data: Reset {}.to_bytes(),
     }
 }
+
 // let [signer_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
 
 pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instruction {
     let miner_address = miner_pda(authority).0;
-    let automation_address = automation_pda(authority).0;
     let board_address = board_pda().0;
     let round_address = round_pda(round_id).0;
     let treasury_address = TREASURY_ADDRESS;
@@ -319,7 +319,6 @@ pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instructi
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(automation_address, false),
             AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(round_address, false),

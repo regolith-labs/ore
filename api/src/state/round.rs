@@ -49,16 +49,16 @@ impl Round {
         round_pda(self.id)
     }
 
-    pub fn rng(&self) -> u64 {
-        if self.slot_hash == [0; 32] {
-            return 0;
+    pub fn rng(&self) -> Option<u64> {
+        if self.slot_hash == [0; 32] || self.slot_hash == [u8::MAX; 32] {
+            return None;
         }
         let r1 = u64::from_le_bytes(self.slot_hash[0..8].try_into().unwrap());
         let r2 = u64::from_le_bytes(self.slot_hash[8..16].try_into().unwrap());
         let r3 = u64::from_le_bytes(self.slot_hash[16..24].try_into().unwrap());
         let r4 = u64::from_le_bytes(self.slot_hash[24..32].try_into().unwrap());
         let r = r1 ^ r2 ^ r3 ^ r4;
-        r
+        Some(r)
     }
 
     pub fn winning_square(&self, rng: u64) -> usize {

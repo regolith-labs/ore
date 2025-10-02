@@ -9,9 +9,6 @@ mod claim_yield;
 mod close;
 mod deploy;
 mod deposit;
-mod migrate_board;
-mod migrate_miner;
-// mod initialize;
 mod log;
 mod reset;
 mod set_admin;
@@ -31,9 +28,6 @@ use claim_yield::*;
 use close::*;
 use deploy::*;
 use deposit::*;
-use migrate_board::*;
-use migrate_miner::*;
-// use initialize::*;
 use log::*;
 use reset::*;
 use set_admin::*;
@@ -62,7 +56,6 @@ pub fn process_instruction(
         OreInstruction::Deploy => process_deploy(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
-        // OreInstruction::Initialize => process_initialize(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Staker

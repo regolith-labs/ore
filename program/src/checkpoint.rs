@@ -1,13 +1,12 @@
 use ore_api::prelude::*;
-use solana_program::rent::Rent;
+use solana_program::{log::sol_log, rent::Rent};
 use steel::*;
 
 /// Checkpoints a miner's rewards.
 pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
-        accounts
+    let [signer_info, board_info, miner_info, round_info, treasury_info, system_program] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -40,37 +39,25 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         return Ok(());
     }
 
-    // Calculate bot fee permissions.
+    // Get the RNG.
+    let Some(r) = round.rng() else {
+        // If the round has no RNG, no one wins.
+        miner.checkpoint_id = miner.round_id;
+        return Ok(());
+    };
+
+    // Calculate bot fee.
     let mut bot_fee = 0;
     if clock.slot >= round.expires_at - ONE_DAY_SLOTS {
         // The round expires in less than 24h.
-        // Anyone is allowed to checkpoint this account and may collect the bot fee.
+        // Anyone may checkpoint this account and collect the bot fee.
         bot_fee = miner.checkpoint_fee;
         miner.checkpoint_fee = 0;
-    } else {
-        // There is still time remaining before the round expires.
-        // Bots may not yet checkpoint this account.
-        automation_info.has_seeds(&[AUTOMATION, &miner.authority.to_bytes()], &ore_api::ID)?;
-        if !automation_info.data_is_empty() {
-            let automation = automation_info
-                .as_account::<Automation>(&ore_api::ID)?
-                .assert(|a| a.authority == miner.authority)?;
-            assert!(
-                *signer_info.key == miner.authority || *signer_info.key == automation.executor,
-                "Only the miner or automation executor can checkpoint this account"
-            );
-        } else {
-            assert!(
-                *signer_info.key == miner.authority,
-                "Only the miner can checkpoint this account"
-            );
-        }
     }
 
     // Calculate miner rewards.
     let mut rewards_sol = 0;
     let mut rewards_ore = 0;
-    let r = round.rng();
     let winning_square = round.winning_square(r) as usize;
     if miner.deployed[winning_square] > 0 {
         // Sanity check.
@@ -101,6 +88,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         }
     }
 
+    sol_log("I");
+
     // Checkpoint miner.
     miner.checkpoint_id = round.id;
     miner.rewards_ore += rewards_ore;
@@ -116,8 +105,9 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         miner_info.send(bot_fee, &signer_info);
     }
 
+    // TODO Round debts. Track total checkpointed and/or num miner's checkpointed.
+
     // Assert round has sufficient funds for rent + debts.
-    // TODO Debts
     let account_size = 8 + std::mem::size_of::<Round>();
     let required_rent = Rent::get()?.minimum_balance(account_size);
     assert!(

@@ -80,8 +80,8 @@ async fn main() {
         "deploy_all" => {
             deploy_all(&rpc, &payer).await.unwrap();
         }
-        "square" => {
-            log_square(&rpc).await.unwrap();
+        "round" => {
+            log_round(&rpc).await.unwrap();
         }
         "seeker" => {
             log_seeker(&rpc).await.unwrap();
@@ -130,32 +130,32 @@ async fn main() {
 // 34QyjRFFU2Vp7ZAxdNm3FRCChEMbStAh9Zf58W84q7Fh
 
 async fn test_kick(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let mut kps = vec![];
-    for i in 1..=20 {
-        let home_dir = dirs::home_dir()
-            .expect("Could not find home directory")
-            .display()
-            .to_string();
-        let path = format!("{}/.config/solana/tester-{}.json", home_dir, i);
-        kps.push(read_keypair_file(&path).unwrap());
-    }
-    let mut alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
-    alt_miners.push(pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"));
+    // let mut kps = vec![];
+    // for i in 1..=20 {
+    //     let home_dir = dirs::home_dir()
+    //         .expect("Could not find home directory")
+    //         .display()
+    //         .to_string();
+    //     let path = format!("{}/.config/solana/tester-{}.json", home_dir, i);
+    //     kps.push(read_keypair_file(&path).unwrap());
+    // }
+    // let mut alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
+    // alt_miners.push(pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"));
 
-    for (i, kp) in kps.iter().enumerate() {
-        let amount = 1000 + i as u64;
-        let mut squares = [false; 25];
-        squares[0] = true;
-        let deploy_ix = ore_api::sdk::deploy(
-            kp.pubkey(),
-            kp.pubkey(),
-            amount,
-            squares,
-            alt_miners.clone(),
-        );
-        println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
-        submit_transaction_no_confirm(rpc, &kp, &[deploy_ix]).await?;
-    }
+    // for (i, kp) in kps.iter().enumerate() {
+    //     let amount = 1000 + i as u64;
+    //     let mut squares = [false; 25];
+    //     squares[0] = true;
+    //     let deploy_ix = ore_api::sdk::deploy(
+    //         kp.pubkey(),
+    //         kp.pubkey(),
+    //         amount,
+    //         squares,
+    //         alt_miners.clone(),
+    //     );
+    //     println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
+    //     submit_transaction_no_confirm(rpc, &kp, &[deploy_ix]).await?;
+    // }
 
     Ok(())
 }
@@ -269,15 +269,19 @@ async fn reset(
     let board = get_board(rpc).await?;
     let config = get_config(rpc).await?;
     let slot_hashes = get_slot_hashes(rpc).await?;
-    let mut miners = vec![];
     if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
         let id = get_winning_square(&slot_hash.to_bytes());
-        let square = get_square(rpc).await?;
+        // let square = get_square(rpc).await?;
         println!("Winning square: {}", id);
         // println!("Miners: {:?}", square.miners);
-        miners = square.miners[id as usize].to_vec();
+        // miners = square.miners[id as usize].to_vec();
     };
-    let reset_ix = ore_api::sdk::reset(payer.pubkey(), config.fee_collector, miners);
+    let reset_ix = ore_api::sdk::reset(
+        payer.pubkey(),
+        config.fee_collector,
+        board.round_id,
+        Pubkey::default(),
+    );
     // simulate_transaction(rpc, payer, &[reset_ix]).await;
     submit_transaction(rpc, payer, &[reset_ix]).await?;
     Ok(())
@@ -291,11 +295,16 @@ async fn deploy(
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
     let square_id = std::env::var("SQUARE").expect("Missing SQUARE env var");
     let square_id = u64::from_str(&square_id).expect("Invalid SQUARE");
-
+    let board = get_board(rpc).await?;
     let mut squares = [false; 25];
     squares[square_id as usize] = true;
-
-    let ix = ore_api::sdk::deploy(payer.pubkey(), payer.pubkey(), amount, squares, vec![]);
+    let ix = ore_api::sdk::deploy(
+        payer.pubkey(),
+        payer.pubkey(),
+        amount,
+        board.round_id,
+        squares,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -306,8 +315,15 @@ async fn deploy_all(
 ) -> Result<(), anyhow::Error> {
     let amount = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
     let amount = u64::from_str(&amount).expect("Invalid AMOUNT");
+    let board = get_board(rpc).await?;
     let squares = [true; 25];
-    let ix = ore_api::sdk::deploy(payer.pubkey(), payer.pubkey(), amount, squares, vec![]);
+    let ix = ore_api::sdk::deploy(
+        payer.pubkey(),
+        payer.pubkey(),
+        board.round_id,
+        amount,
+        squares,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -416,14 +432,32 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-async fn log_square(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let id = std::env::var("ID").expect("Missing ID env var");
-    let id = usize::from_str(&id).expect("Invalid ID");
-    let square = get_square(rpc).await?;
-    println!("Square");
-    println!("  count: {:?}", square.count[id]);
-    println!("  deployed: {:?}", square.deployed[id]);
-    println!("  miners: {:?}", square.miners[id]);
+    let id = u64::from_str(&id).expect("Invalid ID");
+    let round_address = round_pda(id).0;
+    let round = get_round(rpc, id).await?;
+    let rng = round.rng();
+    println!("Round");
+    println!("  Address: {}", round_address);
+    println!("  Count: {:?}", round.count);
+    println!("  Deployed: {:?}", round.deployed);
+    println!("  Expires at: {}", round.expires_at);
+    println!("  Id: {:?}", round.id);
+    println!("  Motherlode: {}", round.motherlode);
+    println!("  Rent payer: {}", round.rent_payer);
+    println!("  Slot hash: {:?}", round.slot_hash);
+    println!("  Top miner: {:?}", round.top_miner);
+    println!("  Top miner reward: {}", round.top_miner_reward);
+    println!("  Total deployed: {}", round.total_deployed);
+    println!("  Total vaulted: {}", round.total_vaulted);
+    println!("  Total winnings: {}", round.total_winnings);
+    if let Some(rng) = rng {
+        println!("  Winning square: {}", round.winning_square(rng));
+    }
+    // if round.slot_hash != [0; 32] {
+    //     println!("  Winning square: {}", get_winning_square(&round.slot_hash));
+    // }
     Ok(())
 }
 
@@ -439,10 +473,11 @@ async fn log_miner(
     println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
     println!("  deployed: {:?}", miner.deployed);
-    println!("  refund_sol: {}", miner.refund_sol);
+    println!("  cumulative: {:?}", miner.cumulative);
     println!("  rewards_sol: {}", miner.rewards_sol);
     println!("  rewards_ore: {}", miner.rewards_ore);
     println!("  round_id: {}", miner.round_id);
+    println!("  checkpoint_id: {}", miner.checkpoint_id);
     println!("  lifetime_rewards_sol: {}", miner.lifetime_rewards_sol);
     println!("  lifetime_rewards_ore: {}", miner.lifetime_rewards_ore);
     Ok(())
@@ -489,18 +524,9 @@ async fn log_board(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 fn print_board(board: Board, clock: &Clock) {
     let current_slot = clock.slot;
     println!("Board");
-    println!("  Id: {:?}", board.id);
-    println!("  Slot hash: {:?}", board.slot_hash);
+    println!("  Id: {:?}", board.round_id);
     println!("  Start slot: {}", board.start_slot);
     println!("  End slot: {}", board.end_slot);
-    println!("  deployed: {:?}", board.deployed);
-    println!("  Top miner: {:?}", board.top_miner);
-    println!("  Total deployed: {}", board.total_deployed);
-    println!("  Total vaulted: {}", board.total_vaulted);
-    println!("  Total winnings: {}", board.total_winnings);
-    if board.slot_hash != [0; 32] {
-        println!("  Winning square: {}", get_winning_square(&board.slot_hash));
-    }
     println!(
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
@@ -544,11 +570,11 @@ async fn get_slot_hashes(rpc: &RpcClient) -> Result<SlotHashes, anyhow::Error> {
     Ok(slot_hashes)
 }
 
-async fn get_square(rpc: &RpcClient) -> Result<Square, anyhow::Error> {
-    let square_pda = ore_api::state::square_pda();
-    let account = rpc.get_account(&square_pda.0).await?;
-    let square = Square::try_from_bytes(&account.data)?;
-    Ok(*square)
+async fn get_round(rpc: &RpcClient, id: u64) -> Result<Round, anyhow::Error> {
+    let round_pda = ore_api::state::round_pda(id);
+    let account = rpc.get_account(&round_pda.0).await?;
+    let round = Round::try_from_bytes(&account.data)?;
+    Ok(*round)
 }
 
 async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
@@ -595,6 +621,11 @@ async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::
 #[allow(dead_code)]
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
+    Ok(miners)
+}
+
+async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
+    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 
