@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, rent::Rent};
+use solana_program::rent::Rent;
 use steel::*;
 
 /// Checkpoints a miner's rewards.
@@ -27,10 +27,15 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
     let round = round_info
         .as_account_mut::<Round>(&ore_api::ID)?
-        .assert_mut(|r| r.id < board.round_id)? // Ensure round has ended.
         .assert_mut(|r| r.id == miner.round_id)?; // Ensure miner round ID matches the provided round.
+
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
+
+    // If round is current round, return.
+    if round.id == board.round_id {
+        return Ok(());
+    }
 
     // Ensure round is not expired.
     if clock.slot >= round.expires_at {
@@ -68,7 +73,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
 
         // Calculate SOL rewards.
         let original_deployment = miner.deployed[winning_square];
-        let admin_fee = original_deployment / 100;
+        let admin_fee = (original_deployment / 100).max(1);
         rewards_sol = original_deployment - admin_fee;
         rewards_sol += ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
             / round.deployed[winning_square] as u128) as u64;
@@ -79,6 +84,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             && top_miner_sample < miner.cumulative[winning_square] + miner.deployed[winning_square]
         {
             rewards_ore = round.top_miner_reward;
+            round.top_miner = miner.authority;
         }
 
         // Calculate motherlode rewards.
@@ -87,8 +93,6 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 / round.deployed[winning_square] as u128) as u64;
         }
     }
-
-    sol_log("I");
 
     // Checkpoint miner.
     miner.checkpoint_id = round.id;
@@ -105,9 +109,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         miner_info.send(bot_fee, &signer_info);
     }
 
-    // TODO Round debts. Track total checkpointed and/or num miner's checkpointed.
-
-    // Assert round has sufficient funds for rent + debts.
+    // Assert round has sufficient funds for rent.
     let account_size = 8 + std::mem::size_of::<Round>();
     let required_rent = Rent::get()?.minimum_balance(account_size);
     assert!(
