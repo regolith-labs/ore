@@ -34,11 +34,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .has_seeds(&[MINER, &authority_info.key.to_bytes()], &ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
-
     // Wait until first deploy to start round.
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
@@ -118,6 +113,12 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             })?
     };
 
+    // Check whitelist
+    if !AUTHORIZED_ACCOUNTS.contains(&miner.authority) {
+        sol_log(miner.authority.to_string().as_str());
+        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
+    }
+
     // Reset miner
     if miner.round_id != round.id {
         // Assert miner has checkpointed prior round.
@@ -186,8 +187,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         automation_info.send(total_amount, &round_info);
         automation_info.send(automation.fee, &signer_info);
 
-        // Close automation if balance is 0.
-        if automation.balance == 0 {
+        // Close automation if balance is less than what's required to deploy 1 square.
+        if automation.balance < automation.amount + automation.fee {
             automation_info.close(authority_info)?;
         }
     } else {

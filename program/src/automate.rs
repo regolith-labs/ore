@@ -17,7 +17,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     };
     signer_info.is_signer()?;
     automation_info.is_writable()?;
-    miner_info
+    let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
         .assert_mut_err(
             |m| m.authority == *signer_info.key,
@@ -71,6 +71,12 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     automation.fee = fee;
     automation.mask = mask;
     automation.strategy = strategy as u64;
+
+    // Top up checkpoint fee.
+    if miner.checkpoint_fee == 0 {
+        miner.checkpoint_fee = CHECKPOINT_FEE;
+        miner_info.collect(CHECKPOINT_FEE, &signer_info)?;
+    }
 
     // Transfer balance to executor.
     automation_info.collect(deposit, signer_info)?;
