@@ -5,14 +5,16 @@ use steel::*;
 pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, rent_payer_info, round_info, system_program] = accounts else {
+    let [signer_info, board_info, rent_payer_info, round_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    let board = board_info.as_account_mut::<Board>(&ore_api::ID)?;
     rent_payer_info.is_writable()?;
     round_info
         .as_account_mut::<Round>(&ore_api::ID)?
-        .assert_mut(|r| r.expires_at >= clock.slot)? // Ensure round has ended.
+        .assert_mut(|r| r.id < board.round_id)?
+        .assert_mut(|r| r.expires_at < clock.slot)? // Ensure round has expired.
         .assert_mut(|r| r.rent_payer == *rent_payer_info.key)?; // Ensure the rent payer is the correct one.
     system_program.is_program(&system_program::ID)?;
 
