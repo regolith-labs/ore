@@ -101,11 +101,24 @@ async fn main() {
         "claim_seeker" => {
             claim_seeker(&rpc, &payer).await.unwrap();
         }
+        "participating_miners" => {
+            participating_miners(&rpc).await.unwrap();
+        }
         "keys" => {
             keys().await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let round_id = std::env::var("ID").expect("Missing ID env var");
+    let round_id = u64::from_str(&round_id).expect("Invalid ID");
+    let miners = get_miners_participating(rpc, round_id).await?;
+    for (i, (address, miner)) in miners.iter().enumerate() {
+        println!("{}: {}", i, miner.authority);
+    }
+    Ok(())
 }
 
 // Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR
@@ -626,6 +639,15 @@ async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Err
 
 async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
     let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
+    Ok(miners)
+}
+
+async fn get_miners_participating(
+    rpc: &RpcClient,
+    round_id: u64,
+) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
+    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(472, &round_id.to_le_bytes()));
+    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(miners)
 }
 

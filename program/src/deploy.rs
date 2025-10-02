@@ -39,6 +39,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         return Err(trace("Not authorized", OreError::NotAuthorized.into()));
     }
 
+    // Wait until first deploy to start round.
+    if board.end_slot == u64::MAX {
+        board.start_slot = clock.slot;
+        board.end_slot = board.start_slot + 150;
+        round.expires_at = board.end_slot + ONE_WEEK_SLOTS;
+    }
+
     // Check if signer is the automation executor.
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info

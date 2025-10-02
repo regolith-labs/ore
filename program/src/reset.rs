@@ -47,7 +47,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.deployed = [0; 25];
     round_next.slot_hash = [0; 32];
     round_next.count = [0; 25];
-    round_next.expires_at = clock.slot + 150 + ONE_WEEK_SLOTS;
+    round_next.expires_at = u64::MAX; // clock.slot + 150 + ONE_WEEK_SLOTS;
     round_next.rent_payer = *signer_info.key;
     round_next.motherlode = 0;
     round_next.top_miner = Pubkey::default();
@@ -109,7 +109,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Update board
         board.round_id += 1;
         board.start_slot = clock.slot + 1;
-        board.end_slot = board.start_slot + 150;
+        board.end_slot = u64::MAX; // board.start_slot + 150;
 
         // Do SOL transfers.
         round_info.send(total_admin_fee, &fee_collector_info);
@@ -220,7 +220,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Reset board.
     board.round_id += 1;
     board.start_slot = clock.slot + 1;
-    board.end_slot = board.start_slot + 150;
+    board.end_slot = u64::MAX; // board.start_slot + 150;
 
     // Do SOL transfers.
     round_info.send(total_admin_fee, &fee_collector_info);
