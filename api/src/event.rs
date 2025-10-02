@@ -30,6 +30,9 @@ pub struct ResetEvent {
     /// The number of miners on the winning square.
     pub num_winners: u64,
 
+    /// The amount of ORE payout for the motherlode.
+    pub motherlode: u64,
+
     /// The total amount of SOL prospected in the round.
     pub total_deployed: u64,
 
