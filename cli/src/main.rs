@@ -21,7 +21,7 @@ use solana_sdk::{
 };
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{amount_to_ui_amount, ui_amount_to_amount};
-use steel::{AccountDeserialize, Clock, Discriminator};
+use steel::{AccountDeserialize, Clock, Discriminator, Instruction};
 
 #[tokio::main]
 async fn main() {
@@ -342,34 +342,30 @@ async fn checkpoint_all(
                 continue;
             };
 
-            println!(
-                "[{}/{}] Checkpoint miner: {} ({} s)",
-                i + 1,
-                miners.len(),
-                miner.authority,
-                (expires_at - clock.slot) as f64 * 0.4
-            );
-
             // If we are in fee collection period, checkpoint the miner.
             if clock.slot >= expires_at - TWELVE_HOURS_SLOTS {
+                println!(
+                    "[{}/{}] Checkpoint miner: {} ({} s)",
+                    i + 1,
+                    miners.len(),
+                    miner.authority,
+                    (expires_at - clock.slot) as f64 * 0.4
+                );
                 ixs.push(ore_api::sdk::checkpoint(
                     payer.pubkey(),
                     miner.authority,
                     miner.round_id,
                 ));
             }
-
-            // If we have more than 10 ixs, submit them.
-            if ixs.len() >= 10 {
-                submit_transaction(rpc, payer, &ixs).await?;
-                ixs.clear();
-            }
         }
     }
 
-    // Submit the remaining ixs.
-    if !ixs.is_empty() {
-        submit_transaction(rpc, payer, &ixs).await?;
+    // Submit the instructions in batches.
+    while !ixs.is_empty() {
+        let batch = ixs
+            .drain(..std::cmp::min(10, ixs.len()))
+            .collect::<Vec<Instruction>>();
+        submit_transaction(rpc, payer, &batch).await?;
     }
 
     Ok(())
