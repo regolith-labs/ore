@@ -2,8 +2,6 @@ use ore_api::prelude::*;
 use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
-use crate::AUTHORIZED_ACCOUNTS;
-
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -38,7 +36,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
         board.end_slot = board.start_slot + 150;
-        round.expires_at = board.end_slot + ONE_WEEK_SLOTS;
+        round.expires_at = board.end_slot + ONE_DAY_SLOTS;
     }
 
     // Check if signer is the automation executor.
@@ -112,12 +110,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                 }
             })?
     };
-
-    // Check whitelist
-    // if !AUTHORIZED_ACCOUNTS.contains(&miner.authority) {
-    //     sol_log(miner.authority.to_string().as_str());
-    //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    // }
 
     // Reset miner
     if miner.round_id != round.id {

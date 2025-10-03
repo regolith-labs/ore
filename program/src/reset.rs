@@ -158,20 +158,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Reset the motherlode if it was activated.
     if round.did_hit_motherlode(r) {
-        // Log the motherlode event.
-        program_log(
-            &[board_info.clone(), ore_program.clone()],
-            MotherlodeEvent {
-                disc: 2,
-                amount: treasury.motherlode,
-                round_id: round.id,
-                num_miners: 0,
-                ts: clock.unix_timestamp,
-            }
-            .to_bytes(),
-        )?;
-
-        // Reset the motherlode.
         round.motherlode = treasury.motherlode;
         treasury.motherlode = 0;
     }

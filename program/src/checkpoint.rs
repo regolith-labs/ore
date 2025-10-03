@@ -13,49 +13,48 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     signer_info.is_signer()?;
     let board = board_info.as_account::<Board>(&ore_api::ID)?;
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+
     // If miner has already checkpointed this round, return.
     if miner.checkpoint_id == miner.round_id {
         return Ok(());
     }
+
+    // If round account is empty, verify the correct account was provided.
+    // This can happen if the miner attempted to checkpoint after the round expired and the account was closed.
+    // In this case, the miner forfeits any potential rewards.
     if round_info.data_is_empty() {
-        // If round account is empty, ensure the correct account was provided.
-        // This can happen if the miner attempted to checkpoint after the round expired and the account was closed.
-        // In this case, the miner forfeits any potential rewards.
         round_info.has_seeds(&[ROUND, &miner.round_id.to_le_bytes()], &ore_api::ID)?;
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
-    let round = round_info
-        .as_account_mut::<Round>(&ore_api::ID)?
-        .assert_mut(|r| r.id == miner.round_id)?; // Ensure miner round ID matches the provided round.
 
+    let round = round_info.as_account_mut::<Round>(&ore_api::ID)?;
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
-    // If round is current round, return.
-    if round.id == board.round_id {
+    // If round is current round, or the miner round ID does not match the provided round, return.
+    if round.id == board.round_id || round.id != miner.round_id {
         return Ok(());
     }
 
     // Ensure round is not expired.
+    // In this case, the miner forfeits any potential rewards.
     if clock.slot >= round.expires_at {
-        // In this case, the miner forfeits any potential rewards.
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
 
     // Get the RNG.
+    // If the round has no RNG, no one wins.
     let Some(r) = round.rng() else {
-        // If the round has no RNG, no one wins.
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     };
 
     // Calculate bot fee.
+    // If the round expires in less than 12h, anyone may checkpoint this account and collect the bot fee.
     let mut bot_fee = 0;
-    if clock.slot >= round.expires_at - ONE_DAY_SLOTS {
-        // The round expires in less than 24h.
-        // Anyone may checkpoint this account and collect the bot fee.
+    if clock.slot >= round.expires_at - TWELVE_HOURS_SLOTS {
         bot_fee = miner.checkpoint_fee;
         miner.checkpoint_fee = 0;
     }
@@ -116,14 +115,6 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     if bot_fee > 0 {
         miner_info.send(bot_fee, &signer_info);
     }
-
-    // Assert round has sufficient funds for rent.
-    let account_size = 8 + std::mem::size_of::<Round>();
-    let required_rent = Rent::get()?.minimum_balance(account_size);
-    assert!(
-        round_info.lamports() >= required_rent,
-        "Round does not have sufficient funds for rent"
-    );
 
     let account_size = 8 + std::mem::size_of::<Miner>();
     let required_rent = Rent::get()?.minimum_balance(account_size);

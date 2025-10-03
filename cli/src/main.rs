@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use meteora_pools_sdk::accounts::Pool;
 use meteora_vault_sdk::accounts::Vault;
@@ -21,7 +21,7 @@ use solana_sdk::{
 };
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{amount_to_ui_amount, ui_amount_to_amount};
-use steel::{AccountDeserialize, Clock, Discriminator};
+use steel::{AccountDeserialize, Clock, Discriminator, Instruction};
 
 #[tokio::main]
 async fn main() {
@@ -86,9 +86,6 @@ async fn main() {
         "seeker" => {
             log_seeker(&rpc).await.unwrap();
         }
-        "test_kick" => {
-            test_kick(&rpc).await.unwrap();
-        }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
         }
@@ -97,6 +94,9 @@ async fn main() {
         }
         "ata" => {
             ata(&rpc, &payer).await.unwrap();
+        }
+        "checkpoint_all" => {
+            checkpoint_all(&rpc, &payer).await.unwrap();
         }
         "claim_seeker" => {
             claim_seeker(&rpc, &payer).await.unwrap();
@@ -118,58 +118,6 @@ async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     for (i, (address, miner)) in miners.iter().enumerate() {
         println!("{}: {}", i, miner.authority);
     }
-    Ok(())
-}
-
-// Dmy2fqxpkUocwvkALMDwfCRFeYfkdGqgB5PLfmZW5ASR
-// Az9Xia5f6EXU9MGHuuMCKyHMy3MfNnsoyTbh7HTuFw5G
-// 5muLAbcjsAMcP8438KPfo2Jqw2vgAtuSDvMFNWb6Bexi
-// FRYaFLiE384yeqqjM9smbz17HrJAWGVmicmWYCEMAL16
-// 9D3hfN4FJWVdCMZStAhJbx93m2WLYXVEbkwdehsjihSK
-// GNVEy8fcCwfDFHFXiKBrnmxDwQDFq9JfACgnjirWvzXa
-// 7sBX4kPzB87tBw7xGsaLMyUjbPvoKRz2HA5kgxruUYfr
-// BeqD2wuermavKMivfRMw3eFaXpAosh5pCVotF89PLfZk
-// 3xrxQD2DcxiTeBKQqu129aijrVt6iAJ9yiEAV83yd61a
-// GQA2EL4FJhFvKrQwLTUvq2kczS8t4MxpAzfbgroUX8oP
-// Ddh1CP9vA3kjizVsr2J18VetznQiaY3EjPs8uPLVDFSd
-// A21sYbqWbURRnUQEsVnyjEJq1hackmspp7RYaZFh4dw8
-// 9fhLoSqzG9dfBja9mCHeYo4pG3jNyw47xqoZ9R3sihug
-// FuWRwcvKBs3EHq9eUNy3xUSYETwhoK4jCHq93rFRas1i
-// 8N8xX3dX4QhYtsmkU1jH6qPhT46or8TU8gvk9sF7PKrA
-// Da6QdrpoSsZUffj7RBmVmnvP4HJZTBwcDv47YQErm45E
-// Fjyo6xK6KdfaejYdZnb46aEXxmKHgkb3JoAW41ydF6gA
-// EYuhVmfAG6WoKVkwnb1TEeXKek5J14YAkJn4VTEgu4ip
-// CJmSeXLA2LrX8qLehn1vaMHGj2pX3hXmnJstgU3uhNeM
-// 34QyjRFFU2Vp7ZAxdNm3FRCChEMbStAh9Zf58W84q7Fh
-
-async fn test_kick(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    // let mut kps = vec![];
-    // for i in 1..=20 {
-    //     let home_dir = dirs::home_dir()
-    //         .expect("Could not find home directory")
-    //         .display()
-    //         .to_string();
-    //     let path = format!("{}/.config/solana/tester-{}.json", home_dir, i);
-    //     kps.push(read_keypair_file(&path).unwrap());
-    // }
-    // let mut alt_miners = kps.iter().map(|kp| kp.pubkey()).collect::<Vec<Pubkey>>();
-    // alt_miners.push(pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS"));
-
-    // for (i, kp) in kps.iter().enumerate() {
-    //     let amount = 1000 + i as u64;
-    //     let mut squares = [false; 25];
-    //     squares[0] = true;
-    //     let deploy_ix = ore_api::sdk::deploy(
-    //         kp.pubkey(),
-    //         kp.pubkey(),
-    //         amount,
-    //         squares,
-    //         alt_miners.clone(),
-    //     );
-    //     println!("Deploying {} to square 0 for {}", amount, kp.pubkey());
-    //     submit_transaction_no_confirm(rpc, &kp, &[deploy_ix]).await?;
-    // }
-
     Ok(())
 }
 
@@ -369,6 +317,57 @@ async fn set_fee_collector(
     let fee_collector = Pubkey::from_str(&fee_collector).expect("Invalid FEE_COLLECTOR");
     let ix = ore_api::sdk::set_fee_collector(payer.pubkey(), fee_collector);
     submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn checkpoint_all(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let clock = get_clock(rpc).await?;
+    let miners = get_miners(rpc).await?;
+    let mut expiry_slots = HashMap::new();
+    let mut ixs = vec![];
+    for (i, (_address, miner)) in miners.iter().enumerate() {
+        if miner.checkpoint_id < miner.round_id {
+            // Log the expiry slot for the round.
+            if !expiry_slots.contains_key(&miner.round_id) {
+                if let Ok(round) = get_round(rpc, miner.round_id).await {
+                    expiry_slots.insert(miner.round_id, round.expires_at);
+                }
+            }
+
+            // Get the expiry slot for the round.
+            let Some(expires_at) = expiry_slots.get(&miner.round_id) else {
+                continue;
+            };
+
+            // If we are in fee collection period, checkpoint the miner.
+            if clock.slot >= expires_at - TWELVE_HOURS_SLOTS {
+                println!(
+                    "[{}/{}] Checkpoint miner: {} ({} s)",
+                    i + 1,
+                    miners.len(),
+                    miner.authority,
+                    (expires_at - clock.slot) as f64 * 0.4
+                );
+                ixs.push(ore_api::sdk::checkpoint(
+                    payer.pubkey(),
+                    miner.authority,
+                    miner.round_id,
+                ));
+            }
+        }
+    }
+
+    // Submit the instructions in batches.
+    while !ixs.is_empty() {
+        let batch = ixs
+            .drain(..std::cmp::min(10, ixs.len()))
+            .collect::<Vec<Instruction>>();
+        submit_transaction(rpc, payer, &batch).await?;
+    }
+
     Ok(())
 }
 

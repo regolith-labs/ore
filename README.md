@@ -1,6 +1,6 @@
 # ORE
 
-ORE is a crypto mining game.
+ORE is a crypto mining protocol.
 
 
 ## API
@@ -13,6 +13,7 @@ ORE is a crypto mining game.
 
 #### Mining
 - [`Automate`](program/src/automate.rs) - Configures a new automation.
+- [`Checkpoint`](program/src/checkpoint.rs) - Checkpoints rewards from an prior round.
 - [`ClaimORE`](program/src/claim_ore.rs) - Claims ORE mining rewards.
 - [`ClaimSOL`](program/src/claim_sol.rs) - Claims SOL mining rewards.
 - [`Deploy`](program/src/deploy.rs) – Deploys SOL to claim space on the board.
@@ -36,11 +37,11 @@ ORE is a crypto mining game.
 
 ## State
 - [`Automation`](api/src/state/automation.rs) - Tracks automation configs. 
-- [`Board`](api/src/state/board.rs) - Holds current game state.
+- [`Board`](api/src/state/board.rs) - Tracks the current round number and timestamps.
 - [`Config`](api/src/state/config.rs) - Global program configs.
 - [`Miner`](api/src/state/miner.rs) - Tracks a miner's game state.
+- [`Round`](api/src/state/round.rs) - Tracks the game state of a given round.
 - [`Seeker`](api/src/state/seeker.rs) - Tracks whether a Seeker token has been claimed.
-- [`Square`](api/src/state/square.rs) - The blockspace state and claims.
 - [`Stake`](api/src/state/stake.rs) - Manages a user's staking activity.
 - [`Treasury`](api/src/state/treasury.rs) - Mints, burns, and escrows ORE tokens. 
 
