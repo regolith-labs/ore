@@ -113,12 +113,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             })?
     };
 
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&miner.authority) {
-        sol_log(miner.authority.to_string().as_str());
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
-
     // Reset miner
     if miner.round_id != round.id {
         // Assert miner has checkpointed prior round.
