@@ -82,7 +82,7 @@ pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9j
 pub const SOL_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
 
 /// The address to indicate ORE rewards are split between all miners.
-pub const SPLIT_ADDRESS: Pubkey = pubkey!("Split11111111111111111111111111111111111112");
+pub const SPLIT_ADDRESS: Pubkey = pubkey!("SpLiT11111111111111111111111111111111111112");
 
 /// The address of the treasury account.
 pub const TREASURY_ADDRESS: Pubkey =
