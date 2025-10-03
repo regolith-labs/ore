@@ -53,8 +53,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
 
     // Calculate bot fee.
     let mut bot_fee = 0;
-    if clock.slot >= round.expires_at - ONE_DAY_SLOTS {
-        // The round expires in less than 24h.
+    if clock.slot >= round.expires_at - TWELVE_HOURS_SLOTS {
+        // The round expires in less than 12h.
         // Anyone may checkpoint this account and collect the bot fee.
         bot_fee = miner.checkpoint_fee;
         miner.checkpoint_fee = 0;

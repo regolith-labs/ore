@@ -29,6 +29,9 @@ pub const ONE_MINUTE_SLOTS: u64 = 150;
 /// The number of slots in one hour.
 pub const ONE_HOUR_SLOTS: u64 = 60 * ONE_MINUTE_SLOTS;
 
+/// The number of slots in 12 hours.
+pub const TWELVE_HOURS_SLOTS: u64 = 12 * ONE_HOUR_SLOTS;
+
 /// The number of slots in one day.
 pub const ONE_DAY_SLOTS: u64 = 24 * ONE_HOUR_SLOTS;
 

@@ -38,7 +38,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
         board.end_slot = board.start_slot + 150;
-        round.expires_at = board.end_slot + ONE_WEEK_SLOTS;
+        round.expires_at = board.end_slot + ONE_DAY_SLOTS;
     }
 
     // Check if signer is the automation executor.
