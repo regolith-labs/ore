@@ -78,12 +78,20 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             / round.deployed[winning_square] as u128) as u64;
 
         // Calculate ORE rewards.
-        let top_miner_sample = round.top_miner_sample(r, winning_square);
-        if top_miner_sample >= miner.cumulative[winning_square]
-            && top_miner_sample < miner.cumulative[winning_square] + miner.deployed[winning_square]
-        {
-            rewards_ore = round.top_miner_reward;
-            round.top_miner = miner.authority;
+        if round.top_miner == SPLIT_ADDRESS {
+            // If round is split, split the reward evenly among all miners.
+            rewards_ore = ((round.top_miner_reward * miner.deployed[winning_square])
+                / round.deployed[winning_square]) as u64;
+        } else {
+            // If round is not split, payout to the top miner.
+            let top_miner_sample = round.top_miner_sample(r, winning_square);
+            if top_miner_sample >= miner.cumulative[winning_square]
+                && top_miner_sample
+                    < miner.cumulative[winning_square] + miner.deployed[winning_square]
+            {
+                rewards_ore = round.top_miner_reward;
+                round.top_miner = miner.authority;
+            }
         }
 
         // Calculate motherlode rewards.

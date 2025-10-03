@@ -1,6 +1,6 @@
 use steel::*;
 
-use crate::state::{miner_pda, OreAccountOLD};
+use crate::state::miner_pda;
 
 use super::OreAccount;
 
@@ -38,38 +38,6 @@ pub struct Miner {
     pub lifetime_rewards_ore: u64,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
-pub struct MinerOLD {
-    /// The authority of this miner account.
-    pub authority: Pubkey,
-
-    /// The miner's prospects in the current round.
-    pub deployed: [u64; 25],
-
-    /// Unused buffer.
-    #[deprecated(note = "No longer used")]
-    pub buffer: [u8; 32],
-
-    /// The amount of SOL this miner has had refunded and may claim.
-    pub refund_sol: u64,
-
-    /// The amount of SOL this miner can claim.
-    pub rewards_sol: u64,
-
-    /// The amount of ORE this miner can claim.
-    pub rewards_ore: u64,
-
-    /// The ID of the round this miner last played in.
-    pub round_id: u64,
-
-    /// The total amount of SOL this miner has mined across all blocks.
-    pub lifetime_rewards_sol: u64,
-
-    /// The total amount of ORE this miner has mined across all blocks.
-    pub lifetime_rewards_ore: u64,
-}
-
 impl Miner {
     pub fn pda(&self) -> (Pubkey, u8) {
         miner_pda(self.authority)
@@ -77,4 +45,3 @@ impl Miner {
 }
 
 account!(OreAccount, Miner);
-account!(OreAccountOLD, MinerOLD);

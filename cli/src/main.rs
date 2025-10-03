@@ -636,11 +636,6 @@ async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Err
     Ok(miners)
 }
 
-async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
-    let miners = get_program_accounts::<MinerOLD>(rpc, ore_api::ID, vec![]).await?;
-    Ok(miners)
-}
-
 async fn get_miners_participating(
     rpc: &RpcClient,
     round_id: u64,

@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::slot_hashes::SlotHashes;
+use solana_program::{pubkey, slot_hashes::SlotHashes};
 use steel::*;
 
 /// Pays out the winners and block reward.
@@ -151,6 +151,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
+    // Set top miner to split reward address if the round is split.
+    if round.is_split_reward(r) {
+        round.top_miner = SPLIT_ADDRESS;
+    }
+
     // Reset the motherlode if it was activated.
     if round.did_hit_motherlode(r) {
         round.motherlode = treasury.motherlode;
@@ -193,7 +198,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: Pubkey::default(), // top_miner.authority,
+            top_miner: round.top_miner,
             motherlode: round.motherlode,
             num_winners: round.count[winning_square],
             total_deployed: round.total_deployed,
