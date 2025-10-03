@@ -351,7 +351,7 @@ async fn checkpoint_all(
             );
 
             // If we are in fee collection period, checkpoint the miner.
-            if clock.slot >= expires_at - ONE_DAY_SLOTS {
+            if clock.slot >= expires_at - TWELVE_HOURS_SLOTS {
                 ixs.push(ore_api::sdk::checkpoint(
                     payer.pubkey(),
                     miner.authority,

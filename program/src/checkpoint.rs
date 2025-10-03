@@ -25,9 +25,12 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
-    let round = round_info
-        .as_account_mut::<Round>(&ore_api::ID)?
-        .assert_mut(|r| r.id == miner.round_id)?; // Ensure miner round ID matches the provided round.
+    let round = round_info.as_account_mut::<Round>(&ore_api::ID)?;
+
+    // Ensure miner round ID matches the provided round.
+    if round.id != miner.round_id {
+        return Ok(());
+    }
 
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
