@@ -19,8 +19,12 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
         .as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     system_program.is_program(&system_program::ID)?;
 
+    // Get amount
+    let one_sol = 1_000_000_000;
+    let amount = (one_sol * 10).min(treasury.balance);
+
     // Send SOL to the WSOL account.
-    treasury_info.send(treasury.balance, treasury_sol_info);
+    treasury_info.send(amount, treasury_sol_info);
 
     // Check min balance.
     let min_balance = Rent::get()?.minimum_balance(std::mem::size_of::<Treasury>());
@@ -30,7 +34,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     );
 
     // Update treasury.
-    treasury.balance = 0;
+    treasury.balance -= amount;
 
     Ok(())
 }
