@@ -28,14 +28,12 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         return Ok(());
     }
 
-    let round = round_info
-        .as_account_mut::<Round>(&ore_api::ID)?
-        .assert_mut(|r| r.slot_hash != [0; 32])?; // Round has been closed.
+    let round = round_info.as_account_mut::<Round>(&ore_api::ID)?; // Round has been closed.
     treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // If round is current round, or the miner round ID does not match the provided round, return.
-    if round.id == board.round_id || round.id != miner.round_id {
+    if round.id == board.round_id || round.id != miner.round_id || round.slot_hash == [0; 32] {
         return Ok(());
     }
 
