@@ -57,20 +57,10 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Calculate miner rewards.
     let mut rewards_sol = 0;
     let mut rewards_ore = 0;
-    if round.slot_hash == [u8::MAX; 32] {
-        // Sanity check.
-        // If there is no slot hash, total deployed should be reset to zero.
-        assert!(
-            round.total_deployed == 0,
-            "Round total deployed should be zero."
-        );
 
-        // Round has no slot hash, refund all SOL.
-        rewards_sol = miner.deployed.iter().sum::<u64>();
-    } else {
-        // Get the RNG.
-        // If the round has no RNG, panic. This should never happen here.
-        let r = round.rng().expect("Round has no RNG.");
+    // Get the RNG.
+    if let Some(r) = round.rng() {
+        // Get the winning square.
         let winning_square = round.winning_square(r) as usize;
 
         // If the miner deployed to the winning square, calculate rewards.
@@ -111,6 +101,16 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                     / round.deployed[winning_square] as u128) as u64;
             }
         }
+    } else {
+        // Sanity check.
+        // If there is no rng, total deployed should have been reset to zero.
+        assert!(
+            round.total_deployed == 0,
+            "Round total deployed should be zero."
+        );
+
+        // Round has no slot hash, refund all SOL.
+        rewards_sol = miner.deployed.iter().sum::<u64>();
     }
 
     // Checkpoint miner.

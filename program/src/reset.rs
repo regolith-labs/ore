@@ -91,10 +91,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .to_bytes(),
         )?;
 
-        // Update board
+        // Update board for next round.
         board.round_id += 1;
         board.start_slot = clock.slot + 1;
-        board.end_slot = u64::MAX; // board.start_slot + 150;
+        board.end_slot = u64::MAX;
         return Ok(());
     };
 
@@ -131,10 +131,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             .to_bytes(),
         )?;
 
-        // Update board
+        // Update board for next round.
         board.round_id += 1;
         board.start_slot = clock.slot + 1;
-        board.end_slot = u64::MAX; // board.start_slot + 150;
+        board.end_slot = u64::MAX;
 
         // Do SOL transfers.
         round_info.send(total_admin_fee, &fee_collector_info);
@@ -147,7 +147,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let winnings_admin_fee = winnings / 100; // 1% admin fee.
     let winnings = winnings - winnings_admin_fee;
 
-    // Get vault amount. Subtract vaulted amount from winnings.
+    // Subtract vault amount from winnings.
     let vault_amount = winnings / 10; // 10% of winnings.
     let winnings = winnings - vault_amount;
     round.total_winnings = winnings;
@@ -163,7 +163,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 + winnings_admin_fee
     );
 
-    // Mint 1 ORE for the winning miner(s).
+    // Mint +1 ORE for the winning miner(s).
     let mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE);
     round.top_miner_reward = mint_amount;
     mint_to_signed(
@@ -175,7 +175,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
-    // With 1 in 4 odds, split the 1 ORE reward.
+    // With 1 in 4 odds, split the +1 ORE reward.
     if round.is_split_reward(r) {
         round.top_miner = SPLIT_ADDRESS;
     }
@@ -186,7 +186,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode = 0;
     }
 
-    // Top up the motherlode rewards pool.
+    // Mint +0.2 ORE to the motherlode rewards pool.
     let mint = mint_info.as_mint()?;
     let motherlode_mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE / 5);
     if motherlode_mint_amount > 0 {
