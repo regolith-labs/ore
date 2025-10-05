@@ -308,6 +308,26 @@ pub fn reset(
     }
 }
 
+// let [signer_info, board_info, rent_payer_info, round_info, treasury_info, system_program] =
+
+pub fn close(signer: Pubkey, round_id: u64, rent_payer: Pubkey) -> Instruction {
+    let board_address = board_pda().0;
+    let treasury_address = TREASURY_ADDRESS;
+    let round_address = round_pda(round_id).0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
+            AccountMeta::new(rent_payer, false),
+            AccountMeta::new(round_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: Close {}.to_bytes(),
+    }
+}
+
 // let [signer_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
 
 pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instruction {

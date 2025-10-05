@@ -98,6 +98,9 @@ async fn main() {
         "checkpoint_all" => {
             checkpoint_all(&rpc, &payer).await.unwrap();
         }
+        "close_all" => {
+            close_all(&rpc, &payer).await.unwrap();
+        }
         "claim_seeker" => {
             claim_seeker(&rpc, &payer).await.unwrap();
         }
@@ -218,8 +221,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
@@ -360,11 +363,40 @@ async fn checkpoint_all(
         }
     }
 
-    // Submit the instructions in batches.
+    // Batch and submit the instructions.
     while !ixs.is_empty() {
         let batch = ixs
             .drain(..std::cmp::min(10, ixs.len()))
             .collect::<Vec<Instruction>>();
+        submit_transaction(rpc, payer, &batch).await?;
+    }
+
+    Ok(())
+}
+
+async fn close_all(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let rounds = get_rounds(rpc).await?;
+    let mut ixs = vec![];
+    let clock = get_clock(rpc).await?;
+    for (_i, (_address, round)) in rounds.iter().enumerate() {
+        if clock.slot >= round.expires_at {
+            ixs.push(ore_api::sdk::close(
+                payer.pubkey(),
+                round.id,
+                round.rent_payer,
+            ));
+        }
+    }
+
+    // Batch and submit the instructions.
+    while !ixs.is_empty() {
+        let batch = ixs
+            .drain(..std::cmp::min(12, ixs.len()))
+            .collect::<Vec<Instruction>>();
+        // simulate_transaction(rpc, payer, &batch).await;
         submit_transaction(rpc, payer, &batch).await?;
     }
 
@@ -628,6 +660,11 @@ async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::
     let account = rpc.get_account(&stake_pda.0).await?;
     let stake = Stake::try_from_bytes(&account.data)?;
     Ok(*stake)
+}
+
+async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Error> {
+    let rounds = get_program_accounts::<Round>(rpc, ore_api::ID, vec![]).await?;
+    Ok(rounds)
 }
 
 #[allow(dead_code)]
