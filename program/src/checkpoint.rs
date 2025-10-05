@@ -69,7 +69,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         rewards_sol = miner.deployed.iter().sum::<u64>();
     } else {
         // Get the RNG.
-        // If the round has no RNG, no one wins.
+        // If the round has no RNG, panic. This should never happen here.
         let r = round.rng().expect("Round has no RNG.");
         let winning_square = round.winning_square(r) as usize;
 
