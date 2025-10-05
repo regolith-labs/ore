@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{pubkey, slot_hashes::SlotHashes};
+use solana_program::slot_hashes::SlotHashes;
 use steel::*;
 
 /// Pays out the winners and block reward.
@@ -47,7 +47,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.deployed = [0; 25];
     round_next.slot_hash = [0; 32];
     round_next.count = [0; 25];
-    round_next.expires_at = u64::MAX; // clock.slot + 150 + ONE_WEEK_SLOTS;
+    round_next.expires_at = u64::MAX; // Set to max, to indicate round is waiting for first deploy to begin.
     round_next.rent_payer = *signer_info.key;
     round_next.motherlode = 0;
     round_next.top_miner = Pubkey::default();
@@ -57,31 +57,55 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.total_winnings = 0;
 
     // Sample slot hash.
-    let mut r = 0;
-    let (winning_square, square_deployed) =
-        if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
-            round.slot_hash = slot_hash;
-            if let Some(rng) = round.rng() {
-                r = rng;
-                let winning_square = round.winning_square(r);
-                let square_deployed = round.deployed[winning_square];
-                (winning_square, square_deployed)
-            } else {
-                // Cannot get slot hash. No one wins.
-                round.slot_hash = [u8::MAX; 32];
-                (u64::MAX as usize, 0)
-            }
-        } else {
-            // Cannot get slot hash. No one wins.
-            round.slot_hash = [u8::MAX; 32];
-            (u64::MAX as usize, 0)
-        };
+    if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
+        round.slot_hash = slot_hash;
+    } else {
+        round.slot_hash = [u8::MAX; 32];
+    }
 
-    // Collect admin fees.
+    // Exit early if no slot hash was found.
+    let Some(r) = round.rng() else {
+        // Slot hash could not be found, refund all SOL.
+        round.total_vaulted = 0;
+        round.total_winnings = 0;
+        round.total_deployed = 0;
+
+        // Emit event.
+        program_log(
+            &[board_info.clone(), ore_program.clone()],
+            ResetEvent {
+                disc: 0,
+                round_id: round.id,
+                start_slot: board.start_slot,
+                end_slot: board.end_slot,
+                winning_square: u64::MAX,
+                top_miner: Pubkey::default(),
+                num_winners: 0,
+                motherlode: 0,
+                total_deployed: round.total_deployed,
+                total_vaulted: round.total_vaulted,
+                total_winnings: round.total_winnings,
+                total_minted: 0,
+                ts: clock.unix_timestamp,
+            }
+            .to_bytes(),
+        )?;
+
+        // Update board
+        board.round_id += 1;
+        board.start_slot = clock.slot + 1;
+        board.end_slot = u64::MAX; // board.start_slot + 150;
+        return Ok(());
+    };
+
+    // Caculate admin fees.
     let total_admin_fee = round.total_deployed / 100;
 
-    // No one won. Vault all deployed.
-    if square_deployed == 0 {
+    // Get the winning square.
+    let winning_square = round.winning_square(r);
+
+    // If no one deployed on the winning square, vault all deployed.
+    if round.deployed[winning_square] == 0 {
         // Vault all deployed.
         round.total_vaulted = round.total_deployed - total_admin_fee;
         treasury.balance += round.total_deployed - total_admin_fee;
@@ -118,12 +142,12 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Ok(());
     }
 
-    // Get winnings amount (total deployed on all non-winning squares).
+    // Get winnings amount (total deployed on all non-winning squares, minus admin fee).
     let winnings = round.calculate_total_winnings(winning_square);
     let winnings_admin_fee = winnings / 100; // 1% admin fee.
     let winnings = winnings - winnings_admin_fee;
 
-    // Get vault amount.
+    // Get vault amount. Subtract vaulted amount from winnings.
     let vault_amount = winnings / 10; // 10% of winnings.
     let winnings = winnings - vault_amount;
     round.total_winnings = winnings;
@@ -139,7 +163,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 + winnings_admin_fee
     );
 
-    // Mint 1 ORE for the winning miner.
+    // Mint 1 ORE for the winning miner(s).
     let mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE);
     round.top_miner_reward = mint_amount;
     mint_to_signed(
@@ -151,12 +175,12 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
-    // Set top miner to split reward address if the round is split.
+    // With 1 in 4 odds, split the 1 ORE reward.
     if round.is_split_reward(r) {
         round.top_miner = SPLIT_ADDRESS;
     }
 
-    // Reset the motherlode if it was activated.
+    // Payout the motherlode if it was activated.
     if round.did_hit_motherlode(r) {
         round.motherlode = treasury.motherlode;
         treasury.motherlode = 0;
