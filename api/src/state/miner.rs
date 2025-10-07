@@ -45,16 +45,16 @@ impl Miner {
 
     pub fn claim_ore(&mut self, amount: u64, stake: &mut Stake, treasury: &mut Treasury) -> u64 {
         stake.update_rewards(self, treasury);
-        let mut amount = self.rewards_ore.min(amount);
+        let amount = self.rewards_ore.min(amount);
         self.rewards_ore -= amount;
         treasury.total_unclaimed -= amount;
 
         // Charge a 10% fee and share with stakers.
-        if treasury.total_yielding_ore() > 0 {
-            let claim_fee = amount / 10;
-            amount -= claim_fee;
-            treasury.update_rewards_factor(claim_fee);
-        }
+        // if treasury.total_yielding_ore() > 0 {
+        //     let claim_fee = amount / 10;
+        //     amount -= claim_fee;
+        //     treasury.update_rewards_factor(claim_fee);
+        // }
 
         amount
     }

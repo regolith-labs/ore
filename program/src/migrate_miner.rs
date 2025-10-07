@@ -1,11 +1,7 @@
 use ore_api::prelude::*;
 use steel::*;
 
-pub fn process_migrate_miner(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    // Parse data.
-    let args = SetAdmin::try_from_bytes(data)?;
-    let new_admin = Pubkey::new_from_array(args.admin);
-
+pub fn process_migrate_miner(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, config_info, miner_info, stake_info, treasury_info, system_program] =
         accounts
@@ -25,6 +21,13 @@ pub fn process_migrate_miner(accounts: &[AccountInfo<'_>], data: &[u8]) -> Progr
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
 
     let stake = if stake_info.data_is_empty() {
+        create_program_account::<Stake>(
+            stake_info,
+            system_program,
+            &signer_info,
+            &ore_api::ID,
+            &[STAKE, &miner.authority.to_bytes()],
+        )?;
         let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
         stake.authority = miner.authority;
         stake.balance = 0;

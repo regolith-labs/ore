@@ -2,11 +2,7 @@ use ore_api::prelude::*;
 use solana_program::rent::Rent;
 use steel::*;
 
-pub fn process_migrate_treasury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    // Parse data.
-    let args = SetAdmin::try_from_bytes(data)?;
-    let new_admin = Pubkey::new_from_array(args.admin);
-
+pub fn process_migrate_treasury(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let [signer_info, config_info, treasury_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
