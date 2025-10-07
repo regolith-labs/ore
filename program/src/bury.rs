@@ -96,7 +96,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let mut shared_amount = 0;
     if treasury.total_staked > 0 {
         shared_amount = ONE_ORE / 10_000; // TODO: calculate shared amount
-        treasury.update_rewards_factor(shared_amount);
+        treasury.rewards_factor += Numeric::from_fraction(shared_amount, treasury.total_staked);
     }
 
     sol_log(&format!(
