@@ -25,10 +25,9 @@ pub struct Treasury {
 
 impl Treasury {
     pub fn update_rewards_factor(&mut self, new_rewards: u64) {
-        if self.total_staked == 0 {
-            return;
+        if self.total_staked > 0 {
+            self.rewards_factor += Numeric::from_fraction(new_rewards, self.total_staked);
         }
-        self.rewards_factor += Numeric::from_fraction(new_rewards, self.total_staked);
     }
 }
 
