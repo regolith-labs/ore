@@ -12,14 +12,11 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let strategy = AutomationStrategy::from_u64(args.strategy as u64);
 
     // Load accounts.
-    let [signer_info, automation_info, executor_info, miner_info, treasury_info, system_program] =
-        accounts
-    else {
+    let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
     automation_info.is_writable()?;
-    let treasury = treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // // Check whitelist
