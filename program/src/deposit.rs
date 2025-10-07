@@ -13,12 +13,15 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
+    let [signer_info, miner_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    // let miner = miner_info
+    //     .as_account_mut::<Miner>(&ore_api::ID)?
+    //     .assert_mut(|m| m.authority == *signer_info.key)?;
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
@@ -34,6 +37,33 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
         return Err(trace("Not authorized", OreError::NotAuthorized.into()));
     }
+
+    // Open miner account.
+    let miner = if miner_info.data_is_empty() {
+        create_program_account::<Miner>(
+            miner_info,
+            system_program,
+            &signer_info,
+            &ore_api::ID,
+            &[MINER, &signer_info.key.to_bytes()],
+        )?;
+        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        miner.authority = *signer_info.key;
+        miner.deployed = [0; 25];
+        miner.cumulative = [0; 25];
+        miner.checkpoint_fee = 0;
+        miner.checkpoint_id = 0;
+        miner.rewards_sol = 0;
+        miner.rewards_ore = 0;
+        miner.round_id = 0;
+        miner.lifetime_rewards_sol = 0;
+        miner.lifetime_rewards_ore = 0;
+        miner
+    } else {
+        miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut(|m| m.authority == *signer_info.key)?
+    };
 
     // Open stake account.
     let stake = if stake_info.data_is_empty() {
@@ -62,10 +92,10 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     };
 
     // Only allow deposits from seekers.
-    assert!(stake.is_seeker == 1, "Only seekers can deposit stake");
+    // assert!(stake.is_seeker == 1, "Only seekers can deposit stake");
 
     // Deposit into stake account.
-    let amount = stake.deposit(amount, &clock, treasury, &sender);
+    let amount = stake.deposit(amount, &clock, miner, treasury, &sender);
 
     // Transfer ORE to treasury.
     transfer(

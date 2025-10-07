@@ -13,12 +13,15 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, miner_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    let miner = miner_info
+        .as_account_mut::<Miner>(&ore_api::ID)?
+        .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info
         .is_writable()?
@@ -53,7 +56,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     }
 
     // Deposit into stake account.
-    let amount = stake.withdraw(amount, &clock, treasury);
+    let amount = stake.withdraw(amount, miner, &clock, treasury);
 
     // Transfer ORE to recipient.
     transfer_signed(

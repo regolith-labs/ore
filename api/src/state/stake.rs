@@ -1,6 +1,6 @@
 use steel::*;
 
-use crate::state::{stake_pda, Treasury};
+use crate::state::{stake_pda, Miner, Treasury};
 
 use super::OreAccount;
 
@@ -40,8 +40,8 @@ impl Stake {
         stake_pda(self.authority)
     }
 
-    pub fn claim(&mut self, amount: u64, clock: &Clock, treasury: &Treasury) -> u64 {
-        self.update_rewards(treasury);
+    pub fn claim(&mut self, amount: u64, clock: &Clock, miner: &Miner, treasury: &Treasury) -> u64 {
+        self.update_rewards(miner, treasury);
         let amount = self.rewards.min(amount);
         self.rewards -= amount;
         self.last_claim_at = clock.unix_timestamp;
@@ -52,10 +52,11 @@ impl Stake {
         &mut self,
         amount: u64,
         clock: &Clock,
+        miner: &Miner,
         treasury: &mut Treasury,
         sender: &TokenAccount,
     ) -> u64 {
-        self.update_rewards(treasury);
+        self.update_rewards(miner, treasury);
         let amount = sender.amount().min(amount);
         self.balance += amount;
         self.last_deposit_at = clock.unix_timestamp;
@@ -63,8 +64,14 @@ impl Stake {
         amount
     }
 
-    pub fn withdraw(&mut self, amount: u64, clock: &Clock, treasury: &mut Treasury) -> u64 {
-        self.update_rewards(treasury);
+    pub fn withdraw(
+        &mut self,
+        amount: u64,
+        miner: &Miner,
+        clock: &Clock,
+        treasury: &mut Treasury,
+    ) -> u64 {
+        self.update_rewards(miner, treasury);
         let amount = self.balance.min(amount);
         self.balance -= amount;
         self.last_withdraw_at = clock.unix_timestamp;
@@ -72,14 +79,15 @@ impl Stake {
         amount
     }
 
-    pub fn update_rewards(&mut self, treasury: &Treasury) {
+    pub fn update_rewards(&mut self, miner: &Miner, treasury: &Treasury) {
         // Accumulate rewards, weighted by stake balance.
         if treasury.rewards_factor > self.rewards_factor {
             let accumulated_rewards = treasury.rewards_factor - self.rewards_factor;
             if accumulated_rewards < Numeric::ZERO {
                 panic!("Accumulated rewards is negative");
             }
-            let personal_rewards = accumulated_rewards * Numeric::from_u64(self.balance);
+            let total_yielding_ore = self.balance + miner.rewards_ore; // All staking deposits and unclaimed mining rewards count towards yielding ore.
+            let personal_rewards = accumulated_rewards * Numeric::from_u64(total_yielding_ore);
             self.rewards += personal_rewards.to_u64();
             self.lifetime_rewards += personal_rewards.to_u64();
         }
