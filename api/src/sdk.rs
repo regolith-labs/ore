@@ -482,3 +482,39 @@ pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
         .to_bytes(),
     }
 }
+
+// let [signer_info, miner_info, stake_info, treasury_info, system_program] =
+
+pub fn migrate_miner(signer: Pubkey) -> Instruction {
+    let miner_address = miner_pda(signer).0;
+    let stake_address = stake_pda(signer).0;
+    let treasury_address = treasury_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateMiner {}.to_bytes(),
+    }
+}
+
+// let [signer_info, treasury_info, system_program] =
+
+pub fn migrate_treasury(signer: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    let treasury_address = treasury_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateTreasury {}.to_bytes(),
+    }
+}
