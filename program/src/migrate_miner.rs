@@ -1,8 +1,7 @@
 use ore_api::prelude::*;
 use steel::*;
 
-/// Sets the admin.
-pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+pub fn process_migrate_miner(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
     let args = SetAdmin::try_from_bytes(data)?;
     let new_admin = Pubkey::new_from_array(args.admin);
@@ -20,7 +19,7 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
             |c| c.admin == *signer_info.key,
             OreError::NotAuthorized.into(),
         )?;
-    let treasury = treasury_info.as_account::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
@@ -42,6 +41,9 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
             .as_account_mut::<Stake>(&ore_api::ID)?
             .assert_mut(|s| s.authority == miner.authority)?
     };
+
+    // Update values.
+    treasury.total_unclaimed += miner.rewards_ore;
 
     Ok(())
 }

@@ -4,6 +4,8 @@ use steel::*;
 
 /// Claims a block reward.
 pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    panic!("program is currently in migration mode");
+
     // Parse data.
     let args = ClaimSOL::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
