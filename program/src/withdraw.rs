@@ -25,8 +25,7 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         .as_associated_token_account(&signer_info.key, &mint_info.key)?;
     let stake = stake_info
         .as_account_mut::<Stake>(&ore_api::ID)?
-        .assert_mut(|s| s.authority == *signer_info.key)?
-        .assert_mut(|s| clock.unix_timestamp > s.last_deposit_at + ONE_HOUR)?; // Must wait one hour since last deposit
+        .assert_mut(|s| s.authority == *signer_info.key)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info
         .is_writable()?
