@@ -59,9 +59,9 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
 
         // Staker
-        OreInstruction::Deposit => process_deposit(accounts, data)?,
-        OreInstruction::Withdraw => process_withdraw(accounts, data)?,
-        OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
+        // OreInstruction::Deposit => process_deposit(accounts, data)?,
+        // OreInstruction::Withdraw => process_withdraw(accounts, data)?,
+        // OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
 
         // Admin
         OreInstruction::Bury => process_bury(accounts, data)?,

@@ -1,6 +1,6 @@
 use steel::*;
 
-use crate::state::miner_pda;
+use crate::state::{miner_pda, Treasury};
 
 use super::OreAccount;
 
@@ -41,6 +41,19 @@ pub struct Miner {
 impl Miner {
     pub fn pda(&self) -> (Pubkey, u8) {
         miner_pda(self.authority)
+    }
+
+    pub fn claim_ore(&mut self, amount: u64, treasury: &mut Treasury) -> u64 {
+        let amount = self.rewards_ore.min(amount);
+        self.rewards_ore -= amount;
+        treasury.total_unclaimed -= amount;
+        amount
+    }
+
+    pub fn claim_sol(&mut self, amount: u64) -> u64 {
+        let amount = self.rewards_sol.min(amount);
+        self.rewards_sol -= amount;
+        amount
     }
 }
 

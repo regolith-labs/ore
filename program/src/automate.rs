@@ -17,18 +17,42 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     };
     signer_info.is_signer()?;
     automation_info.is_writable()?;
-    let miner = miner_info
-        .as_account_mut::<Miner>(&ore_api::ID)?
-        .assert_mut_err(
-            |m| m.authority == *signer_info.key,
-            OreError::NotAuthorized.into(),
-        )?;
     system_program.is_program(&system_program::ID)?;
 
     // // Check whitelist
     // if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
     //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
     // }
+
+    // Open miner account.
+    let miner = if miner_info.data_is_empty() {
+        create_program_account::<Miner>(
+            miner_info,
+            system_program,
+            &signer_info,
+            &ore_api::ID,
+            &[MINER, &signer_info.key.to_bytes()],
+        )?;
+        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        miner.authority = *signer_info.key;
+        miner.deployed = [0; 25];
+        miner.cumulative = [0; 25];
+        miner.checkpoint_fee = 0;
+        miner.checkpoint_id = 0;
+        miner.rewards_sol = 0;
+        miner.rewards_ore = 0;
+        miner.round_id = 0;
+        miner.lifetime_rewards_sol = 0;
+        miner.lifetime_rewards_ore = 0;
+        miner
+    } else {
+        miner_info
+            .as_account_mut::<Miner>(&ore_api::ID)?
+            .assert_mut_err(
+                |m| m.authority == *signer_info.key,
+                OreError::NotAuthorized.into(),
+            )?
+    };
 
     // Close account if executor is Pubkey::default().
     if *executor_info.key == Pubkey::default() {

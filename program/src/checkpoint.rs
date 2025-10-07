@@ -29,7 +29,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     let round = round_info.as_account_mut::<Round>(&ore_api::ID)?; // Round has been closed.
-    treasury_info.as_account::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // If round is current round, or the miner round ID does not match the provided round, return.
@@ -117,6 +117,9 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     miner.lifetime_rewards_ore += rewards_ore;
     miner.rewards_sol += rewards_sol;
     miner.lifetime_rewards_sol += rewards_sol;
+
+    // Update treasury.
+    treasury.total_unclaimed += rewards_ore;
 
     // Do SOL transfers.
     if rewards_sol > 0 {

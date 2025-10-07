@@ -21,7 +21,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         .assert_mut(|m| m.authority == *signer_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info.is_writable()?;
-    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -43,7 +43,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     }
 
     // Normalize amount.
-    let amount = miner.rewards_ore.min(amount);
+    let amount = miner.claim_ore(amount, treasury);
 
     sol_log(
         &format!(
@@ -52,9 +52,6 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         )
         .as_str(),
     );
-
-    // Update miner.
-    miner.rewards_ore -= amount;
 
     // Transfer reward to recipient.
     transfer_signed(

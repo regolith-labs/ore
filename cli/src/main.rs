@@ -472,7 +472,14 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         "  rewards_factor: {}",
         treasury.rewards_factor.to_i80f48().to_string()
     );
-    println!("  total_staked: {}", treasury.total_staked);
+    println!(
+        "  total_staked: {} ORE",
+        amount_to_ui_amount(treasury.total_staked, TOKEN_DECIMALS)
+    );
+    println!(
+        "  total_unclaimed: {} ORE",
+        amount_to_ui_amount(treasury.total_unclaimed, TOKEN_DECIMALS)
+    );
     Ok(())
 }
 
