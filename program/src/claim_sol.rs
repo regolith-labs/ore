@@ -4,8 +4,6 @@ use steel::*;
 
 /// Claims a block reward.
 pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    panic!("program is currently in migration mode");
-
     // Parse data.
     let args = ClaimSOL::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
@@ -21,12 +19,9 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     system_program.is_program(&system_program::ID)?;
 
     // Normalize amount.
-    let amount = miner.rewards_sol.min(amount);
+    let amount = miner.claim_sol(amount);
 
     sol_log(&format!("Claiming {} SOL", lamports_to_sol(amount)).as_str());
-
-    // Update miner.
-    miner.rewards_sol -= amount;
 
     // Transfer reward to recipient.
     miner_info.send(amount, signer_info);

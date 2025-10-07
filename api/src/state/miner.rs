@@ -47,14 +47,12 @@ impl Miner {
         let amount = self.rewards_ore.min(amount);
         self.rewards_ore -= amount;
         treasury.total_unclaimed -= amount;
+        amount
+    }
 
-        // Charge a 10% fee and share with stakers.
-        // if treasury.total_yielding_ore() > 0 {
-        //     let claim_fee = amount / 10;
-        //     amount -= claim_fee;
-        //     treasury.update_rewards_factor(claim_fee);
-        // }
-
+    pub fn claim_sol(&mut self, amount: u64) -> u64 {
+        let amount = self.rewards_sol.min(amount);
+        self.rewards_sol -= amount;
         amount
     }
 }
