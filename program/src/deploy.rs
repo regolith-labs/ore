@@ -11,7 +11,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
+    let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -30,7 +30,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     miner_info
         .is_writable()?
         .has_seeds(&[MINER, &authority_info.key.to_bytes()], &ore_api::ID)?;
-    let treasury = treasury_info.as_account::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // Wait until first deploy to start round.
