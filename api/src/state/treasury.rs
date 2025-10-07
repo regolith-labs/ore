@@ -24,15 +24,11 @@ pub struct Treasury {
 }
 
 impl Treasury {
-    pub fn total_yielding_ore(&self) -> u64 {
-        self.total_staked + self.total_unclaimed
-    }
-
     pub fn update_rewards_factor(&mut self, new_rewards: u64) {
-        if self.total_yielding_ore() == 0 {
+        if self.total_staked == 0 {
             return;
         }
-        self.rewards_factor += Numeric::from_fraction(new_rewards, self.total_yielding_ore());
+        self.rewards_factor += Numeric::from_fraction(new_rewards, self.total_staked);
     }
 }
 
