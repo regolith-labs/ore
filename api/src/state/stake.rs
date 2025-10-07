@@ -1,6 +1,6 @@
 use steel::*;
 
-use crate::state::{stake_pda, Miner, Treasury};
+use crate::state::{stake_pda, Treasury};
 
 use super::OreAccount;
 
