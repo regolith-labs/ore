@@ -38,7 +38,6 @@ pub fn automate(
 ) -> Instruction {
     let automation_address = automation_pda(signer).0;
     let miner_address = miner_pda(signer).0;
-    let stake_address = stake_pda(signer).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -46,7 +45,6 @@ pub fn automate(
             AccountMeta::new(automation_address, false),
             AccountMeta::new(executor, false),
             AccountMeta::new(miner_address, false),
-            AccountMeta::new(stake_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: Automate {
@@ -127,7 +125,6 @@ pub fn claim_sol(signer: Pubkey, amount: u64) -> Instruction {
 
 pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
     let miner_address = miner_pda(signer).0;
-    let stake_address = stake_pda(signer).0;
     let treasury_address = treasury_pda().0;
     let treasury_tokens_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
@@ -138,7 +135,6 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(miner_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(recipient_address, false),
-            AccountMeta::new(stake_address, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new(treasury_tokens_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
@@ -164,7 +160,6 @@ pub fn deploy(
     let automation_address = automation_pda(authority).0;
     let board_address = board_pda().0;
     let miner_address = miner_pda(authority).0;
-    let stake_address = stake_pda(authority).0;
     let round_address = round_pda(round_id).0;
     let treasury_address = TREASURY_ADDRESS;
 
@@ -186,7 +181,6 @@ pub fn deploy(
             AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(round_address, false),
-            AccountMeta::new(stake_address, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
@@ -340,7 +334,6 @@ pub fn close(signer: Pubkey, round_id: u64, rent_payer: Pubkey) -> Instruction {
 
 pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instruction {
     let miner_address = miner_pda(authority).0;
-    let stake_address = stake_pda(authority).0;
     let board_address = board_pda().0;
     let round_address = round_pda(round_id).0;
     let treasury_address = TREASURY_ADDRESS;
@@ -351,7 +344,6 @@ pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instructi
             AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(round_address, false),
-            AccountMeta::new(stake_address, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
@@ -415,7 +407,6 @@ pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
 // let [signer_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
 
 pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
-    let miner_address = miner_pda(signer).0;
     let stake_address = stake_pda(signer).0;
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let treasury_address = TREASURY_ADDRESS;
@@ -424,7 +415,6 @@ pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner_address, false),
             AccountMeta::new(sender_address, false),
             AccountMeta::new(stake_address, false),
             AccountMeta::new(treasury_address, false),
@@ -470,7 +460,6 @@ pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
 // let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
 
 pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
-    let miner_address = miner_pda(signer).0;
     let stake_address = stake_pda(signer).0;
     let mint_address = MINT_ADDRESS;
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
@@ -480,7 +469,6 @@ pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
-            AccountMeta::new(miner_address, false),
             AccountMeta::new(mint_address, false),
             AccountMeta::new(recipient_address, false),
             AccountMeta::new(stake_address, false),

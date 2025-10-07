@@ -10,8 +10,6 @@ mod close;
 mod deploy;
 mod deposit;
 mod log;
-mod migrate_miner;
-mod migrate_treasury;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
@@ -31,8 +29,6 @@ use close::*;
 use deploy::*;
 use deposit::*;
 use log::*;
-use migrate_miner::*;
-use migrate_treasury::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -52,12 +48,12 @@ pub fn process_instruction(
 
     match ix {
         // Miner
-        // OreInstruction::Automate => process_automate(accounts, data)?,
+        OreInstruction::Automate => process_automate(accounts, data)?,
         OreInstruction::Boost => process_boost(accounts, data)?,
-        // OreInstruction::Checkpoint => process_checkpoint(accounts, data)?,
-        // OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
-        // OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
-        // OreInstruction::Deploy => process_deploy(accounts, data)?,
+        OreInstruction::Checkpoint => process_checkpoint(accounts, data)?,
+        OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
+        OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,
+        OreInstruction::Deploy => process_deploy(accounts, data)?,
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
@@ -75,8 +71,6 @@ pub fn process_instruction(
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
-        OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
-        OreInstruction::MigrateTreasury => process_migrate_treasury(accounts, data)?,
         _ => return Err(ProgramError::InvalidInstructionData),
     }
 

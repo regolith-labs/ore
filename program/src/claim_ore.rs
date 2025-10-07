@@ -10,7 +10,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer_info, miner_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -22,9 +22,6 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     recipient_info.is_writable()?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
-    let stake = stake_info
-        .as_account_mut::<Stake>(&ore_api::ID)?
-        .assert_mut(|s| s.authority == *signer_info.key)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -46,7 +43,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore(amount, stake, treasury);
+    let amount = miner.claim_ore(amount, treasury);
 
     sol_log(
         &format!(

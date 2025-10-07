@@ -6,8 +6,7 @@ use steel::*;
 pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, board_info, miner_info, round_info, stake_info, treasury_info, system_program] =
-        accounts
+    let [signer_info, board_info, miner_info, round_info, treasury_info, system_program] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -44,32 +43,6 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
-
-    // Open stake account.
-    let stake = if stake_info.data_is_empty() {
-        create_program_account::<Stake>(
-            stake_info,
-            system_program,
-            &signer_info,
-            &ore_api::ID,
-            &[STAKE, &miner.authority.to_bytes()],
-        )?;
-        let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
-        stake.authority = miner.authority;
-        stake.balance = 0;
-        stake.last_claim_at = 0;
-        stake.last_deposit_at = 0;
-        stake.last_withdraw_at = 0;
-        stake.rewards_factor = treasury.rewards_factor;
-        stake.rewards = 0;
-        stake.lifetime_rewards = 0;
-        stake.is_seeker = 0;
-        stake
-    } else {
-        stake_info
-            .as_account_mut::<Stake>(&ore_api::ID)?
-            .assert_mut(|s| s.authority == miner.authority)?
-    };
 
     // Calculate bot fee.
     // If the round expires in less than 12h, anyone may checkpoint this account and collect the bot fee.
@@ -137,9 +110,6 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         // Round has no slot hash, refund all SOL.
         rewards_sol = miner.deployed.iter().sum::<u64>();
     }
-
-    // Update stake rewards.
-    stake.update_rewards(miner, treasury);
 
     // Checkpoint miner.
     miner.checkpoint_id = round.id;

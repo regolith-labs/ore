@@ -12,7 +12,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let strategy = AutomationStrategy::from_u64(args.strategy as u64);
 
     // Load accounts.
-    let [signer_info, automation_info, executor_info, miner_info, stake_info, treasury_info, system_program] =
+    let [signer_info, automation_info, executor_info, miner_info, treasury_info, system_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -53,35 +53,6 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
             .as_account_mut::<Miner>(&ore_api::ID)?
             .assert_mut_err(
                 |m| m.authority == *signer_info.key,
-                OreError::NotAuthorized.into(),
-            )?
-    };
-
-    // Open stake account.
-    let _stake = if stake_info.data_is_empty() {
-        create_program_account::<Stake>(
-            stake_info,
-            system_program,
-            &signer_info,
-            &ore_api::ID,
-            &[STAKE, &miner.authority.to_bytes()],
-        )?;
-        let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
-        stake.authority = miner.authority;
-        stake.balance = 0;
-        stake.last_claim_at = 0;
-        stake.last_deposit_at = 0;
-        stake.last_withdraw_at = 0;
-        stake.rewards_factor = treasury.rewards_factor;
-        stake.rewards = 0;
-        stake.lifetime_rewards = 0;
-        stake.is_seeker = 0;
-        stake
-    } else {
-        stake_info
-            .as_account_mut::<Stake>(&ore_api::ID)?
-            .assert_mut_err(
-                |s| s.authority == miner.authority,
                 OreError::NotAuthorized.into(),
             )?
     };

@@ -43,8 +43,7 @@ impl Miner {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore(&mut self, amount: u64, stake: &mut Stake, treasury: &mut Treasury) -> u64 {
-        stake.update_rewards(self, treasury);
+    pub fn claim_ore(&mut self, amount: u64, treasury: &mut Treasury) -> u64 {
         let amount = self.rewards_ore.min(amount);
         self.rewards_ore -= amount;
         treasury.total_unclaimed -= amount;
