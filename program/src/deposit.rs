@@ -51,7 +51,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         stake.last_deposit_at = 0;
         stake.last_withdraw_at = 0;
         stake.is_seeker = 0;
-        stake.rewards_factor = treasury.rewards_factor;
+        stake.rewards_factor = treasury.stake_rewards_factor;
         stake.rewards = 0;
         stake.lifetime_rewards = 0;
         stake

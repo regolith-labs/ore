@@ -28,6 +28,8 @@ pub enum OreInstruction {
 
     // Seeker
     ClaimSeeker = 17,
+    MigrateTreasury = 18,
+    MigrateMiner = 19,
 }
 
 #[repr(C)]
@@ -46,15 +48,11 @@ pub struct Boost {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimSOL {
-    pub amount: [u8; 8],
-}
+pub struct ClaimSOL {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimORE {
-    pub amount: [u8; 8],
-}
+pub struct ClaimORE {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -154,6 +152,14 @@ pub struct Checkpoint {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MigrateTreasury {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MigrateMiner {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, Close);
@@ -172,3 +178,5 @@ instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, ClaimSeeker);
+instruction!(OreInstruction, MigrateTreasury);
+instruction!(OreInstruction, MigrateMiner);

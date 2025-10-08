@@ -107,11 +107,56 @@ async fn main() {
         "participating_miners" => {
             participating_miners(&rpc).await.unwrap();
         }
+        "migrate_miners" => {
+            migrate_miners(&rpc, &payer).await.unwrap();
+        }
+        "migrate_treasury" => {
+            migrate_treasury(&rpc, &payer).await.unwrap();
+        }
         "keys" => {
             keys().await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn migrate_miners(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let miners = get_miners_old(rpc).await?;
+    let mut ixs = vec![];
+    for (i, (address, miner)) in miners.iter().enumerate() {
+        println!(
+            "[{}/{}] Migrate miner: {}",
+            i + 1,
+            miners.len(),
+            miner.authority
+        );
+        ixs.push(ore_api::sdk::migrate_miner(payer.pubkey(), *address));
+    }
+    // submit_transaction(rpc, payer, &ixs).await?;
+    // let ix = ore_api::sdk::migrate_miner(payer.pubkey());
+    // submit_transaction(rpc, payer, &[ix]).await?;
+
+    // simulate_transaction_batches(rpc, payer, ixs, 10).await?;
+    submit_transaction_batches(rpc, payer, ixs, 10).await?;
+
+    Ok(())
+}
+
+async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
+    let miners = get_program_accounts(rpc, ore_api::ID, vec![]).await?;
+    Ok(miners)
+}
+
+async fn migrate_treasury(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::migrate_treasury(payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -206,8 +251,8 @@ async fn claim(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix_sol = ore_api::sdk::claim_sol(payer.pubkey(), u64::MAX);
-    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey(), u64::MAX);
+    let ix_sol = ore_api::sdk::claim_sol(payer.pubkey());
+    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey());
     submit_transaction(rpc, payer, &[ix_sol, ix_ore]).await?;
     Ok(())
 }
@@ -221,8 +266,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 
@@ -469,8 +514,12 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
     );
     println!(
-        "  rewards_factor: {}",
-        treasury.rewards_factor.to_i80f48().to_string()
+        "  miner_rewards_factor: {}",
+        treasury.miner_rewards_factor.to_i80f48().to_string()
+    );
+    println!(
+        "  stake_rewards_factor: {}",
+        treasury.stake_rewards_factor.to_i80f48().to_string()
     );
     println!(
         "  total_staked: {} ORE",
@@ -479,6 +528,10 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!(
         "  total_unclaimed: {} ORE",
         amount_to_ui_amount(treasury.total_unclaimed, TOKEN_DECIMALS)
+    );
+    println!(
+        "  total_refined: {} ORE",
+        amount_to_ui_amount(treasury.total_refined, TOKEN_DECIMALS)
     );
     Ok(())
 }
@@ -717,6 +770,38 @@ async fn simulate_transaction(
         ))
         .await;
     println!("Simulation result: {:?}", x);
+}
+
+async fn submit_transaction_batches(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+    mut ixs: Vec<solana_sdk::instruction::Instruction>,
+    batch_size: usize,
+) -> Result<(), anyhow::Error> {
+    // Batch and submit the instructions.
+    while !ixs.is_empty() {
+        let batch = ixs
+            .drain(..std::cmp::min(batch_size, ixs.len()))
+            .collect::<Vec<Instruction>>();
+        submit_transaction_no_confirm(rpc, payer, &batch).await?;
+    }
+    Ok(())
+}
+
+async fn simulate_transaction_batches(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+    mut ixs: Vec<solana_sdk::instruction::Instruction>,
+    batch_size: usize,
+) -> Result<(), anyhow::Error> {
+    // Batch and submit the instructions.
+    while !ixs.is_empty() {
+        let batch = ixs
+            .drain(..std::cmp::min(batch_size, ixs.len()))
+            .collect::<Vec<Instruction>>();
+        simulate_transaction(rpc, payer, &batch).await;
+    }
+    Ok(())
 }
 
 async fn submit_transaction(

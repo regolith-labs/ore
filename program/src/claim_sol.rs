@@ -3,12 +3,9 @@ use solana_program::{log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
 /// Claims a block reward.
-pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    // Parse data.
-    let args = ClaimSOL::try_from_bytes(data)?;
-    let amount = u64::from_le_bytes(args.amount);
-
+pub fn process_claim_sol(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
+    let clock = Clock::get()?;
     let [signer_info, miner_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -19,7 +16,7 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     system_program.is_program(&system_program::ID)?;
 
     // Normalize amount.
-    let amount = miner.claim_sol(amount);
+    let amount = miner.claim_sol(&clock);
 
     sol_log(&format!("Claiming {} SOL", lamports_to_sol(amount)).as_str());
 

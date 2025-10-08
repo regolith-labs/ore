@@ -74,8 +74,8 @@ impl Stake {
 
     pub fn update_rewards(&mut self, treasury: &Treasury) {
         // Accumulate rewards, weighted by stake balance.
-        if treasury.rewards_factor > self.rewards_factor {
-            let accumulated_rewards = treasury.rewards_factor - self.rewards_factor;
+        if treasury.stake_rewards_factor > self.rewards_factor {
+            let accumulated_rewards = treasury.stake_rewards_factor - self.rewards_factor;
             if accumulated_rewards < Numeric::ZERO {
                 panic!("Accumulated rewards is negative");
             }
@@ -85,7 +85,7 @@ impl Stake {
         }
 
         // Update this stake account's last seen rewards factor.
-        self.rewards_factor = treasury.rewards_factor;
+        self.rewards_factor = treasury.stake_rewards_factor;
     }
 }
 

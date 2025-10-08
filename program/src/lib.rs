@@ -10,6 +10,8 @@ mod close;
 mod deploy;
 mod deposit;
 mod log;
+mod migrate_miner;
+mod migrate_treasury;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
@@ -29,6 +31,8 @@ use close::*;
 use deploy::*;
 use deposit::*;
 use log::*;
+use migrate_miner::*;
+use migrate_treasury::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
@@ -71,6 +75,8 @@ pub fn process_instruction(
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
+        OreInstruction::MigrateTreasury => process_migrate_treasury(accounts, data)?,
+        OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
         _ => return Err(ProgramError::InvalidInstructionData),
     }
 

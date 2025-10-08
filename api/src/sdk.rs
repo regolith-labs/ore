@@ -105,7 +105,7 @@ pub fn initialize(signer: Pubkey) -> Instruction {
     }
 }
 
-pub fn claim_sol(signer: Pubkey, amount: u64) -> Instruction {
+pub fn claim_sol(signer: Pubkey) -> Instruction {
     let miner_address = miner_pda(signer).0;
     Instruction {
         program_id: crate::ID,
@@ -114,16 +114,13 @@ pub fn claim_sol(signer: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(miner_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
-        data: ClaimSOL {
-            amount: amount.to_le_bytes(),
-        }
-        .to_bytes(),
+        data: ClaimSOL {}.to_bytes(),
     }
 }
 
 // let [signer_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
 
-pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
+pub fn claim_ore(signer: Pubkey) -> Instruction {
     let miner_address = miner_pda(signer).0;
     let treasury_address = treasury_pda().0;
     let treasury_tokens_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
@@ -141,10 +138,7 @@ pub fn claim_ore(signer: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
         ],
-        data: ClaimORE {
-            amount: amount.to_le_bytes(),
-        }
-        .to_bytes(),
+        data: ClaimORE {}.to_bytes(),
     }
 }
 
@@ -187,6 +181,35 @@ pub fn deploy(
             squares: mask.to_le_bytes(),
         }
         .to_bytes(),
+    }
+}
+
+pub fn migrate_miner(signer: Pubkey, address: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateMiner {}.to_bytes(),
+    }
+}
+
+pub fn migrate_treasury(signer: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    let treasury_address = treasury_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateTreasury {}.to_bytes(),
     }
 }
 
