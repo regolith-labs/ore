@@ -3,8 +3,6 @@ use solana_program::log::sol_log;
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
-use crate::AUTHORIZED_ACCOUNTS;
-
 /// Deposits ORE into the staking contract.
 pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -29,11 +27,6 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .as_associated_token_account(&treasury_info.key, &MINT_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
-
-    // Check whitelist
-    if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-        return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    }
 
     // Open stake account.
     let stake = if stake_info.data_is_empty() {

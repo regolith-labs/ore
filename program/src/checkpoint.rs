@@ -111,6 +111,9 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         rewards_sol = miner.deployed.iter().sum::<u64>();
     }
 
+    // Checkpoint rewards.
+    miner.update_rewards(treasury);
+
     // Checkpoint miner.
     miner.checkpoint_id = round.id;
     miner.rewards_ore += rewards_ore;

@@ -737,7 +737,7 @@ async fn get_miners_participating(
     rpc: &RpcClient,
     round_id: u64,
 ) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
-    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(472, &round_id.to_le_bytes()));
+    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(512, &round_id.to_le_bytes()));
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(miners)
 }

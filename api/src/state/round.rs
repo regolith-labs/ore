@@ -90,7 +90,7 @@ impl Round {
         let r3 = u16::from_le_bytes(rng[4..6].try_into().unwrap());
         let r4 = u16::from_le_bytes(rng[6..8].try_into().unwrap());
         let r = r1 ^ r2 ^ r3 ^ r4;
-        r % 4 == 0
+        r % 3 == 0
     }
 
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {

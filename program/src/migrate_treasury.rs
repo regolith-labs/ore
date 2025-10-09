@@ -43,6 +43,7 @@ pub fn process_migrate_treasury(accounts: &[AccountInfo<'_>], data: &[u8]) -> Pr
     treasury.total_staked = total_staked;
     treasury.total_unclaimed = total_unclaimed;
     treasury.miner_rewards_factor = miner_rewards_factor;
+    treasury.total_refined = 0;
 
     Ok(())
 }
