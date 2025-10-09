@@ -121,7 +121,7 @@ async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let round_id = std::env::var("ID").expect("Missing ID env var");
     let round_id = u64::from_str(&round_id).expect("Invalid ID");
     let miners = get_miners_participating(rpc, round_id).await?;
-    for (i, (address, miner)) in miners.iter().enumerate() {
+    for (i, (_address, miner)) in miners.iter().enumerate() {
         println!("{}: {}", i, miner.authority);
     }
     Ok(())
