@@ -11,7 +11,7 @@ mod deploy;
 mod deposit;
 mod log;
 // mod migrate_miner;
-// mod migrate_treasury;
+mod migrate_treasury;
 mod reset;
 mod set_admin;
 mod set_fee_collector;

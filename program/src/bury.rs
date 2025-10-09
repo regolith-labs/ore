@@ -22,7 +22,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
     config_info
         .as_account::<Config>(&ore_api::ID)?
-        .assert(|c| c.admin == *signer_info.key)?;
+        .assert(|c| c.bury_authority == *signer_info.key)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =

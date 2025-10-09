@@ -38,6 +38,7 @@ pub enum OreAccount {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccountOLD {
+    ConfigOLD = 101,
     MinerOLD = 103,
     TreasuryOLD = 104,
 }

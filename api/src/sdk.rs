@@ -200,13 +200,13 @@ pub fn migrate_miner(signer: Pubkey, address: Pubkey) -> Instruction {
 
 pub fn migrate_treasury(signer: Pubkey) -> Instruction {
     let config_address = config_pda().0;
-    let treasury_address = treasury_pda().0;
+    // let treasury_address = treasury_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
             AccountMeta::new(config_address, false),
-            AccountMeta::new(treasury_address, false),
+            // AccountMeta::new(treasury_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: MigrateTreasury {}.to_bytes(),
