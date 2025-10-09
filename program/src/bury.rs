@@ -95,7 +95,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Share some ORE with stakers.
     let mut shared_amount = 0;
     if treasury.total_staked > 0 {
-        shared_amount = ONE_ORE / 10_000; // TODO: calculate shared amount
+        shared_amount = total_ore / 10; // Share 10% of buyback ORE with stakers
         treasury.stake_rewards_factor +=
             Numeric::from_fraction(shared_amount, treasury.total_staked);
     }

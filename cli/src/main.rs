@@ -578,12 +578,25 @@ async fn log_miner(
     println!("  authority: {}", authority);
     println!("  deployed: {:?}", miner.deployed);
     println!("  cumulative: {:?}", miner.cumulative);
-    println!("  rewards_sol: {}", miner.rewards_sol);
-    println!("  rewards_ore: {}", miner.rewards_ore);
+    println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
+    println!(
+        "  rewards_ore: {} ORE",
+        amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
+    );
+    println!(
+        "  refined_ore: {} ORE",
+        amount_to_ui_amount(miner.refined_ore, TOKEN_DECIMALS)
+    );
     println!("  round_id: {}", miner.round_id);
     println!("  checkpoint_id: {}", miner.checkpoint_id);
-    println!("  lifetime_rewards_sol: {}", miner.lifetime_rewards_sol);
-    println!("  lifetime_rewards_ore: {}", miner.lifetime_rewards_ore);
+    println!(
+        "  lifetime_rewards_sol: {} SOL",
+        lamports_to_sol(miner.lifetime_rewards_sol)
+    );
+    println!(
+        "  lifetime_rewards_ore: {} ORE",
+        amount_to_ui_amount(miner.lifetime_rewards_ore, TOKEN_DECIMALS)
+    );
     Ok(())
 }
 
