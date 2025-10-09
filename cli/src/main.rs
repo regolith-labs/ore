@@ -110,56 +110,11 @@ async fn main() {
         "participating_miners" => {
             participating_miners(&rpc).await.unwrap();
         }
-        "migrate_miners" => {
-            migrate_miners(&rpc, &payer).await.unwrap();
-        }
-        "migrate_treasury" => {
-            migrate_treasury(&rpc, &payer).await.unwrap();
-        }
         "keys" => {
             keys().await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn migrate_miners(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let miners = get_miners_old(rpc).await?;
-    let mut ixs = vec![];
-    for (i, (address, miner)) in miners.iter().enumerate() {
-        println!(
-            "[{}/{}] Migrate miner: {}",
-            i + 1,
-            miners.len(),
-            miner.authority
-        );
-        ixs.push(ore_api::sdk::migrate_miner(payer.pubkey(), *address));
-    }
-    // submit_transaction(rpc, payer, &ixs).await?;
-    // let ix = ore_api::sdk::migrate_miner(payer.pubkey());
-    // submit_transaction(rpc, payer, &[ix]).await?;
-
-    // simulate_transaction_batches(rpc, payer, ixs, 10).await?;
-    submit_transaction_batches(rpc, payer, ixs, 10).await?;
-
-    Ok(())
-}
-
-async fn get_miners_old(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerOLD)>, anyhow::Error> {
-    let miners = get_program_accounts(rpc, ore_api::ID, vec![]).await?;
-    Ok(miners)
-}
-
-async fn migrate_treasury(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::migrate_treasury(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
 }
 
 async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
