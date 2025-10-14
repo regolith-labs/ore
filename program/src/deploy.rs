@@ -94,8 +94,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.cumulative = [0; 25];
         miner.rewards_sol = 0;
         miner.rewards_ore = 0;
-        miner.round_id = round.id;
-        miner.checkpoint_id = round.id;
+        miner.round_id = 0;
+        miner.checkpoint_id = 0;
         miner.lifetime_rewards_sol = 0;
         miner.lifetime_rewards_ore = 0;
         miner

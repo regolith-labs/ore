@@ -157,16 +157,16 @@ async fn ata(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let user = pubkey!("BQbXD9tqv3ysrvojSZao2RoW9ucR4RmiKbKEaVWJp4J3");
+    let user = pubkey!("Gmc26GMnhE3AWwdAQpxxsQPo6UYaob4wPRxUpmDsujoX");
     let token = pubkey!("8H8rPiWW4iTFCfEkSnf7jpqeNpFfvdH9gLouAL3Fe2Zx");
     let ata = get_associated_token_address(&user, &token);
-    // let ix = spl_associated_token_account::instruction::create_associated_token_account(
-    //     &payer.pubkey(),
-    //     &user,
-    //     &token,
-    //     &spl_token::ID,
-    // );
-    // submit_transaction(rpc, payer, &[ix]).await?;
+    let ix = spl_associated_token_account::instruction::create_associated_token_account(
+        &payer.pubkey(),
+        &user,
+        &token,
+        &spl_token::ID,
+    );
+    submit_transaction(rpc, payer, &[ix]).await?;
     let account = rpc.get_account(&ata).await?;
     println!("ATA: {}", ata);
     println!("Account: {:?}", account);
@@ -224,8 +224,8 @@ async fn bury(
     let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    // simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
+    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
     Ok(())
 }
 

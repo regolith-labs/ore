@@ -12,7 +12,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     signer_info.is_signer()?;
     config_info
         .as_account::<Config>(&ore_api::ID)?
-        .assert(|c| c.admin == *signer_info.key)?;
+        .assert(|c| c.bury_authority == *signer_info.key)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_sol_info
         .is_writable()?
