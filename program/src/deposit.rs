@@ -3,6 +3,8 @@ use solana_program::log::sol_log;
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
+use crate::AUTHORIZED_ACCOUNTS;
+
 /// Deposits ORE into the staking contract.
 pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
@@ -11,22 +13,27 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
+    let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
     stake_info.is_writable()?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
-    treasury_tokens_info
-        .is_writable()?
-        .as_associated_token_account(&treasury_info.key, &MINT_ADDRESS)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
+
+    // Whitelist
+    assert!(
+        AUTHORIZED_ACCOUNTS.contains(&signer_info.key),
+        "Signer not whitelisted"
+    );
 
     // Open stake account.
     let stake = if stake_info.data_is_empty() {
@@ -54,6 +61,21 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             .assert_mut(|s| s.authority == *signer_info.key)?
     };
 
+    // Create stake tokens account.
+    if stake_tokens_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            stake_info,
+            stake_tokens_info,
+            mint_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        stake_tokens_info.as_associated_token_account(stake_info.key, mint_info.key)?;
+    }
+
     // Only allow deposits from seekers.
     // assert!(stake.is_seeker == 1, "Only seekers can deposit stake");
 
@@ -64,7 +86,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     transfer(
         signer_info,
         sender_info,
-        treasury_tokens_info,
+        stake_tokens_info,
         token_program,
         amount,
     )?;
