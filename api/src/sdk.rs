@@ -396,9 +396,10 @@ pub fn claim_seeker(signer: Pubkey, mint: Pubkey) -> Instruction {
     }
 }
 
-// let [signer_info, sender_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program] =
+// let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
 
 pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
+    let mint_address = MINT_ADDRESS;
     let stake_address = stake_pda(signer).0;
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
@@ -407,6 +408,7 @@ pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(mint_address, false),
             AccountMeta::new(sender_address, false),
             AccountMeta::new(stake_address, false),
             AccountMeta::new(stake_tokens_address, false),
@@ -422,7 +424,7 @@ pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
     }
 }
 
-// let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+// let [signer_info, mint_info, recipient_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
 
 pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
     let stake_address = stake_pda(signer).0;
