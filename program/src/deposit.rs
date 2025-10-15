@@ -3,8 +3,6 @@ use solana_program::log::sol_log;
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
-use crate::AUTHORIZED_ACCOUNTS;
-
 /// Deposits ORE into the staking contract.
 pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
