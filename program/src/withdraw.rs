@@ -32,11 +32,6 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
 
-    assert!(
-        AUTHORIZED_ACCOUNTS.contains(&signer_info.key),
-        "Signer not whitelisted"
-    );
-
     // Open recipient token account.
     if recipient_info.data_is_empty() {
         create_associated_token_account(
@@ -71,6 +66,11 @@ pub fn process_withdraw(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         )
         .as_str(),
     );
+
+    // Safety check.
+    let stake_tokens =
+        stake_tokens_info.as_associated_token_account(stake_info.key, mint_info.key)?;
+    assert!(stake_tokens.amount() >= stake.balance);
 
     Ok(())
 }

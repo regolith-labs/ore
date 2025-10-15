@@ -29,12 +29,6 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
 
-    // Whitelist
-    assert!(
-        AUTHORIZED_ACCOUNTS.contains(&signer_info.key),
-        "Signer not whitelisted"
-    );
-
     // Open stake account.
     let stake = if stake_info.data_is_empty() {
         create_program_account::<Stake>(
@@ -99,6 +93,11 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         )
         .as_str(),
     );
+
+    // Safety check.
+    let stake_tokens =
+        stake_tokens_info.as_associated_token_account(stake_info.key, mint_info.key)?;
+    assert!(stake_tokens.amount() >= stake.balance);
 
     Ok(())
 }
