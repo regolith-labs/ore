@@ -162,7 +162,7 @@ async fn ata(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let user = pubkey!("Gmc26GMnhE3AWwdAQpxxsQPo6UYaob4wPRxUpmDsujoX");
+    let user = pubkey!("FgZFnb3bi7QexKCdXWPwWy91eocUD7JCFySHb83vLoPD");
     let token = pubkey!("8H8rPiWW4iTFCfEkSnf7jpqeNpFfvdH9gLouAL3Fe2Zx");
     let ata = get_associated_token_address(&user, &token);
     let ix = spl_associated_token_account::instruction::create_associated_token_account(
@@ -197,7 +197,6 @@ async fn keys() -> Result<(), anyhow::Error> {
     println!("Config: {}", config_address);
     println!("Board: {}", board_address);
     println!("Miner: {}", miner_address);
-
     Ok(())
 }
 
