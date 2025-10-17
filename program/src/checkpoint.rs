@@ -1,5 +1,6 @@
 use ore_api::prelude::*;
-use solana_program::rent::Rent;
+use solana_program::{log::sol_log, native_token::lamports_to_sol, rent::Rent};
+use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Checkpoints a miner's rewards.
@@ -75,12 +76,20 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             rewards_sol = original_deployment - admin_fee;
             rewards_sol += ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
                 / round.deployed[winning_square] as u128) as u64;
+            sol_log(&format!("Base rewards: {} SOL", lamports_to_sol(rewards_sol)).as_str());
 
             // Calculate ORE rewards.
             if round.top_miner == SPLIT_ADDRESS {
                 // If round is split, split the reward evenly among all miners.
                 rewards_ore = ((round.top_miner_reward * miner.deployed[winning_square])
                     / round.deployed[winning_square]) as u64;
+                sol_log(
+                    &format!(
+                        "Split rewards: {} ORE",
+                        amount_to_ui_amount(rewards_ore, TOKEN_DECIMALS)
+                    )
+                    .as_str(),
+                );
             } else {
                 // If round is not split, payout to the top miner.
                 let top_miner_sample = round.top_miner_sample(r, winning_square);
@@ -90,13 +99,29 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 {
                     rewards_ore = round.top_miner_reward;
                     round.top_miner = miner.authority;
+                    sol_log(
+                        &format!(
+                            "Top miner rewards: {} ORE",
+                            amount_to_ui_amount(rewards_ore, TOKEN_DECIMALS)
+                        )
+                        .as_str(),
+                    );
                 }
             }
 
             // Calculate motherlode rewards.
             if round.motherlode > 0 {
-                rewards_ore += ((round.motherlode as u128 * miner.deployed[winning_square] as u128)
-                    / round.deployed[winning_square] as u128) as u64;
+                let motherload_rewards =
+                    ((round.motherlode as u128 * miner.deployed[winning_square] as u128)
+                        / round.deployed[winning_square] as u128) as u64;
+                sol_log(
+                    &format!(
+                        "Motherlode rewards: {} ORE",
+                        amount_to_ui_amount(motherload_rewards, TOKEN_DECIMALS)
+                    )
+                    .as_str(),
+                );
+                rewards_ore += motherload_rewards;
             }
         }
     } else {
@@ -108,7 +133,9 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         );
 
         // Round has no slot hash, refund all SOL.
-        rewards_sol = miner.deployed.iter().sum::<u64>();
+        let refund_amount = miner.deployed.iter().sum::<u64>();
+        sol_log(&format!("Refunding {} SOL", lamports_to_sol(refund_amount)).as_str());
+        rewards_sol = refund_amount;
     }
 
     // Checkpoint rewards.
