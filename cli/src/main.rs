@@ -117,11 +117,6 @@ async fn main() {
     };
 }
 
-async fn get_stakers(rpc: &RpcClient) -> Result<Vec<(Pubkey, Stake)>, anyhow::Error> {
-    let stakers = get_program_accounts(rpc, ore_api::ID, vec![]).await?;
-    Ok(stakers)
-}
-
 async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let round_id = std::env::var("ID").expect("Missing ID env var");
     let round_id = u64::from_str(&round_id).expect("Invalid ID");
@@ -765,6 +760,7 @@ async fn simulate_transaction(
     println!("Simulation result: {:?}", x);
 }
 
+#[allow(unused)]
 async fn submit_transaction_batches(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
@@ -781,6 +777,7 @@ async fn submit_transaction_batches(
     Ok(())
 }
 
+#[allow(unused)]
 async fn simulate_transaction_batches(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
