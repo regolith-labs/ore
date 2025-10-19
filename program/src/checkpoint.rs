@@ -14,6 +14,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     signer_info.is_signer()?;
     let board = board_info.as_account::<Board>(&ore_api::ID)?;
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    system_program.is_program(&system_program::ID)?;
 
     // If miner has already checkpointed this round, return.
     if miner.checkpoint_id == miner.round_id {
@@ -24,23 +26,24 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // This can happen if the miner attempted to checkpoint after the round expired and the account was closed.
     // In this case, the miner forfeits any potential rewards.
     if round_info.data_is_empty() {
+        sol_log(&format!("Round account is empty").as_str());
         round_info.has_seeds(&[ROUND, &miner.round_id.to_le_bytes()], &ore_api::ID)?;
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }
 
-    let round = round_info.as_account_mut::<Round>(&ore_api::ID)?; // Round has been closed.
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
-    system_program.is_program(&system_program::ID)?;
-
     // If round is current round, or the miner round ID does not match the provided round, return.
+    let round = round_info.as_account_mut::<Round>(&ore_api::ID)?; // Round has been closed.
+    sol_log(&format!("Round ID: {}", round.id).as_str());
     if round.id == board.round_id || round.id != miner.round_id || round.slot_hash == [0; 32] {
+        sol_log(&format!("Round not valid").as_str());
         return Ok(());
     }
 
     // Ensure round is not expired.
     // In this case, the miner forfeits any potential rewards.
     if clock.slot >= round.expires_at {
+        sol_log(&format!("Round expired").as_str());
         miner.checkpoint_id = miner.round_id;
         return Ok(());
     }

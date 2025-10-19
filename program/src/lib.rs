@@ -32,7 +32,6 @@ use log::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
-use whitelist::*;
 use withdraw::*;
 use wrap::*;
 
