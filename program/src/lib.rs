@@ -1,5 +1,4 @@
 mod automate;
-mod boost;
 mod bury;
 mod checkpoint;
 mod claim_ore;
@@ -18,7 +17,6 @@ mod withdraw;
 mod wrap;
 
 use automate::*;
-use boost::*;
 use bury::*;
 use checkpoint::*;
 use claim_ore::*;
@@ -48,7 +46,6 @@ pub fn process_instruction(
     match ix {
         // Miner
         OreInstruction::Automate => process_automate(accounts, data)?,
-        OreInstruction::Boost => process_boost(accounts, data)?,
         OreInstruction::Checkpoint => process_checkpoint(accounts, data)?,
         OreInstruction::ClaimSOL => process_claim_sol(accounts, data)?,
         OreInstruction::ClaimORE => process_claim_ore(accounts, data)?,

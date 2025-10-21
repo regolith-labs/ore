@@ -38,9 +38,6 @@ async fn main() {
         "automations" => {
             log_automations(&rpc).await.unwrap();
         }
-        "boost" => {
-            boost(&rpc, &payer).await.unwrap();
-        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -170,15 +167,6 @@ async fn ata(
     let account = rpc.get_account(&ata).await?;
     println!("ATA: {}", ata);
     println!("Account: {:?}", account);
-    Ok(())
-}
-
-async fn boost(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::boost(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 

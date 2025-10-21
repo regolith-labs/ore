@@ -5,7 +5,6 @@ use steel::*;
 pub enum OreInstruction {
     // Miner
     Automate = 0,
-    Boost = 1,
     Checkpoint = 2,
     ClaimSOL = 3,
     ClaimORE = 4,
@@ -39,10 +38,6 @@ pub struct Automate {
     pub mask: [u8; 8],
     pub strategy: u8,
 }
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Boost {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -151,7 +146,6 @@ pub struct Checkpoint {}
 pub struct Close {}
 
 instruction!(OreInstruction, Automate);
-instruction!(OreInstruction, Boost);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);

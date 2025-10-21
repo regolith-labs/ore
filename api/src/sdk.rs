@@ -58,28 +58,6 @@ pub fn automate(
     }
 }
 
-// let [signer_info, config_info, mint_info, reserve_tokens_info, treasury_info, system_program, token_program] =
-
-pub fn boost(signer: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    let mint_address = MINT_ADDRESS;
-    let reserve_tokens_address = BOOST_RESERVE_TOKEN;
-    let treasury_address = TREASURY_ADDRESS;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(mint_address, false),
-            AccountMeta::new(reserve_tokens_address, false),
-            AccountMeta::new(treasury_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-        ],
-        data: Boost {}.to_bytes(),
-    }
-}
-
 // let [signer_info, board_info, config_info, mint_info, treasury_info, vault_info, system_program, token_program, associated_token_program] =
 
 pub fn initialize(signer: Pubkey) -> Instruction {
