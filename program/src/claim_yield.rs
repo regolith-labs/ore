@@ -18,9 +18,7 @@ pub fn process_claim_yield(accounts: &[AccountInfo<'_>], data: &[u8]) -> Program
     };
     signer_info.is_signer()?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    recipient_info
-        .is_writable()?
-        .as_associated_token_account(&signer_info.key, &mint_info.key)?;
+    recipient_info.is_writable()?;
     let stake = stake_info
         .as_account_mut::<Stake>(&ore_api::ID)?
         .assert_mut(|s| s.authority == *signer_info.key)?;
@@ -43,6 +41,8 @@ pub fn process_claim_yield(accounts: &[AccountInfo<'_>], data: &[u8]) -> Program
             token_program,
             associated_token_program,
         )?;
+    } else {
+        recipient_info.as_associated_token_account(&signer_info.key, &mint_info.key)?;
     }
 
     // Claim yield from stake account.
