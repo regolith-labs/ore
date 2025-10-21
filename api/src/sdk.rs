@@ -6,7 +6,7 @@ use spl_associated_token_account::{
 use steel::*;
 
 use crate::{
-    consts::{BOARD, BOOST_RESERVE_TOKEN, MINT_ADDRESS, SOL_MINT, TREASURY_ADDRESS},
+    consts::{BOARD, MINT_ADDRESS, SOL_MINT, TREASURY_ADDRESS},
     instruction::*,
     state::*,
 };
