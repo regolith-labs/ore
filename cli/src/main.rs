@@ -135,7 +135,10 @@ async fn log_stake(
     println!("Stake");
     println!("  address: {}", staker_address);
     println!("  authority: {}", authority);
-    println!("  balance: {}", stake.balance);
+    println!(
+        "  balance: {} ORE",
+        amount_to_ui_amount(stake.balance, TOKEN_DECIMALS)
+    );
     println!("  last_claim_at: {}", stake.last_claim_at);
     println!("  last_deposit_at: {}", stake.last_deposit_at);
     println!("  last_withdraw_at: {}", stake.last_withdraw_at);
@@ -143,9 +146,14 @@ async fn log_stake(
         "  rewards_factor: {}",
         stake.rewards_factor.to_i80f48().to_string()
     );
-    println!("  rewards: {}", stake.rewards);
-    println!("  lifetime_rewards: {}", stake.lifetime_rewards);
-    println!("  is_seeker: {}", stake.is_seeker);
+    println!(
+        "  rewards: {} ORE",
+        amount_to_ui_amount(stake.rewards, TOKEN_DECIMALS)
+    );
+    println!(
+        "  lifetime_rewards: {} ORE",
+        amount_to_ui_amount(stake.lifetime_rewards, TOKEN_DECIMALS)
+    );
 
     Ok(())
 }
