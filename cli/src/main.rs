@@ -250,13 +250,11 @@ async fn reset(
         // println!("Miners: {:?}", square.miners);
         // miners = square.miners[id as usize].to_vec();
     };
-    let reveal = solana_sdk::hash::hash(&board.end_slot.to_le_bytes()).to_bytes();
     let reset_ix = ore_api::sdk::reset(
         payer.pubkey(),
         config.fee_collector,
         board.round_id,
         Pubkey::default(),
-        reveal,
     );
     // simulate_transaction(rpc, payer, &[reset_ix]).await;
     submit_transaction(rpc, payer, &[reset_ix]).await?;
