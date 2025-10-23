@@ -287,28 +287,24 @@ pub fn get_slot_hash_alt(
         bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
 
     // Sample slot hashes 4 and 8 slots ago.
+    // If reset is not called within ~2.5 minutes of the block ending,
+    // then the slot hash will be unavailable and secure hashes cannot be generated.
     let slot_a = slot - 4;
     let slot_b = slot - 8;
     let slot_c = slot;
     let Some(slot_hash_a) = slot_hashes.get(&slot_a) else {
-        // If reset is not called within ~2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and secure hashes cannot be generated.
         return Err(trace(
             "Slot hash A unavailable",
             ProgramError::InvalidAccountData,
         ));
     };
     let Some(slot_hash_b) = slot_hashes.get(&slot_b) else {
-        // If reset is not called within ~2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and secure hashes cannot be generated.
         return Err(trace(
             "Slot hash B unavailable",
             ProgramError::InvalidAccountData,
         ));
     };
     let Some(slot_hash_c) = slot_hashes.get(&slot_c) else {
-        // If reset is not called within ~2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and secure hashes cannot be generated.
         return Err(trace(
             "Slot hash C unavailable",
             ProgramError::InvalidAccountData,
@@ -320,29 +316,17 @@ pub fn get_slot_hash_alt(
     let slot_hash_b = slot_hash_b.to_bytes();
     let slot_hash_c = slot_hash_c.to_bytes();
 
-    // Get control numbers.
+    // Get control number.
     let r1 = u16::from_le_bytes(slot_hash_c[0..8].try_into().unwrap());
     let r2 = u16::from_le_bytes(slot_hash_c[8..16].try_into().unwrap());
     let r3 = u16::from_le_bytes(slot_hash_c[16..24].try_into().unwrap());
     let r4 = u16::from_le_bytes(slot_hash_c[24..32].try_into().unwrap());
-    let r = (r1 ^ r2 ^ r3 ^ r4) % 4;
-    let c1 = (r & 1) != 0;
-    let c2 = (r & 2) != 0;
+    let c = (r1 ^ r2 ^ r3 ^ r4) % 2 == 0;
 
-    // Build up final slot hash piece-wise from samples.
-    let mut slot_hash = [0; 32];
-    if c1 {
-        slot_hash[0..16].copy_from_slice(&slot_hash_a);
-    } else {
-        slot_hash[0..16].copy_from_slice(&slot_hash_b);
-    }
-    if c2 {
-        slot_hash[16..32].copy_from_slice(&slot_hash_a);
-    } else {
-        slot_hash[16..32].copy_from_slice(&slot_hash_b);
-    }
+    // Select digest to use and generate final hash.
+    let digest = if c { &slot_hash_a } else { &slot_hash_b };
+    let slot_hash = solana_program::keccak::hash(digest.as_ref()).to_bytes();
 
     // Hash the final sample.
-    let slot_hash = solana_program::keccak::hash(slot_hash.as_ref()).to_bytes();
     Ok(slot_hash)
 }
