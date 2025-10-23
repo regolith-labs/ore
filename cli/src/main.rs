@@ -110,8 +110,20 @@ async fn main() {
         "keys" => {
             keys().await.unwrap();
         }
+        "enable_new_rng" => {
+            enable_new_rng(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn enable_new_rng(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::set_is_new_rng_enabled(payer.pubkey(), true);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -238,11 +250,13 @@ async fn reset(
         // println!("Miners: {:?}", square.miners);
         // miners = square.miners[id as usize].to_vec();
     };
+    let reveal = solana_sdk::hash::hash(&board.end_slot.to_le_bytes()).to_bytes();
     let reset_ix = ore_api::sdk::reset(
         payer.pubkey(),
         config.fee_collector,
         board.round_id,
         Pubkey::default(),
+        reveal,
     );
     // simulate_transaction(rpc, payer, &[reset_ix]).await;
     submit_transaction(rpc, payer, &[reset_ix]).await?;
@@ -594,10 +608,7 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  bury_authority: {}", config.bury_authority);
     println!("  fee_collector: {}", config.fee_collector);
     println!("  last_boost: {}", config.last_boost);
-    println!(
-        "  is_seeker_activation_enabled: {}",
-        config.is_seeker_activation_enabled
-    );
+    println!("  is_new_rng_enabled: {}", config.is_new_rng_enabled);
 
     Ok(())
 }
