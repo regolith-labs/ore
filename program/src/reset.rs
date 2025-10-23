@@ -278,7 +278,7 @@ pub fn get_slot_hash(
 /// This method makes it significantly harder for a single leader to control the outcome by pigeonholing the outcome to 1 of 4 possible outcomes.
 /// The available options are sampled by combing two hashes, selected 4 and 8 slots prior respectively.
 /// Reasoning here being that no single validator is likely to be generate both hashes and the control hash, and thus the outcome of the round.
-/// This rng solution does remove *all* possibility of manipulation, but does make it significantly harder, raises the bar for colusion, and limits the range of possible outcomes.
+/// This rng solution does not remove *all* possibility of manipulation, but does make it significantly harder, raises the bar for collusion, and limits the range of possible outcomes.
 pub fn get_slot_hash_alt(
     slot: u64,
     slot_hashes_sysvar: &AccountInfo<'_>,
