@@ -23,7 +23,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
-        .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
+        .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot - 8)?;
     let round = round_info
         .as_account_mut::<Round>(&ore_api::ID)?
         .assert_mut(|r| r.id == board.round_id)?;
