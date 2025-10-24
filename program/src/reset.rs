@@ -57,10 +57,18 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.total_winnings = 0;
 
     // Sample slot hash.
-    if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
-        round.slot_hash = slot_hash;
+    if config.is_new_rng_enabled == 0 {
+        if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
+            round.slot_hash = slot_hash;
+        } else {
+            round.slot_hash = [u8::MAX; 32];
+        }
     } else {
-        round.slot_hash = [u8::MAX; 32];
+        if let Ok(slot_hash) = get_slot_hash_alt(board.end_slot, slot_hashes_sysvar) {
+            round.slot_hash = slot_hash;
+        } else {
+            round.slot_hash = [u8::MAX; 32];
+        }
     }
 
     // Exit early if no slot hash was found.
@@ -261,5 +269,64 @@ pub fn get_slot_hash(
         ));
     };
     let slot_hash = slot_hash.to_bytes();
+    Ok(slot_hash)
+}
+
+/// Alternative slot hash generation method.
+///
+/// The prior method gives a single leader full control over the slot hash, and thus the outcome of the round.
+/// This method makes it significantly harder for a single leader to control the outcome by pigeonholing the outcome to 1 of 4 possible outcomes.
+/// The available options are sampled by combing two hashes, selected 4 and 8 slots prior respectively.
+/// Reasoning here being that no single validator is likely to be generate both hashes and the control hash, and thus the outcome of the round.
+/// This rng solution does not remove *all* possibility of manipulation, but does make it significantly harder, raises the bar for collusion, and limits the range of possible outcomes.
+pub fn get_slot_hash_alt(
+    slot: u64,
+    slot_hashes_sysvar: &AccountInfo<'_>,
+) -> Result<[u8; 32], ProgramError> {
+    let slot_hashes =
+        bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
+
+    // Sample slot hashes 4 and 8 slots ago.
+    // If reset is not called within ~2.5 minutes of the block ending,
+    // then the slot hash will be unavailable and secure hashes cannot be generated.
+    let slot_a = slot - 4;
+    let slot_b = slot - 8;
+    let slot_c = slot;
+    let Some(slot_hash_a) = slot_hashes.get(&slot_a) else {
+        return Err(trace(
+            "Slot hash A unavailable",
+            ProgramError::InvalidAccountData,
+        ));
+    };
+    let Some(slot_hash_b) = slot_hashes.get(&slot_b) else {
+        return Err(trace(
+            "Slot hash B unavailable",
+            ProgramError::InvalidAccountData,
+        ));
+    };
+    let Some(slot_hash_c) = slot_hashes.get(&slot_c) else {
+        return Err(trace(
+            "Slot hash C unavailable",
+            ProgramError::InvalidAccountData,
+        ));
+    };
+
+    // Convert to bytes.
+    let slot_hash_a = slot_hash_a.to_bytes();
+    let slot_hash_b = slot_hash_b.to_bytes();
+    let slot_hash_c = slot_hash_c.to_bytes();
+
+    // Get control number.
+    let r1 = u16::from_le_bytes(slot_hash_c[0..8].try_into().unwrap());
+    let r2 = u16::from_le_bytes(slot_hash_c[8..16].try_into().unwrap());
+    let r3 = u16::from_le_bytes(slot_hash_c[16..24].try_into().unwrap());
+    let r4 = u16::from_le_bytes(slot_hash_c[24..32].try_into().unwrap());
+    let c = (r1 ^ r2 ^ r3 ^ r4) % 2 == 0;
+
+    // Select digest to use and generate final hash.
+    let digest = if c { &slot_hash_a } else { &slot_hash_b };
+    let slot_hash = solana_program::keccak::hash(digest.as_ref()).to_bytes();
+
+    // Hash the final sample.
     Ok(slot_hash)
 }

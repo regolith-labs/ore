@@ -12,6 +12,7 @@ mod log;
 mod reset;
 mod set_admin;
 mod set_fee_collector;
+mod set_is_new_rng_enabled;
 mod whitelist;
 mod withdraw;
 mod wrap;
@@ -30,6 +31,7 @@ use log::*;
 use reset::*;
 use set_admin::*;
 use set_fee_collector::*;
+use set_is_new_rng_enabled::*;
 use withdraw::*;
 use wrap::*;
 
@@ -64,6 +66,7 @@ pub fn process_instruction(
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
+        OreInstruction::SetIsNewRngEnabled => process_set_is_new_rng_enabled(accounts, data)?,
 
         // Seeker
         OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,

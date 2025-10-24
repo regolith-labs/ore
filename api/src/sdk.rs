@@ -457,3 +457,19 @@ pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
         .to_bytes(),
     }
 }
+
+pub fn set_is_new_rng_enabled(signer: Pubkey, is_new_rng_enabled: bool) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: SetIsNewRngEnabled {
+            is_new_rng_enabled: is_new_rng_enabled as u8,
+        }
+        .to_bytes(),
+    }
+}

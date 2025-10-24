@@ -24,9 +24,10 @@ pub enum OreInstruction {
     Wrap = 14,
     SetAdmin = 15,
     SetFeeCollector = 16,
+    SetIsNewRngEnabled = 17,
 
     // Seeker
-    ClaimSeeker = 17,
+    ClaimSeeker = 18,
 }
 
 #[repr(C)]
@@ -145,6 +146,12 @@ pub struct Checkpoint {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetIsNewRngEnabled {
+    pub is_new_rng_enabled: u8,
+}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -162,3 +169,4 @@ instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, ClaimSeeker);
+instruction!(OreInstruction, SetIsNewRngEnabled);

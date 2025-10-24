@@ -19,8 +19,8 @@ pub struct Config {
     /// The last boost timestamp.
     pub last_boost: i64,
 
-    /// Whether seeker activation is enabled.
-    pub is_seeker_activation_enabled: u64,
+    /// Whether the new rng system is enabled.
+    pub is_new_rng_enabled: u64,
 }
 
 impl Config {
