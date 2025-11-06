@@ -1,6 +1,9 @@
+use entropy_api::state::Var;
 use ore_api::prelude::*;
 use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
+
+use crate::reset::ORE_VAR_ADDRESS;
 
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -11,8 +14,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Load accounts.
     let clock = Clock::get()?;
+    let (ore_accounts, entropy_accounts) = accounts.split_at(7);
+    sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
+    sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
     let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, system_program] =
-        accounts
+        ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -37,6 +43,24 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         board.start_slot = clock.slot;
         board.end_slot = board.start_slot + 150;
         round.expires_at = board.end_slot + ONE_DAY_SLOTS;
+
+        // Bump var to the next value.
+        let [var_info, entropy_program] = entropy_accounts else {
+            return Err(ProgramError::NotEnoughAccountKeys);
+        };
+        var_info
+            .has_address(&ORE_VAR_ADDRESS)?
+            .as_account::<Var>(&entropy_api::ID)?
+            .assert(|v| v.authority == *board_info.key)?;
+        entropy_program.is_program(&entropy_api::ID)?;
+
+        // Bump var to the next value.
+        invoke_signed(
+            &entropy_api::sdk::next(*board_info.key, *var_info.key, board.end_slot),
+            &[board_info.clone(), var_info.clone()],
+            &entropy_api::ID,
+            &[BOARD],
+        )?;
     }
 
     // Check if signer is the automation executor.

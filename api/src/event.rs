@@ -92,4 +92,3 @@ pub struct MotherlodeEvent {
 
 event!(ResetEvent);
 event!(BuryEvent);
-event!(MotherlodeEvent);

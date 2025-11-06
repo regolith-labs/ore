@@ -1,7 +1,12 @@
 use std::{collections::HashMap, str::FromStr};
 
-use meteora_pools_sdk::accounts::Pool;
-use meteora_vault_sdk::accounts::Vault;
+use entropy_api::prelude::*;
+use jup_swap::{
+    quote::QuoteRequest,
+    swap::SwapRequest,
+    transaction_config::{DynamicSlippageSettings, TransactionConfig},
+    JupiterSwapApiClient,
+};
 use ore_api::prelude::*;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
@@ -11,16 +16,17 @@ use solana_client::{
     rpc_filter::{Memcmp, RpcFilterType},
 };
 use solana_sdk::{
+    address_lookup_table::{state::AddressLookupTable, AddressLookupTableAccount},
     compute_budget::ComputeBudgetInstruction,
-    native_token::lamports_to_sol,
-    pubkey,
+    message::{v0::Message, VersionedMessage},
+    native_token::{lamports_to_sol, LAMPORTS_PER_SOL},
     pubkey::Pubkey,
-    signature::{read_keypair_file, Signer},
-    slot_hashes::SlotHashes,
-    transaction::Transaction,
+    signature::{read_keypair_file, Signature, Signer},
+    transaction::{Transaction, VersionedTransaction},
 };
+use solana_sdk::{keccak, pubkey};
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::{amount_to_ui_amount, ui_amount_to_amount};
+use spl_token::amount_to_ui_amount;
 use steel::{AccountDeserialize, Clock, Discriminator, Instruction};
 
 #[tokio::main]
@@ -50,9 +56,6 @@ async fn main() {
         "config" => {
             log_config(&rpc).await.unwrap();
         }
-        "initialize" => {
-            initialize(&rpc, &payer).await.unwrap();
-        }
         "bury" => {
             bury(&rpc, &payer).await.unwrap();
         }
@@ -65,9 +68,9 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
-        "pool" => {
-            log_meteora_pool(&rpc).await.unwrap();
-        }
+        // "pool" => {
+        //     log_meteora_pool(&rpc).await.unwrap();
+        // }
         "deploy" => {
             deploy(&rpc, &payer).await.unwrap();
         }
@@ -79,9 +82,6 @@ async fn main() {
         }
         "round" => {
             log_round(&rpc).await.unwrap();
-        }
-        "seeker" => {
-            log_seeker(&rpc).await.unwrap();
         }
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
@@ -101,17 +101,49 @@ async fn main() {
         "close_all" => {
             close_all(&rpc, &payer).await.unwrap();
         }
-        "claim_seeker" => {
-            claim_seeker(&rpc, &payer).await.unwrap();
-        }
         "participating_miners" => {
             participating_miners(&rpc).await.unwrap();
+        }
+        "new_var" => {
+            new_var(&rpc, &payer).await.unwrap();
+        }
+        "set_buffer" => {
+            set_buffer(&rpc, &payer).await.unwrap();
         }
         "keys" => {
             keys().await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn set_buffer(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let buffer = std::env::var("BUFFER").expect("Missing BUFFER env var");
+    let buffer = u64::from_str(&buffer).expect("Invalid BUFFER");
+    let ix = ore_api::sdk::set_buffer(payer.pubkey(), buffer);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn new_var(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let provider = std::env::var("PROVIDER").expect("Missing PROVIDER env var");
+    let provider = Pubkey::from_str(&provider).expect("Invalid PROVIDER");
+    let commit = std::env::var("COMMIT").expect("Missing COMMIT env var");
+    let commit = keccak::Hash::from_str(&commit).expect("Invalid COMMIT");
+    let samples = std::env::var("SAMPLES").expect("Missing SAMPLES env var");
+    let samples = u64::from_str(&samples).expect("Invalid SAMPLES");
+    let board_address = board_pda().0;
+    let var_address = entropy_api::state::var_pda(board_address, 0).0;
+    println!("Var address: {}", var_address);
+    let ix = ore_api::sdk::new_var(payer.pubkey(), provider, 0, commit.to_bytes(), samples);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
@@ -184,19 +216,12 @@ async fn keys() -> Result<(), anyhow::Error> {
     let board_address = ore_api::state::board_pda().0;
     let address = pubkey!("pqspJ298ryBjazPAr95J9sULCVpZe3HbZTWkbC1zrkS");
     let miner_address = ore_api::state::miner_pda(address).0;
+    let round = round_pda(31460).0;
+    println!("Round: {}", round);
     println!("Treasury: {}", treasury_address);
     println!("Config: {}", config_address);
     println!("Board: {}", board_address);
     println!("Miner: {}", miner_address);
-    Ok(())
-}
-
-async fn initialize(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::initialize(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
@@ -214,38 +239,146 @@ async fn bury(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let amount_str = std::env::var("AMOUNT").expect("Missing AMOUNT env var");
-    let amount_f64 = f64::from_str(&amount_str).expect("Invalid AMOUNT");
-    let amount_u64 = ui_amount_to_amount(amount_f64, TOKEN_DECIMALS);
+    // Get swap amount.
+    let treasury = get_treasury(rpc).await?;
+    let amount = treasury.balance.min(10 * LAMPORTS_PER_SOL);
+
+    // Build quote request.
+    const INPUT_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+    const OUTPUT_MINT: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
+    let api_base_url =
+        std::env::var("API_BASE_URL").unwrap_or("https://lite-api.jup.ag/swap/v1".into());
+    let jupiter_swap_api_client = JupiterSwapApiClient::new(api_base_url);
+    let quote_request = QuoteRequest {
+        amount,
+        input_mint: INPUT_MINT,
+        output_mint: OUTPUT_MINT,
+        max_accounts: Some(55),
+        ..QuoteRequest::default()
+    };
+
+    // GET /quote
+    let quote_response = match jupiter_swap_api_client.quote(&quote_request).await {
+        Ok(quote_response) => quote_response,
+        Err(e) => {
+            println!("quote failed: {e:#?}");
+            return Err(anyhow::anyhow!("quote failed: {e:#?}"));
+        }
+    };
+
+    // GET /swap/instructions
+    let treasury_address = ore_api::state::treasury_pda().0;
+    let response = jupiter_swap_api_client
+        .swap_instructions(&SwapRequest {
+            user_public_key: treasury_address,
+            quote_response,
+            config: TransactionConfig {
+                skip_user_accounts_rpc_calls: true,
+                wrap_and_unwrap_sol: false,
+                dynamic_compute_unit_limit: true,
+                dynamic_slippage: Some(DynamicSlippageSettings {
+                    min_bps: Some(50),
+                    max_bps: Some(1000),
+                }),
+                ..TransactionConfig::default()
+            },
+        })
+        .await
+        .unwrap();
+
+    let address_lookup_table_accounts =
+        get_address_lookup_table_accounts(rpc, response.address_lookup_table_addresses)
+            .await
+            .unwrap();
+
+    // Build transaction.
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
-    let bury_ix = ore_api::sdk::bury(payer.pubkey(), amount_u64);
-    // submit_transaction(rpc, payer, &[wrap_ix, bury_ix]).await?;
-    simulate_transaction(rpc, payer, &[wrap_ix, bury_ix]).await;
+    let bury_ix = ore_api::sdk::bury(
+        payer.pubkey(),
+        &response.swap_instruction.accounts,
+        &response.swap_instruction.data,
+    );
+    simulate_transaction_with_address_lookup_tables(
+        rpc,
+        payer,
+        &[wrap_ix, bury_ix],
+        address_lookup_table_accounts,
+    )
+    .await;
+
     Ok(())
 }
+
+#[allow(dead_code)]
+pub async fn get_address_lookup_table_accounts(
+    rpc_client: &RpcClient,
+    addresses: Vec<Pubkey>,
+) -> Result<Vec<AddressLookupTableAccount>, anyhow::Error> {
+    let mut accounts = Vec::new();
+    for key in addresses {
+        if let Ok(account) = rpc_client.get_account(&key).await {
+            if let Ok(address_lookup_table_account) = AddressLookupTable::deserialize(&account.data)
+            {
+                accounts.push(AddressLookupTableAccount {
+                    key,
+                    addresses: address_lookup_table_account.addresses.to_vec(),
+                });
+            }
+        }
+    }
+    Ok(accounts)
+}
+
+pub const ORE_VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
 
 async fn reset(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let board = get_board(rpc).await?;
+    let var = get_var(rpc, ORE_VAR_ADDRESS).await?;
+
+    println!("Var: {:?}", var);
+
+    let client = reqwest::Client::new();
+    let url = format!("https://entropy-api.onrender.com/var/{ORE_VAR_ADDRESS}/seed");
+    let response = client
+        .get(url)
+        .send()
+        .await?
+        .json::<entropy_types::response::GetSeedResponse>()
+        .await?;
+    println!("Entropy seed: {:?}", response);
+
     let config = get_config(rpc).await?;
-    let slot_hashes = get_slot_hashes(rpc).await?;
-    if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
-        let id = get_winning_square(&slot_hash.to_bytes());
-        // let square = get_square(rpc).await?;
-        println!("Winning square: {}", id);
-        // println!("Miners: {:?}", square.miners);
-        // miners = square.miners[id as usize].to_vec();
-    };
+    let sample_ix = entropy_api::sdk::sample(payer.pubkey(), ORE_VAR_ADDRESS);
+    let reveal_ix = entropy_api::sdk::reveal(payer.pubkey(), ORE_VAR_ADDRESS, response.seed);
     let reset_ix = ore_api::sdk::reset(
         payer.pubkey(),
         config.fee_collector,
         board.round_id,
         Pubkey::default(),
     );
-    // simulate_transaction(rpc, payer, &[reset_ix]).await;
-    submit_transaction(rpc, payer, &[reset_ix]).await?;
+    let sig = submit_transaction(rpc, payer, &[sample_ix, reveal_ix, reset_ix]).await?;
+    println!("Reset: {}", sig);
+
+    // let slot_hashes = get_slot_hashes(rpc).await?;
+    // if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
+    //     let id = get_winning_square(&slot_hash.to_bytes());
+    //     // let square = get_square(rpc).await?;
+    //     println!("Winning square: {}", id);
+    //     // println!("Miners: {:?}", square.miners);
+    //     // miners = square.miners[id as usize].to_vec();
+    // };
+
+    // let reset_ix = ore_api::sdk::reset(
+    //     payer.pubkey(),
+    //     config.fee_collector,
+    //     board.round_id,
+    //     Pubkey::default(),
+    // );
+    // // simulate_transaction(rpc, payer, &[reset_ix]).await;
+    // submit_transaction(rpc, payer, &[reset_ix]).await?;
     Ok(())
 }
 
@@ -287,17 +420,6 @@ async fn deploy_all(
         squares,
     );
     submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn claim_seeker(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let seeker_mint = pubkey!("5mXbkqKz883aufhAsx3p5Z1NcvD2ppZbdTTznM6oUKLj");
-    let ix = ore_api::sdk::claim_seeker(payer.pubkey(), seeker_mint);
-    // submit_transaction(rpc, payer, &[ix]).await?;
-    simulate_transaction(rpc, payer, &[ix]).await;
     Ok(())
 }
 
@@ -413,45 +535,45 @@ async fn close_all(
     Ok(())
 }
 
-async fn log_meteora_pool(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let address = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
-    let pool = get_meteora_pool(rpc, address).await?;
-    let vault_a = get_meteora_vault(rpc, pool.a_vault).await?;
-    let vault_b = get_meteora_vault(rpc, pool.b_vault).await?;
+// async fn log_meteora_pool(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+//     let address = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
+//     let pool = get_meteora_pool(rpc, address).await?;
+//     let vault_a = get_meteora_vault(rpc, pool.a_vault).await?;
+//     let vault_b = get_meteora_vault(rpc, pool.b_vault).await?;
 
-    println!("Pool");
-    println!("  address: {}", address);
-    println!("  lp_mint: {}", pool.lp_mint);
-    println!("  token_a_mint: {}", pool.token_a_mint);
-    println!("  token_b_mint: {}", pool.token_b_mint);
-    println!("  a_vault: {}", pool.a_vault);
-    println!("  b_vault: {}", pool.b_vault);
-    println!("  a_token_vault: {}", vault_a.token_vault);
-    println!("  b_token_vault: {}", vault_b.token_vault);
-    println!("  a_vault_lp_mint: {}", vault_a.lp_mint);
-    println!("  b_vault_lp_mint: {}", vault_b.lp_mint);
-    println!("  a_vault_lp: {}", pool.a_vault_lp);
-    println!("  b_vault_lp: {}", pool.b_vault_lp);
-    println!("  protocol_token_fee: {}", pool.protocol_token_b_fee);
+//     println!("Pool");
+//     println!("  address: {}", address);
+//     println!("  lp_mint: {}", pool.lp_mint);
+//     println!("  token_a_mint: {}", pool.token_a_mint);
+//     println!("  token_b_mint: {}", pool.token_b_mint);
+//     println!("  a_vault: {}", pool.a_vault);
+//     println!("  b_vault: {}", pool.b_vault);
+//     println!("  a_token_vault: {}", vault_a.token_vault);
+//     println!("  b_token_vault: {}", vault_b.token_vault);
+//     println!("  a_vault_lp_mint: {}", vault_a.lp_mint);
+//     println!("  b_vault_lp_mint: {}", vault_b.lp_mint);
+//     println!("  a_vault_lp: {}", pool.a_vault_lp);
+//     println!("  b_vault_lp: {}", pool.b_vault_lp);
+//     println!("  protocol_token_fee: {}", pool.protocol_token_b_fee);
 
-    // pool: *pool.key,
-    // user_source_token: *user_source_token.key,
-    // user_destination_token: *user_destination_token.key,
-    // a_vault: *a_vault.key,
-    // b_vault: *b_vault.key,
-    // a_token_vault: *a_token_vault.key,
-    // b_token_vault: *b_token_vault.key,
-    // a_vault_lp_mint: *a_vault_lp_mint.key,
-    // b_vault_lp_mint: *b_vault_lp_mint.key,
-    // a_vault_lp: *a_vault_lp.key,
-    // b_vault_lp: *b_vault_lp.key,
-    // protocol_token_fee: *protocol_token_fee.key,
-    // user: *user.key,
-    // vault_program: *vault_program.key,
-    // token_program: *token_program.key,
+//     // pool: *pool.key,
+//     // user_source_token: *user_source_token.key,
+//     // user_destination_token: *user_destination_token.key,
+//     // a_vault: *a_vault.key,
+//     // b_vault: *b_vault.key,
+//     // a_token_vault: *a_token_vault.key,
+//     // b_token_vault: *b_token_vault.key,
+//     // a_vault_lp_mint: *a_vault_lp_mint.key,
+//     // b_vault_lp_mint: *b_vault_lp_mint.key,
+//     // a_vault_lp: *a_vault_lp.key,
+//     // b_vault_lp: *b_vault_lp.key,
+//     // protocol_token_fee: *protocol_token_fee.key,
+//     // user: *user.key,
+//     // vault_program: *vault_program.key,
+//     // token_program: *token_program.key,
 
-    Ok(())
-}
+//     Ok(())
+// }
 
 async fn log_automations(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let automations = get_automations(rpc).await?;
@@ -565,17 +687,6 @@ async fn log_miner(
     Ok(())
 }
 
-async fn log_seeker(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let mint = std::env::var("MINT").unwrap();
-    let mint = Pubkey::from_str(&mint).expect("Invalid MINT");
-    let seeker = get_seeker(&rpc, mint).await?;
-    let seeker_address = ore_api::state::seeker_pda(mint).0;
-    println!("Seeker");
-    println!("  address: {}", seeker_address);
-    println!("  mint: {}", seeker.mint);
-    Ok(())
-}
-
 async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let clock = get_clock(&rpc).await?;
     println!("Clock");
@@ -593,11 +704,8 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  admin: {}", config.admin);
     println!("  bury_authority: {}", config.bury_authority);
     println!("  fee_collector: {}", config.fee_collector);
-    println!("  last_boost: {}", config.last_boost);
-    println!(
-        "  is_seeker_activation_enabled: {}",
-        config.is_seeker_activation_enabled
-    );
+    println!("  swap_program: {}", config.swap_program);
+    println!("  buffer: {}", config.buffer);
 
     Ok(())
 }
@@ -631,17 +739,17 @@ async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, a
     Ok(automations)
 }
 
-async fn get_meteora_pool(rpc: &RpcClient, address: Pubkey) -> Result<Pool, anyhow::Error> {
-    let data = rpc.get_account_data(&address).await?;
-    let pool = Pool::from_bytes(&data)?;
-    Ok(pool)
-}
+// async fn get_meteora_pool(rpc: &RpcClient, address: Pubkey) -> Result<Pool, anyhow::Error> {
+//     let data = rpc.get_account_data(&address).await?;
+//     let pool = Pool::from_bytes(&data)?;
+//     Ok(pool)
+// }
 
-async fn get_meteora_vault(rpc: &RpcClient, address: Pubkey) -> Result<Vault, anyhow::Error> {
-    let data = rpc.get_account_data(&address).await?;
-    let vault = Vault::from_bytes(&data)?;
-    Ok(vault)
-}
+// async fn get_meteora_vault(rpc: &RpcClient, address: Pubkey) -> Result<Vault, anyhow::Error> {
+//     let data = rpc.get_account_data(&address).await?;
+//     let vault = Vault::from_bytes(&data)?;
+//     Ok(vault)
+// }
 
 async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {
     let board_pda = ore_api::state::board_pda();
@@ -650,12 +758,10 @@ async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {
     Ok(*board)
 }
 
-async fn get_slot_hashes(rpc: &RpcClient) -> Result<SlotHashes, anyhow::Error> {
-    let data = rpc
-        .get_account_data(&solana_sdk::sysvar::slot_hashes::ID)
-        .await?;
-    let slot_hashes = bincode::deserialize::<SlotHashes>(&data)?;
-    Ok(slot_hashes)
+async fn get_var(rpc: &RpcClient, address: Pubkey) -> Result<Var, anyhow::Error> {
+    let account = rpc.get_account(&address).await?;
+    let var = Var::try_from_bytes(&account.data)?;
+    Ok(*var)
 }
 
 async fn get_round(rpc: &RpcClient, id: u64) -> Result<Round, anyhow::Error> {
@@ -692,13 +798,6 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_seeker(rpc: &RpcClient, mint: Pubkey) -> Result<Seeker, anyhow::Error> {
-    let seeker_pda = ore_api::state::seeker_pda(mint);
-    let account = rpc.get_account(&seeker_pda.0).await?;
-    let seeker = Seeker::try_from_bytes(&account.data)?;
-    Ok(*seeker)
-}
-
 async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::Error> {
     let stake_pda = ore_api::state::stake_pda(authority);
     let account = rpc.get_account(&stake_pda.0).await?;
@@ -726,17 +825,16 @@ async fn get_miners_participating(
     Ok(miners)
 }
 
-fn get_winning_square(slot_hash: &[u8]) -> u64 {
-    // Use slot hash to generate a random u64
-    let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
-    let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
-    let r3 = u64::from_le_bytes(slot_hash[16..24].try_into().unwrap());
-    let r4 = u64::from_le_bytes(slot_hash[24..32].try_into().unwrap());
-    let r = r1 ^ r2 ^ r3 ^ r4;
-
-    // Returns a value in the range [0, 24] inclusive
-    r % 25
-}
+// fn get_winning_square(slot_hash: &[u8]) -> u64 {
+//     // Use slot hash to generate a random u64
+//     let r1 = u64::from_le_bytes(slot_hash[0..8].try_into().unwrap());
+//     let r2 = u64::from_le_bytes(slot_hash[8..16].try_into().unwrap());
+//     let r3 = u64::from_le_bytes(slot_hash[16..24].try_into().unwrap());
+//     let r4 = u64::from_le_bytes(slot_hash[24..32].try_into().unwrap());
+//     let r = r1 ^ r2 ^ r3 ^ r4;
+//     // Returns a value in the range [0, 24] inclusive
+//     r % 25
+// }
 
 #[allow(dead_code)]
 async fn simulate_transaction(
@@ -753,6 +851,33 @@ async fn simulate_transaction(
             blockhash,
         ))
         .await;
+    println!("Simulation result: {:?}", x);
+}
+
+#[allow(dead_code)]
+async fn simulate_transaction_with_address_lookup_tables(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+    instructions: &[solana_sdk::instruction::Instruction],
+    address_lookup_table_accounts: Vec<AddressLookupTableAccount>,
+) {
+    let blockhash = rpc.get_latest_blockhash().await.unwrap();
+    let tx = VersionedTransaction {
+        signatures: vec![Signature::default()],
+        message: VersionedMessage::V0(
+            Message::try_compile(
+                &payer.pubkey(),
+                instructions,
+                &address_lookup_table_accounts,
+                blockhash,
+            )
+            .unwrap(),
+        ),
+    };
+    let s = tx.sanitize();
+    println!("Sanitize result: {:?}", s);
+    s.unwrap();
+    let x = rpc.simulate_transaction(&tx).await;
     println!("Simulation result: {:?}", x);
 }
 

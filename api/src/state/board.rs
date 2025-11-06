@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use steel::*;
 
 use crate::state::board_pda;
@@ -5,7 +6,7 @@ use crate::state::board_pda;
 use super::OreAccount;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Board {
     /// The current round number.
     pub round_id: u64,

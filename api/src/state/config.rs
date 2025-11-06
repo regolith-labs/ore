@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use steel::*;
 
 use crate::state::config_pda;
@@ -5,7 +6,7 @@ use crate::state::config_pda;
 use super::OreAccount;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Config {
     /// The address that can update the config.
     pub admin: Pubkey,
@@ -16,11 +17,14 @@ pub struct Config {
     /// The address that receives admin fees.
     pub fee_collector: Pubkey,
 
-    /// The last boost timestamp.
-    pub last_boost: i64,
+    /// The program id for the protocol swaps.
+    pub swap_program: Pubkey,
 
-    /// Whether seeker activation is enabled.
-    pub is_seeker_activation_enabled: u64,
+    /// The address of the entropy var account.
+    pub var_address: Pubkey,
+
+    /// Buffer array
+    pub buffer: u64,
 }
 
 impl Config {

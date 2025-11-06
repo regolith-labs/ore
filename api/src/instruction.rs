@@ -10,7 +10,6 @@ pub enum OreInstruction {
     ClaimORE = 4,
     Close = 5,
     Deploy = 6,
-    Initialize = 7,
     Log = 8,
     Reset = 9,
 
@@ -24,9 +23,8 @@ pub enum OreInstruction {
     Wrap = 14,
     SetAdmin = 15,
     SetFeeCollector = 16,
-
-    // Seeker
-    ClaimSeeker = 17,
+    NewVar = 17,
+    SetBuffer = 18,
 }
 
 #[repr(C)]
@@ -53,10 +51,6 @@ pub struct Deploy {
     pub amount: [u8; 8],
     pub squares: [u8; 4],
 }
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Initialize {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -111,9 +105,7 @@ pub struct Wrap {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Bury {
-    pub min_amount_out: [u8; 8],
-}
+pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -135,15 +127,25 @@ pub struct ClaimYield {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimSeeker {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Checkpoint {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Close {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct NewVar {
+    pub id: [u8; 8],
+    pub commit: [u8; 32],
+    pub samples: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetBuffer {
+    pub buffer: [u8; 8],
+}
 
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
@@ -151,7 +153,6 @@ instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
 instruction!(OreInstruction, Deploy);
-instruction!(OreInstruction, Initialize);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);
 instruction!(OreInstruction, Bury);
@@ -161,4 +162,5 @@ instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
-instruction!(OreInstruction, ClaimSeeker);
+instruction!(OreInstruction, NewVar);
+instruction!(OreInstruction, SetBuffer);

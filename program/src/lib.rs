@@ -2,17 +2,17 @@ mod automate;
 mod bury;
 mod checkpoint;
 mod claim_ore;
-mod claim_seeker;
 mod claim_sol;
 mod claim_yield;
 mod close;
 mod deploy;
 mod deposit;
 mod log;
+mod new_var;
 mod reset;
 mod set_admin;
+mod set_buffer;
 mod set_fee_collector;
-mod whitelist;
 mod withdraw;
 mod wrap;
 
@@ -20,15 +20,16 @@ use automate::*;
 use bury::*;
 use checkpoint::*;
 use claim_ore::*;
-use claim_seeker::*;
 use claim_sol::*;
 use claim_yield::*;
 use close::*;
 use deploy::*;
 use deposit::*;
 use log::*;
+use new_var::*;
 use reset::*;
 use set_admin::*;
+use set_buffer::*;
 use set_fee_collector::*;
 use withdraw::*;
 use wrap::*;
@@ -64,10 +65,8 @@ pub fn process_instruction(
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
-
-        // Seeker
-        OreInstruction::ClaimSeeker => process_claim_seeker(accounts, data)?,
-        _ => return Err(ProgramError::InvalidInstructionData),
+        OreInstruction::NewVar => process_new_var(accounts, data)?,
+        OreInstruction::SetBuffer => process_set_buffer(accounts, data)?,
     }
 
     Ok(())

@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use steel::*;
 
 use crate::state::{miner_pda, Treasury};
@@ -5,7 +6,7 @@ use crate::state::{miner_pda, Treasury};
 use super::OreAccount;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Miner {
     /// The authority of this miner account.
     pub authority: Pubkey,

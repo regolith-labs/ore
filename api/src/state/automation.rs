@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use steel::*;
 
 use crate::state::miner_pda;
@@ -5,7 +6,7 @@ use crate::state::miner_pda;
 use super::OreAccount;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Automation {
     /// The amount of SOL to deploy on each territory per round.
     pub amount: u64,

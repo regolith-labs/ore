@@ -1,13 +1,19 @@
+use entropy_api::state::Var;
 use ore_api::prelude::*;
-use solana_program::slot_hashes::SlotHashes;
+use solana_program::{keccak, log::sol_log, pubkey};
 use steel::*;
+
+pub const ORE_VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
 
 /// Pays out the winners and block reward.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
+    let (ore_accounts, entropy_accounts) = accounts.split_at(14);
+    sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
+    sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
     let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
-        accounts
+        ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -56,12 +62,29 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.total_vaulted = 0;
     round_next.total_winnings = 0;
 
-    // Sample slot hash.
-    if let Ok(slot_hash) = get_slot_hash(board.end_slot, slot_hashes_sysvar) {
-        round.slot_hash = slot_hash;
-    } else {
-        round.slot_hash = [u8::MAX; 32];
-    }
+    // Sample random variable
+    let [var_info, entropy_program] = entropy_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    let var = var_info
+        .has_address(&ORE_VAR_ADDRESS)? // TODO Verify address matches whats in the config.
+        .as_account::<Var>(&entropy_api::ID)?
+        .assert(|v| v.authority == *board_info.key)?
+        .assert(|v| v.slot_hash != [0; 32])?
+        .assert(|v| v.seed != [0; 32])?
+        .assert(|v| v.value != [0; 32])?;
+    entropy_program.is_program(&entropy_api::ID)?;
+
+    // Print the seed and slot hash.
+    let seed = keccak::Hash::new_from_array(var.seed);
+    let slot_hash = keccak::Hash::new_from_array(var.slot_hash);
+    sol_log(&format!("var slothash: {:?}", slot_hash).to_string());
+    sol_log(&format!("var seed: {:?}", seed).to_string());
+
+    // Read the finalized value from the var.
+    let value = keccak::Hash::new_from_array(var.value);
+    sol_log(&format!("var value: {:?}", value).to_string());
+    round.slot_hash = var.value;
 
     // Exit early if no slot hash was found.
     let Some(r) = round.rng() else {
@@ -175,7 +198,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
-    // With 1 in 4 odds, split the +1 ORE reward.
+    // With 1 in 2 odds, split the +1 ORE reward.
     if round.is_split_reward(r) {
         round.top_miner = SPLIT_ADDRESS;
     }
@@ -244,22 +267,4 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_info.send(vault_amount, &treasury_info);
 
     Ok(())
-}
-
-pub fn get_slot_hash(
-    slot: u64,
-    slot_hashes_sysvar: &AccountInfo<'_>,
-) -> Result<[u8; 32], ProgramError> {
-    let slot_hashes =
-        bincode::deserialize::<SlotHashes>(slot_hashes_sysvar.data.borrow().as_ref()).unwrap();
-    let Some(slot_hash) = slot_hashes.get(&slot) else {
-        // If reset is not called within ~2.5 minutes of the block ending,
-        // then the slot hash will be unavailable and secure hashes cannot be generated.
-        return Err(trace(
-            "Slot hash unavailable",
-            ProgramError::InvalidAccountData,
-        ));
-    };
-    let slot_hash = slot_hash.to_bytes();
-    Ok(slot_hash)
 }

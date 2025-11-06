@@ -19,8 +19,7 @@ default = []
 
 [dependencies]
 bincode.workspace = true
-meteora-pools-sdk.workspace = true
-mpl-token-metadata.workspace = true
+entropy-api.workspace = true
 ore-api.workspace = true
 solana-nostd-keccak.workspace = true
 solana-program.workspace = true
