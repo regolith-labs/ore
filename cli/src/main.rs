@@ -110,6 +110,9 @@ async fn main() {
         "set_buffer" => {
             set_buffer(&rpc, &payer).await.unwrap();
         }
+        "set_swap_program" => {
+            set_swap_program(&rpc, &payer).await.unwrap();
+        }
         "keys" => {
             keys().await.unwrap();
         }
@@ -428,6 +431,17 @@ async fn set_admin(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn set_swap_program(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let swap_program = std::env::var("SWAP_PROGRAM").expect("Missing SWAP_PROGRAM env var");
+    let swap_program = Pubkey::from_str(&swap_program).expect("Invalid SWAP_PROGRAM");
+    let ix = ore_api::sdk::set_swap_program(payer.pubkey(), swap_program);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }

@@ -13,6 +13,7 @@ mod reset;
 mod set_admin;
 mod set_buffer;
 mod set_fee_collector;
+mod set_swap_program;
 mod withdraw;
 mod wrap;
 
@@ -31,6 +32,7 @@ use reset::*;
 use set_admin::*;
 use set_buffer::*;
 use set_fee_collector::*;
+use set_swap_program::*;
 use withdraw::*;
 use wrap::*;
 
@@ -65,6 +67,7 @@ pub fn process_instruction(
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
+        OreInstruction::SetSwapProgram => process_set_swap_program(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::SetBuffer => process_set_buffer(accounts, data)?,
     }

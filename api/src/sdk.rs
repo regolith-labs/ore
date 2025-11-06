@@ -433,3 +433,16 @@ pub fn new_var(
         .to_bytes(),
     }
 }
+
+pub fn set_swap_program(signer: Pubkey, new_program: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(new_program, false),
+        ],
+        data: SetSwapProgram {}.to_bytes(),
+    }
+}

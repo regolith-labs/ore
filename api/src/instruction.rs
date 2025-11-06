@@ -23,8 +23,9 @@ pub enum OreInstruction {
     Wrap = 14,
     SetAdmin = 15,
     SetFeeCollector = 16,
-    NewVar = 17,
-    SetBuffer = 18,
+    SetSwapProgram = 17,
+    NewVar = 18,
+    SetBuffer = 19,
 }
 
 #[repr(C)]
@@ -147,6 +148,10 @@ pub struct SetBuffer {
     pub buffer: [u8; 8],
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct SetSwapProgram {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -164,3 +169,4 @@ instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, NewVar);
 instruction!(OreInstruction, SetBuffer);
+instruction!(OreInstruction, SetSwapProgram);
