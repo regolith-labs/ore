@@ -39,6 +39,9 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Record pre-swap mint supply.
     let pre_swap_mint_supply = ore_mint.supply();
 
+    // Record pre-swap treasury lamports.
+    let pre_swap_treasury_lamports = treasury_info.lamports();
+
     let accounts: Vec<AccountMeta> = swap_accounts
         .iter()
         .map(|acc| {
@@ -66,6 +69,14 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &ore_api::ID,
         &[TREASURY],
     )?;
+
+    // Record post-swap treasury lamports.
+    let post_swap_treasury_lamports = treasury_info.lamports();
+    assert_eq!(
+        post_swap_treasury_lamports, pre_swap_treasury_lamports,
+        "Treasury lamports changed during swap: {} -> {}",
+        pre_swap_treasury_lamports, post_swap_treasury_lamports
+    );
 
     // Record post-swap mint supply.
     let post_swap_mint_supply = mint_info.as_mint()?.supply();
