@@ -138,7 +138,9 @@ async fn set_var_address(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::set_var_address(payer.pubkey(), payer.pubkey());
+    let new_var_address = std::env::var("VAR").expect("Missing VAR env var");
+    let new_var_address = Pubkey::from_str(&new_var_address).expect("Invalid VAR");
+    let ix = ore_api::sdk::set_var_address(payer.pubkey(), new_var_address);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
