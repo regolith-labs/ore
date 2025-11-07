@@ -33,6 +33,7 @@ pub struct Stake {
     pub lifetime_rewards: u64,
 
     /// Flag indicating whether this staker is associated with a Solana Seeker.
+    #[deprecated(since = "3.7.5", note = "This field is no longer used")]
     pub is_seeker: u64,
 }
 
