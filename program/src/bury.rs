@@ -1,11 +1,8 @@
 use ore_api::prelude::*;
 use solana_program::log::sol_log;
 use solana_program::native_token::lamports_to_sol;
-use solana_program::pubkey;
 use spl_token::amount_to_ui_amount;
 use steel::*;
-
-const JUPITER_PROGRAM_ID: Pubkey = pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
 
 /// Swap vaulted SOL to ORE, and burn the ORE.
 pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -18,10 +15,10 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     };
     signer_info.is_signer()?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
-    config_info
+    let config = config_info
         .as_account::<Config>(&ore_api::ID)?
         .assert(|c| c.bury_authority == *signer_info.key)?;
-    mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
         treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
@@ -38,6 +35,9 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let pre_swap_ore_balance = treasury_ore.amount();
     let pre_swap_sol_balance = treasury_sol.amount();
     assert!(pre_swap_sol_balance > 0);
+
+    // Record pre-swap mint supply.
+    let pre_swap_mint_supply = ore_mint.supply();
 
     let accounts: Vec<AccountMeta> = swap_accounts
         .iter()
@@ -58,7 +58,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     invoke_signed(
         &Instruction {
-            program_id: JUPITER_PROGRAM_ID,
+            program_id: config.swap_program,
             accounts,
             data: data.to_vec(),
         },
@@ -66,6 +66,14 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         &ore_api::ID,
         &[TREASURY],
     )?;
+
+    // Record post-swap mint supply.
+    let post_swap_mint_supply = mint_info.as_mint()?.supply();
+    assert_eq!(
+        post_swap_mint_supply, pre_swap_mint_supply,
+        "Mint supply changed during swap: {} -> {}",
+        pre_swap_mint_supply, post_swap_mint_supply
+    );
 
     // Record post-swap balances.
     let treasury_ore =
