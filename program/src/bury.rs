@@ -42,6 +42,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     // Record pre-swap treasury lamports.
     let pre_swap_treasury_lamports = treasury_info.lamports();
 
+    // Build swap accounts.
     let accounts: Vec<AccountMeta> = swap_accounts
         .iter()
         .map(|acc| {
@@ -54,11 +55,13 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         })
         .collect();
 
+    // Build swap accounts infos.
     let accounts_infos: Vec<AccountInfo> = swap_accounts
         .iter()
         .map(|acc| AccountInfo { ..acc.clone() })
         .collect();
 
+    // Invoke swap program.
     invoke_signed(
         &Instruction {
             program_id: config.swap_program,
