@@ -113,6 +113,9 @@ async fn main() {
         "set_swap_program" => {
             set_swap_program(&rpc, &payer).await.unwrap();
         }
+        "set_var_address" => {
+            set_var_address(&rpc, &payer).await.unwrap();
+        }
         "keys" => {
             keys().await.unwrap();
         }
@@ -127,6 +130,15 @@ async fn set_buffer(
     let buffer = std::env::var("BUFFER").expect("Missing BUFFER env var");
     let buffer = u64::from_str(&buffer).expect("Invalid BUFFER");
     let ix = ore_api::sdk::set_buffer(payer.pubkey(), buffer);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
+}
+
+async fn set_var_address(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::set_var_address(payer.pubkey(), payer.pubkey());
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -719,8 +731,8 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  bury_authority: {}", config.bury_authority);
     println!("  fee_collector: {}", config.fee_collector);
     println!("  swap_program: {}", config.swap_program);
+    println!("  var_address: {}", config.var_address);
     println!("  buffer: {}", config.buffer);
-
     Ok(())
 }
 

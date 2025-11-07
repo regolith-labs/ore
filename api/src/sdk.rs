@@ -446,3 +446,18 @@ pub fn set_swap_program(signer: Pubkey, new_program: Pubkey) -> Instruction {
         data: SetSwapProgram {}.to_bytes(),
     }
 }
+
+pub fn set_var_address(signer: Pubkey, new_var_address: Pubkey) -> Instruction {
+    let board_address = board_pda().0;
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(new_var_address, false),
+        ],
+        data: SetVarAddress {}.to_bytes(),
+    }
+}
