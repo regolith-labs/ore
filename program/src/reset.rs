@@ -12,7 +12,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let (ore_accounts, entropy_accounts) = accounts.split_at(14);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
-    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -61,6 +61,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.total_deployed = 0;
     round_next.total_vaulted = 0;
     round_next.total_winnings = 0;
+    round_next.top_miner_sample = 0;
 
     // Sample random variable
     let [var_info, entropy_program] = entropy_accounts else {
@@ -102,7 +103,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 start_slot: board.start_slot,
                 end_slot: board.end_slot,
                 winning_square: u64::MAX,
-                top_miner: Pubkey::default(),
+                top_miner_sample: 0,
                 num_winners: 0,
                 motherlode: 0,
                 total_deployed: round.total_deployed,
@@ -142,7 +143,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 start_slot: board.start_slot,
                 end_slot: board.end_slot,
                 winning_square: winning_square as u64,
-                top_miner: Pubkey::default(),
+                top_miner_sample: 0,
                 num_winners: 0,
                 motherlode: 0,
                 total_deployed: round.total_deployed,
@@ -201,6 +202,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // With 1 in 2 odds, split the +1 ORE reward.
     if round.is_split_reward(r) {
         round.top_miner = SPLIT_ADDRESS;
+    } else {
+        round.top_miner_sample = round.top_miner_sample(r, winning_square);
     }
 
     // Payout the motherlode if it was activated.
@@ -245,7 +248,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: round.top_miner,
+            top_miner_sample: round.top_miner_sample,
             motherlode: round.motherlode,
             num_winners: round.count[winning_square],
             total_deployed: round.total_deployed,
