@@ -11,7 +11,7 @@ pub struct Config {
     /// The address that can update the config.
     pub admin: Pubkey,
 
-    /// The adress with authority to call bury.
+    /// The address with authority to call bury.
     pub bury_authority: Pubkey,
 
     /// The address that receives admin fees.

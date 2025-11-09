@@ -119,7 +119,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Ok(());
     };
 
-    // Caculate admin fees.
+    // Calculate admin fees.
     let total_admin_fee = round.total_deployed / 100;
 
     // Get the winning square.
