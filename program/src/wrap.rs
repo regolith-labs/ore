@@ -21,7 +21,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
 
     // Get amount
     let one_sol = 1_000_000_000;
-    let amount = (one_sol * 30).min(treasury.balance);
+    let amount = (one_sol * 100).min(treasury.balance);
 
     // Send SOL to the WSOL account.
     treasury_info.send(amount, treasury_sol_info);
