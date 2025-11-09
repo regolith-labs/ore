@@ -67,7 +67,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     let var = var_info
-        .has_address(&ORE_VAR_ADDRESS)? // TODO Verify address matches whats in the config.
+        .has_address(&config.var_address)?
         .as_account::<Var>(&entropy_api::ID)?
         .assert(|v| v.authority == *board_info.key)?
         .assert(|v| v.slot_hash != [0; 32])?
