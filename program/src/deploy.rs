@@ -1,9 +1,9 @@
 use entropy_api::state::Var;
 use ore_api::prelude::*;
-use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
+use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol, pubkey};
 use steel::*;
 
-use crate::reset::ORE_VAR_ADDRESS;
+pub const ORE_VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
 
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
@@ -11,6 +11,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let args = Deploy::try_from_bytes(data)?;
     let mut amount = u64::from_le_bytes(args.amount);
     let mask = u32::from_le_bytes(args.squares);
+
+    // TODO Need config account...
 
     // Load accounts.
     let clock = Clock::get()?;

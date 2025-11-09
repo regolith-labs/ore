@@ -1,9 +1,7 @@
 use entropy_api::state::Var;
 use ore_api::prelude::*;
-use solana_program::{keccak, log::sol_log, pubkey};
+use solana_program::{keccak, log::sol_log};
 use steel::*;
-
-pub const ORE_VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
 
 /// Pays out the winners and block reward.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
@@ -67,7 +65,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     let var = var_info
-        .has_address(&ORE_VAR_ADDRESS)? // TODO Verify address matches whats in the config.
+        .has_address(&config.var_address)?
         .as_account::<Var>(&entropy_api::ID)?
         .assert(|v| v.authority == *board_info.key)?
         .assert(|v| v.slot_hash != [0; 32])?
