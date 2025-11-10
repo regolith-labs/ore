@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
+
 pub enum OreEvent {
     Reset = 0,
     Bury = 1,
-    Motherlode = 2,
+    Deploy = 2,
 }
 
 #[repr(C)]
@@ -73,18 +74,21 @@ pub struct BuryEvent {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct MotherlodeEvent {
+pub struct DeployEvent {
     /// The event discriminator.
     pub disc: u64,
 
-    /// The amount of ORE minted to the motherlode.
+    /// The authority of the deployer.
+    pub authority: Pubkey,
+
+    /// The amount of SOL deployed per square.
     pub amount: u64,
+
+    /// The mask of the squares deployed to.
+    pub mask: u64,
 
     /// The round id.
     pub round_id: u64,
-
-    /// The number of winners.
-    pub num_miners: u64,
 
     /// The timestamp of the event.
     pub ts: i64,
@@ -92,3 +96,4 @@ pub struct MotherlodeEvent {
 
 event!(ResetEvent);
 event!(BuryEvent);
+event!(DeployEvent);
