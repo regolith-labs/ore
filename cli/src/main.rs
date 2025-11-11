@@ -27,7 +27,7 @@ use solana_sdk::{
 use solana_sdk::{keccak, pubkey};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::amount_to_ui_amount;
-use steel::{AccountDeserialize, Clock, Discriminator, Instruction};
+use steel::{AccountDeserialize, AccountMeta, Clock, Discriminator, Instruction};
 
 #[tokio::main]
 async fn main() {
@@ -119,8 +119,65 @@ async fn main() {
         "keys" => {
             keys().await.unwrap();
         }
+        "lut" => {
+            lut(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn lut(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let recent_slot = rpc.get_slot().await? - 4;
+    let (ix, lut_address) = solana_address_lookup_table_interface::instruction::create_lookup_table(
+        payer.pubkey(),
+        payer.pubkey(),
+        recent_slot,
+    );
+    let board_address = ore_api::state::board_pda().0;
+    let config_address = ore_api::state::config_pda().0;
+    let treasury_address = ore_api::state::treasury_pda().0;
+    let treasury_tokens_address = ore_api::state::treasury_tokens_address();
+    let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
+    let mint_address = MINT_ADDRESS;
+    let ore_program_address = ore_api::ID;
+    let ex_ix = solana_address_lookup_table_interface::instruction::extend_lookup_table(
+        lut_address,
+        payer.pubkey(),
+        Some(payer.pubkey()),
+        vec![
+            board_address,
+            config_address,
+            treasury_address,
+            treasury_tokens_address,
+            treasury_sol_address,
+            mint_address,
+            ore_program_address,
+        ],
+    );
+    let ix_1 = Instruction {
+        program_id: ix.program_id,
+        accounts: ix
+            .accounts
+            .iter()
+            .map(|a| AccountMeta::new(a.pubkey, a.is_signer))
+            .collect(),
+        data: ix.data,
+    };
+    let ix_2 = Instruction {
+        program_id: ex_ix.program_id,
+        accounts: ex_ix
+            .accounts
+            .iter()
+            .map(|a| AccountMeta::new(a.pubkey, a.is_signer))
+            .collect(),
+        data: ex_ix.data,
+    };
+    submit_transaction(rpc, payer, &[ix_1, ix_2]).await?;
+    println!("LUT address: {}", lut_address);
+    Ok(())
 }
 
 async fn set_buffer(
