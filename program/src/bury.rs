@@ -98,6 +98,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let post_swap_sol_balance = treasury_sol.amount();
     let total_ore = post_swap_ore_balance - pre_swap_ore_balance;
     assert_eq!(post_swap_sol_balance, 0);
+    assert!(post_swap_ore_balance >= pre_swap_ore_balance);
     sol_log(
         &format!(
             "📈 Swapped {} SOL into {} ORE",
