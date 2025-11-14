@@ -96,9 +96,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 );
             } else {
                 // If round is not split, payout to the top miner.
-                let top_miner_sample = round.top_miner_sample(r, winning_square);
-                if top_miner_sample >= miner.cumulative[winning_square]
-                    && top_miner_sample
+                if round.top_miner_sample >= miner.cumulative[winning_square]
+                    && round.top_miner_sample
                         < miner.cumulative[winning_square] + miner.deployed[winning_square]
                 {
                     rewards_ore = round.top_miner_reward;
