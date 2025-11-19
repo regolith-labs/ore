@@ -9,6 +9,7 @@ mod deploy;
 mod deposit;
 mod log;
 mod new_var;
+mod recycle_sol;
 mod reset;
 mod set_admin;
 mod set_buffer;
@@ -29,6 +30,7 @@ use deploy::*;
 use deposit::*;
 use log::*;
 use new_var::*;
+use recycle_sol::*;
 use reset::*;
 use set_admin::*;
 use set_buffer::*;
@@ -58,6 +60,7 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
+        OreInstruction::RecycleSOL => process_recycle_sol(accounts, data)?,
 
         // Staker
         OreInstruction::Deposit => process_deposit(accounts, data)?,

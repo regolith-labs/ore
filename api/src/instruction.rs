@@ -12,6 +12,7 @@ pub enum OreInstruction {
     Deploy = 6,
     Log = 8,
     Reset = 9,
+    RecycleSOL = 21,
 
     // Staker
     Deposit = 10,
@@ -111,6 +112,10 @@ pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct RecycleSOL {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Deposit {
     pub amount: [u8; 8],
 }
@@ -162,6 +167,7 @@ instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
+instruction!(OreInstruction, RecycleSOL);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);
