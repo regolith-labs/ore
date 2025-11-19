@@ -1,11 +1,11 @@
 use ore_api::prelude::*;
 use steel::*;
 
-/// Sets the buffer.
-pub fn process_set_buffer(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+/// Sets the admin fee.
+pub fn process_set_admin_fee(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
-    let args = SetBuffer::try_from_bytes(data)?;
-    let new_buffer = u64::from_le_bytes(args.buffer);
+    let args = SetAdminFee::try_from_bytes(data)?;
+    let new_admin_fee = u64::from_le_bytes(args.admin_fee);
 
     // Load accounts.
     let [signer_info, config_info, system_program] = accounts else {
@@ -20,8 +20,11 @@ pub fn process_set_buffer(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramR
         )?;
     system_program.is_program(&system_program::ID)?;
 
-    // Set buffer.
-    config.buffer = new_buffer;
+    // Cap admin fee at 1%.
+    let new_admin_fee = new_admin_fee.min(100);
+
+    // Set admin fee.
+    config.admin_fee = new_admin_fee;
 
     Ok(())
 }

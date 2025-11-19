@@ -25,17 +25,9 @@ pub enum OreAccount {
     Config = 101,
     Miner = 103,
     Treasury = 104,
-
-    //
     Board = 105,
     Stake = 108,
     Round = 109,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OreAccountOLD {
-    ConfigOLD = 101,
 }
 
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {

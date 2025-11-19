@@ -288,7 +288,7 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
     }
 }
 
-pub fn set_buffer(signer: Pubkey, buffer: u64) -> Instruction {
+pub fn set_admin_fee(signer: Pubkey, admin_fee: u64) -> Instruction {
     let config_address = config_pda().0;
     Instruction {
         program_id: crate::ID,
@@ -297,8 +297,8 @@ pub fn set_buffer(signer: Pubkey, buffer: u64) -> Instruction {
             AccountMeta::new(config_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
-        data: SetBuffer {
-            buffer: buffer.to_le_bytes(),
+        data: SetAdminFee {
+            admin_fee: admin_fee.to_le_bytes(),
         }
         .to_bytes(),
     }

@@ -12,7 +12,7 @@ mod new_var;
 mod recycle_sol;
 mod reset;
 mod set_admin;
-mod set_buffer;
+mod set_admin_fee;
 mod set_fee_collector;
 mod set_swap_program;
 mod set_var_address;
@@ -33,7 +33,7 @@ use new_var::*;
 use recycle_sol::*;
 use reset::*;
 use set_admin::*;
-use set_buffer::*;
+use set_admin_fee::*;
 use set_fee_collector::*;
 use set_swap_program::*;
 use set_var_address::*;
@@ -75,7 +75,7 @@ pub fn process_instruction(
         OreInstruction::SetSwapProgram => process_set_swap_program(accounts, data)?,
         OreInstruction::SetVarAddress => process_set_var_address(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
-        OreInstruction::SetBuffer => process_set_buffer(accounts, data)?,
+        OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
     }
 
     Ok(())

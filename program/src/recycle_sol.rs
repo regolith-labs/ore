@@ -23,8 +23,10 @@ pub fn process_recycle_sol(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Progra
     // Whitelist feature
     assert_eq!(*signer_info.key, TESTER);
 
-    // Increment automation balance.
+    // Claim sol from the miner.
     let amount = miner.claim_sol(&clock);
+
+    // Increment automation balance.
     automation.balance += amount;
 
     // Transfer SOL to automation.
