@@ -322,7 +322,7 @@ pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
 
 // let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
 
-pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
+pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let stake_address = stake_pda(signer).0;
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
@@ -332,6 +332,7 @@ pub fn deposit(signer: Pubkey, amount: u64) -> Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(payer, true),
             AccountMeta::new(mint_address, false),
             AccountMeta::new(sender_address, false),
             AccountMeta::new(stake_address, false),

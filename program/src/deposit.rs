@@ -11,12 +11,13 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Load accounts.
     let clock = Clock::get()?;
-    let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
+    let [signer_info, payer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    payer_info.is_signer()?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let sender = sender_info
         .is_writable()?
@@ -32,7 +33,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         create_program_account::<Stake>(
             stake_info,
             system_program,
-            &signer_info,
+            &payer_info,
             &ore_api::ID,
             &[STAKE, &signer_info.key.to_bytes()],
         )?;
