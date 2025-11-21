@@ -107,8 +107,8 @@ async fn main() {
         "new_var" => {
             new_var(&rpc, &payer).await.unwrap();
         }
-        "set_buffer" => {
-            set_buffer(&rpc, &payer).await.unwrap();
+        "set_admin_fee" => {
+            set_admin_fee(&rpc, &payer).await.unwrap();
         }
         "set_swap_program" => {
             set_swap_program(&rpc, &payer).await.unwrap();
@@ -180,13 +180,13 @@ async fn lut(
     Ok(())
 }
 
-async fn set_buffer(
+async fn set_admin_fee(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let buffer = std::env::var("BUFFER").expect("Missing BUFFER env var");
-    let buffer = u64::from_str(&buffer).expect("Invalid BUFFER");
-    let ix = ore_api::sdk::set_buffer(payer.pubkey(), buffer);
+    let admin_fee = std::env::var("ADMIN_FEE").expect("Missing ADMIN_FEE env var");
+    let admin_fee = u64::from_str(&admin_fee).expect("Invalid ADMIN_FEE");
+    let ix = ore_api::sdk::set_admin_fee(payer.pubkey(), admin_fee);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -791,7 +791,7 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  fee_collector: {}", config.fee_collector);
     println!("  swap_program: {}", config.swap_program);
     println!("  var_address: {}", config.var_address);
-    println!("  buffer: {}", config.buffer);
+    println!("  admin_fee: {}", config.admin_fee);
     Ok(())
 }
 

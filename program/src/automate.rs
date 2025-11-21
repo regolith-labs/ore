@@ -19,11 +19,6 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     automation_info.is_writable()?;
     system_program.is_program(&system_program::ID)?;
 
-    // // Check whitelist
-    // if !AUTHORIZED_ACCOUNTS.contains(&signer_info.key) {
-    //     return Err(trace("Not authorized", OreError::NotAuthorized.into()));
-    // }
-
     // Open miner account.
     let miner = if miner_info.data_is_empty() {
         create_program_account::<Miner>(

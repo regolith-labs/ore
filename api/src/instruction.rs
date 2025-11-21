@@ -12,6 +12,7 @@ pub enum OreInstruction {
     Deploy = 6,
     Log = 8,
     Reset = 9,
+    RecycleSOL = 21,
 
     // Staker
     Deposit = 10,
@@ -26,7 +27,7 @@ pub enum OreInstruction {
     SetSwapProgram = 17,
     SetVarAddress = 18,
     NewVar = 19,
-    SetBuffer = 20,
+    SetAdminFee = 20,
 }
 
 #[repr(C)]
@@ -111,6 +112,10 @@ pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct RecycleSOL {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Deposit {
     pub amount: [u8; 8],
 }
@@ -145,8 +150,8 @@ pub struct NewVar {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetBuffer {
-    pub buffer: [u8; 8],
+pub struct SetAdminFee {
+    pub admin_fee: [u8; 8],
 }
 
 #[repr(C)]
@@ -162,6 +167,7 @@ instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
+instruction!(OreInstruction, RecycleSOL);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);
@@ -173,6 +179,6 @@ instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, NewVar);
-instruction!(OreInstruction, SetBuffer);
+instruction!(OreInstruction, SetAdminFee);
 instruction!(OreInstruction, SetSwapProgram);
 instruction!(OreInstruction, SetVarAddress);

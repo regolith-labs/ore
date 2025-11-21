@@ -3,6 +3,8 @@ use ore_api::prelude::*;
 use solana_program::{keccak, log::sol_log};
 use steel::*;
 
+// TODO Integrate admin fee
+
 /// Pays out the winners and block reward.
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
