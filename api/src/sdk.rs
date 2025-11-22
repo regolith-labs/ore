@@ -377,6 +377,23 @@ pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
     }
 }
 
+// let [signer_info, automation_info, miner_info, system_program] = accounts else {
+
+pub fn recycle_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
+    let automation_address = automation_pda(authority).0;
+    let miner_address = miner_pda(authority).0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(automation_address, false),
+            AccountMeta::new(miner_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: RecycleSOL {}.to_bytes(),
+    }
+}
+
 // let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
 
 pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
