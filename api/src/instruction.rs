@@ -12,7 +12,7 @@ pub enum OreInstruction {
     Deploy = 6,
     Log = 8,
     Reset = 9,
-    RecycleSOL = 21,
+    ReloadSOL = 21,
 
     // Staker
     Deposit = 10,
@@ -28,6 +28,7 @@ pub enum OreInstruction {
     SetVarAddress = 18,
     NewVar = 19,
     SetAdminFee = 20,
+    MigrateAutomation = 22,
 }
 
 #[repr(C)]
@@ -38,6 +39,7 @@ pub struct Automate {
     pub fee: [u8; 8],
     pub mask: [u8; 8],
     pub strategy: u8,
+    pub reload: [u8; 8],
 }
 
 #[repr(C)]
@@ -112,7 +114,7 @@ pub struct Bury {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct RecycleSOL {}
+pub struct ReloadSOL {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -162,12 +164,16 @@ pub struct SetSwapProgram {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetVarAddress {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MigrateAutomation {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
-instruction!(OreInstruction, RecycleSOL);
+instruction!(OreInstruction, ReloadSOL);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);
@@ -182,3 +188,4 @@ instruction!(OreInstruction, NewVar);
 instruction!(OreInstruction, SetAdminFee);
 instruction!(OreInstruction, SetSwapProgram);
 instruction!(OreInstruction, SetVarAddress);
+instruction!(OreInstruction, MigrateAutomation);

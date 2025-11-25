@@ -21,6 +21,7 @@ use solana_sdk::{
     message::{v0::Message, VersionedMessage},
     native_token::{lamports_to_sol, LAMPORTS_PER_SOL},
     pubkey::Pubkey,
+    rent::Rent,
     signature::{read_keypair_file, Signature, Signer},
     transaction::{Transaction, VersionedTransaction},
 };
@@ -122,8 +123,32 @@ async fn main() {
         "lut" => {
             lut(&rpc, &payer).await.unwrap();
         }
+        "migrate_automation" => {
+            migrate_automation(&rpc, &payer).await.unwrap();
+        }
+        "automation" => {
+            log_automation(&rpc).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn migrate_automation(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let authorities = [
+        pubkey!("HSB6HB184xHLsEBia2VR3rdqrme9MWZR9tVPLT3Ndda2"),
+        pubkey!("3SrTpJEsTonUf9Ew7eGSi1xhNN6gqaKbZUc9ncFcGz7b"),
+        pubkey!("Bwyuj9ybgSTtPkhvCFxL1A7uV9SiA75nb55qBF6pFMKz"),
+    ];
+    for authority in authorities {
+        let ix = ore_api::sdk::migrate_automation(payer.pubkey(), authority);
+        if let Err(e) = submit_transaction_no_confirm(rpc, payer, &[ix]).await {
+            println!("Error submitting transaction: {:?}", e);
+        }
+    }
+    Ok(())
 }
 
 async fn lut(
@@ -660,6 +685,29 @@ async fn close_all(
 //     Ok(())
 // }
 
+async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let authority = std::env::var("AUTHORITY").expect("Missing AUTHORITY env var");
+    let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
+    let address = automation_pda(authority).0;
+    let automation = get_automation(rpc, address).await?;
+    let account_balance = rpc.get_balance(&address).await?;
+    let size = 8 + std::mem::size_of::<Automation>();
+    let required_rent = Rent::default().minimum_balance(size);
+    println!("Automation");
+    println!("  address: {}", address);
+    println!("  amount: {} SOL", lamports_to_sol(automation.amount));
+    println!("  required rent: {} SOL", lamports_to_sol(required_rent));
+    println!("  authority: {}", automation.authority);
+    println!("  balance: {} SOL", lamports_to_sol(automation.balance));
+    println!("  lamports: {} SOL", lamports_to_sol(account_balance));
+    println!("  executor: {}", automation.executor);
+    println!("  fee: {} SOL", lamports_to_sol(automation.fee));
+    println!("  mask: {}", automation.mask);
+    println!("  strategy: {}", automation.strategy);
+    println!("  reload: {}", automation.reload);
+    Ok(())
+}
+
 async fn log_automations(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let automations = get_automations(rpc).await?;
     for (i, (address, automation)) in automations.iter().enumerate() {
@@ -812,6 +860,12 @@ fn print_board(board: Board, clock: &Clock) {
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
     );
+}
+
+async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<Automation, anyhow::Error> {
+    let account = rpc.get_account(&address).await?;
+    let automation = Automation::try_from_bytes(&account.data)?;
+    Ok(*automation)
 }
 
 async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {

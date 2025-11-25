@@ -29,6 +29,9 @@ pub struct Automation {
     /// The mask of squares this automation should deploy to if preferred strategy.
     /// If strategy is Random, first bit is used to determine how many squares to deploy to.
     pub mask: u64,
+
+    /// Whether or not to auto-reload SOL winnings into the automation balance.
+    pub reload: u64,
 }
 
 #[repr(u8)]

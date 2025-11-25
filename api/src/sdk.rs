@@ -32,6 +32,7 @@ pub fn automate(
     fee: u64,
     mask: u64,
     strategy: u8,
+    reload: bool,
 ) -> Instruction {
     let automation_address = automation_pda(signer).0;
     let miner_address = miner_pda(signer).0;
@@ -50,6 +51,7 @@ pub fn automate(
             fee: fee.to_le_bytes(),
             mask: mask.to_le_bytes(),
             strategy: strategy as u8,
+            reload: (reload as u64).to_le_bytes(),
         }
         .to_bytes(),
     }
@@ -379,7 +381,7 @@ pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
 
 // let [signer_info, automation_info, miner_info, system_program] = accounts else {
 
-pub fn recycle_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
+pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
     let automation_address = automation_pda(authority).0;
     let miner_address = miner_pda(authority).0;
     Instruction {
@@ -390,7 +392,7 @@ pub fn recycle_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
             AccountMeta::new(miner_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
-        data: RecycleSOL {}.to_bytes(),
+        data: ReloadSOL {}.to_bytes(),
     }
 }
 
@@ -477,5 +479,23 @@ pub fn set_var_address(signer: Pubkey, new_var_address: Pubkey) -> Instruction {
             AccountMeta::new(new_var_address, false),
         ],
         data: SetVarAddress {}.to_bytes(),
+    }
+}
+
+// let [signer_info, authority_info, config_info, automation_info, system_program] = accounts
+
+pub fn migrate_automation(signer: Pubkey, authority: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    let automation_address = automation_pda(authority).0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(authority, false),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(automation_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: MigrateAutomation {}.to_bytes(),
     }
 }

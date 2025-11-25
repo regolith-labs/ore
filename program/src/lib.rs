@@ -8,8 +8,9 @@ mod close;
 mod deploy;
 mod deposit;
 mod log;
+mod migrate_automation;
 mod new_var;
-mod recycle_sol;
+mod reload_sol;
 mod reset;
 mod set_admin;
 mod set_admin_fee;
@@ -29,8 +30,9 @@ use close::*;
 use deploy::*;
 use deposit::*;
 use log::*;
+use migrate_automation::*;
 use new_var::*;
-use recycle_sol::*;
+use reload_sol::*;
 use reset::*;
 use set_admin::*;
 use set_admin_fee::*;
@@ -60,7 +62,7 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::RecycleSOL => process_recycle_sol(accounts, data)?,
+        OreInstruction::ReloadSOL => process_reload_sol(accounts, data)?,
 
         // Staker
         OreInstruction::Deposit => process_deposit(accounts, data)?,
@@ -76,6 +78,7 @@ pub fn process_instruction(
         OreInstruction::SetVarAddress => process_set_var_address(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
+        OreInstruction::MigrateAutomation => process_migrate_automation(accounts, data)?,
     }
 
     Ok(())

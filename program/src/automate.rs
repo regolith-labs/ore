@@ -10,6 +10,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let fee = u64::from_le_bytes(args.fee);
     let mask = u64::from_le_bytes(args.mask);
     let strategy = AutomationStrategy::from_u64(args.strategy as u64);
+    let reload = u64::from_le_bytes(args.reload) > 0;
 
     // Load accounts.
     let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
@@ -90,6 +91,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     automation.fee = fee;
     automation.mask = mask;
     automation.strategy = strategy as u64;
+    automation.reload = reload as u64;
 
     // Top up checkpoint fee.
     if miner.checkpoint_fee == 0 {

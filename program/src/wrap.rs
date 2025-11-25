@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::rent::Rent;
+use solana_program::{native_token::LAMPORTS_PER_SOL, rent::Rent};
 use steel::*;
 
 /// Send SOL from the treasury to the WSOL account.
@@ -20,8 +20,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     system_program.is_program(&system_program::ID)?;
 
     // Get amount
-    let one_sol = 1_000_000_000;
-    let amount = (one_sol * 100).min(treasury.balance);
+    let amount = (LAMPORTS_PER_SOL * 100).min(treasury.balance);
 
     // Send SOL to the WSOL account.
     treasury_info.send(amount, treasury_sol_info);
