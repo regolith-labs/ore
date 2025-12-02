@@ -5,6 +5,7 @@ pub enum OreEvent {
     Reset = 0,
     Bury = 1,
     Deploy = 2,
+    Liq = 3,
 }
 
 #[repr(C)]
@@ -94,6 +95,23 @@ pub struct DeployEvent {
     pub ts: i64,
 }
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+pub struct LiqEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The amount of SOL sent to the liq manager.
+    pub sol_amount: u64,
+
+    /// The recipient of the SOL.
+    pub recipient: Pubkey,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(ResetEvent);
 event!(BuryEvent);
 event!(DeployEvent);
+event!(LiqEvent);

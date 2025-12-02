@@ -1,5 +1,6 @@
 mod automate;
 mod bury;
+mod buyback;
 mod checkpoint;
 mod claim_ore;
 mod claim_sol;
@@ -7,6 +8,7 @@ mod claim_yield;
 mod close;
 mod deploy;
 mod deposit;
+mod liq;
 mod log;
 mod migrate_automation;
 mod new_var;
@@ -22,6 +24,7 @@ mod wrap;
 
 use automate::*;
 use bury::*;
+use buyback::*;
 use checkpoint::*;
 use claim_ore::*;
 use claim_sol::*;
@@ -29,6 +32,7 @@ use claim_yield::*;
 use close::*;
 use deploy::*;
 use deposit::*;
+use liq::*;
 use log::*;
 use migrate_automation::*;
 use new_var::*;
@@ -70,6 +74,7 @@ pub fn process_instruction(
         OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
 
         // Admin
+        OreInstruction::Buyback => process_buyback(accounts, data)?,
         OreInstruction::Bury => process_bury(accounts, data)?,
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
@@ -79,6 +84,7 @@ pub fn process_instruction(
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
         OreInstruction::MigrateAutomation => process_migrate_automation(accounts, data)?,
+        OreInstruction::Liq => process_liq(accounts, data)?,
     }
 
     Ok(())

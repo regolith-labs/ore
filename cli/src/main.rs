@@ -57,8 +57,8 @@ async fn main() {
         "config" => {
             log_config(&rpc).await.unwrap();
         }
-        "bury" => {
-            bury(&rpc, &payer).await.unwrap();
+        "buyback" => {
+            buyback(&rpc, &payer).await.unwrap();
         }
         "reset" => {
             reset(&rpc, &payer).await.unwrap();
@@ -123,6 +123,9 @@ async fn main() {
         "lut" => {
             lut(&rpc, &payer).await.unwrap();
         }
+        "liq" => {
+            liq(&rpc, &payer).await.unwrap();
+        }
         "migrate_automation" => {
             migrate_automation(&rpc, &payer).await.unwrap();
         }
@@ -131,6 +134,17 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn liq(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let manager = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
+    let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
+    let liq_ix = ore_api::sdk::liq(payer.pubkey(), manager);
+    submit_transaction(rpc, payer, &[wrap_ix, liq_ix]).await?;
+    Ok(())
 }
 
 async fn migrate_automation(
@@ -161,25 +175,28 @@ async fn lut(
         payer.pubkey(),
         recent_slot,
     );
-    let board_address = ore_api::state::board_pda().0;
-    let config_address = ore_api::state::config_pda().0;
-    let treasury_address = ore_api::state::treasury_pda().0;
-    let treasury_tokens_address = ore_api::state::treasury_tokens_address();
-    let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
-    let mint_address = MINT_ADDRESS;
-    let ore_program_address = ore_api::ID;
     let ex_ix = solana_address_lookup_table_interface::instruction::extend_lookup_table(
         lut_address,
         payer.pubkey(),
         Some(payer.pubkey()),
         vec![
-            board_address,
-            config_address,
-            treasury_address,
-            treasury_tokens_address,
-            treasury_sol_address,
-            mint_address,
-            ore_program_address,
+            pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),
+            pubkey!("2wQ7J46uwK3VyrmAYe5E8KhCjTg8CTaFimh1ty2huuyY"),
+            pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee"),
+            pubkey!("HLaJ3RiyoaxQzwJQbU2Gc5RTZtx8HKAMJgkf57qdgpFJ"),
+            pubkey!("8yS5zJTZa1Q1zQ1jsEAUnjAyMZfsNwvrgbDQp1ky2dr"),
+            pubkey!("7qBS6huLjjGyrnMMBNXpLZA73yiGc6ao9znj7f9RpF1L"),
+            pubkey!("3Mt1bpU3fnSXyPEm66HKKXyQTpLWrwYziPLqwTqK4ZT7"),
+            pubkey!("LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo"),
+            pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"),
+            pubkey!("So11111111111111111111111111111111111111112"),
+            pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+            pubkey!("D1ZN9Wj1fRSUQfCjhvnu1hqDMT7hzjzBBpi12nVniYD6"),
+            pubkey!("8kqLv9cBUDCYEKCL3Dj2MkeXX3tdCqT8KZ3gpYp8BnGP"),
+            pubkey!("H38TVzkjAiAhBZR5SksbW8XDXP3N1ez4Tuna7uAW1Tsw"),
+            pubkey!("11111111111111111111111111111111"),
+            pubkey!("SysvarRent111111111111111111111111111111111"),
         ],
     );
     let ix_1 = Instruction {
@@ -334,7 +351,7 @@ async fn claim(
     Ok(())
 }
 
-async fn bury(
+async fn buyback(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
@@ -392,7 +409,7 @@ async fn bury(
 
     // Build transaction.
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
-    let bury_ix = ore_api::sdk::bury(
+    let buyback_ix = ore_api::sdk::buyback(
         payer.pubkey(),
         &response.swap_instruction.accounts,
         &response.swap_instruction.data,
@@ -400,7 +417,7 @@ async fn bury(
     simulate_transaction_with_address_lookup_tables(
         rpc,
         payer,
-        &[wrap_ix, bury_ix],
+        &[wrap_ix, buyback_ix],
         address_lookup_table_accounts,
     )
     .await;

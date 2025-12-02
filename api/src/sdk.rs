@@ -142,7 +142,7 @@ pub fn deploy(
 
 // let [pool, user_source_token, user_destination_token, a_vault, b_vault, a_token_vault, b_token_vault, a_vault_lp_mint, b_vault_lp_mint, a_vault_lp, b_vault_lp, protocol_token_fee, user_key, vault_program, token_program] =
 
-pub fn bury(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) -> Instruction {
+pub fn buyback(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
@@ -165,12 +165,68 @@ pub fn bury(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) -> 
         acc_clone.is_signer = false;
         accounts.push(acc_clone);
     }
-    let mut data = Bury {}.to_bytes();
+    let mut data = Buyback {}.to_bytes();
     data.extend_from_slice(swap_data);
     Instruction {
         program_id: crate::ID,
         accounts,
         data,
+    }
+}
+
+// let [signer_info, sender_info, board_info, mint_info, treasury_info, treasury_ore_info, token_program, ore_program] =
+
+pub fn bury(signer: Pubkey, amount: u64) -> Instruction {
+    let board_address = board_pda().0;
+    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
+    let mint_address = MINT_ADDRESS;
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
+    let token_program = spl_token::ID;
+    let ore_program = crate::ID;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(sender_address, false),
+            AccountMeta::new(board_address, false),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_ore_address, false),
+            AccountMeta::new_readonly(token_program, false),
+            AccountMeta::new_readonly(ore_program, false),
+        ],
+        data: Bury {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
+// let [signer_info, board_info, config_info, manager_info, manager_sol_info, treasury_info, treasury_sol_info, token_program, ore_program] =
+
+pub fn liq(signer: Pubkey, manager: Pubkey) -> Instruction {
+    let board_address = board_pda().0;
+    let config_address = config_pda().0;
+    let manager_sol_address = get_associated_token_address(&manager, &SOL_MINT);
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
+    let token_program = spl_token::ID;
+    let ore_program = crate::ID;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(manager, false),
+            AccountMeta::new(manager_sol_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_sol_address, false),
+            AccountMeta::new_readonly(token_program, false),
+            AccountMeta::new_readonly(ore_program, false),
+        ],
+        data: Liq {}.to_bytes(),
     }
 }
 

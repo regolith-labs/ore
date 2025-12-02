@@ -20,7 +20,8 @@ pub enum OreInstruction {
     ClaimYield = 12,
 
     // Admin
-    Bury = 13,
+    Buyback = 13,
+    Bury = 24,
     Wrap = 14,
     SetAdmin = 15,
     SetFeeCollector = 16,
@@ -29,6 +30,7 @@ pub enum OreInstruction {
     NewVar = 19,
     SetAdminFee = 20,
     MigrateAutomation = 22,
+    Liq = 25,
 }
 
 #[repr(C)]
@@ -110,7 +112,13 @@ pub struct Wrap {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Bury {}
+pub struct Buyback {}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Bury {
+    pub amount: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -168,6 +176,10 @@ pub struct SetVarAddress {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct MigrateAutomation {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Liq {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -177,6 +189,7 @@ instruction!(OreInstruction, ReloadSOL);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);
+instruction!(OreInstruction, Buyback);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
@@ -189,3 +202,4 @@ instruction!(OreInstruction, SetAdminFee);
 instruction!(OreInstruction, SetSwapProgram);
 instruction!(OreInstruction, SetVarAddress);
 instruction!(OreInstruction, MigrateAutomation);
+instruction!(OreInstruction, Liq);
