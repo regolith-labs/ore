@@ -10,7 +10,6 @@ mod deploy;
 mod deposit;
 mod liq;
 mod log;
-mod migrate_automation;
 mod new_var;
 mod reload_sol;
 mod reset;
@@ -34,7 +33,6 @@ use deploy::*;
 use deposit::*;
 use liq::*;
 use log::*;
-use migrate_automation::*;
 use new_var::*;
 use reload_sol::*;
 use reset::*;
@@ -83,7 +81,6 @@ pub fn process_instruction(
         OreInstruction::SetVarAddress => process_set_var_address(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
-        OreInstruction::MigrateAutomation => process_migrate_automation(accounts, data)?,
         OreInstruction::Liq => process_liq(accounts, data)?,
     }
 

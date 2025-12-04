@@ -537,21 +537,3 @@ pub fn set_var_address(signer: Pubkey, new_var_address: Pubkey) -> Instruction {
         data: SetVarAddress {}.to_bytes(),
     }
 }
-
-// let [signer_info, authority_info, config_info, automation_info, system_program] = accounts
-
-pub fn migrate_automation(signer: Pubkey, authority: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    let automation_address = automation_pda(authority).0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(authority, false),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(automation_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: MigrateAutomation {}.to_bytes(),
-    }
-}

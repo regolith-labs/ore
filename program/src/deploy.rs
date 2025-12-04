@@ -151,6 +151,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner.round_id = round.id;
     }
 
+    // Update total miners for round.
+    if miner.deployed.iter().sum::<u64>() == 0 {
+        round.total_miners += 1;
+    }
+
     // Calculate all deployments.
     let mut total_amount = 0;
     let mut total_squares = 0;

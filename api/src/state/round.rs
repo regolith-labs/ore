@@ -38,6 +38,9 @@ pub struct Round {
     /// The total amount of SOL deployed in the round.
     pub total_deployed: u64,
 
+    /// The total number of unique miners that played in the round.
+    pub total_miners: u64,
+
     /// The total amount of SOL put in the ORE vault.
     pub total_vaulted: u64,
 

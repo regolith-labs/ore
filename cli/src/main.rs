@@ -126,9 +126,6 @@ async fn main() {
         "liq" => {
             liq(&rpc, &payer).await.unwrap();
         }
-        "migrate_automation" => {
-            migrate_automation(&rpc, &payer).await.unwrap();
-        }
         "automation" => {
             log_automation(&rpc).await.unwrap();
         }
@@ -144,24 +141,6 @@ async fn liq(
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
     let liq_ix = ore_api::sdk::liq(payer.pubkey(), manager);
     submit_transaction(rpc, payer, &[wrap_ix, liq_ix]).await?;
-    Ok(())
-}
-
-async fn migrate_automation(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let authorities = [
-        pubkey!("HSB6HB184xHLsEBia2VR3rdqrme9MWZR9tVPLT3Ndda2"),
-        pubkey!("3SrTpJEsTonUf9Ew7eGSi1xhNN6gqaKbZUc9ncFcGz7b"),
-        pubkey!("Bwyuj9ybgSTtPkhvCFxL1A7uV9SiA75nb55qBF6pFMKz"),
-    ];
-    for authority in authorities {
-        let ix = ore_api::sdk::migrate_automation(payer.pubkey(), authority);
-        if let Err(e) = submit_transaction_no_confirm(rpc, payer, &[ix]).await {
-            println!("Error submitting transaction: {:?}", e);
-        }
-    }
     Ok(())
 }
 
@@ -785,14 +764,30 @@ async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  Deployed: {:?}", round.deployed);
     println!("  Expires at: {}", round.expires_at);
     println!("  Id: {:?}", round.id);
-    println!("  Motherlode: {}", round.motherlode);
+    println!(
+        "  Motherlode: {} ORE",
+        amount_to_ui_amount(round.motherlode, TOKEN_DECIMALS)
+    );
     println!("  Rent payer: {}", round.rent_payer);
     println!("  Slot hash: {:?}", round.slot_hash);
     println!("  Top miner: {:?}", round.top_miner);
-    println!("  Top miner reward: {}", round.top_miner_reward);
-    println!("  Total deployed: {}", round.total_deployed);
-    println!("  Total vaulted: {}", round.total_vaulted);
-    println!("  Total winnings: {}", round.total_winnings);
+    println!(
+        "  Top miner reward: {} ORE",
+        amount_to_ui_amount(round.top_miner_reward, TOKEN_DECIMALS)
+    );
+    println!("  Total miners: {}", round.total_miners);
+    println!(
+        "  Total deployed: {} SOL",
+        lamports_to_sol(round.total_deployed)
+    );
+    println!(
+        "  Total vaulted: {} SOL",
+        lamports_to_sol(round.total_vaulted)
+    );
+    println!(
+        "  Total winnings: {} SOL",
+        lamports_to_sol(round.total_winnings)
+    );
     if let Some(rng) = rng {
         println!("  Winning square: {}", round.winning_square(rng));
     }
