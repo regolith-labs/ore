@@ -1309,6 +1309,10 @@
                         "type": "u64"
                     },
                     {
+                        "name": "buffer_a",
+                        "type": "u64"
+                    },
+                    {
                         "name": "motherlode",
                         "type": "u64"
                     },
@@ -1325,15 +1329,19 @@
                         }
                     },
                     {
+                        "name": "buffer_b",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "total_refined",
+                        "type": "u64"
+                    },
+                    {
                         "name": "total_staked",
                         "type": "u64"
                     },
                     {
                         "name": "total_unclaimed",
-                        "type": "u64"
-                    },
-                    {
-                        "name": "total_refined",
                         "type": "u64"
                     }
                 ]

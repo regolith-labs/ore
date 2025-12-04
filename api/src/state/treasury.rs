@@ -11,6 +11,9 @@ pub struct Treasury {
     // The amount of SOL collected for buy-bury operations.
     pub balance: u64,
 
+    /// Buffer a (placeholder)
+    pub buffer_a: u64,
+
     /// The amount of ORE in the motherlode rewards pool.
     pub motherlode: u64,
 
@@ -20,14 +23,17 @@ pub struct Treasury {
     /// The cumulative ORE distributed to stakers, divided by the total stake at the time of distribution.
     pub stake_rewards_factor: Numeric,
 
+    /// Buffer b (placeholder)
+    pub buffer_b: u64,
+
+    /// The current total amount of refined ORE mining rewards.
+    pub total_refined: u64,
+
     /// The current total amount of ORE staking deposits.
     pub total_staked: u64,
 
     /// The current total amount of unclaimed ORE mining rewards.
     pub total_unclaimed: u64,
-
-    /// The current total amount of refined ORE mining rewards.
-    pub total_refined: u64,
 }
 
 account!(OreAccount, Treasury);
