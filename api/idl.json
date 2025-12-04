@@ -1131,6 +1131,10 @@
                     {
                         "name": "lifetime_rewards_ore",
                         "type": "u64"
+                    },
+                    {
+                        "name": "lifetime_deployed",
+                        "type": "u64"
                     }
                 ]
             }
