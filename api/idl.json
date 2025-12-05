@@ -1254,6 +1254,26 @@
                         "type": "u64"
                     },
                     {
+                        "name": "buffer_a",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "buffer_b",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "buffer_c",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "buffer_d",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "buffer_e",
+                        "type": "u64"
+                    },
+                    {
                         "name": "last_claim_at",
                         "type": "i64"
                     },
@@ -1280,7 +1300,7 @@
                         "type": "u64"
                     },
                     {
-                        "name": "is_seeker",
+                        "name": "buffer_f",
                         "type": "u64"
                     }
                 ]

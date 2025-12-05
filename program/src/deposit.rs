@@ -40,12 +40,18 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         let stake = stake_info.as_account_mut::<Stake>(&ore_api::ID)?;
         stake.authority = *signer_info.key;
         stake.balance = 0;
+        stake.buffer_a = 0;
+        stake.buffer_b = 0;
+        stake.buffer_c = 0;
+        stake.buffer_d = 0;
+        stake.buffer_e = 0;
         stake.last_claim_at = 0;
         stake.last_deposit_at = 0;
         stake.last_withdraw_at = 0;
         stake.rewards_factor = treasury.stake_rewards_factor;
         stake.rewards = 0;
         stake.lifetime_rewards = 0;
+        stake.buffer_f = 0;
         stake
     } else {
         stake_info

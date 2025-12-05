@@ -266,6 +266,11 @@ async fn log_stake(
         "  balance: {} ORE",
         amount_to_ui_amount(stake.balance, TOKEN_DECIMALS)
     );
+    println!("  buffer_a: {}", stake.buffer_a);
+    println!("  buffer_b: {}", stake.buffer_b);
+    println!("  buffer_c: {}", stake.buffer_c);
+    println!("  buffer_d: {}", stake.buffer_d);
+    println!("  buffer_e: {}", stake.buffer_e);
     println!("  last_claim_at: {}", stake.last_claim_at);
     println!("  last_deposit_at: {}", stake.last_deposit_at);
     println!("  last_withdraw_at: {}", stake.last_withdraw_at);
@@ -281,6 +286,7 @@ async fn log_stake(
         "  lifetime_rewards: {} ORE",
         amount_to_ui_amount(stake.lifetime_rewards, TOKEN_DECIMALS)
     );
+    println!("  buffer_f: {}", stake.buffer_f);
 
     Ok(())
 }
