@@ -186,17 +186,15 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 + winnings_admin_fee
     );
 
-    // Mint +1 ORE for the winning miner(s).
-    let mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE);
+    // Calculate mint amounts.
+    let mut mint_supply = mint.supply();
+    let mint_amount = MAX_SUPPLY.saturating_sub(mint_supply).min(ONE_ORE);
+    mint_supply += mint_amount;
+    let motherlode_mint_amount = MAX_SUPPLY.saturating_sub(mint_supply).min(ONE_ORE / 5);
+    let total_mint_amount = mint_amount + motherlode_mint_amount;
+
+    // Reward +1 ORE for the winning miner(s).
     round.top_miner_reward = mint_amount;
-    mint_to_signed(
-        mint_info,
-        treasury_tokens_info,
-        treasury_info,
-        token_program,
-        mint_amount,
-        &[TREASURY],
-    )?;
 
     // With 1 in 2 odds, split the +1 ORE reward.
     if round.is_split_reward(r) {
@@ -210,19 +208,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     }
 
     // Mint +0.2 ORE to the motherlode rewards pool.
-    let mint = mint_info.as_mint()?;
-    let motherlode_mint_amount = MAX_SUPPLY.saturating_sub(mint.supply()).min(ONE_ORE / 5);
-    if motherlode_mint_amount > 0 {
-        mint_to_signed(
-            mint_info,
-            treasury_tokens_info,
-            treasury_info,
-            token_program,
-            motherlode_mint_amount,
-            &[TREASURY],
-        )?;
-        treasury.motherlode += motherlode_mint_amount;
-    }
+    treasury.motherlode += motherlode_mint_amount;
+
+    // Mint ORE to the treasury.
+    mint_to_signed(
+        mint_info,
+        treasury_tokens_info,
+        treasury_info,
+        token_program,
+        total_mint_amount,
+        &[TREASURY],
+    )?;
 
     // Validate top miner.
     // TODO Safety checks here (if no one won).
@@ -251,7 +247,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_deployed: round.total_deployed,
             total_vaulted: round.total_vaulted,
             total_winnings: round.total_winnings,
-            total_minted: mint_amount + motherlode_mint_amount,
+            total_minted: total_mint_amount,
             ts: clock.unix_timestamp,
         }
         .to_bytes(),
