@@ -152,9 +152,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     }
 
     // Update total miners for round.
-    if miner.deployed.iter().sum::<u64>() == 0 {
-        round.total_miners += 1;
-    }
+    let is_first_deploy = miner.deployed.iter().sum::<u64>() == 0;
 
     // Calculate all deployments.
     let mut total_amount = 0;
@@ -196,6 +194,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                 break;
             }
         }
+    }
+
+    // Update total miners for round.
+    if is_first_deploy && total_amount > 0 {
+        round.total_miners += 1;
     }
 
     // Increment miner lifetime deployed.
