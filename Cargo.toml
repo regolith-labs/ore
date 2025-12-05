@@ -24,6 +24,7 @@ entropy-api = "0.1.4"
 entropy-types = "0.0.1"
 num_enum = "0.7.2"
 ore-api = { path = "./api" }
+solana-security-txt = "1.1.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 solana-account-decoder = "^2.1"

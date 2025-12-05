@@ -45,6 +45,7 @@ use withdraw::*;
 use wrap::*;
 
 use ore_api::instruction::*;
+use solana_security_txt::security_txt;
 use steel::*;
 
 pub fn process_instruction(
@@ -88,3 +89,15 @@ pub fn process_instruction(
 }
 
 entrypoint!(process_instruction);
+
+security_txt! {
+    name: "ORE",
+    project_url: "https://ore.supply",
+    contacts: "email:hardhatchad@gmail.com,discord:hardhatchad",
+    policy: "https://github.com/regolith-labs/ore/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/regolith-labs/ore"
+    // source_revision: default_env!("GITHUB_SHA", ""),
+    // source_release: default_env!("GITHUB_REF_NAME", ""),
+    // auditors: "None"
+}
