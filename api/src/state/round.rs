@@ -46,6 +46,9 @@ pub struct Round {
 
     /// The total amount of SOL won by miners for the round.
     pub total_winnings: u64,
+
+    /// A sample value used to determine the top miner.
+    pub top_miner_sample: u64,
 }
 
 impl Round {

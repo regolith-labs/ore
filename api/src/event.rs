@@ -26,8 +26,8 @@ pub struct ResetEvent {
     /// The winning square of the round.
     pub winning_square: u64,
 
-    /// The top miner of the round.
-    pub top_miner: Pubkey,
+    /// The top miner sample used to determine the top miner of the round.
+    pub top_miner_sample: u64,
 
     /// The number of miners on the winning square.
     pub num_winners: u64,
