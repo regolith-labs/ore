@@ -16,6 +16,9 @@ pub struct Board {
 
     /// The slot at which the current round ends mining.
     pub end_slot: u64,
+
+    /// The current epoch id.
+    pub epoch_id: u64,
 }
 
 impl Board {

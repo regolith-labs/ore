@@ -880,6 +880,7 @@ fn print_board(board: Board, clock: &Clock) {
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
     );
+    println!("  Epoch id: {:?}", board.epoch_id);
 }
 
 async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<Automation, anyhow::Error> {

@@ -997,6 +997,10 @@
                     {
                         "name": "end_slot",
                         "type": "u64"
+                    },
+                    {
+                        "name": "epoch_id",
+                        "type": "u64"
                     }
                 ]
             }
