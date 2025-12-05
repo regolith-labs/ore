@@ -2,8 +2,6 @@
 
 ### Reporting security problems in the ORE mining contract
 
-DO NOT CREATE A GITHUB ISSUE to report a security problem.
-
 **DO NOT CREATE A GITHUB ISSUE** to report a security problem.
 
 Instead please use this [Report a Vulnerability](https://github.com/regolith-labs/ore/security/advisories/new) link.
