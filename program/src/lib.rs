@@ -94,7 +94,7 @@ security_txt! {
     name: "ORE",
     project_url: "https://ore.supply",
     contacts: "email:hardhatchad@gmail.com,discord:hardhatchad",
-    policy: "https://github.com/regolith-labs/ore/SECURITY.md",
+    policy: "https://github.com/regolith-labs/ore/blob/master/SECURITY.md",
     preferred_languages: "en",
     source_code: "https://github.com/regolith-labs/ore"
     // source_revision: default_env!("GITHUB_SHA", ""),
