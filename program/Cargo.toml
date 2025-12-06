@@ -21,6 +21,7 @@ default = []
 bincode.workspace = true
 entropy-api.workspace = true
 ore-api.workspace = true
+ore-mint-api.workspace = true
 solana-nostd-keccak.workspace = true
 solana-program.workspace = true
 solana-security-txt.workspace = true

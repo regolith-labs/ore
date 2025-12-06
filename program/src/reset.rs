@@ -9,9 +9,9 @@ use steel::*;
 pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
-    let (ore_accounts, entropy_accounts) = accounts.split_at(14);
+    let (ore_accounts, other_accounts) = accounts.split_at(14);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
-    sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
+    sol_log(&format!("Other accounts: {:?}", other_accounts.len()).to_string());
     let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         ore_accounts
     else {
@@ -63,6 +63,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.total_winnings = 0;
 
     // Sample random variable
+    let (entropy_accounts, mint_accounts) = other_accounts.split_at(2);
+    sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
+    sol_log(&format!("Mint accounts: {:?}", mint_accounts.len()).to_string());
     let [var_info, entropy_program] = entropy_accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
@@ -211,12 +214,21 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     treasury.motherlode += motherlode_mint_amount;
 
     // Mint ORE to the treasury.
-    mint_to_signed(
-        mint_info,
-        treasury_tokens_info,
-        treasury_info,
-        token_program,
-        total_mint_amount,
+    let [mint_authority_info, mint_program] = mint_accounts else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    mint_authority_info.as_account::<ore_mint_api::state::Authority>(&ore_mint_api::ID)?;
+    mint_program.is_program(&ore_mint_api::ID)?;
+    invoke_signed(
+        &ore_mint_api::sdk::mint_ore(total_mint_amount),
+        &[
+            treasury_info.clone(),
+            mint_authority_info.clone(),
+            mint_info.clone(),
+            treasury_tokens_info.clone(),
+            token_program.clone(),
+        ],
+        &ore_api::ID,
         &[TREASURY],
     )?;
 

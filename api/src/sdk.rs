@@ -264,6 +264,7 @@ pub fn reset(
     let treasury_address = TREASURY_ADDRESS;
     let treasury_tokens_address = treasury_tokens_address();
     let entropy_var_address = entropy_api::state::var_pda(board_address, 0).0;
+    let mint_authority_address = ore_mint_api::state::authority_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -284,6 +285,9 @@ pub fn reset(
             // Entropy accounts.
             AccountMeta::new(entropy_var_address, false),
             AccountMeta::new_readonly(entropy_api::ID, false),
+            // Mint accounts.
+            AccountMeta::new(mint_authority_address, false),
+            AccountMeta::new_readonly(ore_mint_api::ID, false),
         ],
         data: Reset {}.to_bytes(),
     }

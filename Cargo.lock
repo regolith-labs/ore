@@ -2674,13 +2674,14 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "ore-api"
-version = "3.7.17"
+version = "3.7.19"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
  "const-crypto",
  "entropy-api",
  "num_enum",
+ "ore-mint-api",
  "serde",
  "solana-program",
  "spl-associated-token-account",
@@ -2692,7 +2693,7 @@ dependencies = [
 
 [[package]]
 name = "ore-cli"
-version = "3.7.17"
+version = "3.7.19"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2718,12 +2719,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-mint-api"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "816a5c58b862fe2ec54422860d602c5dc9a76201d898efe24b3a71458adb5d86"
+dependencies = [
+ "base64 0.22.1",
+ "bytemuck",
+ "const-crypto",
+ "num_enum",
+ "serde",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "spl-token-2022 7.0.0",
+ "steel",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "ore-program"
-version = "3.7.17"
+version = "3.7.19"
 dependencies = [
  "bincode",
  "entropy-api",
  "ore-api",
+ "ore-mint-api",
  "rand 0.8.5",
  "solana-nostd-keccak",
  "solana-program",
