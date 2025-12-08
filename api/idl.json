@@ -255,6 +255,7 @@
             "docs": [
                 "Deploys SOL to selected squares for the current round.",
                 "Automation PDA seeds: [\"automation\", authority].",
+                "Config PDA seeds: [\"config\"].",
                 "Miner PDA seeds: [\"miner\", authority].",
                 "Round PDA seeds: [\"round\", board.round_id]."
             ],
@@ -280,6 +281,11 @@
                     "isSigner": false
                 },
                 {
+                    "name": "config",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "miner",
                     "isMut": true,
                     "isSigner": false
@@ -294,6 +300,12 @@
                     "isMut": false,
                     "isSigner": false,
                     "address": "11111111111111111111111111111111"
+                },
+                {
+                    "name": "oreProgram",
+                    "isMut": false,
+                    "isSigner": false,
+                    "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
                 },
                 {
                     "name": "entropyVar",
