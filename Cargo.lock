@@ -2720,21 +2720,17 @@ dependencies = [
 
 [[package]]
 name = "ore-mint-api"
-version = "0.1.1"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "816a5c58b862fe2ec54422860d602c5dc9a76201d898efe24b3a71458adb5d86"
+checksum = "2f589eedc80280ba56a9962d12c398529ae2121ebfc78a4acbc546b3a8c68386"
 dependencies = [
- "base64 0.22.1",
  "bytemuck",
- "const-crypto",
  "num_enum",
  "serde",
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
- "spl-token-2022 7.0.0",
  "steel",
- "thiserror 1.0.69",
 ]
 
 [[package]]
