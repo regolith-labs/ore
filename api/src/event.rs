@@ -91,6 +91,15 @@ pub struct DeployEvent {
     /// The round id.
     pub round_id: u64,
 
+    /// The signer of the deployer.
+    pub signer: Pubkey,
+
+    /// The strategy used by the autominer (u64::MAX if manual).
+    pub strategy: u64,
+
+    /// The total number of squares deployed to.
+    pub total_squares: u64,
+
     /// The timestamp of the event.
     pub ts: i64,
 }

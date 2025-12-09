@@ -3,8 +3,6 @@ use ore_api::prelude::*;
 use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol, pubkey};
 use steel::*;
 
-pub const ORE_VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
-
 /// Deploys capital to prospect on a square.
 pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     if accounts.len() > 9 {
@@ -37,8 +35,6 @@ fn process_deploy_new(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let mut amount = u64::from_le_bytes(args.amount);
     let mask = u32::from_le_bytes(args.squares);
 
-    // TODO Need config to validator var address.
-
     // Load accounts.
     let clock = Clock::get()?;
     let (ore_accounts, entropy_accounts) = accounts.split_at(9);
@@ -54,6 +50,7 @@ fn process_deploy_new(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     automation_info
         .is_writable()?
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
+    let config = config_info.as_account::<Config>(&ore_api::ID)?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
@@ -76,7 +73,7 @@ fn process_deploy_new(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             return Err(ProgramError::NotEnoughAccountKeys);
         };
         var_info
-            .has_address(&ORE_VAR_ADDRESS)?
+            .has_address(&config.var_address)?
             .as_account::<Var>(&entropy_api::ID)?
             .assert(|v| v.authority == *board_info.key)?;
         entropy_program.is_program(&entropy_api::ID)?;
@@ -91,11 +88,13 @@ fn process_deploy_new(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     }
 
     // Check if signer is the automation executor.
+    let mut strategy = u64::MAX;
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
             .as_account_mut::<Automation>(&ore_api::ID)?
             .assert_mut(|a| a.executor == *signer_info.key)?
             .assert_mut(|a| a.authority == *authority_info.key)?;
+        strategy = automation.strategy as u64;
         Some(automation)
     } else {
         None
@@ -249,6 +248,23 @@ fn process_deploy_new(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         round_info.collect(total_amount, &signer_info)?;
     }
 
+    // Log the deploy event.
+    program_log(
+        &[board_info.clone(), ore_program.clone()],
+        DeployEvent {
+            disc: 2,
+            authority: miner.authority,
+            amount,
+            mask: mask as u64,
+            round_id: round.id,
+            signer: *signer_info.key,
+            strategy,
+            total_squares,
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
+
     // Log
     sol_log(
         &format!(
@@ -308,7 +324,7 @@ fn process_deploy_old(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             return Err(ProgramError::NotEnoughAccountKeys);
         };
         var_info
-            .has_address(&ORE_VAR_ADDRESS)?
+            .has_address(&pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E"))?
             .as_account::<Var>(&entropy_api::ID)?
             .assert(|v| v.authority == *board_info.key)?;
         entropy_program.is_program(&entropy_api::ID)?;
