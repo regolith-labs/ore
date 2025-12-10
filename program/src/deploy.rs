@@ -1,6 +1,6 @@
 use entropy_api::state::Var;
 use ore_api::prelude::*;
-use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol, pubkey};
+use solana_program::{keccak::hashv, log::sol_log, native_token::lamports_to_sol};
 use steel::*;
 
 /// Deploys capital to prospect on a square.
