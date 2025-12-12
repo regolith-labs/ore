@@ -138,7 +138,7 @@ async fn liq(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let manager = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
-    let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
+    let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), u64::MAX);
     let liq_ix = ore_api::sdk::liq(payer.pubkey(), manager);
     submit_transaction(rpc, payer, &[wrap_ix, liq_ix]).await?;
     Ok(())
@@ -393,7 +393,7 @@ async fn buyback(
             .unwrap();
 
     // Build transaction.
-    let wrap_ix = ore_api::sdk::wrap(payer.pubkey());
+    let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), u64::MAX);
     let buyback_ix = ore_api::sdk::buyback(
         payer.pubkey(),
         &response.swap_instruction.accounts,

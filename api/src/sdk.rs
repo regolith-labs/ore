@@ -233,7 +233,7 @@ pub fn liq(signer: Pubkey, manager: Pubkey) -> Instruction {
     }
 }
 
-pub fn wrap(signer: Pubkey) -> Instruction {
+pub fn wrap(signer: Pubkey, amount: u64) -> Instruction {
     let config_address = config_pda().0;
     let treasury_address = TREASURY_ADDRESS;
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
@@ -246,7 +246,10 @@ pub fn wrap(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
         ],
         program_id: crate::ID,
-        data: Wrap {}.to_bytes(),
+        data: Wrap {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
     }
 }
 

@@ -107,7 +107,9 @@ pub struct SetFeeRate {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Wrap {}
+pub struct Wrap {
+    pub amount: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]

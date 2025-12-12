@@ -3,7 +3,11 @@ use solana_program::{native_token::LAMPORTS_PER_SOL, rent::Rent};
 use steel::*;
 
 /// Send SOL from the treasury to the WSOL account.
-pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+pub fn process_wrap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    // Parse data.
+    let args = Wrap::try_from_bytes(data)?;
+    let amount = u64::from_le_bytes(args.amount);
+
     // Load accounts.
     let [signer_info, config_info, treasury_info, treasury_sol_info, system_program] = accounts
     else {
@@ -20,7 +24,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult
     system_program.is_program(&system_program::ID)?;
 
     // Get amount
-    let amount = (LAMPORTS_PER_SOL * 100).min(treasury.balance);
+    let amount = (LAMPORTS_PER_SOL * 100).min(treasury.balance).min(amount);
 
     // Send SOL to the WSOL account.
     treasury_info.send(amount, treasury_sol_info);
