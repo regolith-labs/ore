@@ -1,5 +1,5 @@
 {
-    "version": "3.7.20",
+    "version": "3.7.22",
     "name": "ore",
     "instructions": [
         {
@@ -757,7 +757,12 @@
                     "address": "11111111111111111111111111111111"
                 }
             ],
-            "args": []
+            "args": [
+                {
+                    "name": "amount",
+                    "type": "u64"
+                }
+            ]
         },
         {
             "name": "setAdmin",
