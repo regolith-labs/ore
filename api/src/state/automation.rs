@@ -39,6 +39,7 @@ pub struct Automation {
 pub enum AutomationStrategy {
     Random = 0,
     Preferred = 1,
+    Discretionary = 2,
 }
 
 impl AutomationStrategy {

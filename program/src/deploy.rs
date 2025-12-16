@@ -78,22 +78,27 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Update amount and mask for automation.
     let mut squares = [false; 25];
     if let Some(automation) = &automation {
-        // Set amount
-        amount = automation.amount;
-
-        // Set squares
+        // Set amount and squares based on automation strategy.
         match AutomationStrategy::from_u64(automation.strategy as u64) {
             AutomationStrategy::Preferred => {
                 // Preferred automation strategy. Use the miner authority's provided mask.
+                amount = automation.amount;
                 for i in 0..25 {
                     squares[i] = (automation.mask & (1 << i)) != 0;
                 }
             }
             AutomationStrategy::Random => {
                 // Random automation strategy. Generate a random mask based on number of squares user wants to deploy to.
+                amount = automation.amount;
                 let num_squares = ((automation.mask & 0xFF) as u64).min(25);
                 let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
                 squares = generate_random_mask(num_squares, &r);
+            }
+            AutomationStrategy::Discretionary => {
+                // Discretionary automation strategy. Use the provided mask.
+                for i in 0..25 {
+                    squares[i] = (mask & (1 << i)) != 0;
+                }
             }
         }
     } else {
