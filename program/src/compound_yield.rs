@@ -5,9 +5,6 @@ use solana_program::log::sol_log;
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
-/// Amount paid to bots for auto-compounding, in lamports.
-const COMPOUND_FEE_PER_TRANSACTION: u64 = 7_000;
-
 /// Compounds yield from the staking contract.
 pub fn process_compound_yield(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.

@@ -102,3 +102,6 @@ pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGun
 
 /// The fee paid to bots if they checkpoint a user.
 pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 SOL
+
+/// Amount paid to bots per transaction for auto-compounding staking yield, in lamports.
+pub const COMPOUND_FEE_PER_TRANSACTION: u64 = 7_000;
