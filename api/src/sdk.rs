@@ -390,7 +390,7 @@ pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
 
 // let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
 
-pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64) -> Instruction {
+pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64, compound_fee: u64) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let stake_address = stake_pda(signer).0;
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
@@ -412,6 +412,7 @@ pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64) -> Instruction {
         ],
         data: Deposit {
             amount: amount.to_le_bytes(),
+            compound_fee: compound_fee.to_le_bytes(),
         }
         .to_bytes(),
     }
@@ -487,6 +488,28 @@ pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
             amount: amount.to_le_bytes(),
         }
         .to_bytes(),
+    }
+}
+
+pub fn compound_yield(signer: Pubkey) -> Instruction {
+    let stake_address = stake_pda(signer).0;
+    let mint_address = MINT_ADDRESS;
+    let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
+    let treasury_address = TREASURY_ADDRESS;
+    let treasury_tokens_address = treasury_tokens_address();
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(mint_address, false),
+            AccountMeta::new(stake_address, false),
+            AccountMeta::new(stake_tokens_address, false),
+            AccountMeta::new(treasury_address, false),
+            AccountMeta::new(treasury_tokens_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+        ],
+        data: CompoundYield {}.to_bytes(),
     }
 }
 

@@ -6,6 +6,7 @@ mod claim_ore;
 mod claim_sol;
 mod claim_yield;
 mod close;
+mod compound_yield;
 mod deploy;
 mod deposit;
 mod liq;
@@ -29,6 +30,7 @@ use claim_ore::*;
 use claim_sol::*;
 use claim_yield::*;
 use close::*;
+use compound_yield::*;
 use deploy::*;
 use deposit::*;
 use liq::*;
@@ -71,6 +73,7 @@ pub fn process_instruction(
         OreInstruction::Deposit => process_deposit(accounts, data)?,
         OreInstruction::Withdraw => process_withdraw(accounts, data)?,
         OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
+        OreInstruction::CompoundYield => process_compound_yield(accounts, data)?,
 
         // Admin
         OreInstruction::Buyback => process_buyback(accounts, data)?,

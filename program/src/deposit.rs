@@ -8,6 +8,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     // Parse data.
     let args = Deposit::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
+    let compound_fee = u64::from_le_bytes(args.compound_fee);
 
     // Load accounts.
     let clock = Clock::get()?;
@@ -44,7 +45,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         stake.buffer_b = 0;
         stake.buffer_c = 0;
         stake.buffer_d = 0;
-        stake.buffer_e = 0;
+        stake.compound_fee_reserve = 0;
         stake.last_claim_at = 0;
         stake.last_deposit_at = 0;
         stake.last_withdraw_at = 0;
@@ -97,6 +98,10 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         )
         .as_str(),
     );
+
+    // Transfer SOL to the stake account for compound fee.
+    stake.compound_fee_reserve += compound_fee;
+    stake_info.collect(compound_fee, &signer_info)?;
 
     // Safety check.
     let stake_tokens =

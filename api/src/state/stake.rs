@@ -26,8 +26,8 @@ pub struct Stake {
     /// Buffer d (placeholder)
     pub buffer_d: u64,
 
-    /// Buffer e (placeholder)
-    pub buffer_e: u64,
+    /// The lamport reserve to pay fees for auto-compounding bots.
+    pub compound_fee_reserve: u64,
 
     /// The timestamp of last claim.
     pub last_claim_at: i64,

@@ -18,6 +18,7 @@ pub enum OreInstruction {
     Deposit = 10,
     Withdraw = 11,
     ClaimYield = 12,
+    CompoundYield = 22,
 
     // Admin
     Buyback = 13,
@@ -129,6 +130,7 @@ pub struct ReloadSOL {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Deposit {
     pub amount: [u8; 8],
+    pub compound_fee: [u8; 8],
 }
 
 #[repr(C)]
@@ -177,6 +179,10 @@ pub struct SetVarAddress {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Liq {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct CompoundYield {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -199,3 +205,4 @@ instruction!(OreInstruction, SetAdminFee);
 instruction!(OreInstruction, SetSwapProgram);
 instruction!(OreInstruction, SetVarAddress);
 instruction!(OreInstruction, Liq);
+instruction!(OreInstruction, CompoundYield);

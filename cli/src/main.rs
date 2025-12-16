@@ -270,7 +270,10 @@ async fn log_stake(
     println!("  buffer_b: {}", stake.buffer_b);
     println!("  buffer_c: {}", stake.buffer_c);
     println!("  buffer_d: {}", stake.buffer_d);
-    println!("  buffer_e: {}", stake.buffer_e);
+    println!(
+        "  compound_fee_reserve: {} SOL",
+        lamports_to_sol(stake.compound_fee_reserve)
+    );
     println!("  last_claim_at: {}", stake.last_claim_at);
     println!("  last_deposit_at: {}", stake.last_deposit_at);
     println!("  last_withdraw_at: {}", stake.last_withdraw_at);
