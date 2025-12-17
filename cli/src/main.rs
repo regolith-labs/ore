@@ -257,8 +257,10 @@ async fn log_stake(
 ) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
+    let treasury = get_treasury(&rpc).await?;
     let staker_address = ore_api::state::stake_pda(authority).0;
-    let stake = get_stake(rpc, authority).await?;
+    let mut stake = get_stake(rpc, authority).await?;
+    stake.update_rewards(&treasury);
     println!("Stake");
     println!("  address: {}", staker_address);
     println!("  authority: {}", authority);
@@ -814,8 +816,10 @@ async fn log_miner(
 ) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
+    let treasury = get_treasury(&rpc).await?;
     let miner_address = ore_api::state::miner_pda(authority).0;
-    let miner = get_miner(&rpc, authority).await?;
+    let mut miner = get_miner(&rpc, authority).await?;
+    miner.update_rewards(&treasury);
     println!("Miner");
     println!("  address: {}", miner_address);
     println!("  authority: {}", authority);
