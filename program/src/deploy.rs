@@ -96,6 +96,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             }
             AutomationStrategy::Discretionary => {
                 // Discretionary automation strategy. Use the provided mask.
+                amount = amount.min(automation.amount);
                 for i in 0..25 {
                     squares[i] = (mask & (1 << i)) != 0;
                 }
@@ -216,9 +217,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Transfer SOL.
     if let Some(automation) = automation {
-        automation.balance -= total_amount + automation.fee;
+        // Calculate automation fee.
+        let automation_fee = if is_first_deploy { automation.fee } else { 0 };
+
+        // Update automation balance.
+        automation.balance -= total_amount + automation_fee;
         automation_info.send(total_amount, &round_info);
-        automation_info.send(automation.fee, &signer_info);
+        automation_info.send(automation_fee, &signer_info);
 
         // Close automation if balance is less than what's required to deploy 1 square.
         if automation.balance < automation.amount + automation.fee {
