@@ -11,6 +11,7 @@ mod deploy;
 mod deposit;
 mod liq;
 mod log;
+mod migrate_miner;
 mod new_var;
 mod reload_sol;
 mod reset;
@@ -35,6 +36,7 @@ use deploy::*;
 use deposit::*;
 use liq::*;
 use log::*;
+use migrate_miner::*;
 use new_var::*;
 use reload_sol::*;
 use reset::*;
@@ -86,6 +88,7 @@ pub fn process_instruction(
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
         OreInstruction::Liq => process_liq(accounts, data)?,
+        OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
     }
 
     Ok(())

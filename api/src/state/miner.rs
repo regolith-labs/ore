@@ -50,7 +50,7 @@ pub struct Miner {
     /// The total amount of ORE this miner has mined across all blocks.
     pub lifetime_rewards_ore: u64,
 
-    /// The total amount of ORE this miner has deployed across all rounds.
+    /// The total amount of SOL this miner has deployed across all rounds.
     pub lifetime_deployed: u64,
 }
 

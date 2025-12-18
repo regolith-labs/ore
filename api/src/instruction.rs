@@ -31,6 +31,7 @@ pub enum OreInstruction {
     NewVar = 19,
     SetAdminFee = 20,
     Liq = 25,
+    MigrateMiner = 26,
 }
 
 #[repr(C)]
@@ -183,6 +184,12 @@ pub struct Liq {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct CompoundYield {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MigrateMiner {
+    pub amount: [u8; 8],
+}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -206,3 +213,4 @@ instruction!(OreInstruction, SetSwapProgram);
 instruction!(OreInstruction, SetVarAddress);
 instruction!(OreInstruction, Liq);
 instruction!(OreInstruction, CompoundYield);
+instruction!(OreInstruction, MigrateMiner);

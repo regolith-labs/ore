@@ -543,6 +543,23 @@ pub fn new_var(
     }
 }
 
+pub fn migrate_miner(signer: Pubkey, authority: Pubkey, amount: u64) -> Instruction {
+    let miner_address = miner_pda(authority).0;
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new(miner_address, false),
+        ],
+        data: MigrateMiner {
+            amount: amount.to_le_bytes(),
+        }
+        .to_bytes(),
+    }
+}
+
 pub fn set_swap_program(signer: Pubkey, new_program: Pubkey) -> Instruction {
     let config_address = config_pda().0;
     Instruction {
