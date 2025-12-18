@@ -5,6 +5,7 @@ mod checkpoint;
 mod claim_ore;
 mod claim_sol;
 mod claim_yield;
+mod cleanup_migration;
 mod close;
 mod compound_yield;
 mod deploy;
@@ -30,6 +31,7 @@ use checkpoint::*;
 use claim_ore::*;
 use claim_sol::*;
 use claim_yield::*;
+use cleanup_migration::*;
 use close::*;
 use compound_yield::*;
 use deploy::*;
@@ -89,6 +91,7 @@ pub fn process_instruction(
         OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
         OreInstruction::Liq => process_liq(accounts, data)?,
         OreInstruction::MigrateMiner => process_migrate_miner(accounts, data)?,
+        OreInstruction::CleanupMigration => process_cleanup_migration(accounts, data)?,
     }
 
     Ok(())

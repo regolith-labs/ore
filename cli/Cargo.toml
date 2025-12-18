@@ -24,6 +24,7 @@ entropy-types.workspace = true
 jup-swap = { git = "https://github.com/jup-ag/jupiter-swap-api-client", package = 'jupiter-swap-api-client', branch = '2.1' }
 ore-api = { path = "../api" }
 reqwest = { version = "0.11.24", default-features = false, features = ["json"] }
+serde.workspace = true
 serde_json = "1.0.140"
 sha3 = "0.10.8"
 solana-account-decoder.workspace = true

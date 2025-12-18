@@ -1,6 +1,7 @@
 mod automation;
 mod board;
 mod config;
+mod migration;
 mod miner;
 mod round;
 mod stake;
@@ -9,6 +10,7 @@ mod treasury;
 pub use automation::*;
 pub use board::*;
 pub use config::*;
+pub use migration::*;
 pub use miner::*;
 pub use round::*;
 pub use stake::*;
@@ -28,6 +30,7 @@ pub enum OreAccount {
     Board = 105,
     Stake = 108,
     Round = 109,
+    Migration = 110,
 }
 
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {
@@ -40,6 +43,10 @@ pub fn board_pda() -> (Pubkey, u8) {
 
 pub fn config_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[CONFIG], &crate::ID)
+}
+
+pub fn migration_pda(authority: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[MIGRATION, &authority.to_bytes()], &crate::ID)
 }
 
 pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {

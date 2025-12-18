@@ -2705,6 +2705,7 @@ dependencies = [
  "jupiter-swap-api-client",
  "ore-api",
  "reqwest 0.11.27",
+ "serde",
  "serde_json",
  "sha3",
  "solana-account-decoder",
