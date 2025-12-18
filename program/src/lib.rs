@@ -100,7 +100,4 @@ security_txt! {
     policy: "https://github.com/regolith-labs/ore/blob/master/SECURITY.md",
     preferred_languages: "en",
     source_code: "https://github.com/regolith-labs/ore"
-    // source_revision: default_env!("GITHUB_SHA", ""),
-    // source_release: default_env!("GITHUB_REF_NAME", ""),
-    // auditors: "None"
 }
