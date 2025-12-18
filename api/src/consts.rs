@@ -56,9 +56,6 @@ pub const CONFIG: &[u8] = b"config";
 /// The seed of the miner account PDA.
 pub const MINER: &[u8] = b"miner";
 
-/// The seed of the migration account PDA.
-pub const MIGRATION: &[u8] = b"migration";
-
 /// The seed of the seeker account PDA.
 pub const SEEKER: &[u8] = b"seeker";
 

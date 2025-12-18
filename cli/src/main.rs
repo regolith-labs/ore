@@ -129,54 +129,8 @@ async fn main() {
         "automation" => {
             log_automation(&rpc).await.unwrap();
         }
-        "migrate_miners" => {
-            migrate_miners(&rpc, &payer).await.unwrap();
-        }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn migrate_miners(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    use serde::Deserialize;
-    use std::fs::File;
-    use std::io::BufReader;
-
-    let filepath = std::env::var("FILEPATH").expect("Missing FILEPATH env var");
-
-    #[derive(Debug, Deserialize)]
-    struct MinerMigration {
-        #[serde(rename = "Signer")]
-        signer: String,
-        #[serde(rename = "DeployedSol")]
-        deployed_sol: u64,
-        #[serde(rename = "Exact")]
-        exact: bool,
-    }
-
-    println!("Reading {} ...", filepath);
-    let file = File::open(filepath)?;
-    let reader = BufReader::new(file);
-    let miners: Vec<MinerMigration> = serde_json::from_reader(reader)?;
-
-    let mut ixs = Vec::new();
-    for (i, miner) in miners.iter().enumerate() {
-        println!(
-            "{}: signer: {}, deployed_sol: {}, exact: {}",
-            i, miner.signer, miner.deployed_sol, miner.exact
-        );
-        ixs.push(ore_api::sdk::migrate_miner(
-            payer.pubkey(),
-            Pubkey::from_str(&miner.signer)?,
-            miner.deployed_sol,
-        ));
-    }
-
-    submit_transaction_batches(rpc, payer, ixs, 12).await?;
-
-    Ok(())
 }
 
 async fn liq(
@@ -1106,8 +1060,8 @@ async fn submit_transaction_batches(
         let batch = ixs
             .drain(..std::cmp::min(batch_size, ixs.len()))
             .collect::<Vec<Instruction>>();
-        // submit_transaction_no_confirm(rpc, payer, &batch).await?;
-        submit_transaction(rpc, payer, &batch).await?;
+        submit_transaction_no_confirm(rpc, payer, &batch).await?;
+        // submit_transaction(rpc, payer, &batch).await?;
     }
     Ok(())
 }
