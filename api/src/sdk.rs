@@ -356,38 +356,6 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
     }
 }
 
-pub fn set_admin_fee(signer: Pubkey, admin_fee: u64) -> Instruction {
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: SetAdminFee {
-            admin_fee: admin_fee.to_le_bytes(),
-        }
-        .to_bytes(),
-    }
-}
-
-pub fn set_fee_collector(signer: Pubkey, fee_collector: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: SetFeeCollector {
-            fee_collector: fee_collector.to_bytes(),
-        }
-        .to_bytes(),
-    }
-}
-
 // let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
 
 pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64, compound_fee: u64) -> Instruction {
@@ -540,33 +508,5 @@ pub fn new_var(
             samples: samples.to_le_bytes(),
         }
         .to_bytes(),
-    }
-}
-
-pub fn set_swap_program(signer: Pubkey, new_program: Pubkey) -> Instruction {
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new_readonly(new_program, false),
-        ],
-        data: SetSwapProgram {}.to_bytes(),
-    }
-}
-
-pub fn set_var_address(signer: Pubkey, new_var_address: Pubkey) -> Instruction {
-    let board_address = board_pda().0;
-    let config_address = config_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(board_address, false),
-            AccountMeta::new(config_address, false),
-            AccountMeta::new(new_var_address, false),
-        ],
-        data: SetVarAddress {}.to_bytes(),
     }
 }

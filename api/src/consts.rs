@@ -105,3 +105,18 @@ pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 SOL
 
 /// Amount paid to bots per transaction for auto-compounding staking yield, in lamports.
 pub const COMPOUND_FEE_PER_TRANSACTION: u64 = 7_000;
+
+/// The fee paid to the admin for each transaction.
+pub const ADMIN_FEE: u64 = 100; // 1%
+
+/// The address to receive the admin fee.
+pub const ADMIN_FEE_COLLECTOR: Pubkey = pubkey!("DyB4Kv6V613gp2LWQTq1dwDYHGKuUEoDHnCouGUtxFiX");
+
+/// The swap program used for buybacks.
+pub const SWAP_PROGRAM: Pubkey = pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
+
+/// The address of the var account.
+pub const VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
+
+/// The address which can call the bury and wrap instructions.
+pub const BURY_AUTHORITY: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");

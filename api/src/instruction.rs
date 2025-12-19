@@ -25,11 +25,7 @@ pub enum OreInstruction {
     Bury = 24,
     Wrap = 14,
     SetAdmin = 15,
-    SetFeeCollector = 16,
-    SetSwapProgram = 17,
-    SetVarAddress = 18,
     NewVar = 19,
-    SetAdminFee = 20,
     Liq = 25,
 }
 
@@ -196,13 +192,9 @@ instruction!(OreInstruction, Buyback);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
-instruction!(OreInstruction, SetFeeCollector);
 instruction!(OreInstruction, Deposit);
 instruction!(OreInstruction, Withdraw);
 instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, NewVar);
-instruction!(OreInstruction, SetAdminFee);
-instruction!(OreInstruction, SetSwapProgram);
-instruction!(OreInstruction, SetVarAddress);
 instruction!(OreInstruction, Liq);
 instruction!(OreInstruction, CompoundYield);

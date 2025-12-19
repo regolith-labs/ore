@@ -9,16 +9,13 @@ const LIQ_MANAGER: Pubkey = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWe
 /// Send SOL to the liq manager.
 pub fn process_liq(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, board_info, config_info, manager_info, manager_sol_info, treasury_info, treasury_sol_info, token_program, ore_program] =
+    let [signer_info, board_info, _config_info, manager_info, manager_sol_info, treasury_info, treasury_sol_info, token_program, ore_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?;
+    signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
-    config_info
-        .as_account::<Config>(&ore_api::ID)?
-        .assert(|c| c.bury_authority == *signer_info.key)?;
     manager_info.has_address(&LIQ_MANAGER)?;
     manager_sol_info
         .is_writable()?

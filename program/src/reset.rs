@@ -12,7 +12,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let (ore_accounts, other_accounts) = accounts.split_at(14);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Other accounts: {:?}", other_accounts.len()).to_string());
-    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, _config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -21,10 +21,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.end_slot + INTERMISSION_SLOTS)?;
-    let config = config_info.as_account::<Config>(&ore_api::ID)?;
     fee_collector_info
         .is_writable()?
-        .has_address(&config.fee_collector)?;
+        .has_address(&ADMIN_FEE_COLLECTOR)?;
     let round = round_info
         .as_account_mut::<Round>(&ore_api::ID)?
         .assert_mut(|r| r.id == board.round_id)?;
@@ -70,7 +69,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     let var = var_info
-        .has_address(&config.var_address)?
+        .has_address(&VAR_ADDRESS)?
         .as_account::<Var>(&entropy_api::ID)?
         .assert(|v| v.authority == *board_info.key)?
         .assert(|v| v.slot_hash != [0; 32])?

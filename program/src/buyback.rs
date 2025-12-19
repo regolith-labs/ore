@@ -8,16 +8,13 @@ use steel::*;
 pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Load accounts.
     let (ore_accounts, swap_accounts) = accounts.split_at(9);
-    let [signer_info, board_info, config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, token_program, ore_program] =
+    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, token_program, ore_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?;
+    signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
-    let config = config_info
-        .as_account::<Config>(&ore_api::ID)?
-        .assert(|c| c.bury_authority == *signer_info.key)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
@@ -64,7 +61,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     // Invoke swap program.
     invoke_signed(
         &Instruction {
-            program_id: config.swap_program,
+            program_id: SWAP_PROGRAM,
             accounts,
             data: data.to_vec(),
         },

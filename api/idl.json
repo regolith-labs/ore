@@ -799,40 +799,6 @@
             ]
         },
         {
-            "name": "setFeeCollector",
-            "discriminant": {
-                "type": "u8",
-                "value": 16
-            },
-            "docs": [
-                "Updates the fee collector authority."
-            ],
-            "accounts": [
-                {
-                    "name": "signer",
-                    "isMut": false,
-                    "isSigner": true
-                },
-                {
-                    "name": "config",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "systemProgram",
-                    "isMut": false,
-                    "isSigner": false,
-                    "address": "11111111111111111111111111111111"
-                }
-            ],
-            "args": [
-                {
-                    "name": "feeCollector",
-                    "type": "publicKey"
-                }
-            ]
-        },
-        {
             "name": "newVar",
             "discriminant": {
                 "type": "u8",
@@ -896,40 +862,6 @@
                 },
                 {
                     "name": "samples",
-                    "type": "u64"
-                }
-            ]
-        },
-        {
-            "name": "setBuffer",
-            "discriminant": {
-                "type": "u8",
-                "value": 18
-            },
-            "docs": [
-                "Updates the global buffer value."
-            ],
-            "accounts": [
-                {
-                    "name": "signer",
-                    "isMut": false,
-                    "isSigner": true
-                },
-                {
-                    "name": "config",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "systemProgram",
-                    "isMut": false,
-                    "isSigner": false,
-                    "address": "11111111111111111111111111111111"
-                }
-            ],
-            "args": [
-                {
-                    "name": "buffer",
                     "type": "u64"
                 }
             ]
@@ -1045,23 +977,23 @@
                         "type": "publicKey"
                     },
                     {
-                        "name": "bury_authority",
+                        "name": "buffer_a",
                         "type": "publicKey"
                     },
                     {
-                        "name": "fee_collector",
+                        "name": "buffer_b",
                         "type": "publicKey"
                     },
                     {
-                        "name": "swap_program",
+                        "name": "buffer_c",
                         "type": "publicKey"
                     },
                     {
-                        "name": "var_address",
+                        "name": "buffer_d",
                         "type": "publicKey"
                     },
                     {
-                        "name": "buffer",
+                        "name": "buffer_e",
                         "type": "u64"
                     }
                 ]

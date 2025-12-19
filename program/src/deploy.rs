@@ -15,7 +15,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let (ore_accounts, entropy_accounts) = accounts.split_at(9);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
-    let [signer_info, authority_info, automation_info, board_info, config_info, miner_info, round_info, system_program, ore_program] =
+    let [signer_info, authority_info, automation_info, board_info, _config_info, miner_info, round_info, system_program, ore_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -25,7 +25,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     automation_info
         .is_writable()?
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
-    let config = config_info.as_account::<Config>(&ore_api::ID)?;
     let board = board_info
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
@@ -48,7 +47,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             return Err(ProgramError::NotEnoughAccountKeys);
         };
         var_info
-            .has_address(&config.var_address)?
+            .has_address(&VAR_ADDRESS)?
             .as_account::<Var>(&entropy_api::ID)?
             .assert(|v| v.authority == *board_info.key)?;
         entropy_program.is_program(&entropy_api::ID)?;

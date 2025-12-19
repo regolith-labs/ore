@@ -11,20 +11,20 @@ pub struct Config {
     /// The address that can update the config.
     pub admin: Pubkey,
 
-    /// The adress with authority to call wrap and bury.
-    pub bury_authority: Pubkey,
+    /// Buffer a (placeholder)
+    pub buffer_a: [u8; 32],
 
-    /// The address that receives admin fees.
-    pub fee_collector: Pubkey,
+    /// Buffer b (placeholder)
+    pub buffer_b: [u8; 32],
 
-    /// The program to be used for protocol swaps.
-    pub swap_program: Pubkey,
+    /// Buffer c (placeholder)
+    pub buffer_c: [u8; 32],
 
-    /// The address of the entropy var account.
-    pub var_address: Pubkey,
+    /// Buffer d (placeholder)
+    pub buffer_d: [u8; 32],
 
-    /// Amount to pay to fee collector (bps)
-    pub admin_fee: u64,
+    /// Buffer e (placeholder)
+    pub buffer_e: [u8; 8],
 }
 
 impl Config {

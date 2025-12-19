@@ -87,9 +87,6 @@ async fn main() {
         "set_admin" => {
             set_admin(&rpc, &payer).await.unwrap();
         }
-        "set_fee_collector" => {
-            set_fee_collector(&rpc, &payer).await.unwrap();
-        }
         "ata" => {
             ata(&rpc, &payer).await.unwrap();
         }
@@ -107,15 +104,6 @@ async fn main() {
         }
         "new_var" => {
             new_var(&rpc, &payer).await.unwrap();
-        }
-        "set_admin_fee" => {
-            set_admin_fee(&rpc, &payer).await.unwrap();
-        }
-        "set_swap_program" => {
-            set_swap_program(&rpc, &payer).await.unwrap();
-        }
-        "set_var_address" => {
-            set_var_address(&rpc, &payer).await.unwrap();
         }
         "keys" => {
             keys().await.unwrap();
@@ -198,28 +186,6 @@ async fn lut(
     };
     submit_transaction(rpc, payer, &[ix_1, ix_2]).await?;
     println!("LUT address: {}", lut_address);
-    Ok(())
-}
-
-async fn set_admin_fee(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let admin_fee = std::env::var("ADMIN_FEE").expect("Missing ADMIN_FEE env var");
-    let admin_fee = u64::from_str(&admin_fee).expect("Invalid ADMIN_FEE");
-    let ix = ore_api::sdk::set_admin_fee(payer.pubkey(), admin_fee);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn set_var_address(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let new_var_address = std::env::var("VAR").expect("Missing VAR env var");
-    let new_var_address = Pubkey::from_str(&new_var_address).expect("Invalid VAR");
-    let ix = ore_api::sdk::set_var_address(payer.pubkey(), new_var_address);
-    submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
 
@@ -461,30 +427,13 @@ async fn reset(
     let reveal_ix = entropy_api::sdk::reveal(payer.pubkey(), ORE_VAR_ADDRESS, response.seed);
     let reset_ix = ore_api::sdk::reset(
         payer.pubkey(),
-        config.fee_collector,
+        ADMIN_FEE_COLLECTOR,
         board.round_id,
         Pubkey::default(),
     );
     let sig = submit_transaction(rpc, payer, &[sample_ix, reveal_ix, reset_ix]).await?;
     println!("Reset: {}", sig);
 
-    // let slot_hashes = get_slot_hashes(rpc).await?;
-    // if let Some(slot_hash) = slot_hashes.get(&board.end_slot) {
-    //     let id = get_winning_square(&slot_hash.to_bytes());
-    //     // let square = get_square(rpc).await?;
-    //     println!("Winning square: {}", id);
-    //     // println!("Miners: {:?}", square.miners);
-    //     // miners = square.miners[id as usize].to_vec();
-    // };
-
-    // let reset_ix = ore_api::sdk::reset(
-    //     payer.pubkey(),
-    //     config.fee_collector,
-    //     board.round_id,
-    //     Pubkey::default(),
-    // );
-    // // simulate_transaction(rpc, payer, &[reset_ix]).await;
-    // submit_transaction(rpc, payer, &[reset_ix]).await?;
     Ok(())
 }
 
@@ -534,28 +483,6 @@ async fn set_admin(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn set_swap_program(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let swap_program = std::env::var("SWAP_PROGRAM").expect("Missing SWAP_PROGRAM env var");
-    let swap_program = Pubkey::from_str(&swap_program).expect("Invalid SWAP_PROGRAM");
-    let ix = ore_api::sdk::set_swap_program(payer.pubkey(), swap_program);
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
-}
-
-async fn set_fee_collector(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let fee_collector = std::env::var("FEE_COLLECTOR").expect("Missing FEE_COLLECTOR env var");
-    let fee_collector = Pubkey::from_str(&fee_collector).expect("Invalid FEE_COLLECTOR");
-    let ix = ore_api::sdk::set_fee_collector(payer.pubkey(), fee_collector);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -651,46 +578,6 @@ async fn close_all(
 
     Ok(())
 }
-
-// async fn log_meteora_pool(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-//     let address = pubkey!("GgaDTFbqdgjoZz3FP7zrtofGwnRS4E6MCzmmD5Ni1Mxj");
-//     let pool = get_meteora_pool(rpc, address).await?;
-//     let vault_a = get_meteora_vault(rpc, pool.a_vault).await?;
-//     let vault_b = get_meteora_vault(rpc, pool.b_vault).await?;
-
-//     println!("Pool");
-//     println!("  address: {}", address);
-//     println!("  lp_mint: {}", pool.lp_mint);
-//     println!("  token_a_mint: {}", pool.token_a_mint);
-//     println!("  token_b_mint: {}", pool.token_b_mint);
-//     println!("  a_vault: {}", pool.a_vault);
-//     println!("  b_vault: {}", pool.b_vault);
-//     println!("  a_token_vault: {}", vault_a.token_vault);
-//     println!("  b_token_vault: {}", vault_b.token_vault);
-//     println!("  a_vault_lp_mint: {}", vault_a.lp_mint);
-//     println!("  b_vault_lp_mint: {}", vault_b.lp_mint);
-//     println!("  a_vault_lp: {}", pool.a_vault_lp);
-//     println!("  b_vault_lp: {}", pool.b_vault_lp);
-//     println!("  protocol_token_fee: {}", pool.protocol_token_b_fee);
-
-//     // pool: *pool.key,
-//     // user_source_token: *user_source_token.key,
-//     // user_destination_token: *user_destination_token.key,
-//     // a_vault: *a_vault.key,
-//     // b_vault: *b_vault.key,
-//     // a_token_vault: *a_token_vault.key,
-//     // b_token_vault: *b_token_vault.key,
-//     // a_vault_lp_mint: *a_vault_lp_mint.key,
-//     // b_vault_lp_mint: *b_vault_lp_mint.key,
-//     // a_vault_lp: *a_vault_lp.key,
-//     // b_vault_lp: *b_vault_lp.key,
-//     // protocol_token_fee: *protocol_token_fee.key,
-//     // user: *user.key,
-//     // vault_program: *vault_program.key,
-//     // token_program: *token_program.key,
-
-//     Ok(())
-// }
 
 async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").expect("Missing AUTHORITY env var");
@@ -862,11 +749,6 @@ async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let config = get_config(&rpc).await?;
     println!("Config");
     println!("  admin: {}", config.admin);
-    println!("  bury_authority: {}", config.bury_authority);
-    println!("  fee_collector: {}", config.fee_collector);
-    println!("  swap_program: {}", config.swap_program);
-    println!("  var_address: {}", config.var_address);
-    println!("  admin_fee: {}", config.admin_fee);
     Ok(())
 }
 
@@ -905,18 +787,6 @@ async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, a
     let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(automations)
 }
-
-// async fn get_meteora_pool(rpc: &RpcClient, address: Pubkey) -> Result<Pool, anyhow::Error> {
-//     let data = rpc.get_account_data(&address).await?;
-//     let pool = Pool::from_bytes(&data)?;
-//     Ok(pool)
-// }
-
-// async fn get_meteora_vault(rpc: &RpcClient, address: Pubkey) -> Result<Vault, anyhow::Error> {
-//     let data = rpc.get_account_data(&address).await?;
-//     let vault = Vault::from_bytes(&data)?;
-//     Ok(vault)
-// }
 
 async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {
     let board_pda = ore_api::state::board_pda();

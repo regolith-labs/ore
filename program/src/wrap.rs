@@ -9,14 +9,11 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer_info, config_info, treasury_info, treasury_sol_info, system_program] = accounts
+    let [signer_info, _config_info, treasury_info, treasury_sol_info, system_program] = accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
-    signer_info.is_signer()?;
-    config_info
-        .as_account::<Config>(&ore_api::ID)?
-        .assert(|c| c.bury_authority == *signer_info.key)?;
+    signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
     let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_sol_info
         .is_writable()?

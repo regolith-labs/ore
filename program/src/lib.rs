@@ -15,10 +15,6 @@ mod new_var;
 mod reload_sol;
 mod reset;
 mod set_admin;
-mod set_admin_fee;
-mod set_fee_collector;
-mod set_swap_program;
-mod set_var_address;
 mod withdraw;
 mod wrap;
 
@@ -39,10 +35,6 @@ use new_var::*;
 use reload_sol::*;
 use reset::*;
 use set_admin::*;
-use set_admin_fee::*;
-use set_fee_collector::*;
-use set_swap_program::*;
-use set_var_address::*;
 use withdraw::*;
 use wrap::*;
 
@@ -80,11 +72,7 @@ pub fn process_instruction(
         OreInstruction::Bury => process_bury(accounts, data)?,
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
-        OreInstruction::SetFeeCollector => process_set_fee_collector(accounts, data)?,
-        OreInstruction::SetSwapProgram => process_set_swap_program(accounts, data)?,
-        OreInstruction::SetVarAddress => process_set_var_address(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
-        OreInstruction::SetAdminFee => process_set_admin_fee(accounts, data)?,
         OreInstruction::Liq => process_liq(accounts, data)?,
     }
 
