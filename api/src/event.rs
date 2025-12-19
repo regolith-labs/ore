@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-pub enum OreEvent {
+pub enum FpowEvent {
     Reset = 0,
     Bury = 1,
     Deploy = 2,
@@ -32,19 +32,19 @@ pub struct ResetEvent {
     /// The number of miners on the winning square.
     pub num_winners: u64,
 
-    /// The amount of ORE payout for the motherlode.
+    /// The amount of fPOW payout for the motherlode.
     pub motherlode: u64,
 
-    /// The total amount of SOL prospected in the round.
+    /// The total amount of ALGO prospected in the round.
     pub total_deployed: u64,
 
-    /// The total amount of SOL put in the ORE vault.
+    /// The total amount of ALGO put in the fPOW vault.
     pub total_vaulted: u64,
 
-    /// The total amount of SOL won by miners for the round.
+    /// The total amount of ALGO won by miners for the round.
     pub total_winnings: u64,
 
-    /// The total amount of ORE minted for the round.
+    /// The total amount of fPOW minted for the round.
     pub total_minted: u64,
 
     /// The timestamp of the event.
@@ -57,16 +57,16 @@ pub struct BuryEvent {
     /// The event discriminator.
     pub disc: u64,
 
-    /// The amount of ORE buried.
-    pub ore_buried: u64,
+    /// The amount of fPOW buried.
+    pub fpow_buried: u64,
 
-    /// The amount of ORE shared with stakers.
-    pub ore_shared: u64,
+    /// The amount of fPOW shared with stakers.
+    pub fpow_shared: u64,
 
-    /// The amount of SOL swapped.
-    pub sol_amount: u64,
+    /// The amount of ALGO swapped.
+    pub algo_amount: u64,
 
-    /// The new circulating supply of ORE.
+    /// The new circulating supply of fPOW.
     pub new_circulating_supply: u64,
 
     /// The timestamp of the event.
@@ -82,7 +82,7 @@ pub struct DeployEvent {
     /// The authority of the deployer.
     pub authority: Pubkey,
 
-    /// The amount of SOL deployed per square.
+    /// The amount of ALGO deployed per square.
     pub amount: u64,
 
     /// The mask of the squares deployed to.
@@ -110,10 +110,10 @@ pub struct LiqEvent {
     /// The event discriminator.
     pub disc: u64,
 
-    /// The amount of SOL sent to the liq manager.
-    pub sol_amount: u64,
+    /// The amount of ALGO sent to the liq manager.
+    pub algo_amount: u64,
 
-    /// The recipient of the SOL.
+    /// The recipient of the ALGO.
     pub recipient: Pubkey,
 
     /// The timestamp of the event.

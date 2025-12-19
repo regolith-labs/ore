@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use solana_program::{native_token::LAMPORTS_PER_SOL, rent::Rent};
 use steel::*;
 
@@ -14,7 +14,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&fpow_api::ID)?;
     treasury_sol_info
         .is_writable()?
         .as_associated_token_account(treasury_info.key, &SOL_MINT)?;

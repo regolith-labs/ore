@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use steel::*;
 
 /// Sets the admin.
@@ -13,7 +13,7 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     };
     signer_info.is_signer()?;
     let config = config_info
-        .as_account_mut::<Config>(&ore_api::ID)?
+        .as_account_mut::<Config>(&fpow_api::ID)?
         .assert_mut_err(
             |c| c.admin == *signer_info.key,
             OreError::NotAuthorized.into(),

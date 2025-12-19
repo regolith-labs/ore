@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use steel::*;
 
 /// Creates a new var account.
@@ -16,9 +16,9 @@ pub fn process_new_var(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let board = board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    let board = board_info.as_account_mut::<Board>(&fpow_api::ID)?;
     config_info
-        .as_account_mut::<Config>(&ore_api::ID)?
+        .as_account_mut::<Config>(&fpow_api::ID)?
         .assert_mut_err(
             |c| c.admin == *signer_info.key,
             OreError::NotAuthorized.into(),

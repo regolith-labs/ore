@@ -3,7 +3,7 @@ use steel::*;
 
 use crate::state::board_pda;
 
-use super::OreAccount;
+use super::FpowAccount;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -27,4 +27,4 @@ impl Board {
     }
 }
 
-account!(OreAccount, Board);
+account!(FpowAccount, Board);

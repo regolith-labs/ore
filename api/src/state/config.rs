@@ -3,7 +3,7 @@ use steel::*;
 
 use crate::state::config_pda;
 
-use super::OreAccount;
+use super::FpowAccount;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -33,4 +33,4 @@ impl Config {
     }
 }
 
-account!(OreAccount, Config);
+account!(FpowAccount, Config);

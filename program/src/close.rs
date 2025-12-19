@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use solana_program::rent::Rent;
 use steel::*;
 
@@ -12,14 +12,14 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let board = board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    let board = board_info.as_account_mut::<Board>(&fpow_api::ID)?;
     rent_payer_info.is_writable()?;
     round_info
-        .as_account_mut::<Round>(&ore_api::ID)?
+        .as_account_mut::<Round>(&fpow_api::ID)?
         .assert_mut(|r| r.id < board.round_id)?
         .assert_mut(|r| r.expires_at < clock.slot)? // Ensure round has expired.
         .assert_mut(|r| r.rent_payer == *rent_payer_info.key)?; // Ensure the rent payer is the correct one.
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&fpow_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // Vault all unclaimed rewards.

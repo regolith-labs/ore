@@ -3,7 +3,7 @@ use steel::*;
 
 use crate::state::round_pda;
 
-use super::OreAccount;
+use super::FpowAccount;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -11,10 +11,10 @@ pub struct Round {
     /// The round number.
     pub id: u64,
 
-    /// The amount of SOL deployed in each square.
+    /// The amount of ALGO deployed in each square.
     pub deployed: [u64; 25],
 
-    /// The hash of the end slot, provided by solana, used for random number generation.
+    /// The hash of the end slot, provided by algorand, used for random number generation.
     pub slot_hash: [u8; 32],
 
     /// The count of miners on each square.
@@ -23,7 +23,7 @@ pub struct Round {
     /// The slot at which claims for this round account end.
     pub expires_at: u64,
 
-    /// The amount of ORE in the motherlode.
+    /// The amount of fPOW in the motherlode.
     pub motherlode: u64,
 
     /// The account to which rent should be returned when this account is closed.
@@ -32,19 +32,19 @@ pub struct Round {
     /// The top miner of the round.
     pub top_miner: Pubkey,
 
-    /// The amount of ORE to distribute to the top miner.
+    /// The amount of fPOW to distribute to the top miner.
     pub top_miner_reward: u64,
 
-    /// The total amount of SOL deployed in the round.
+    /// The total amount of ALGO deployed in the round.
     pub total_deployed: u64,
 
     /// The total number of unique miners that played in the round.
     pub total_miners: u64,
 
-    /// The total amount of SOL put in the ORE vault.
+    /// The total amount of ALGO put in the fPOW vault.
     pub total_vaulted: u64,
 
-    /// The total amount of SOL won by miners for the round.
+    /// The total amount of ALGO won by miners for the round.
     pub total_winnings: u64,
 }
 
@@ -102,7 +102,7 @@ impl Round {
     }
 }
 
-account!(OreAccount, Round);
+account!(FpowAccount, Round);
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,5 @@
 [package]
-name = "ore-program"
+name = "fpow-program"
 description.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -12,7 +12,7 @@ keywords.workspace = true
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "ore"
+name = "fpow"
 
 [features]
 default = []
@@ -20,8 +20,8 @@ default = []
 [dependencies]
 bincode.workspace = true
 entropy-api.workspace = true
-ore-api.workspace = true
-ore-mint-api.workspace = true
+fpow-api.workspace = true
+fpow-mint-api.workspace = true
 solana-nostd-keccak.workspace = true
 solana-program.workspace = true
 solana-security-txt.workspace = true

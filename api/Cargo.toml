@@ -1,5 +1,5 @@
 [package]
-name = "ore-api"
+name = "fpow-api"
 description.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -15,7 +15,7 @@ bytemuck.workspace = true
 const-crypto.workspace = true
 entropy-api.workspace = true
 num_enum.workspace = true
-ore-mint-api.workspace = true
+fpow-mint-api.workspace = true
 serde.workspace = true
 solana-program.workspace = true
 spl-token.workspace = true

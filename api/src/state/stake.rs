@@ -3,7 +3,7 @@ use steel::*;
 
 use crate::state::{stake_pda, Treasury};
 
-use super::OreAccount;
+use super::FpowAccount;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -26,7 +26,7 @@ pub struct Stake {
     /// Buffer d (placeholder)
     pub buffer_d: u64,
 
-    /// The lamport reserve to pay fees for auto-compounding bots.
+    /// The microalgo reserve to pay fees for auto-compounding bots.
     pub compound_fee_reserve: u64,
 
     /// The timestamp of last claim.
@@ -41,10 +41,10 @@ pub struct Stake {
     /// The rewards factor last time rewards were updated on this stake account.
     pub rewards_factor: Numeric,
 
-    /// The amount of ORE this staker can claim.
+    /// The amount of fPOW this staker can claim.
     pub rewards: u64,
 
-    /// The total amount of ORE this staker has earned over its lifetime.
+    /// The total amount of fPOW this staker has earned over its lifetime.
     pub lifetime_rewards: u64,
 
     /// Buffer f (placeholder)
@@ -105,4 +105,4 @@ impl Stake {
     }
 }
 
-account!(OreAccount, Stake);
+account!(FpowAccount, Stake);

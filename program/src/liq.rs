@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use solana_program::log::sol_log;
 use solana_program::native_token::lamports_to_sol;
 use solana_program::pubkey;
@@ -15,15 +15,15 @@ pub fn process_liq(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult 
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
-    board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    board_info.as_account_mut::<Board>(&fpow_api::ID)?;
     manager_info.has_address(&LIQ_MANAGER)?;
     manager_sol_info
         .is_writable()?
         .as_associated_token_account(&manager_info.key, &SOL_MINT)?;
-    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    treasury_info.as_account_mut::<Treasury>(&fpow_api::ID)?;
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     token_program.is_program(&spl_token::ID)?;
-    ore_program.is_program(&ore_api::ID)?;
+    ore_program.is_program(&fpow_api::ID)?;
 
     // Sync native token balance.
     sync_native(treasury_sol_info)?;

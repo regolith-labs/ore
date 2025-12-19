@@ -6,12 +6,12 @@ members = ["api", "program", "cli"]
 version = "3.7.24"
 edition = "2021"
 license = "Apache-2.0"
-homepage = "https://ore.supply"
-description = "Solana native store of value."
-documentation = "https://docs.rs/ore-api/latest/ore_api/"
-repository = "https://github.com/regolith-labs/ore"
+homepage = "https://fpow.supply"
+description = "Algorand native proof of work token."
+documentation = "https://docs.rs/fpow-api/latest/fpow_api/"
+repository = "https://github.com/Fry-Foundation/fPOW"
 readme = "./README.md"
-keywords = ["solana"]
+keywords = ["algorand"]
 
 [workspace.dependencies]
 anyhow = "1.0"
@@ -23,8 +23,8 @@ const-crypto = "0.1.0"
 entropy-api = "0.1.4"
 entropy-types = "0.0.1"
 num_enum = "0.7.2"
-ore-api = { path = "./api" }
-ore-mint-api = "0.1.3"
+fpow-api = { path = "./api" }
+fpow-mint-api = "0.1.3"
 solana-security-txt = "1.1.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

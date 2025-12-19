@@ -4,12 +4,12 @@ use solana_program::{pubkey, pubkey::Pubkey};
 /// The authority allowed to initialize the program.
 pub const ADMIN_ADDRESS: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
 
-/// The decimal precision of the ORE token.
-/// There are 100 billion indivisible units per ORE (called "grams").
+/// The decimal precision of the fPOW token.
+/// There are 100 billion indivisible units per fPOW (called "grams").
 pub const TOKEN_DECIMALS: u8 = 11;
 
-/// One ORE token, denominated in indivisible units.
-pub const ONE_ORE: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
+/// One fPOW token, denominated in indivisible units.
+pub const ONE_FPOW: u64 = 10u64.pow(TOKEN_DECIMALS as u32);
 
 /// The duration of one minute, in seconds.
 pub const ONE_MINUTE: i64 = 60;
@@ -42,7 +42,7 @@ pub const ONE_WEEK_SLOTS: u64 = 7 * ONE_DAY_SLOTS;
 pub const INTERMISSION_SLOTS: u64 = 35;
 
 /// The maximum token supply (5 million).
-pub const MAX_SUPPLY: u64 = ONE_ORE * 5_000_000;
+pub const MAX_SUPPLY: u64 = ONE_FPOW * 5_000_000;
 
 /// The seed of the automation account PDA.
 pub const AUTOMATION: &[u8] = b"automation";
@@ -81,10 +81,10 @@ pub const CONFIG_ADDRESS: Pubkey =
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
 
-/// The address of the sol mint account.
-pub const SOL_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+/// The address of the ALGO mint account.
+pub const ALGO_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
 
-/// The address to indicate ORE rewards are split between all miners.
+/// The address to indicate fPOW rewards are split between all miners.
 pub const SPLIT_ADDRESS: Pubkey = pubkey!("SpLiT11111111111111111111111111111111111112");
 
 /// The address of the treasury account.
@@ -101,9 +101,9 @@ pub const DENOMINATOR_BPS: u64 = 10_000;
 pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGunofStvxFx6rBiD");
 
 /// The fee paid to bots if they checkpoint a user.
-pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 SOL
+pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 ALGO
 
-/// Amount paid to bots per transaction for auto-compounding staking yield, in lamports.
+/// Amount paid to bots per transaction for auto-compounding staking yield, in microalgos.
 pub const COMPOUND_FEE_PER_TRANSACTION: u64 = 7_000;
 
 /// The fee paid to the admin for each transaction.

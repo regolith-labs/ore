@@ -1,6 +1,6 @@
 {
     "version": "3.7.22",
-    "name": "ore",
+    "name": "fpow",
     "instructions": [
         {
             "name": "automate",
@@ -110,13 +110,13 @@
             "args": []
         },
         {
-            "name": "claimSol",
+            "name": "claimAlgo",
             "discriminant": {
                 "type": "u8",
                 "value": 3
             },
             "docs": [
-                "Claims SOL rewards from the miner account."
+                "Claims ALGO rewards from the miner account."
             ],
             "accounts": [
                 {
@@ -139,13 +139,13 @@
             "args": []
         },
         {
-            "name": "claimOre",
+            "name": "claimFpow",
             "discriminant": {
                 "type": "u8",
                 "value": 4
             },
             "docs": [
-                "Claims ORE token rewards from the treasury vault."
+                "Claims fPOW token rewards from the treasury vault."
             ],
             "accounts": [
                 {
@@ -253,7 +253,7 @@
                 "value": 6
             },
             "docs": [
-                "Deploys SOL to selected squares for the current round.",
+                "Deploys ALGO to selected squares for the current round.",
                 "Automation PDA seeds: [\"automation\", authority].",
                 "Config PDA seeds: [\"config\"].",
                 "Miner PDA seeds: [\"miner\", authority].",
@@ -302,7 +302,7 @@
                     "address": "11111111111111111111111111111111"
                 },
                 {
-                    "name": "oreProgram",
+                    "name": "fpowProgram",
                     "isMut": false,
                     "isSigner": false,
                     "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
@@ -426,7 +426,7 @@
                     "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 },
                 {
-                    "name": "oreProgram",
+                    "name": "fpowProgram",
                     "isMut": false,
                     "isSigner": false,
                     "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
@@ -458,7 +458,7 @@
                 "value": 10
             },
             "docs": [
-                "Deposits ORE into a staking account.",
+                "Deposits fPOW into a staking account.",
                 "Stake PDA seeds: [\"stake\", signer]."
             ],
             "accounts": [
@@ -526,7 +526,7 @@
                 "value": 11
             },
             "docs": [
-                "Withdraws ORE from a staking account.",
+                "Withdraws fPOW from a staking account.",
                 "Stake PDA seeds: [\"stake\", signer]."
             ],
             "accounts": [
@@ -695,12 +695,12 @@
                     "isSigner": false
                 },
                 {
-                    "name": "treasuryOre",
+                    "name": "treasuryFpow",
                     "isMut": true,
                     "isSigner": false
                 },
                 {
-                    "name": "treasurySol",
+                    "name": "treasuryAlgo",
                     "isMut": true,
                     "isSigner": false
                 },
@@ -711,7 +711,7 @@
                     "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 },
                 {
-                    "name": "oreProgram",
+                    "name": "fpowProgram",
                     "isMut": false,
                     "isSigner": false,
                     "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
@@ -726,7 +726,7 @@
                 "value": 14
             },
             "docs": [
-                "Wraps SOL held by the treasury into WSOL for swapping.",
+                "Wraps ALGO held by the treasury into WSOL for swapping.",
                 "Treasury PDA seeds: [\"treasury\"]."
             ],
             "accounts": [
@@ -746,7 +746,7 @@
                     "isSigner": false
                 },
                 {
-                    "name": "treasurySol",
+                    "name": "treasuryAlgo",
                     "isMut": true,
                     "isSigner": false
                 },
@@ -1012,7 +1012,7 @@
                 0
             ],
             "docs": [
-                "Tracks a miner's deployed SOL and reward balances."
+                "Tracks a miner's deployed ALGO and reward balances."
             ],
             "type": {
                 "kind": "struct",
@@ -1048,11 +1048,11 @@
                         "type": "u64"
                     },
                     {
-                        "name": "last_claim_ore_at",
+                        "name": "last_claim_fpow_at",
                         "type": "i64"
                     },
                     {
-                        "name": "last_claim_sol_at",
+                        "name": "last_claim_algo_at",
                         "type": "i64"
                     },
                     {
@@ -1062,15 +1062,15 @@
                         }
                     },
                     {
-                        "name": "rewards_sol",
+                        "name": "rewards_algo",
                         "type": "u64"
                     },
                     {
-                        "name": "rewards_ore",
+                        "name": "rewards_fpow",
                         "type": "u64"
                     },
                     {
-                        "name": "refined_ore",
+                        "name": "refined_fpow",
                         "type": "u64"
                     },
                     {
@@ -1078,11 +1078,11 @@
                         "type": "u64"
                     },
                     {
-                        "name": "lifetime_rewards_sol",
+                        "name": "lifetime_rewards_algo",
                         "type": "u64"
                     },
                     {
-                        "name": "lifetime_rewards_ore",
+                        "name": "lifetime_rewards_fpow",
                         "type": "u64"
                     },
                     {
@@ -1443,17 +1443,17 @@
                     "index": false
                 },
                 {
-                    "name": "ore_buried",
+                    "name": "fpow_buried",
                     "type": "u64",
                     "index": false
                 },
                 {
-                    "name": "ore_shared",
+                    "name": "fpow_shared",
                     "type": "u64",
                     "index": false
                 },
                 {
-                    "name": "sol_amount",
+                    "name": "algo_amount",
                     "type": "u64",
                     "index": false
                 },

@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use steel::*;
 
 /// Sets the executor.
@@ -26,10 +26,10 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
             miner_info,
             system_program,
             &signer_info,
-            &ore_api::ID,
+            &fpow_api::ID,
             &[MINER, &signer_info.key.to_bytes()],
         )?;
-        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        let miner = miner_info.as_account_mut::<Miner>(&fpow_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
         miner.cumulative = [0; 25];
@@ -43,7 +43,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         miner
     } else {
         miner_info
-            .as_account_mut::<Miner>(&ore_api::ID)?
+            .as_account_mut::<Miner>(&fpow_api::ID)?
             .assert_mut_err(
                 |m| m.authority == *signer_info.key,
                 OreError::NotAuthorized.into(),
@@ -53,7 +53,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Close account if executor is Pubkey::default().
     if *executor_info.key == Pubkey::default() {
         automation_info
-            .as_account_mut::<Automation>(&ore_api::ID)?
+            .as_account_mut::<Automation>(&fpow_api::ID)?
             .assert_mut_err(
                 |a| a.authority == *signer_info.key,
                 OreError::NotAuthorized.into(),
@@ -68,16 +68,16 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
             automation_info,
             system_program,
             signer_info,
-            &ore_api::ID,
+            &fpow_api::ID,
             &[AUTOMATION, &signer_info.key.to_bytes()],
         )?;
-        let automation = automation_info.as_account_mut::<Automation>(&ore_api::ID)?;
+        let automation = automation_info.as_account_mut::<Automation>(&fpow_api::ID)?;
         automation.balance = 0;
         automation.authority = *signer_info.key;
         automation
     } else {
         automation_info
-            .as_account_mut::<Automation>(&ore_api::ID)?
+            .as_account_mut::<Automation>(&fpow_api::ID)?
             .assert_mut_err(
                 |a| a.authority == *signer_info.key,
                 OreError::NotAuthorized.into(),

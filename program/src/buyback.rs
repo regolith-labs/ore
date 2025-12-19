@@ -1,4 +1,4 @@
-use ore_api::prelude::*;
+use fpow_api::prelude::*;
 use solana_program::log::sol_log;
 use solana_program::native_token::lamports_to_sol;
 use spl_token::amount_to_ui_amount;
@@ -14,14 +14,14 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
-    board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    board_info.as_account_mut::<Board>(&fpow_api::ID)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info.as_account_mut::<Treasury>(&fpow_api::ID)?;
     let treasury_ore =
         treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     token_program.is_program(&spl_token::ID)?;
-    ore_program.is_program(&ore_api::ID)?;
+    ore_program.is_program(&fpow_api::ID)?;
 
     // Sync native token balance.
     sync_native(treasury_sol_info)?;
@@ -66,7 +66,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             data: data.to_vec(),
         },
         &accounts_infos,
-        &ore_api::ID,
+        &fpow_api::ID,
         &[TREASURY],
     )?;
 

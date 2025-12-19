@@ -2,17 +2,17 @@ use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
-pub enum OreInstruction {
+pub enum FpowInstruction {
     // Miner
     Automate = 0,
     Checkpoint = 2,
-    ClaimSOL = 3,
-    ClaimORE = 4,
+    ClaimALGO = 3,
+    ClaimFPOW = 4,
     Close = 5,
     Deploy = 6,
     Log = 8,
     Reset = 9,
-    ReloadSOL = 21,
+    ReloadALGO = 21,
 
     // Staker
     Deposit = 10,
@@ -42,11 +42,11 @@ pub struct Automate {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimSOL {}
+pub struct ClaimALGO {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimORE {}
+pub struct ClaimFPOW {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -120,7 +120,7 @@ pub struct Bury {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ReloadSOL {}
+pub struct ReloadALGO {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -179,22 +179,22 @@ pub struct Liq {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct CompoundYield {}
 
-instruction!(OreInstruction, Automate);
-instruction!(OreInstruction, Close);
-instruction!(OreInstruction, Checkpoint);
-instruction!(OreInstruction, ClaimSOL);
-instruction!(OreInstruction, ClaimORE);
-instruction!(OreInstruction, ReloadSOL);
-instruction!(OreInstruction, Deploy);
-instruction!(OreInstruction, Log);
-instruction!(OreInstruction, Wrap);
-instruction!(OreInstruction, Buyback);
-instruction!(OreInstruction, Bury);
-instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, SetAdmin);
-instruction!(OreInstruction, Deposit);
-instruction!(OreInstruction, Withdraw);
-instruction!(OreInstruction, ClaimYield);
-instruction!(OreInstruction, NewVar);
-instruction!(OreInstruction, Liq);
-instruction!(OreInstruction, CompoundYield);
+instruction!(FpowInstruction, Automate);
+instruction!(FpowInstruction, Close);
+instruction!(FpowInstruction, Checkpoint);
+instruction!(FpowInstruction, ClaimALGO);
+instruction!(FpowInstruction, ClaimFPOW);
+instruction!(FpowInstruction, ReloadALGO);
+instruction!(FpowInstruction, Deploy);
+instruction!(FpowInstruction, Log);
+instruction!(FpowInstruction, Wrap);
+instruction!(FpowInstruction, Buyback);
+instruction!(FpowInstruction, Bury);
+instruction!(FpowInstruction, Reset);
+instruction!(FpowInstruction, SetAdmin);
+instruction!(FpowInstruction, Deposit);
+instruction!(FpowInstruction, Withdraw);
+instruction!(FpowInstruction, ClaimYield);
+instruction!(FpowInstruction, NewVar);
+instruction!(FpowInstruction, Liq);
+instruction!(FpowInstruction, CompoundYield);

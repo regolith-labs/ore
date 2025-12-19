@@ -20,7 +20,7 @@ use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OreAccount {
+pub enum FpowAccount {
     Automation = 100,
     Config = 101,
     Miner = 103,

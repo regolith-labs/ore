@@ -3,24 +3,24 @@ use steel::*;
 
 use crate::state::miner_pda;
 
-use super::OreAccount;
+use super::FpowAccount;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Automation {
-    /// The amount of SOL to deploy on each territory per round.
+    /// The amount of ALGO to deploy on each territory per round.
     pub amount: u64,
 
     /// The authority of this automation account.
     pub authority: Pubkey,
 
-    /// The amount of SOL this automation has left.
+    /// The amount of ALGO this automation has left.
     pub balance: u64,
 
     /// The executor of this automation account.
     pub executor: Pubkey,
 
-    /// The amount of SOL the executor should receive in fees.
+    /// The amount of ALGO the executor should receive in fees.
     pub fee: u64,
 
     /// The strategy this automation uses.
@@ -30,7 +30,7 @@ pub struct Automation {
     /// If strategy is Random, first bit is used to determine how many squares to deploy to.
     pub mask: u64,
 
-    /// Whether or not to auto-reload SOL winnings into the automation balance.
+    /// Whether or not to auto-reload ALGO winnings into the automation balance.
     pub reload: u64,
 }
 
@@ -54,4 +54,4 @@ impl Automation {
     }
 }
 
-account!(OreAccount, Automation);
+account!(FpowAccount, Automation);
