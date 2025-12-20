@@ -1,8 +1,12 @@
-use const_crypto::ed25519;
-use solana_program::{pubkey, pubkey::Pubkey};
+use algonaut_core::Address;
 
 /// The authority allowed to initialize the program.
-pub const ADMIN_ADDRESS: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk");
+pub const ADMIN_ADDRESS: &str = "HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8JwYAopk";
+
+/// Helper to get admin address
+pub fn admin_address() -> Address {
+    ADMIN_ADDRESS.parse().expect("Invalid admin address")
+}
 
 /// The decimal precision of the fPOW token.
 /// There are 100 billion indivisible units per fPOW (called "grams").
@@ -23,100 +27,82 @@ pub const ONE_DAY: i64 = 24 * ONE_HOUR;
 /// The number of seconds for when the winning square expires.
 pub const ONE_WEEK: i64 = 7 * ONE_DAY;
 
-/// The number of slots in one week.
-pub const ONE_MINUTE_SLOTS: u64 = 150;
+/// Algorand block time is approximately 3.3 seconds
+/// One minute is approximately 18 rounds
+pub const ONE_MINUTE_ROUNDS: u64 = 18;
 
-/// The number of slots in one hour.
-pub const ONE_HOUR_SLOTS: u64 = 60 * ONE_MINUTE_SLOTS;
+/// The number of rounds in one hour.
+pub const ONE_HOUR_ROUNDS: u64 = 60 * ONE_MINUTE_ROUNDS;
 
-/// The number of slots in 12 hours.
-pub const TWELVE_HOURS_SLOTS: u64 = 12 * ONE_HOUR_SLOTS;
+/// The number of rounds in 12 hours.
+pub const TWELVE_HOURS_ROUNDS: u64 = 12 * ONE_HOUR_ROUNDS;
 
-/// The number of slots in one day.
-pub const ONE_DAY_SLOTS: u64 = 24 * ONE_HOUR_SLOTS;
+/// The number of rounds in one day.
+pub const ONE_DAY_ROUNDS: u64 = 24 * ONE_HOUR_ROUNDS;
 
-/// The number of slots in one week.
-pub const ONE_WEEK_SLOTS: u64 = 7 * ONE_DAY_SLOTS;
+/// The number of rounds in one week.
+pub const ONE_WEEK_ROUNDS: u64 = 7 * ONE_DAY_ROUNDS;
 
-/// The number of slots for breather between rounds.
-pub const INTERMISSION_SLOTS: u64 = 35;
+/// The number of rounds for breather between rounds.
+pub const INTERMISSION_ROUNDS: u64 = 5;
 
 /// The maximum token supply (5 million).
 pub const MAX_SUPPLY: u64 = ONE_FPOW * 5_000_000;
 
-/// The seed of the automation account PDA.
+/// The seed of the automation account box.
 pub const AUTOMATION: &[u8] = b"automation";
 
-/// The seed of the board account PDA.
+/// The seed of the board account box.
 pub const BOARD: &[u8] = b"board";
 
-/// The seed of the config account PDA.
+/// The seed of the config account box.
 pub const CONFIG: &[u8] = b"config";
 
-/// The seed of the miner account PDA.
+/// The seed of the miner account box.
 pub const MINER: &[u8] = b"miner";
 
-/// The seed of the seeker account PDA.
+/// The seed of the seeker account box.
 pub const SEEKER: &[u8] = b"seeker";
 
-/// The seed of the square account PDA.
+/// The seed of the square account box.
 pub const SQUARE: &[u8] = b"square";
 
-/// The seed of the stake account PDA.
+/// The seed of the stake account box.
 pub const STAKE: &[u8] = b"stake";
 
-/// The seed of the round account PDA.
+/// The seed of the round account box.
 pub const ROUND: &[u8] = b"round";
 
-/// The seed of the treasury account PDA.
+/// The seed of the treasury account box.
 pub const TREASURY: &[u8] = b"treasury";
 
-/// Program id for const pda derivations
-const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
-
-/// The address of the config account.
-pub const CONFIG_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
-
-/// The address of the mint account.
-pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
-
-/// The address of the ALGO mint account.
-pub const ALGO_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
+/// The fPOW ASA (Algorand Standard Asset) ID
+/// To be set after asset creation
+pub const FPOW_ASA_ID: u64 = 0;
 
 /// The address to indicate fPOW rewards are split between all miners.
-pub const SPLIT_ADDRESS: Pubkey = pubkey!("SpLiT11111111111111111111111111111111111112");
-
-/// The address of the treasury account.
-pub const TREASURY_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);
-
-/// The address of the treasury account.
-pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
+pub const SPLIT_ADDRESS: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
 
-/// The address of the boost reserve token account.
-pub const BOOST_RESERVE_TOKEN: Pubkey = pubkey!("Gce36ZUsBDJsoLrfCBxUB5Sfq2DsGunofStvxFx6rBiD");
-
-/// The fee paid to bots if they checkpoint a user.
-pub const CHECKPOINT_FEE: u64 = 10_000; // 0.00001 ALGO
+/// The fee paid to bots if they checkpoint a user (in microalgos).
+pub const CHECKPOINT_FEE: u64 = 10_000; // 0.01 ALGO
 
 /// Amount paid to bots per transaction for auto-compounding staking yield, in microalgos.
 pub const COMPOUND_FEE_PER_TRANSACTION: u64 = 7_000;
 
-/// The fee paid to the admin for each transaction.
+/// The fee paid to the admin for each transaction (basis points).
 pub const ADMIN_FEE: u64 = 100; // 1%
 
 /// The address to receive the admin fee.
-pub const ADMIN_FEE_COLLECTOR: Pubkey = pubkey!("DyB4Kv6V613gp2LWQTq1dwDYHGKuUEoDHnCouGUtxFiX");
-
-/// The swap program used for buybacks.
-pub const SWAP_PROGRAM: Pubkey = pubkey!("JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4");
-
-/// The address of the var account.
-pub const VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzhxgm2E");
+pub const ADMIN_FEE_COLLECTOR: &str = "DyB4Kv6V613gp2LWQTq1dwDYHGKuUEoDHnCouGUtxFiX";
 
 /// The address which can call the bury and wrap instructions.
-pub const BURY_AUTHORITY: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
+pub const BURY_AUTHORITY: &str = "HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T";
+
+/// Minimum balance requirement for Algorand accounts (in microalgos)
+pub const MIN_BALANCE: u64 = 100_000; // 0.1 ALGO
+
+/// Transaction fee on Algorand (in microalgos)
+pub const TXN_FEE: u64 = 1_000; // 0.001 ALGO

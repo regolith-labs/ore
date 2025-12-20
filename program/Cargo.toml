@@ -10,26 +10,21 @@ repository.workspace = true
 readme.workspace = true
 keywords.workspace = true
 
+# Note: The fPOW smart contract is written in PyTeal for Algorand
+# This crate provides Rust utilities for contract interaction
+# See program/contract/ for the PyTeal smart contract source
+
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["lib"]
 name = "fpow"
 
 [features]
 default = []
 
 [dependencies]
-bincode.workspace = true
-entropy-api.workspace = true
 fpow-api.workspace = true
-fpow-mint-api.workspace = true
-solana-nostd-keccak.workspace = true
-solana-program.workspace = true
-solana-security-txt.workspace = true
-spl-token.workspace = true
-spl-token-2022.workspace = true
-spl-token-metadata-interface.workspace = true
-spl-associated-token-account.workspace = true
-steel.workspace = true
-
-[dev-dependencies]
-rand = "0.8.5"
+serde.workspace = true
+serde_json.workspace = true
+algonaut_core.workspace = true
+algonaut_transaction.workspace = true
+sha2.workspace = true

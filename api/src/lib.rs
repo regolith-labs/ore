@@ -14,6 +14,17 @@ pub mod prelude {
     pub use crate::state::*;
 }
 
-use steel::*;
+use algonaut_core::Address;
 
-declare_id!("oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv");
+/// The fPOW application ID on Algorand
+pub const APP_ID: u64 = 0; // To be set after deployment
+
+/// The fPOW program address (application account)
+pub fn program_address() -> Address {
+    algonaut_core::to_app_address(APP_ID)
+}
+
+/// The ID function for compatibility
+pub fn id() -> Address {
+    program_address()
+}

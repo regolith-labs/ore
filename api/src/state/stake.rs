@@ -1,15 +1,12 @@
 use serde::{Deserialize, Serialize};
-use steel::*;
 
-use crate::state::{stake_pda, Treasury};
+use crate::state::{stake_box_name, Numeric, Treasury};
 
-use super::FpowAccount;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+/// Stake account state for staking fPOW tokens
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stake {
-    /// The authority of this miner account.
-    pub authority: Pubkey,
+    /// The authority of this stake account (Algorand address bytes).
+    pub authority: [u8; 32],
 
     /// The balance of this stake account.
     pub balance: u64,
@@ -29,13 +26,13 @@ pub struct Stake {
     /// The microalgo reserve to pay fees for auto-compounding bots.
     pub compound_fee_reserve: u64,
 
-    /// The timestamp of last claim.
+    /// The timestamp of last claim (unix timestamp).
     pub last_claim_at: i64,
 
-    /// The timestamp the last time this staker deposited.
+    /// The timestamp the last time this staker deposited (unix timestamp).
     pub last_deposit_at: i64,
 
-    /// The timestamp the last time this staker withdrew.
+    /// The timestamp the last time this staker withdrew (unix timestamp).
     pub last_withdraw_at: i64,
 
     /// The rewards factor last time rewards were updated on this stake account.
@@ -52,38 +49,38 @@ pub struct Stake {
 }
 
 impl Stake {
-    pub fn pda(&self) -> (Pubkey, u8) {
-        stake_pda(self.authority)
+    pub fn box_name(&self) -> Vec<u8> {
+        stake_box_name(&self.authority)
     }
 
-    pub fn claim(&mut self, amount: u64, clock: &Clock, treasury: &Treasury) -> u64 {
+    pub fn claim(&mut self, amount: u64, timestamp: i64, treasury: &Treasury) -> u64 {
         self.update_rewards(treasury);
         let amount = self.rewards.min(amount);
         self.rewards -= amount;
-        self.last_claim_at = clock.unix_timestamp;
+        self.last_claim_at = timestamp;
         amount
     }
 
     pub fn deposit(
         &mut self,
         amount: u64,
-        clock: &Clock,
+        timestamp: i64,
         treasury: &mut Treasury,
-        sender: &TokenAccount,
+        sender_balance: u64,
     ) -> u64 {
         self.update_rewards(treasury);
-        let amount = sender.amount().min(amount);
+        let amount = sender_balance.min(amount);
         self.balance += amount;
-        self.last_deposit_at = clock.unix_timestamp;
+        self.last_deposit_at = timestamp;
         treasury.total_staked += amount;
         amount
     }
 
-    pub fn withdraw(&mut self, amount: u64, clock: &Clock, treasury: &mut Treasury) -> u64 {
+    pub fn withdraw(&mut self, amount: u64, timestamp: i64, treasury: &mut Treasury) -> u64 {
         self.update_rewards(treasury);
         let amount = self.balance.min(amount);
         self.balance -= amount;
-        self.last_withdraw_at = clock.unix_timestamp;
+        self.last_withdraw_at = timestamp;
         treasury.total_staked -= amount;
         amount
     }
@@ -105,4 +102,23 @@ impl Stake {
     }
 }
 
-account!(FpowAccount, Stake);
+impl Default for Stake {
+    fn default() -> Self {
+        Self {
+            authority: [0u8; 32],
+            balance: 0,
+            buffer_a: 0,
+            buffer_b: 0,
+            buffer_c: 0,
+            buffer_d: 0,
+            compound_fee_reserve: 0,
+            last_claim_at: 0,
+            last_deposit_at: 0,
+            last_withdraw_at: 0,
+            rewards_factor: Numeric::ZERO,
+            rewards: 0,
+            lifetime_rewards: 0,
+            buffer_f: 0,
+        }
+    }
+}

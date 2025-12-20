@@ -1,15 +1,12 @@
 use serde::{Deserialize, Serialize};
-use steel::*;
 
-use crate::state::config_pda;
+use crate::state::config_box_name;
 
-use super::FpowAccount;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+/// Configuration state for the fPOW application
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
-    /// The address that can update the config.
-    pub admin: Pubkey,
+    /// The address that can update the config (Algorand address bytes).
+    pub admin: [u8; 32],
 
     /// Buffer a (placeholder)
     pub buffer_a: [u8; 32],
@@ -28,9 +25,20 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn pda() -> (Pubkey, u8) {
-        config_pda()
+    pub fn box_name() -> Vec<u8> {
+        config_box_name()
     }
 }
 
-account!(FpowAccount, Config);
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            admin: [0u8; 32],
+            buffer_a: [0u8; 32],
+            buffer_b: [0u8; 32],
+            buffer_c: [0u8; 32],
+            buffer_d: [0u8; 32],
+            buffer_e: [0u8; 8],
+        }
+    }
+}

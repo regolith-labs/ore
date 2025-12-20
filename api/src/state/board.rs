@@ -1,30 +1,25 @@
 use serde::{Deserialize, Serialize};
-use steel::*;
 
-use crate::state::board_pda;
+use crate::state::board_box_name;
 
-use super::FpowAccount;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+/// Board state - tracks the current game round
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Board {
     /// The current round number.
     pub round_id: u64,
 
-    /// The slot at which the current round starts mining.
-    pub start_slot: u64,
+    /// The Algorand round at which the current round starts mining.
+    pub start_round: u64,
 
-    /// The slot at which the current round ends mining.
-    pub end_slot: u64,
+    /// The Algorand round at which the current round ends mining.
+    pub end_round: u64,
 
     /// The current epoch id.
     pub epoch_id: u64,
 }
 
 impl Board {
-    pub fn pda(&self) -> (Pubkey, u8) {
-        board_pda()
+    pub fn box_name() -> Vec<u8> {
+        board_box_name()
     }
 }
-
-account!(FpowAccount, Board);

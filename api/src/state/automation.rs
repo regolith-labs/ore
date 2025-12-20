@@ -1,24 +1,21 @@
 use serde::{Deserialize, Serialize};
-use steel::*;
 
-use crate::state::miner_pda;
+use crate::state::miner_box_name;
 
-use super::FpowAccount;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+/// Automation account for automated mining
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Automation {
     /// The amount of ALGO to deploy on each territory per round.
     pub amount: u64,
 
-    /// The authority of this automation account.
-    pub authority: Pubkey,
+    /// The authority of this automation account (Algorand address bytes).
+    pub authority: [u8; 32],
 
-    /// The amount of ALGO this automation has left.
+    /// The amount of ALGO this automation has left (in microalgos).
     pub balance: u64,
 
-    /// The executor of this automation account.
-    pub executor: Pubkey,
+    /// The executor of this automation account (Algorand address bytes).
+    pub executor: [u8; 32],
 
     /// The amount of ALGO the executor should receive in fees.
     pub fee: u64,
@@ -35,7 +32,7 @@ pub struct Automation {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum AutomationStrategy {
     Random = 0,
     Preferred = 1,
@@ -43,15 +40,33 @@ pub enum AutomationStrategy {
 }
 
 impl AutomationStrategy {
-    pub fn from_u64(value: u64) -> Self {
-        Self::try_from(value as u8).unwrap()
+    pub fn from_u64(value: u64) -> Option<Self> {
+        match value {
+            0 => Some(AutomationStrategy::Random),
+            1 => Some(AutomationStrategy::Preferred),
+            2 => Some(AutomationStrategy::Discretionary),
+            _ => None,
+        }
     }
 }
 
 impl Automation {
-    pub fn pda(&self) -> (Pubkey, u8) {
-        miner_pda(self.authority)
+    pub fn box_name(&self) -> Vec<u8> {
+        miner_box_name(&self.authority)
     }
 }
 
-account!(FpowAccount, Automation);
+impl Default for Automation {
+    fn default() -> Self {
+        Self {
+            amount: 0,
+            authority: [0u8; 32],
+            balance: 0,
+            executor: [0u8; 32],
+            fee: 0,
+            strategy: 0,
+            mask: 0,
+            reload: 0,
+        }
+    }
+}
