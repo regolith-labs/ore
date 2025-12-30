@@ -161,6 +161,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Calculate all deployments.
     let mut total_amount = 0;
     let mut total_squares = 0;
+    let mut deployed_squares = [false; 25];
     for (square_id, &should_deploy) in squares.iter().enumerate() {
         // Skip if square index is out of bounds.
         if square_id > 24 {
@@ -191,6 +192,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         // Update totals.
         total_amount += amount;
         total_squares += 1;
+        deployed_squares[square_id] = true;
 
         // Exit early if automation does not have enough balance for another square.
         if let Some(automation) = &automation {
@@ -236,6 +238,14 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         round_info.collect(total_amount, &signer_info)?;
     }
 
+    // Rebuild the mask from the deployed squares.
+    let mut deployed_mask = 0;
+    for (square_id, &deployed) in deployed_squares.iter().enumerate() {
+        if deployed {
+            deployed_mask |= 1 << square_id;
+        }
+    }
+
     // Log the deploy event.
     program_log(
         &[board_info.clone(), ore_program.clone()],
@@ -243,7 +253,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             disc: 2,
             authority: miner.authority,
             amount,
-            mask: mask as u64,
+            mask: deployed_mask as u64,
             round_id: round.id,
             signer: *signer_info.key,
             strategy,
