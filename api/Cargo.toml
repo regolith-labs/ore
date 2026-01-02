@@ -12,7 +12,6 @@ keywords.workspace = true
 [dependencies]
 base64.workspace = true
 bytemuck.workspace = true
-const-crypto.workspace = true
 entropy-api.workspace = true
 num_enum.workspace = true
 ore-mint-api.workspace = true

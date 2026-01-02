@@ -3,7 +3,7 @@ use spl_associated_token_account::get_associated_token_address;
 use steel::*;
 
 use crate::{
-    consts::{BOARD, MINT_ADDRESS, SOL_MINT, TREASURY_ADDRESS},
+    consts::{BOARD, MINT_ADDRESS, SOL_MINT},
     instruction::*,
     state::*,
 };
@@ -149,7 +149,7 @@ pub fn buyback(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) 
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let mint_address = MINT_ADDRESS;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
     let mut accounts = vec![
@@ -183,7 +183,7 @@ pub fn bury(signer: Pubkey, amount: u64) -> Instruction {
     let board_address = board_pda().0;
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
     let mint_address = MINT_ADDRESS;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
     let token_program = spl_token::ID;
     let ore_program = crate::ID;
@@ -212,7 +212,7 @@ pub fn liq(signer: Pubkey, manager: Pubkey) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
     let manager_sol_address = get_associated_token_address(&manager, &SOL_MINT);
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
     let token_program = spl_token::ID;
     let ore_program = crate::ID;
@@ -235,7 +235,7 @@ pub fn liq(signer: Pubkey, manager: Pubkey) -> Instruction {
 
 pub fn wrap(signer: Pubkey, amount: u64) -> Instruction {
     let config_address = config_pda().0;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
     Instruction {
         accounts: vec![
@@ -267,7 +267,7 @@ pub fn reset(
     let round_address = round_pda(round_id).0;
     let round_next_address = round_pda(round_id + 1).0;
     let top_miner_address = miner_pda(top_miner).0;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_tokens_address = treasury_tokens_address();
     let entropy_var_address = entropy_api::state::var_pda(board_address, 0).0;
     let mint_authority_address = ore_mint_api::state::authority_pda().0;
@@ -303,7 +303,7 @@ pub fn reset(
 
 pub fn close(signer: Pubkey, round_id: u64, rent_payer: Pubkey) -> Instruction {
     let board_address = board_pda().0;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let round_address = round_pda(round_id).0;
     Instruction {
         program_id: crate::ID,
@@ -325,7 +325,7 @@ pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instructi
     let miner_address = miner_pda(authority).0;
     let board_address = board_pda().0;
     let round_address = round_pda(round_id).0;
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -363,7 +363,7 @@ pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64, compound_fee: u64) ->
     let stake_address = stake_pda(signer).0;
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
     let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -393,7 +393,7 @@ pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
     let mint_address = MINT_ADDRESS;
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
@@ -437,7 +437,7 @@ pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
     let stake_address = stake_pda(signer).0;
     let mint_address = MINT_ADDRESS;
     let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_tokens_address = treasury_tokens_address();
     Instruction {
         program_id: crate::ID,
@@ -463,7 +463,7 @@ pub fn compound_yield(signer: Pubkey) -> Instruction {
     let stake_address = stake_pda(signer).0;
     let mint_address = MINT_ADDRESS;
     let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
-    let treasury_address = TREASURY_ADDRESS;
+    let treasury_address = treasury_pda().0;
     let treasury_tokens_address = treasury_tokens_address();
     Instruction {
         program_id: crate::ID,

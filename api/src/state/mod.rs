@@ -59,5 +59,6 @@ pub fn treasury_pda() -> (Pubkey, u8) {
 }
 
 pub fn treasury_tokens_address() -> Pubkey {
-    spl_associated_token_account::get_associated_token_address(&TREASURY_ADDRESS, &MINT_ADDRESS)
+    let treasury_address = treasury_pda().0;
+    spl_associated_token_account::get_associated_token_address(&treasury_address, &MINT_ADDRESS)
 }

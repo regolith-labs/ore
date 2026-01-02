@@ -1,4 +1,3 @@
-use const_crypto::ed25519;
 use solana_program::{pubkey, pubkey::Pubkey};
 
 /// The authority allowed to initialize the program.
@@ -74,10 +73,6 @@ pub const TREASURY: &[u8] = b"treasury";
 /// Program id for const pda derivations
 const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
 
-/// The address of the config account.
-pub const CONFIG_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[CONFIG], &PROGRAM_ID).0);
-
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
 
@@ -86,13 +81,6 @@ pub const SOL_MINT: Pubkey = pubkey!("So1111111111111111111111111111111111111111
 
 /// The address to indicate ORE rewards are split between all miners.
 pub const SPLIT_ADDRESS: Pubkey = pubkey!("SpLiT11111111111111111111111111111111111112");
-
-/// The address of the treasury account.
-pub const TREASURY_ADDRESS: Pubkey =
-    Pubkey::new_from_array(ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).0);
-
-/// The address of the treasury account.
-pub const TREASURY_BUMP: u8 = ed25519::derive_program_address(&[TREASURY], &PROGRAM_ID).1;
 
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
