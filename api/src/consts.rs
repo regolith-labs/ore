@@ -82,6 +82,9 @@ pub const SOL_MINT: Pubkey = pubkey!("So1111111111111111111111111111111111111111
 /// The address to indicate ORE rewards are split between all miners.
 pub const SPLIT_ADDRESS: Pubkey = pubkey!("SpLiT11111111111111111111111111111111111112");
 
+/// The address to indicate automation is permissionless.
+pub const EXECUTOR_ADDRESS: Pubkey = pubkey!("executor11111111111111111111111111111111112");
+
 /// Denominator for fee calculations.
 pub const DENOMINATOR_BPS: u64 = 10_000;
 

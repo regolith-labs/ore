@@ -63,7 +63,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     // Create stake tokens account.
     if stake_tokens_info.data_is_empty() {
         create_associated_token_account(
-            signer_info,
+            payer_info,
             stake_info,
             stake_tokens_info,
             mint_info,
