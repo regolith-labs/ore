@@ -101,7 +101,7 @@ pub fn process_deposit(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Transfer SOL to the stake account for compound fee.
     stake.compound_fee_reserve += compound_fee;
-    stake_info.collect(compound_fee, &signer_info)?;
+    stake_info.collect(compound_fee, &payer_info)?;
 
     // Safety check.
     let stake_tokens =
