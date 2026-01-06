@@ -12,7 +12,7 @@ pub fn process_reload_sol(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     signer_info.is_signer()?;
     let automation = automation_info
         .as_account_mut::<Automation>(&ore_api::ID)?
-        .assert_mut(|a| a.executor == *signer_info.key)?
+        .assert_mut(|a| a.executor == *signer_info.key || a.executor == EXECUTOR_ADDRESS)?
         .assert_mut(|a| a.reload > 0)?;
     let miner = miner_info
         .as_account_mut::<Miner>(&ore_api::ID)?
