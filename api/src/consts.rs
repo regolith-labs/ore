@@ -70,9 +70,6 @@ pub const ROUND: &[u8] = b"round";
 /// The seed of the treasury account PDA.
 pub const TREASURY: &[u8] = b"treasury";
 
-/// Program id for const pda derivations
-const PROGRAM_ID: [u8; 32] = unsafe { *(&crate::id() as *const Pubkey as *const [u8; 32]) };
-
 /// The address of the mint account.
 pub const MINT_ADDRESS: Pubkey = pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp");
 
