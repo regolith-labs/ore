@@ -12,7 +12,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let (ore_accounts, other_accounts) = accounts.split_at(14);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Other accounts: {:?}", other_accounts.len()).to_string());
-    let [signer_info, board_info, _config_info, fee_collector_info, mint_info, round_info, round_next_info, _top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, _config_info, fee_collector_info, mint_info, round_info, round_next_info, top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -233,17 +233,26 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         &[TREASURY],
     )?;
 
-    // Validate top miner.
-    // TODO Safety checks here (if no one won).
-    // let mut top_miner_address = Pubkey::default();
-    // let top_miner_sample = round.top_miner_sample(r, winning_square);
-    // let top_miner = top_miner_info
-    //     .as_account::<Miner>(&ore_api::ID)?
-    //     .assert(|m| m.round_id == round.id)?
-    //     .assert(|m| {
-    //         m.cumulative[winning_square] >= top_miner_sample
-    //             && top_miner_sample < m.cumulative[winning_square] + m.deployed[winning_square]
-    //     })?;
+    // Validate top miner (dry-run - no errors on failure).
+    if round.top_miner != SPLIT_ADDRESS {
+        if let Ok(miner) = top_miner_info.as_account::<Miner>(&ore_api::ID) {
+            if miner.round_id == round.id {
+                let top_miner_sample = round.top_miner_sample(r, winning_square);
+                if top_miner_sample >= miner.cumulative[winning_square]
+                    && top_miner_sample
+                        < miner.cumulative[winning_square] + miner.deployed[winning_square]
+                {
+                    sol_log("Top miner verified");
+                } else {
+                    sol_log("Top miner verification failed");
+                }
+            } else {
+                sol_log("Top miner round id mismatch");
+            }
+        } else {
+            sol_log("Top miner account cannot be parsed");
+        }
+    }
 
     // Emit event.
     program_log(
