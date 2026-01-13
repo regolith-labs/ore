@@ -56,10 +56,10 @@ git log --oneline $DEPLOYED_COMMIT..HEAD
 git diff --stat $DEPLOYED_COMMIT..HEAD
 ```
 
-**Show code changes (summary):**
+**Show code changes:**
 
 ```bash
-git diff $DEPLOYED_COMMIT..HEAD -- program/src api/src
+git diff $DEPLOYED_COMMIT..HEAD
 ```
 
 **Claude**: Present a clear summary of:
