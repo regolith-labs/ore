@@ -254,6 +254,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         } else {
             sol_log("Top miner account cannot be parsed");
         }
+    } else {
+        sol_log("Split round");
     }
 
     // Emit event.
