@@ -113,6 +113,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 total_minted: 0,
                 ts: clock.unix_timestamp,
                 rng: 0,
+                deployed_winning_square: 0,
             }
             .to_bytes(),
         )?;
@@ -154,6 +155,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 total_minted: 0,
                 ts: clock.unix_timestamp,
                 rng: r,
+                deployed_winning_square: round.deployed[winning_square],
             }
             .to_bytes(),
         )?;
@@ -272,6 +274,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_minted: total_mint_amount,
             ts: clock.unix_timestamp,
             rng: r,
+            deployed_winning_square: round.deployed[winning_square],
         }
         .to_bytes(),
     )?;

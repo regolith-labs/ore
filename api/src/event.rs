@@ -52,6 +52,9 @@ pub struct ResetEvent {
 
     /// The rng value of the round.
     pub rng: u64,
+
+    /// The amount deployed on the winning square.
+    pub deployed_winning_square: u64,
 }
 
 #[repr(C)]
