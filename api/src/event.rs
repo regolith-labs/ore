@@ -49,6 +49,9 @@ pub struct ResetEvent {
 
     /// The timestamp of the event.
     pub ts: i64,
+
+    /// The rng value of the round.
+    pub rng: u64,
 }
 
 #[repr(C)]
