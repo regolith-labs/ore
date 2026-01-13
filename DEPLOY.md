@@ -22,6 +22,46 @@ LIBRARY_NAME: ore
 
 ## Deployment Steps
 
+### Step 0: Review changes to be deployed
+
+Fetch the currently deployed commit from Solana Verify and summarize all changes.
+
+**Fetch deployed commit:**
+
+```bash
+DEPLOYED_COMMIT=$(curl -s "https://verify.osec.io/status/oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv" \
+  -H "Accept: application/json" | grep -o '"commit":"[^"]*"' | cut -d'"' -f4)
+echo "Currently deployed commit: $DEPLOYED_COMMIT"
+```
+
+**Show commits since deployed version:**
+
+```bash
+git log --oneline $DEPLOYED_COMMIT..HEAD
+```
+
+**Show files changed:**
+
+```bash
+git diff --stat $DEPLOYED_COMMIT..HEAD
+```
+
+**Show code changes (summary):**
+
+```bash
+git diff $DEPLOYED_COMMIT..HEAD -- program/src api/src
+```
+
+**Claude**: Present a clear summary of:
+1. Number of commits being deployed
+2. List of commits with their messages
+3. Files changed and their purpose
+4. Any breaking changes or risk assessment
+
+Then use `AskUserQuestion` to confirm the user wants to proceed with deployment.
+
+---
+
 ### Step 1: Build the program
 
 Build the program with solana-verify to ensure reproducible builds.
@@ -182,13 +222,17 @@ solana-verify remote submit-job \
 
 When executing this runbook:
 
-1. Run each step sequentially using the Bash tool
-2. After Step 2, store `BUFFER_KEYPAIR` and `BUFFER_ADDRESS` for use in subsequent steps
-3. After Step 5, present the base58 transaction output in a clearly copyable format
-4. In Step 6, the commit URL is derived from git - format as `https://github.com/regolith-labs/ore/commit/<hash>`
-5. In Step 7, use `AskUserQuestion` to prompt the user to confirm they've created the Squads deployment before running the set-buffer-authority command
-6. In Step 8, use `AskUserQuestion` to prompt the user to confirm the multisig deployment has been fully executed
-7. Only run Step 9 (cleanup) after user confirms deployment is complete
-8. In Step 10, retry the verification job command until it succeeds (may fail due to rate limits or temporary issues)
-9. If any step fails unexpectedly, stop and report the error before proceeding
-10. Verify `HELIUS_API_KEY` environment variable is set before Step 3
+**General:**
+- Run each step sequentially using the Bash tool
+- If any step fails unexpectedly, stop and report the error before proceeding
+- Verify `HELIUS_API_KEY` environment variable is set before Step 3
+
+**Step-specific instructions:**
+- **Step 0**: Fetch the deployed commit from the Solana Verify API, present a clear summary of all changes, and use `AskUserQuestion` to confirm before proceeding
+- **Step 2**: Store `BUFFER_KEYPAIR` and `BUFFER_ADDRESS` for use in subsequent steps
+- **Step 5**: Present the base58 transaction output in a clearly copyable format
+- **Step 6**: The commit URL is derived from git - format as `https://github.com/regolith-labs/ore/commit/<hash>`
+- **Step 7**: Use `AskUserQuestion` to prompt the user to confirm they've created the Squads deployment before running the set-buffer-authority command
+- **Step 8**: Use `AskUserQuestion` to prompt the user to confirm the multisig deployment has been fully executed
+- **Step 9**: Only run cleanup after user confirms deployment is complete
+- **Step 10**: Retry the verification job command until it succeeds (may fail due to rate limits or temporary issues)
