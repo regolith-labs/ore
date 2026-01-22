@@ -8,6 +8,9 @@ pub enum OreError {
 
     #[error("Not authorized")]
     NotAuthorized = 1,
+
+    #[error("Invalid executor")]
+    InvalidExecutor = 2,
 }
 
 error!(OreError);

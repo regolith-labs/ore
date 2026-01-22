@@ -20,6 +20,11 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     automation_info.is_writable()?;
     system_program.is_program(&system_program::ID)?;
 
+    // Do not allow permissionless execution with discretionary strategy.
+    if strategy == AutomationStrategy::Discretionary && *executor_info.key == EXECUTOR_ADDRESS {
+        return Err(OreError::InvalidExecutor.into());
+    }
+
     // Open miner account.
     let miner = if miner_info.data_is_empty() {
         create_program_account::<Miner>(
