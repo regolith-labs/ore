@@ -58,21 +58,25 @@ pub fn automate(
 }
 
 pub fn claim_sol(signer: Pubkey) -> Instruction {
+    let board_address = board_pda().0;
     let miner_address = miner_pda(signer).0;
     Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: ClaimSOL {}.to_bytes(),
     }
 }
 
-// let [signer_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
+// let [signer_info, board_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
 
 pub fn claim_ore(signer: Pubkey) -> Instruction {
+    let board_address = board_pda().0;
     let miner_address = miner_pda(signer).0;
     let treasury_address = treasury_pda().0;
     let treasury_tokens_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
@@ -81,6 +85,7 @@ pub fn claim_ore(signer: Pubkey) -> Instruction {
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(MINT_ADDRESS, false),
             AccountMeta::new(recipient_address, false),
@@ -89,6 +94,7 @@ pub fn claim_ore(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         data: ClaimORE {}.to_bytes(),
     }

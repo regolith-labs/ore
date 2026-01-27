@@ -6,6 +6,7 @@ pub enum OreEvent {
     Bury = 1,
     Deploy = 2,
     Liq = 3,
+    Claim = 4,
 }
 
 #[repr(C)]
@@ -126,7 +127,28 @@ pub struct LiqEvent {
     pub ts: i64,
 }
 
+/// Claim event - emitted when a miner claims SOL or ORE rewards.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
+pub struct ClaimEvent {
+    /// The event discriminator.
+    pub disc: u64,
+
+    /// The authority of the miner claiming.
+    pub authority: Pubkey,
+
+    /// The amount claimed.
+    pub amount: u64,
+
+    /// The claim type (0 = SOL, 1 = ORE).
+    pub claim_type: u64,
+
+    /// The timestamp of the event.
+    pub ts: i64,
+}
+
 event!(ResetEvent);
 event!(BuryEvent);
 event!(DeployEvent);
 event!(LiqEvent);
+event!(ClaimEvent);
