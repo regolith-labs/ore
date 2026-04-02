@@ -2675,6 +2675,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "ore-api"
+version = "3.7.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71ba2b7a7eab133e0d017d10875207473df5addc2a6296d4ae6f6023eb0e4fb6"
+dependencies = [
+ "base64 0.22.1",
+ "bytemuck",
+ "entropy-api",
+ "num_enum",
+ "ore-mint-api",
+ "serde",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "spl-token-2022 7.0.0",
+ "steel",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "ore-cli"
 version = "3.7.27"
 dependencies = [
@@ -2686,7 +2706,7 @@ dependencies = [
  "entropy-api",
  "entropy-types",
  "jupiter-swap-api-client",
- "ore-api",
+ "ore-api 3.7.27",
  "reqwest 0.11.27",
  "serde",
  "serde_json",
@@ -2723,8 +2743,9 @@ version = "3.7.27"
 dependencies = [
  "bincode",
  "entropy-api",
- "ore-api",
+ "ore-api 3.7.27",
  "ore-mint-api",
+ "ore-stake-api",
  "rand 0.8.5",
  "solana-nostd-keccak",
  "solana-program",
@@ -2734,6 +2755,25 @@ dependencies = [
  "spl-token-2022 7.0.0",
  "spl-token-metadata-interface 0.6.0",
  "steel",
+]
+
+[[package]]
+name = "ore-stake-api"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f787b641096e4c6fdd8da9e22f7b4f7651611f87a1bc0bdc690e4a228db8fe2f"
+dependencies = [
+ "base64 0.22.1",
+ "bytemuck",
+ "num_enum",
+ "ore-api 3.7.27 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token 4.0.2",
+ "spl-token-2022 7.0.0",
+ "steel",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

@@ -27,6 +27,8 @@ pub enum OreInstruction {
     SetAdmin = 15,
     NewVar = 19,
     Liq = 25,
+
+    MigrateStake = 26,
 }
 
 #[repr(C)]
@@ -179,6 +181,10 @@ pub struct Liq {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct CompoundYield {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct MigrateStake {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -198,3 +204,4 @@ instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, NewVar);
 instruction!(OreInstruction, Liq);
 instruction!(OreInstruction, CompoundYield);
+instruction!(OreInstruction, MigrateStake);

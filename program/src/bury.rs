@@ -36,6 +36,8 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         amount,
     )?;
 
+    // TODO Send funds to stake program via CPI.
+
     // Share some ORE with stakers.
     let mut shared_amount = 0;
     if treasury.total_staked > 0 {
