@@ -22,6 +22,40 @@ pub fn program_log(accounts: &[AccountInfo], msg: &[u8]) -> Result<(), ProgramEr
     invoke_signed(&log(*accounts[0].key, msg), accounts, &crate::ID, &[BOARD])
 }
 
+// let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program] =
+
+pub fn migrate_stake(
+    signer: Pubkey,
+    authority: Pubkey,
+    new_stake: Pubkey,
+    new_treasury: Pubkey,
+) -> Instruction {
+    let old_stake = stake_pda(authority).0;
+    let old_stake_tokens = get_associated_token_address(&old_stake, &MINT_ADDRESS);
+    let stake_tokens = get_associated_token_address(&new_stake, &MINT_ADDRESS);
+    let old_treasury = treasury_pda().0;
+    let new_treasury_tokens = get_associated_token_address(&new_treasury, &MINT_ADDRESS);
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(signer, true),
+            AccountMeta::new(MINT_ADDRESS, false),
+            AccountMeta::new(old_stake, false),
+            AccountMeta::new(old_stake_tokens, false),
+            AccountMeta::new(new_stake, false),
+            AccountMeta::new(stake_tokens, false),
+            AccountMeta::new(old_treasury, false),
+            AccountMeta::new(new_treasury, false),
+            AccountMeta::new(new_treasury_tokens, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(spl_token::ID, false),
+            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+        ],
+        data: MigrateStake {}.to_bytes(),
+    }
+}
+
 // let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
 
 pub fn automate(

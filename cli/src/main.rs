@@ -69,6 +69,9 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
+        "migrate_stake" => {
+            migrate_stake(&rpc, &payer).await.unwrap();
+        }
         // "pool" => {
         //     log_meteora_pool(&rpc).await.unwrap();
         // }
@@ -119,6 +122,20 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
+}
+
+async fn migrate_stake(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let authority = pubkey!("6i56BeTvckL1pm3Hvk3hqw95wYfNT1aFcjSjKdgUJp3s");
+    let new_stake = ore_stake_api::state::stake_pda(authority).0;
+    let new_treasury = ore_stake_api::state::treasury_pda().0;
+    println!("New stake: {}", new_stake);
+    println!("New treasury: {}", new_treasury);
+    let ix = ore_api::sdk::migrate_stake(payer.pubkey(), authority, new_stake, new_treasury);
+    submit_transaction(rpc, payer, &[ix]).await?;
+    Ok(())
 }
 
 async fn liq(
