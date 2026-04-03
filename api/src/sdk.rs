@@ -158,6 +158,9 @@ pub fn buyback(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) 
     let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
+    let stake_treasury_address = ore_stake_api::state::treasury_pda().0;
+    let stake_treasury_ore_address =
+        get_associated_token_address(&stake_treasury_address, &MINT_ADDRESS);
     let mut accounts = vec![
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
@@ -166,8 +169,11 @@ pub fn buyback(signer: Pubkey, swap_accounts: &[AccountMeta], swap_data: &[u8]) 
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_ore_address, false),
         AccountMeta::new(treasury_sol_address, false),
+        AccountMeta::new(stake_treasury_address, false),
+        AccountMeta::new(stake_treasury_ore_address, false),
         AccountMeta::new_readonly(spl_token::ID, false),
         AccountMeta::new_readonly(crate::ID, false),
+        AccountMeta::new_readonly(ore_stake_api::ID, false),
     ];
     for account in swap_accounts.iter() {
         let mut acc_clone = account.clone();

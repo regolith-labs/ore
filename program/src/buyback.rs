@@ -8,7 +8,7 @@ use steel::*;
 pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Load accounts.
     let (ore_accounts, swap_accounts) = accounts.split_at(9);
-    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, token_program, ore_program] =
+    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, stake_treasury_info, stake_treasury_ore_info, treasury_sol_info, token_program, ore_program, ore_stake_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -22,6 +22,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     token_program.is_program(&spl_token::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+    ore_stake_program.is_program(&ore_stake_api::ID)?;
 
     // Sync native token balance.
     sync_native(treasury_sol_info)?;
@@ -106,13 +107,20 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     );
 
     // Share some ORE with stakers.
-    let mut shared_amount = 0;
-    if treasury.total_staked > 0 {
-        shared_amount = total_ore / 10; // Share 10% of buyback ORE with stakers
-        treasury.stake_rewards_factor +=
-            Numeric::from_fraction(shared_amount, treasury.total_staked);
-    }
-
+    let shared_amount = total_ore / 10;
+    invoke_signed(
+        &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
+        &[
+            treasury_info.clone(),
+            treasury_ore_info.clone(),
+            mint_info.clone(),
+            stake_treasury_info.clone(),
+            stake_treasury_ore_info.clone(),
+            token_program.clone(),
+        ],
+        &ore_api::ID,
+        &[TREASURY],
+    )?;
     sol_log(&format!(
         "💰 Shared {} ORE",
         amount_to_ui_amount(shared_amount, TOKEN_DECIMALS)

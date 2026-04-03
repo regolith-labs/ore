@@ -5,8 +5,6 @@ use steel::*;
 
 /// Bury ORE and distribute yield to stakers.
 pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
-    panic!("Bury is disabled");
-
     // Parse data.
     let args = Bury::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);
@@ -23,10 +21,11 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     token_program.is_program(&spl_token::ID)?;
     ore_program.is_program(&ore_api::ID)?;
+    ore_stake_program.is_program(&ore_stake_api::ID)?;
 
     // Transfer ORE from sender to treasury.
     let amount = sender.amount().min(amount);
@@ -38,10 +37,8 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         amount,
     )?;
 
-    // TODO Send funds to stake program via CPI.
-
     // Share 10% of buyback ORE with stakers
-    let mut shared_amount = amount / 10;
+    let shared_amount = amount / 10;
     invoke_signed(
         &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
         &[
