@@ -12,7 +12,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer_info, sender_info, board_info, mint_info, treasury_info, treasury_ore_info, token_program, ore_program] =
+    let [signer_info, sender_info, board_info, mint_info, treasury_info, treasury_ore_info, stake_treasury_info, stake_treasury_tokens_info, token_program, ore_program, ore_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -40,13 +40,21 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
 
     // TODO Send funds to stake program via CPI.
 
-    // Share some ORE with stakers.
-    let mut shared_amount = 0;
-    if treasury.total_staked > 0 {
-        shared_amount = amount / 10; // Share 10% of buyback ORE with stakers
-        treasury.stake_rewards_factor +=
-            Numeric::from_fraction(shared_amount, treasury.total_staked);
-    }
+    // Share 10% of buyback ORE with stakers
+    let mut shared_amount = amount / 10;
+    invoke_signed(
+        &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
+        &[
+            treasury_info.clone(),
+            treasury_ore_info.clone(),
+            mint_info.clone(),
+            stake_treasury_info.clone(),
+            stake_treasury_tokens_info.clone(),
+            token_program.clone(),
+        ],
+        &ore_api::ID,
+        &[TREASURY],
+    )?;
     sol_log(&format!(
         "💰 Shared {} ORE",
         amount_to_ui_amount(shared_amount, TOKEN_DECIMALS)

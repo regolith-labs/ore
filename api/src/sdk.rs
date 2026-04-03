@@ -191,6 +191,9 @@ pub fn bury(signer: Pubkey, amount: u64) -> Instruction {
     let mint_address = MINT_ADDRESS;
     let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
+    let stake_treasury_address = ore_stake_api::state::treasury_pda().0;
+    let stake_treasury_ore_address =
+        get_associated_token_address(&stake_treasury_address, &MINT_ADDRESS);
     let token_program = spl_token::ID;
     let ore_program = crate::ID;
     Instruction {
@@ -202,8 +205,11 @@ pub fn bury(signer: Pubkey, amount: u64) -> Instruction {
             AccountMeta::new(mint_address, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new(treasury_ore_address, false),
+            AccountMeta::new(stake_treasury_address, false),
+            AccountMeta::new(stake_treasury_ore_address, false),
             AccountMeta::new_readonly(token_program, false),
             AccountMeta::new_readonly(ore_program, false),
+            AccountMeta::new_readonly(ore_stake_api::ID, false),
         ],
         data: Bury {
             amount: amount.to_le_bytes(),
