@@ -5,6 +5,8 @@ use steel::*;
 
 /// Bury ORE and distribute yield to stakers.
 pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    panic!("Bury is disabled");
+
     // Parse data.
     let args = Bury::try_from_bytes(data)?;
     let amount = u64::from_le_bytes(args.amount);

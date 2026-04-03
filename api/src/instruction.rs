@@ -14,12 +14,6 @@ pub enum OreInstruction {
     Reset = 9,
     ReloadSOL = 21,
 
-    // Staker
-    Deposit = 10,
-    Withdraw = 11,
-    ClaimYield = 12,
-    CompoundYield = 22,
-
     // Admin
     Buyback = 13,
     Bury = 24,
@@ -27,8 +21,6 @@ pub enum OreInstruction {
     SetAdmin = 15,
     NewVar = 19,
     Liq = 25,
-
-    MigrateStake = 26,
 }
 
 #[repr(C)]
@@ -126,25 +118,6 @@ pub struct ReloadSOL {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Deposit {
-    pub amount: [u8; 8],
-    pub compound_fee: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Withdraw {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimYield {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Checkpoint {}
 
 #[repr(C)]
@@ -177,14 +150,6 @@ pub struct SetVarAddress {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Liq {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct CompoundYield {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct MigrateStake {}
-
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -198,10 +163,5 @@ instruction!(OreInstruction, Buyback);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
-instruction!(OreInstruction, Deposit);
-instruction!(OreInstruction, Withdraw);
-instruction!(OreInstruction, ClaimYield);
 instruction!(OreInstruction, NewVar);
 instruction!(OreInstruction, Liq);
-instruction!(OreInstruction, CompoundYield);
-instruction!(OreInstruction, MigrateStake);

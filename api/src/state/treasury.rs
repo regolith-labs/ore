@@ -21,6 +21,7 @@ pub struct Treasury {
     pub miner_rewards_factor: Numeric,
 
     /// The cumulative ORE distributed to stakers, divided by the total stake at the time of distribution.
+    #[deprecated(since = "3.8.0", note = "Staking has moved to ore-stake program")]
     pub stake_rewards_factor: Numeric,
 
     /// Buffer b (placeholder)
@@ -30,6 +31,7 @@ pub struct Treasury {
     pub total_refined: u64,
 
     /// The current total amount of ORE staking deposits.
+    #[deprecated(since = "3.8.0", note = "Staking has moved to ore-stake program")]
     pub total_staked: u64,
 
     /// The current total amount of unclaimed ORE mining rewards.

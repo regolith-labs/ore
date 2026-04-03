@@ -22,44 +22,6 @@ pub fn program_log(accounts: &[AccountInfo], msg: &[u8]) -> Result<(), ProgramEr
     invoke_signed(&log(*accounts[0].key, msg), accounts, &crate::ID, &[BOARD])
 }
 
-// let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program] =
-
-pub fn migrate_stake(
-    signer: Pubkey,
-    authority: Pubkey,
-    new_stake: Pubkey,
-    new_treasury: Pubkey,
-    ore_stake_program: Pubkey,
-) -> Instruction {
-    let old_stake = stake_pda(authority).0;
-    let old_stake_tokens = get_associated_token_address(&old_stake, &MINT_ADDRESS);
-    let stake_tokens = get_associated_token_address(&new_stake, &MINT_ADDRESS);
-    let old_treasury = treasury_pda().0;
-    let old_treasury_tokens = get_associated_token_address(&old_treasury, &MINT_ADDRESS);
-    let new_treasury_tokens = get_associated_token_address(&new_treasury, &MINT_ADDRESS);
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(signer, true),
-            AccountMeta::new(MINT_ADDRESS, false),
-            AccountMeta::new(old_stake, false),
-            AccountMeta::new(old_stake_tokens, false),
-            AccountMeta::new(new_stake, false),
-            AccountMeta::new(stake_tokens, false),
-            AccountMeta::new(old_treasury, false),
-            AccountMeta::new(old_treasury_tokens, false),
-            AccountMeta::new(new_treasury, false),
-            AccountMeta::new(new_treasury_tokens, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-            AccountMeta::new_readonly(ore_stake_program, false),
-        ],
-        data: MigrateStake {}.to_bytes(),
-    }
-}
-
 // let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
 
 pub fn automate(
@@ -400,64 +362,6 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
     }
 }
 
-// let [signer_info, mint_info, sender_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
-
-pub fn deposit(signer: Pubkey, payer: Pubkey, amount: u64, compound_fee: u64) -> Instruction {
-    let mint_address = MINT_ADDRESS;
-    let stake_address = stake_pda(signer).0;
-    let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
-    let sender_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = treasury_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new(mint_address, false),
-            AccountMeta::new(sender_address, false),
-            AccountMeta::new(stake_address, false),
-            AccountMeta::new(stake_tokens_address, false),
-            AccountMeta::new(treasury_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-        ],
-        data: Deposit {
-            amount: amount.to_le_bytes(),
-            compound_fee: compound_fee.to_le_bytes(),
-        }
-        .to_bytes(),
-    }
-}
-
-// let [signer_info, mint_info, recipient_info, stake_info, stake_tokens_info, treasury_info, system_program, token_program, associated_token_program] =
-
-pub fn withdraw(signer: Pubkey, amount: u64) -> Instruction {
-    let stake_address = stake_pda(signer).0;
-    let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
-    let mint_address = MINT_ADDRESS;
-    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = treasury_pda().0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(mint_address, false),
-            AccountMeta::new(recipient_address, false),
-            AccountMeta::new(stake_address, false),
-            AccountMeta::new(stake_tokens_address, false),
-            AccountMeta::new(treasury_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-        ],
-        data: Withdraw {
-            amount: amount.to_le_bytes(),
-        }
-        .to_bytes(),
-    }
-}
-
 // let [signer_info, automation_info, miner_info, system_program] = accounts else {
 
 pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
@@ -472,56 +376,6 @@ pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
             AccountMeta::new_readonly(system_program::ID, false),
         ],
         data: ReloadSOL {}.to_bytes(),
-    }
-}
-
-// let [signer_info, mint_info, recipient_info, stake_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program] =
-
-pub fn claim_yield(signer: Pubkey, amount: u64) -> Instruction {
-    let stake_address = stake_pda(signer).0;
-    let mint_address = MINT_ADDRESS;
-    let recipient_address = get_associated_token_address(&signer, &MINT_ADDRESS);
-    let treasury_address = treasury_pda().0;
-    let treasury_tokens_address = treasury_tokens_address();
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(mint_address, false),
-            AccountMeta::new(recipient_address, false),
-            AccountMeta::new(stake_address, false),
-            AccountMeta::new(treasury_address, false),
-            AccountMeta::new(treasury_tokens_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-            AccountMeta::new_readonly(spl_associated_token_account::ID, false),
-        ],
-        data: ClaimYield {
-            amount: amount.to_le_bytes(),
-        }
-        .to_bytes(),
-    }
-}
-
-pub fn compound_yield(signer: Pubkey) -> Instruction {
-    let stake_address = stake_pda(signer).0;
-    let mint_address = MINT_ADDRESS;
-    let stake_tokens_address = get_associated_token_address(&stake_address, &MINT_ADDRESS);
-    let treasury_address = treasury_pda().0;
-    let treasury_tokens_address = treasury_tokens_address();
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(mint_address, false),
-            AccountMeta::new(stake_address, false),
-            AccountMeta::new(stake_tokens_address, false),
-            AccountMeta::new(treasury_address, false),
-            AccountMeta::new(treasury_tokens_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-            AccountMeta::new_readonly(spl_token::ID, false),
-        ],
-        data: CompoundYield {}.to_bytes(),
     }
 }
 

@@ -69,17 +69,8 @@ async fn main() {
         "miner" => {
             log_miner(&rpc, &payer).await.unwrap();
         }
-        "migrate_stake" => {
-            migrate_stake(&rpc, &payer).await.unwrap();
-        }
-        // "pool" => {
-        //     log_meteora_pool(&rpc).await.unwrap();
-        // }
         "deploy" => {
             deploy(&rpc, &payer).await.unwrap();
-        }
-        "stake" => {
-            log_stake(&rpc, &payer).await.unwrap();
         }
         "deploy_all" => {
             deploy_all(&rpc, &payer).await.unwrap();
@@ -122,26 +113,6 @@ async fn main() {
         }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn migrate_stake(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let authority = pubkey!("6i56BeTvckL1pm3Hvk3hqw95wYfNT1aFcjSjKdgUJp3s");
-    let new_stake = ore_stake_api::state::stake_pda(authority).0;
-    let new_treasury = ore_stake_api::state::treasury_pda().0;
-    println!("New stake: {}", new_stake);
-    println!("New treasury: {}", new_treasury);
-    let ix = ore_api::sdk::migrate_stake(
-        payer.pubkey(),
-        authority,
-        new_stake,
-        new_treasury,
-        ore_stake_api::ID,
-    );
-    submit_transaction(rpc, payer, &[ix]).await?;
-    Ok(())
 }
 
 async fn liq(
@@ -237,51 +208,6 @@ async fn participating_miners(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     for (i, (_address, miner)) in miners.iter().enumerate() {
         println!("{}: {}", i, miner.authority);
     }
-    Ok(())
-}
-
-async fn log_stake(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
-    let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
-    let treasury = get_treasury(&rpc).await?;
-    let staker_address = ore_api::state::stake_pda(authority).0;
-    let mut stake = get_stake(rpc, authority).await?;
-    stake.update_rewards(&treasury);
-    println!("Stake");
-    println!("  address: {}", staker_address);
-    println!("  authority: {}", authority);
-    println!(
-        "  balance: {} ORE",
-        amount_to_ui_amount(stake.balance, TOKEN_DECIMALS)
-    );
-    println!("  buffer_a: {}", stake.buffer_a);
-    println!("  buffer_b: {}", stake.buffer_b);
-    println!("  buffer_c: {}", stake.buffer_c);
-    println!("  buffer_d: {}", stake.buffer_d);
-    println!(
-        "  compound_fee_reserve: {} SOL",
-        lamports_to_sol(stake.compound_fee_reserve)
-    );
-    println!("  last_claim_at: {}", stake.last_claim_at);
-    println!("  last_deposit_at: {}", stake.last_deposit_at);
-    println!("  last_withdraw_at: {}", stake.last_withdraw_at);
-    println!(
-        "  rewards_factor: {}",
-        stake.rewards_factor.to_i80f48().to_string()
-    );
-    println!(
-        "  rewards: {} ORE",
-        amount_to_ui_amount(stake.rewards, TOKEN_DECIMALS)
-    );
-    println!(
-        "  lifetime_rewards: {} ORE",
-        amount_to_ui_amount(stake.lifetime_rewards, TOKEN_DECIMALS)
-    );
-    println!("  buffer_f: {}", stake.buffer_f);
-
     Ok(())
 }
 
@@ -856,13 +782,6 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     let data = rpc.get_account_data(&solana_sdk::sysvar::clock::ID).await?;
     let clock = bincode::deserialize::<Clock>(&data)?;
     Ok(clock)
-}
-
-async fn get_stake(rpc: &RpcClient, authority: Pubkey) -> Result<Stake, anyhow::Error> {
-    let stake_pda = ore_api::state::stake_pda(authority);
-    let account = rpc.get_account(&stake_pda.0).await?;
-    let stake = Stake::try_from_bytes(&account.data)?;
-    Ok(*stake)
 }
 
 async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Error> {

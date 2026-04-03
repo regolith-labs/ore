@@ -3,7 +3,6 @@ mod board;
 mod config;
 mod miner;
 mod round;
-mod stake;
 mod treasury;
 
 pub use automation::*;
@@ -11,7 +10,6 @@ pub use board::*;
 pub use config::*;
 pub use miner::*;
 pub use round::*;
-pub use stake::*;
 pub use treasury::*;
 
 use crate::consts::*;
@@ -26,7 +24,6 @@ pub enum OreAccount {
     Miner = 103,
     Treasury = 104,
     Board = 105,
-    Stake = 108,
     Round = 109,
 }
 
@@ -48,10 +45,6 @@ pub fn miner_pda(authority: Pubkey) -> (Pubkey, u8) {
 
 pub fn round_pda(id: u64) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[ROUND, &id.to_le_bytes()], &crate::ID)
-}
-
-pub fn stake_pda(authority: Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[STAKE, &authority.to_bytes()], &crate::ID)
 }
 
 pub fn treasury_pda() -> (Pubkey, u8) {

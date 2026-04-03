@@ -4,19 +4,14 @@ mod buyback;
 mod checkpoint;
 mod claim_ore;
 mod claim_sol;
-mod claim_yield;
 mod close;
-mod compound_yield;
 mod deploy;
-mod deposit;
 mod liq;
 mod log;
-mod migrate_stake;
 mod new_var;
 mod reload_sol;
 mod reset;
 mod set_admin;
-mod withdraw;
 mod wrap;
 
 use automate::*;
@@ -25,19 +20,14 @@ use buyback::*;
 use checkpoint::*;
 use claim_ore::*;
 use claim_sol::*;
-use claim_yield::*;
 use close::*;
-use compound_yield::*;
 use deploy::*;
-use deposit::*;
 use liq::*;
 use log::*;
-use migrate_stake::*;
 use new_var::*;
 use reload_sol::*;
 use reset::*;
 use set_admin::*;
-use withdraw::*;
 use wrap::*;
 
 use ore_api::instruction::*;
@@ -63,12 +53,6 @@ pub fn process_instruction(
         OreInstruction::Reset => process_reset(accounts, data)?,
         OreInstruction::ReloadSOL => process_reload_sol(accounts, data)?,
 
-        // Staker
-        OreInstruction::Deposit => process_deposit(accounts, data)?,
-        OreInstruction::Withdraw => process_withdraw(accounts, data)?,
-        OreInstruction::ClaimYield => process_claim_yield(accounts, data)?,
-        OreInstruction::CompoundYield => process_compound_yield(accounts, data)?,
-
         // Admin
         OreInstruction::Buyback => process_buyback(accounts, data)?,
         OreInstruction::Bury => process_bury(accounts, data)?,
@@ -76,7 +60,6 @@ pub fn process_instruction(
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::Liq => process_liq(accounts, data)?,
-        OreInstruction::MigrateStake => process_migrate_stake(accounts, data)?,
     }
 
     Ok(())
