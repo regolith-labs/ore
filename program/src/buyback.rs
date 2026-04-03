@@ -16,7 +16,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
         treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
