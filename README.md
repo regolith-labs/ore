@@ -22,12 +22,6 @@ ORE is a crypto mining protocol.
 - [`ReloadSOL`](program/src/reload_sol.rs) - Reloads SOL mining rewards into automation.
 - [`Reset`](program/src/reset.rs) - Resets the board for a new round.
 
-#### Staking
-- [`Deposit`](program/src/deposit.rs) - Deposits ORE into a stake account.
-- [`Withdraw`](program/src/withdraw.rs) - Withdraws ORE from a stake account.
-- [`ClaimSeeker`](program/src/claim_seeker.rs) - Claims a Seeker genesis token. 
-- [`ClaimYield`](program/src/claim_yield.rs) - Claims staking yield.
-
 #### Admin
 - [`Bury`](program/src/bury.rs) - Executes a buy-and-bury transaction.
 - [`Wrap`](program/src/wrap.rs) - Wraps SOL in the treasury for swap transactions. 
@@ -41,8 +35,6 @@ ORE is a crypto mining protocol.
 - [`Config`](api/src/state/config.rs) - Global program configs.
 - [`Miner`](api/src/state/miner.rs) - Tracks a miner's game state.
 - [`Round`](api/src/state/round.rs) - Tracks the game state of a given round.
-- [`Seeker`](api/src/state/seeker.rs) - Tracks whether a Seeker token has been claimed.
-- [`Stake`](api/src/state/stake.rs) - Manages a user's staking activity.
 - [`Treasury`](api/src/state/treasury.rs) - Mints, burns, and escrows ORE tokens. 
 
 
