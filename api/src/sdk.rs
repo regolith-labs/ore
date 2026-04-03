@@ -35,6 +35,7 @@ pub fn migrate_stake(
     let old_stake_tokens = get_associated_token_address(&old_stake, &MINT_ADDRESS);
     let stake_tokens = get_associated_token_address(&new_stake, &MINT_ADDRESS);
     let old_treasury = treasury_pda().0;
+    let old_treasury_tokens = get_associated_token_address(&old_treasury, &MINT_ADDRESS);
     let new_treasury_tokens = get_associated_token_address(&new_treasury, &MINT_ADDRESS);
     Instruction {
         program_id: crate::ID,
@@ -47,6 +48,7 @@ pub fn migrate_stake(
             AccountMeta::new(new_stake, false),
             AccountMeta::new(stake_tokens, false),
             AccountMeta::new(old_treasury, false),
+            AccountMeta::new(old_treasury_tokens, false),
             AccountMeta::new(new_treasury, false),
             AccountMeta::new(new_treasury_tokens, false),
             AccountMeta::new_readonly(system_program::ID, false),

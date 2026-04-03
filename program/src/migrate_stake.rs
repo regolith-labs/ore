@@ -6,7 +6,7 @@ const MIGRATE_AUTHORITY: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8
 /// Migrates ORE from the old staking contract to the new one.
 pub fn process_migrate_stake(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program, ore_stake_program] =
+    let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, old_treasury_tokens_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program, ore_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -22,6 +22,7 @@ pub fn process_migrate_stake(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Prog
     stake_tokens_info.is_writable()?.is_empty()?;
     let old_treasury =
         old_treasury_info.as_account_mut::<ore_api::prelude::Treasury>(&ore_api::ID)?;
+    old_treasury_tokens_info.as_associated_token_account(old_treasury_info.key, mint_info.key)?;
     new_treasury_info.as_account_mut::<ore_stake_api::prelude::Treasury>(&ore_stake_api::ID)?;
     new_treasury_tokens_info
         .is_writable()?
@@ -64,7 +65,7 @@ pub fn process_migrate_stake(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Prog
     // Transfer yield
     transfer_signed(
         old_treasury_info,
-        old_stake_tokens_info,
+        old_treasury_tokens_info,
         new_treasury_tokens_info,
         token_program,
         old_stake.rewards,
