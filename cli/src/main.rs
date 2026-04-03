@@ -133,7 +133,13 @@ async fn migrate_stake(
     let new_treasury = ore_stake_api::state::treasury_pda().0;
     println!("New stake: {}", new_stake);
     println!("New treasury: {}", new_treasury);
-    let ix = ore_api::sdk::migrate_stake(payer.pubkey(), authority, new_stake, new_treasury);
+    let ix = ore_api::sdk::migrate_stake(
+        payer.pubkey(),
+        authority,
+        new_stake,
+        new_treasury,
+        ore_stake_api::ID,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }

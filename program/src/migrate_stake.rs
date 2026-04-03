@@ -6,7 +6,7 @@ const MIGRATE_AUTHORITY: Pubkey = pubkey!("HBUh9g46wk2X89CvaNN15UmsznP59rh6od1h8
 /// Migrates ORE from the old staking contract to the new one.
 pub fn process_migrate_stake(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program] =
+    let [signer_info, payer_info, mint_info, old_stake_info, old_stake_tokens_info, stake_info, stake_tokens_info, old_treasury_info, new_treasury_info, new_treasury_tokens_info, system_program, token_program, associated_token_program, ore_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -29,6 +29,7 @@ pub fn process_migrate_stake(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Prog
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
     associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    ore_stake_program.is_program(&ore_stake_api::ID)?;
 
     // Update rewards
     old_stake.update_rewards(old_treasury);

@@ -29,6 +29,7 @@ pub fn migrate_stake(
     authority: Pubkey,
     new_stake: Pubkey,
     new_treasury: Pubkey,
+    ore_stake_program: Pubkey,
 ) -> Instruction {
     let old_stake = stake_pda(authority).0;
     let old_stake_tokens = get_associated_token_address(&old_stake, &MINT_ADDRESS);
@@ -51,6 +52,7 @@ pub fn migrate_stake(
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(spl_token::ID, false),
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
+            AccountMeta::new_readonly(ore_stake_program, false),
         ],
         data: MigrateStake {}.to_bytes(),
     }
