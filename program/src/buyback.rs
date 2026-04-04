@@ -7,8 +7,8 @@ use steel::*;
 /// Swap vaulted SOL to ORE, and burn the ORE.
 pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let (ore_accounts, swap_accounts) = accounts.split_at(9);
-    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, stake_treasury_info, stake_treasury_ore_info, treasury_sol_info, token_program, ore_program, ore_stake_program] =
+    let (ore_accounts, swap_accounts) = accounts.split_at(12);
+    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, stake_treasury_info, stake_treasury_ore_info, token_program, ore_program, ore_stake_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
