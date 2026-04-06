@@ -2741,9 +2741,9 @@ dependencies = [
 
 [[package]]
 name = "ore-stake-api"
-version = "0.1.5"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95e8f0495c447bb07a69001d210e39856e0a0646132820e5b52a36d0a1ebcdbc"
+checksum = "814ca1eee49bfb5d5b59c64131f815562e3c0d16d68f462d790fb7ddedad2dc5"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
@@ -2752,7 +2752,6 @@ dependencies = [
  "solana-program",
  "spl-associated-token-account",
  "spl-token 4.0.2",
- "spl-token-2022 7.0.0",
  "steel",
  "thiserror 1.0.69",
 ]

@@ -117,6 +117,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             stake_treasury_info.clone(),
             stake_treasury_ore_info.clone(),
             token_program.clone(),
+            ore_stake_program.clone(),
         ],
         &ore_api::ID,
         &[TREASURY],
