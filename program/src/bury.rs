@@ -10,7 +10,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let amount = u64::from_le_bytes(args.amount);
 
     // Load accounts.
-    let [signer_info, sender_info, board_info, mint_info, treasury_info, treasury_ore_info, stake_treasury_info, stake_treasury_tokens_info, token_program, ore_program, ore_stake_program] =
+    let [signer_info, sender_info, board_info, mint_info, treasury_info, treasury_ore_info, stake_treasury_info, stake_treasury_tokens_info, stake_vesting_info, token_program, ore_program, ore_stake_program] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -47,6 +47,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
             mint_info.clone(),
             stake_treasury_info.clone(),
             stake_treasury_tokens_info.clone(),
+            stake_vesting_info.clone(),
             token_program.clone(),
         ],
         &ore_api::ID,

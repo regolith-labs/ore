@@ -2658,7 +2658,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "ore-api"
-version = "3.8.2"
+version = "3.8.3"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
@@ -2677,7 +2677,7 @@ dependencies = [
 
 [[package]]
 name = "ore-cli"
-version = "3.8.2"
+version = "3.8.3"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -2721,7 +2721,7 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "3.8.2"
+version = "3.8.3"
 dependencies = [
  "bincode",
  "entropy-api",
@@ -2741,9 +2741,9 @@ dependencies = [
 
 [[package]]
 name = "ore-stake-api"
-version = "0.1.8"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "814ca1eee49bfb5d5b59c64131f815562e3c0d16d68f462d790fb7ddedad2dc5"
+checksum = "059d462489e37b0b7a95b64c2f85c5a08dc66189ccbf790c2237493adc6d3765"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
