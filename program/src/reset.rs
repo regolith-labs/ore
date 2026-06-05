@@ -285,7 +285,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Reset board.
     board.round_id += 1;
     board.start_slot = clock.slot + 1;
-    board.end_slot = u64::MAX; // board.start_slot + 150;
+    board.end_slot = u64::MAX;
 
     // Do SOL transfers.
     round_info.send(total_admin_fee, &fee_collector_info);
