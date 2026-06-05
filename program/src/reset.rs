@@ -1,5 +1,6 @@
 use entropy_api::state::Var;
 use ore_api::prelude::*;
+use ore_mint_api::consts::MAX_SUPPLY;
 use solana_program::{keccak, log::sol_log};
 use steel::*;
 

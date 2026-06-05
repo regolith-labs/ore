@@ -39,7 +39,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Wait until first deploy to start round.
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
-        board.end_slot = board.start_slot + 150;
+        board.end_slot = board.start_slot + ROUND_SLOTS;
         round.expires_at = board.end_slot + ONE_DAY_SLOTS;
 
         // Bump var to the next value.

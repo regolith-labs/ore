@@ -2741,13 +2741,14 @@ dependencies = [
 
 [[package]]
 name = "ore-stake-api"
-version = "0.2.2"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "059d462489e37b0b7a95b64c2f85c5a08dc66189ccbf790c2237493adc6d3765"
+checksum = "001664778f85d204b7c9d9f538d6174aee0a5b0fc272d96167c8ed7a98d62e59"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
  "num_enum",
+ "ore-mint-api",
  "serde",
  "solana-program",
  "spl-associated-token-account",
