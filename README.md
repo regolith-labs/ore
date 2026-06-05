@@ -1,6 +1,6 @@
 # ORE
 
-ORE is a crypto mining protocol.
+Future-proof electronic cash.
 
 
 ## API
