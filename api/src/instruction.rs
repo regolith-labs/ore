@@ -146,10 +146,6 @@ pub struct SetSwapProgram {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetVarAddress {}
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Liq {}
-
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -164,4 +160,3 @@ instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, NewVar);
-instruction!(OreInstruction, Liq);

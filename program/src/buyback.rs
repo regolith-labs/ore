@@ -1,20 +1,31 @@
 use ore_api::prelude::*;
 use solana_program::log::sol_log;
 use solana_program::native_token::lamports_to_sol;
+use solana_program::pubkey;
 use spl_token::amount_to_ui_amount;
 use steel::*;
+
+/// Percentage of treasury SOL to send to the liq manager (whole unit, denominator 100).
+const LIQ_PCT: u64 = 0;
+
+/// The liq manager address.
+const LIQ_MANAGER: Pubkey = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
 
 /// Swap vaulted SOL to ORE, and burn the ORE.
 pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let (ore_accounts, swap_accounts) = accounts.split_at(13);
-    let [signer_info, board_info, _config_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, stake_treasury_info, stake_treasury_ore_info, stake_vesting_info, token_program, ore_program, ore_stake_program] =
+    let (ore_accounts, swap_accounts) = accounts.split_at(15);
+    let [signer_info, board_info, _config_info, manager_info, manager_sol_info, mint_info, treasury_info, treasury_ore_info, treasury_sol_info, stake_treasury_info, stake_treasury_ore_info, stake_vesting_info, token_program, ore_program, ore_stake_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?.has_address(&BURY_AUTHORITY)?;
     board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    manager_info.has_address(&LIQ_MANAGER)?;
+    manager_sol_info
+        .is_writable()?
+        .as_associated_token_account(&manager_info.key, &SOL_MINT)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
     let treasury_ore =
@@ -31,6 +42,24 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     let treasury_sol =
         treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     let pre_swap_ore_balance = treasury_ore.amount();
+    let total_sol_balance = treasury_sol.amount();
+    assert!(total_sol_balance > 0);
+
+    // Transfer liq percentage to the liq manager.
+    let liq_amount = total_sol_balance * LIQ_PCT / 100;
+    transfer_signed(
+        treasury_info,
+        treasury_sol_info,
+        manager_sol_info,
+        token_program,
+        liq_amount,
+        &[TREASURY],
+    )?;
+    sol_log(&format!("💦 Sent {} SOL to liq manager", lamports_to_sol(liq_amount)).as_str());
+
+    // Record pre-swap sol balance (after liq transfer).
+    let treasury_sol =
+        treasury_sol_info.as_associated_token_account(treasury_info.key, &SOL_MINT)?;
     let pre_swap_sol_balance = treasury_sol.amount();
     assert!(pre_swap_sol_balance > 0);
 
@@ -147,8 +176,9 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .as_str(),
     );
 
-    // Emit event.
+    // Emit bury event.
     let mint = mint_info.as_mint()?;
+    let ts = Clock::get()?.unix_timestamp;
     program_log(
         &[board_info.clone(), ore_program.clone()],
         BuryEvent {
@@ -157,7 +187,19 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
             ore_shared: shared_amount,
             sol_amount: pre_swap_sol_balance,
             new_circulating_supply: mint.supply(),
-            ts: Clock::get()?.unix_timestamp,
+            ts,
+        }
+        .to_bytes(),
+    )?;
+
+    // Emit liq event.
+    program_log(
+        &[board_info.clone(), ore_program.clone()],
+        LiqEvent {
+            disc: 3,
+            sol_amount: liq_amount,
+            recipient: *manager_info.key,
+            ts,
         }
         .to_bytes(),
     )?;

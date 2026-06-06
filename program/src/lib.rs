@@ -6,7 +6,6 @@ mod claim_ore;
 mod claim_sol;
 mod close;
 mod deploy;
-mod liq;
 mod log;
 mod new_var;
 mod reload_sol;
@@ -22,7 +21,6 @@ use claim_ore::*;
 use claim_sol::*;
 use close::*;
 use deploy::*;
-use liq::*;
 use log::*;
 use new_var::*;
 use reload_sol::*;
@@ -59,7 +57,7 @@ pub fn process_instruction(
         OreInstruction::Wrap => process_wrap(accounts, data)?,
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
-        OreInstruction::Liq => process_liq(accounts, data)?,
+        OreInstruction::Liq => return Err(ProgramError::InvalidInstructionData),
     }
 
     Ok(())

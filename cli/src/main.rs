@@ -105,25 +105,11 @@ async fn main() {
         "lut" => {
             lut(&rpc, &payer).await.unwrap();
         }
-        "liq" => {
-            liq(&rpc, &payer).await.unwrap();
-        }
         "automation" => {
             log_automation(&rpc).await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
-}
-
-async fn liq(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    let manager = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
-    let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), u64::MAX);
-    let liq_ix = ore_api::sdk::liq(payer.pubkey(), manager);
-    submit_transaction(rpc, payer, &[wrap_ix, liq_ix]).await?;
-    Ok(())
 }
 
 async fn lut(
@@ -215,8 +201,8 @@ async fn ata(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let user = pubkey!("FgZFnb3bi7QexKCdXWPwWy91eocUD7JCFySHb83vLoPD");
-    let token = pubkey!("8H8rPiWW4iTFCfEkSnf7jpqeNpFfvdH9gLouAL3Fe2Zx");
+    let user = pubkey!("HQS4LBxJKbvZgaLP52cprYq5nvUKuWR8fbSE7h4jGo35");
+    let token = pubkey!("So11111111111111111111111111111111111111112");
     let ata = get_associated_token_address(&user, &token);
     let ix = spl_associated_token_account::instruction::create_associated_token_account(
         &payer.pubkey(),
@@ -260,9 +246,11 @@ async fn buyback(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    // Get swap amount.
+    // Get swap amount. Mirror on-chain math: liq gets total * 10 / 100, swap gets the rest.
     let treasury = get_treasury(rpc).await?;
-    let amount = treasury.balance.min(10 * LAMPORTS_PER_SOL);
+    let total_amount = treasury.balance.min(10 * LAMPORTS_PER_SOL);
+    let liq_amount = total_amount * 0 / 100;
+    let amount = total_amount - liq_amount;
 
     // Build quote request.
     const INPUT_MINT: Pubkey = pubkey!("So11111111111111111111111111111111111111112");
@@ -313,9 +301,11 @@ async fn buyback(
             .unwrap();
 
     // Build transaction.
+    let manager = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
     let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), u64::MAX);
     let buyback_ix = ore_api::sdk::buyback(
         payer.pubkey(),
+        manager,
         &response.swap_instruction.accounts,
         &response.swap_instruction.data,
     );
