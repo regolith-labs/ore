@@ -246,14 +246,15 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                         < miner.cumulative[winning_square] + miner.deployed[winning_square]
                 {
                     sol_log("Top miner verified");
+                    round.top_miner = miner.authority;
                 } else {
-                    sol_log("Top miner verification failed");
+                    panic!("Top miner verification failed");
                 }
             } else {
-                sol_log("Top miner round id mismatch");
+                panic!("Top miner round id mismatch");
             }
         } else {
-            sol_log("Top miner account cannot be parsed");
+            panic!("Top miner account cannot be parsed");
         }
     } else {
         sol_log("Split round");
