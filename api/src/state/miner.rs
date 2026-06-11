@@ -96,6 +96,9 @@ pub struct MinerV4 {
     /// The last time this miner claimed SOL rewards.
     pub last_claim_sol_at: i64,
 
+    /// The total amount of SOL this miner has returned across all blocks.
+    pub lifetime_returned_sol: u64,
+
     /// The total amount of ORE this miner has mined across all blocks.
     pub lifetime_rewards: u64,
 

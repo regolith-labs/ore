@@ -21,24 +21,7 @@ pub struct Board {
     pub epoch_id: u64,
 }
 
-/// Stats is a singleton account tracking global game state.
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct Stats {
-    /// The current round number.
-    pub round_id: u64,
-
-    /// The slot at which the current round starts mining.
-    pub start_slot: u64,
-
-    /// The slot at which the current round ends mining.
-    pub end_slot: u64,
-
-    /// The exponential moving average of production cost (lamports per whole ORE).
-    pub production_cost_ema: u64,
-}
-
-/// BoardV2 is a singleton account tracking global game state.
+/// BoardV4 is a singleton account tracking global game state.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct BoardV4 {
