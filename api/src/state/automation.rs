@@ -130,3 +130,66 @@ impl AutomationV4 {
 
 account!(OreAccount, Automation);
 account!(OreAccountV4, AutomationV4);
+
+pub enum AutomationAccount {
+    Automation(Automation),
+    AutomationV4(AutomationV4),
+}
+
+impl AutomationAccount {
+    pub fn amount(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.amount,
+            AutomationAccount::AutomationV4(a) => a.amount,
+        }
+    }
+
+    pub fn authority(&self) -> Pubkey {
+        match self {
+            AutomationAccount::Automation(a) => a.authority,
+            AutomationAccount::AutomationV4(a) => a.authority,
+        }
+    }
+
+    pub fn balance(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.balance,
+            AutomationAccount::AutomationV4(a) => a.balance,
+        }
+    }
+
+    pub fn executor(&self) -> Pubkey {
+        match self {
+            AutomationAccount::Automation(a) => a.executor,
+            AutomationAccount::AutomationV4(a) => a.executor,
+        }
+    }
+
+    pub fn fee(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.fee,
+            AutomationAccount::AutomationV4(a) => a.fee,
+        }
+    }
+
+    pub fn strategy(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.strategy,
+            AutomationAccount::AutomationV4(a) => a.strategy,
+        }
+    }
+
+    pub fn mask(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.mask,
+            AutomationAccount::AutomationV4(a) => a.mask,
+        }
+    }
+
+    pub fn reload(&self) -> u64 {
+        match self {
+            AutomationAccount::Automation(a) => a.reload,
+            AutomationAccount::AutomationV4(a) => a.reload,
+        }
+    }
+}

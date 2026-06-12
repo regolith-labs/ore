@@ -60,3 +60,74 @@ pub struct TreasuryV4 {
 
 account!(OreAccount, Treasury);
 account!(OreAccountV4, TreasuryV4);
+
+pub enum TreasuryAccount {
+    Treasury(Treasury),
+    TreasuryV4(TreasuryV4),
+}
+
+#[allow(deprecated)]
+impl TreasuryAccount {
+    pub fn balance(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.balance,
+            TreasuryAccount::TreasuryV4(_) => 0,
+        }
+    }
+
+    pub fn buffer_a(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.buffer_a,
+            TreasuryAccount::TreasuryV4(_) => 0,
+        }
+    }
+
+    pub fn motherlode(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.motherlode,
+            TreasuryAccount::TreasuryV4(t) => t.motherlode,
+        }
+    }
+
+    pub fn miner_rewards_factor(&self) -> Numeric {
+        match self {
+            TreasuryAccount::Treasury(t) => t.miner_rewards_factor,
+            TreasuryAccount::TreasuryV4(t) => t.rewards_factor,
+        }
+    }
+
+    pub fn stake_rewards_factor(&self) -> Numeric {
+        match self {
+            TreasuryAccount::Treasury(t) => t.stake_rewards_factor,
+            TreasuryAccount::TreasuryV4(_) => Numeric::ZERO,
+        }
+    }
+
+    pub fn buffer_b(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.buffer_b,
+            TreasuryAccount::TreasuryV4(_) => 0,
+        }
+    }
+
+    pub fn total_refined(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.total_refined,
+            TreasuryAccount::TreasuryV4(t) => t.total_refined,
+        }
+    }
+
+    pub fn total_staked(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.total_staked,
+            TreasuryAccount::TreasuryV4(_) => 0,
+        }
+    }
+
+    pub fn total_unclaimed(&self) -> u64 {
+        match self {
+            TreasuryAccount::Treasury(t) => t.total_unclaimed,
+            TreasuryAccount::TreasuryV4(t) => t.total_unrefined,
+        }
+    }
+}

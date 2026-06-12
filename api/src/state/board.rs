@@ -52,3 +52,45 @@ impl BoardV4 {
 
 account!(OreAccount, Board);
 account!(OreAccountV4, BoardV4);
+
+pub enum BoardAccount {
+    Board(Board),
+    BoardV4(BoardV4),
+}
+
+impl BoardAccount {
+    pub fn round_id(&self) -> u64 {
+        match self {
+            BoardAccount::Board(b) => b.round_id,
+            BoardAccount::BoardV4(b) => b.round_id,
+        }
+    }
+
+    pub fn start_slot(&self) -> u64 {
+        match self {
+            BoardAccount::Board(b) => b.start_slot,
+            BoardAccount::BoardV4(b) => b.start_slot,
+        }
+    }
+
+    pub fn end_slot(&self) -> u64 {
+        match self {
+            BoardAccount::Board(b) => b.end_slot,
+            BoardAccount::BoardV4(b) => b.end_slot,
+        }
+    }
+
+    pub fn epoch_id(&self) -> u64 {
+        match self {
+            BoardAccount::Board(b) => b.epoch_id,
+            BoardAccount::BoardV4(b) => 0,
+        }
+    }
+
+    pub fn pda(&self) -> (Pubkey, u8) {
+        match self {
+            BoardAccount::Board(b) => b.pda(),
+            BoardAccount::BoardV4(b) => b.pda(),
+        }
+    }
+}

@@ -89,3 +89,52 @@ impl ConfigV4 {
 
 account!(OreAccount, Config);
 account!(OreAccountV4, ConfigV4);
+
+pub enum ConfigAccount {
+    Config(Config),
+    ConfigV4(ConfigV4),
+}
+
+impl ConfigAccount {
+    pub fn admin(&self) -> Pubkey {
+        match self {
+            ConfigAccount::Config(c) => c.admin,
+            ConfigAccount::ConfigV4(c) => c.admin.authority,
+        }
+    }
+
+    pub fn buffer_a(&self) -> [u8; 32] {
+        match self {
+            ConfigAccount::Config(c) => c.buffer_a,
+            ConfigAccount::ConfigV4(_) => [0; 32],
+        }
+    }
+
+    pub fn buffer_b(&self) -> [u8; 32] {
+        match self {
+            ConfigAccount::Config(c) => c.buffer_b,
+            ConfigAccount::ConfigV4(_) => [0; 32],
+        }
+    }
+
+    pub fn buffer_c(&self) -> [u8; 32] {
+        match self {
+            ConfigAccount::Config(c) => c.buffer_c,
+            ConfigAccount::ConfigV4(_) => [0; 32],
+        }
+    }
+
+    pub fn buffer_d(&self) -> [u8; 32] {
+        match self {
+            ConfigAccount::Config(c) => c.buffer_d,
+            ConfigAccount::ConfigV4(_) => [0; 32],
+        }
+    }
+
+    pub fn buffer_e(&self) -> [u8; 8] {
+        match self {
+            ConfigAccount::Config(c) => c.buffer_e,
+            ConfigAccount::ConfigV4(_) => [0; 8],
+        }
+    }
+}
