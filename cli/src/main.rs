@@ -433,7 +433,7 @@ async fn checkpoint(
     let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
     let miner = get_miner(rpc, authority).await?;
-    let ix = ore_api::sdk::checkpoint(payer.pubkey(), authority, miner.round_id());
+    let ix = ore_api::sdk::checkpoint(payer.pubkey(), authority, miner.round_id);
     submit_transaction(rpc, payer, &[ix]).await?;
     Ok(())
 }
@@ -640,35 +640,35 @@ async fn log_miner(
     miner.update_rewards(&treasury);
     println!("Miner");
     println!("  address: {}", miner_address);
-    println!("  authority: {}", miner.authority());
-    println!("  deployed: {:?}", miner.deployed());
-    println!("  cumulative: {:?}", miner.cumulative());
-    println!("  checkpoint_fee: {} SOL", lamports_to_sol(miner.checkpoint_fee()));
-    println!("  checkpoint_id: {}", miner.checkpoint_id());
-    println!("  last_claim_ore_at: {}", miner.last_claim_ore_at());
-    println!("  last_claim_sol_at: {}", miner.last_claim_sol_at());
-    println!("  rewards_factor: {}", miner.rewards_factor().to_i80f48().to_string());
-    println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol()));
+    println!("  authority: {}", miner.authority);
+    println!("  deployed: {:?}", miner.deployed);
+    println!("  cumulative: {:?}", miner.cumulative);
+    println!("  checkpoint_fee: {} SOL", lamports_to_sol(miner.checkpoint_fee));
+    println!("  checkpoint_id: {}", miner.checkpoint_id);
+    println!("  last_claim_ore_at: {}", miner.last_claim_ore_at);
+    println!("  last_claim_sol_at: {}", miner.last_claim_sol_at);
+    println!("  rewards_factor: {}", miner.rewards_factor.to_i80f48().to_string());
+    println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
     println!(
         "  rewards_ore: {} ORE",
-        amount_to_ui_amount(miner.rewards_ore(), TOKEN_DECIMALS)
+        amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
     );
     println!(
         "  refined_ore: {} ORE",
-        amount_to_ui_amount(miner.refined_ore(), TOKEN_DECIMALS)
+        amount_to_ui_amount(miner.refined_ore, TOKEN_DECIMALS)
     );
-    println!("  round_id: {}", miner.round_id());
+    println!("  round_id: {}", miner.round_id);
     println!(
         "  lifetime_rewards_sol: {} SOL",
-        lamports_to_sol(miner.lifetime_rewards_sol())
+        lamports_to_sol(miner.lifetime_rewards_sol)
     );
     println!(
         "  lifetime_rewards_ore: {} ORE",
-        amount_to_ui_amount(miner.lifetime_rewards_ore(), TOKEN_DECIMALS)
+        amount_to_ui_amount(miner.lifetime_rewards_ore, TOKEN_DECIMALS)
     );
     println!(
         "  lifetime_deployed: {} SOL",
-        lamports_to_sol(miner.lifetime_deployed())
+        lamports_to_sol(miner.lifetime_deployed)
     );
     Ok(())
 }
@@ -761,15 +761,11 @@ async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     Ok(*config)
 }
 
-async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<MinerAccount, anyhow::Error> {
+async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {
     let miner_pda = ore_api::state::miner_pda(authority);
     let account = rpc.get_account(&miner_pda.0).await?;
-    if let Ok(miner) = MinerV4::try_from_bytes(&account.data) {
-        Ok(MinerAccount::MinerV4(*miner))
-    } else {
-        let miner = Miner::try_from_bytes(&account.data)?;
-        Ok(MinerAccount::Miner(*miner))
-    }
+    let miner = Miner::try_from_bytes(&account.data)?;
+    Ok(*miner)
 }
 
 async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {

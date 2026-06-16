@@ -47,15 +47,17 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
 
     // Transfer liq percentage to the liq manager.
     let liq_amount = total_sol_balance * LIQ_PCT / 100;
-    transfer_signed(
-        treasury_info,
-        treasury_sol_info,
-        manager_sol_info,
-        token_program,
-        liq_amount,
-        &[TREASURY],
-    )?;
-    sol_log(&format!("💦 Sent {} SOL to liq manager", lamports_to_sol(liq_amount)).as_str());
+    if liq_amount > 0 {
+        transfer_signed(
+            treasury_info,
+            treasury_sol_info,
+            manager_sol_info,
+            token_program,
+            liq_amount,
+            &[TREASURY],
+        )?;
+        sol_log(&format!("💦 Sent {} SOL to liq manager", lamports_to_sol(liq_amount)).as_str());
+    }
 
     // Record pre-swap sol balance (after liq transfer).
     let treasury_sol =
@@ -136,26 +138,28 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     );
 
     // Share some ORE with stakers.
-    let shared_amount = total_ore / 10;
-    invoke_signed(
-        &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
-        &[
-            treasury_info.clone(),
-            treasury_ore_info.clone(),
-            mint_info.clone(),
-            stake_treasury_info.clone(),
-            stake_treasury_ore_info.clone(),
-            stake_vesting_info.clone(),
-            token_program.clone(),
-            ore_stake_program.clone(),
-        ],
-        &ore_api::ID,
-        &[TREASURY],
-    )?;
-    sol_log(&format!(
-        "💰 Shared {} ORE",
-        amount_to_ui_amount(shared_amount, TOKEN_DECIMALS)
-    ));
+    let shared_amount = 0; // total_ore / 10;
+    if shared_amount > 0 {
+        invoke_signed(
+            &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
+            &[
+                treasury_info.clone(),
+                treasury_ore_info.clone(),
+                mint_info.clone(),
+                stake_treasury_info.clone(),
+                stake_treasury_ore_info.clone(),
+                stake_vesting_info.clone(),
+                token_program.clone(),
+                ore_stake_program.clone(),
+            ],
+            &ore_api::ID,
+            &[TREASURY],
+        )?;
+        sol_log(&format!(
+            "💰 Shared {} ORE",
+            amount_to_ui_amount(shared_amount, TOKEN_DECIMALS)
+        ));
+    }
 
     // Burn ORE.
     let burn_amount = total_ore - shared_amount;
