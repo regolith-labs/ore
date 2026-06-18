@@ -1,5 +1,7 @@
 use std::{collections::HashMap, str::FromStr};
 
+use curve25519_dalek::edwards::CompressedEdwardsY;
+
 use entropy_api::prelude::*;
 use jup_swap::{
     quote::QuoteRequest,
@@ -108,6 +110,9 @@ async fn main() {
         "automation" => {
             log_automation(&rpc).await.unwrap();
         }
+        "audit_curves" => {
+            audit_curves(&rpc).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
 }
@@ -122,28 +127,67 @@ async fn lut(
         payer.pubkey(),
         recent_slot,
     );
-    let ex_ix = solana_address_lookup_table_interface::instruction::extend_lookup_table(
+    let ex_ix_2 = solana_address_lookup_table_interface::instruction::extend_lookup_table(
         lut_address,
         payer.pubkey(),
         Some(payer.pubkey()),
         vec![
-            pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),
-            pubkey!("2wQ7J46uwK3VyrmAYe5E8KhCjTg8CTaFimh1ty2huuyY"),
-            pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee"),
-            pubkey!("HLaJ3RiyoaxQzwJQbU2Gc5RTZtx8HKAMJgkf57qdgpFJ"),
-            pubkey!("8yS5zJTZa1Q1zQ1jsEAUnjAyMZfsNwvrgbDQp1ky2dr"),
-            pubkey!("7qBS6huLjjGyrnMMBNXpLZA73yiGc6ao9znj7f9RpF1L"),
-            pubkey!("3Mt1bpU3fnSXyPEm66HKKXyQTpLWrwYziPLqwTqK4ZT7"),
-            pubkey!("LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo"),
-            pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"),
-            pubkey!("So11111111111111111111111111111111111111112"),
-            pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-            pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-            pubkey!("D1ZN9Wj1fRSUQfCjhvnu1hqDMT7hzjzBBpi12nVniYD6"),
-            pubkey!("8kqLv9cBUDCYEKCL3Dj2MkeXX3tdCqT8KZ3gpYp8BnGP"),
-            pubkey!("H38TVzkjAiAhBZR5SksbW8XDXP3N1ez4Tuna7uAW1Tsw"),
+            // pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T"),
+            // pubkey!("2wQ7J46uwK3VyrmAYe5E8KhCjTg8CTaFimh1ty2huuyY"),
+            // pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee"),
+            // pubkey!("HLaJ3RiyoaxQzwJQbU2Gc5RTZtx8HKAMJgkf57qdgpFJ"),
+            // pubkey!("8yS5zJTZa1Q1zQ1jsEAUnjAyMZfsNwvrgbDQp1ky2dr"),
+            // pubkey!("7qBS6huLjjGyrnMMBNXpLZA73yiGc6ao9znj7f9RpF1L"),
+            // pubkey!("3Mt1bpU3fnSXyPEm66HKKXyQTpLWrwYziPLqwTqK4ZT7"),
+            // pubkey!("LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo"),
+            // pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"),
+            // pubkey!("So11111111111111111111111111111111111111112"),
+            // pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            // pubkey!("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+            // pubkey!("D1ZN9Wj1fRSUQfCjhvnu1hqDMT7hzjzBBpi12nVniYD6"),
+            // pubkey!("8kqLv9cBUDCYEKCL3Dj2MkeXX3tdCqT8KZ3gpYp8BnGP"),
+            // pubkey!("H38TVzkjAiAhBZR5SksbW8XDXP3N1ez4Tuna7uAW1Tsw"),
+            // pubkey!("11111111111111111111111111111111"),
+            // pubkey!("SysvarRent111111111111111111111111111111111"),
             pubkey!("11111111111111111111111111111111"),
-            pubkey!("SysvarRent111111111111111111111111111111111"),
+            pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+            pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
+            pubkey!("STkEAu2cEyQp5ktgUauRVq8es6mEP2w6ixw4NEd5tDJ"),
+            pubkey!("stakecNP3FpiExZPCgZfqRgumVzi6dNqnfrjwXyTgeH"),
+            pubkey!("LStwN2E5Uw6MCtuxHRLhy8RY9hxqW2XRpLzettb696y"),
+            pubkey!("storeD7bEkywTTMrje19WRoyrkEhbhrvyjVnLxWih6a"),
+            pubkey!("oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"),
+            pubkey!("sTorERYB6xAZ1SSbwpK3zoK2EEwbBrc7TZAzg1uCGiH"),
+            pubkey!("storenSbvkfzircixnaosc5CbzNZVrHJ6S3EKrS1yqR"),
+            pubkey!("ANX3pRkcGipsZjcWVBvRaHFasBMw8FDPBvJHoubpWym6"),
+            pubkey!("8QSVpUWkRBmX6yUdAqUCcaZzj6JwNJoctSRcR1AYE8f3"),
+            pubkey!("FVynQtSNrWMa5Ueh1QNedca2YHSNtqH5LFjK3Sa9si2u"),
+            pubkey!("F3ajpARUkbMnYsrbAmgnsjyp991DVbGYRzfaVXy1Dfvu"),
+            pubkey!("8dPF5obsJxPsZeecAFqJbSWPEw9FkR1XGyRSJbry8B21"),
+            pubkey!("BHnZihpszx6e9rmN2ZQkABBUhwQ1AFYUUpjY6yrVzz3h"),
+            pubkey!("7taXpXz6eqYzscXEi1d1fgwATQMqAR6Nku9pJCjb8gQN"),
+            pubkey!("C1ZiFq8DocfTFxVUe75pqhbmaR8a7sKPsT9A48jmtzzr"),
+        ],
+    );
+    let ex_ix_3 = solana_address_lookup_table_interface::instruction::extend_lookup_table(
+        lut_address,
+        payer.pubkey(),
+        Some(payer.pubkey()),
+        vec![
+            pubkey!("DfdZYzgLuqRickq57fyb4dX88VgPkhoEs1uuBKdxzaaJ"),
+            pubkey!("6uEvYBcpb8KdhKxrRzffce9S7n8u9hiP2CXihJuUDihX"),
+            pubkey!("GexGotZVLZdJ7N7w3BgHpKYmPs915pwZoZAqZVkCS8F7"),
+            pubkey!("HMtLfw8VvYoeDx7WAYALUNQkz6oCBoa1kJwP8NPDRSbt"),
+            pubkey!("4apcWHDc5RF2mpu4MDj6aRQ91aH5rZqbmJviBc75jwi8"),
+            pubkey!("GuAsZMNfo4eTZaxagWxT3Qjpkj7iyy9Jdaj985s5FUJD"),
+            pubkey!("96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5"),
+            pubkey!("HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe"),
+            pubkey!("Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY"),
+            pubkey!("ADaUMid9yfUytqMBgopwjb2DTLSokTSzL1zt6iGPaS49"),
+            pubkey!("DfXygSm4jCyNCybVYYK6DwvWqjKee8pbDmJGcLWNDXjh"),
+            pubkey!("ADuUkR4vqLUMWXxW9gh6D6L8pMSawimctcNZ5pGwDcEt"),
+            pubkey!("DttWaMuVvTiduZRnguLF7jNxTgiMBZ1hyAumKUiL2KRL"),
+            pubkey!("3AVi9Tg9Uo68tJfuvoKvqKNWKkC5wPdSSdeBnizKZ6jT"),
         ],
     );
     let ix_1 = Instruction {
@@ -156,15 +200,27 @@ async fn lut(
         data: ix.data,
     };
     let ix_2 = Instruction {
-        program_id: ex_ix.program_id,
-        accounts: ex_ix
+        program_id: ex_ix_2.program_id,
+        accounts: ex_ix_2
             .accounts
             .iter()
             .map(|a| AccountMeta::new(a.pubkey, a.is_signer))
             .collect(),
-        data: ex_ix.data,
+        data: ex_ix_2.data,
     };
-    submit_transaction(rpc, payer, &[ix_1, ix_2]).await?;
+    let ix_3 = Instruction {
+        program_id: ex_ix_3.program_id,
+        accounts: ex_ix_3
+            .accounts
+            .iter()
+            .map(|a| AccountMeta::new(a.pubkey, a.is_signer))
+            .collect(),
+        data: ex_ix_3.data,
+    };
+
+    submit_transaction(rpc, payer, &[ix_1]).await?;
+    submit_transaction(rpc, payer, &[ix_2]).await?;
+    submit_transaction(rpc, payer, &[ix_3]).await?;
     println!("LUT address: {}", lut_address);
     Ok(())
 }
@@ -518,6 +574,34 @@ async fn close_all(
     Ok(())
 }
 
+fn is_on_curve(pubkey: &Pubkey) -> bool {
+    let compressed = CompressedEdwardsY::from_slice(pubkey.as_ref()).unwrap();
+    compressed.decompress().is_some()
+}
+
+async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let program_id = pubkey!("mintzxW6Kckmeyh1h6Zfdj9QcYgCzhPSGiC8ChZ6fCx");
+    let accounts = rpc.get_program_accounts(&program_id).await?;
+    let mut on_curve_count = 0;
+    println!("Checking {} accounts...", accounts.len());
+    for (pubkey, _account) in &accounts {
+        if is_on_curve(pubkey) {
+            on_curve_count += 1;
+            println!("ON-CURVE: {}", pubkey);
+        }
+    }
+    if on_curve_count == 0 {
+        println!("All {} accounts are off-curve PDAs.", accounts.len());
+    } else {
+        println!(
+            "\nFound {} on-curve accounts out of {}.",
+            on_curve_count,
+            accounts.len()
+        );
+    }
+    Ok(())
+}
+
 async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").expect("Missing AUTHORITY env var");
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
@@ -643,11 +727,17 @@ async fn log_miner(
     println!("  authority: {}", miner.authority);
     println!("  deployed: {:?}", miner.deployed);
     println!("  cumulative: {:?}", miner.cumulative);
-    println!("  checkpoint_fee: {} SOL", lamports_to_sol(miner.checkpoint_fee));
+    println!(
+        "  checkpoint_fee: {} SOL",
+        lamports_to_sol(miner.checkpoint_fee)
+    );
     println!("  checkpoint_id: {}", miner.checkpoint_id);
     println!("  last_claim_ore_at: {}", miner.last_claim_ore_at);
     println!("  last_claim_sol_at: {}", miner.last_claim_sol_at);
-    println!("  rewards_factor: {}", miner.rewards_factor.to_i80f48().to_string());
+    println!(
+        "  rewards_factor: {}",
+        miner.rewards_factor.to_i80f48().to_string()
+    );
     println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
     println!(
         "  rewards_ore: {} ORE",
