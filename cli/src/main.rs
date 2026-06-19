@@ -580,7 +580,7 @@ fn is_on_curve(pubkey: &Pubkey) -> bool {
 }
 
 async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let program_id = pubkey!("mintzxW6Kckmeyh1h6Zfdj9QcYgCzhPSGiC8ChZ6fCx");
+    let program_id = pubkey!("stakecNP3FpiExZPCgZfqRgumVzi6dNqnfrjwXyTgeH");
     let accounts = rpc.get_program_accounts(&program_id).await?;
     let mut on_curve_count = 0;
     println!("Checking {} accounts...", accounts.len());
