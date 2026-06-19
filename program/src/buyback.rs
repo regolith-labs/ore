@@ -6,7 +6,7 @@ use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Percentage of treasury SOL to send to the liq manager (whole unit, denominator 100).
-const LIQ_PCT: u64 = 10;
+const LIQ_PCT: u64 = 0;
 
 /// The liq manager address.
 const LIQ_MANAGER: Pubkey = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
@@ -138,7 +138,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     );
 
     // Share some ORE with stakers.
-    let shared_amount = 0; // total_ore / 10;
+    let shared_amount = total_ore / 10;
     if shared_amount > 0 {
         invoke_signed(
             &ore_stake_api::sdk::distribute(*treasury_info.key, shared_amount),
