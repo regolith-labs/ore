@@ -160,7 +160,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Update total miners for round.
     let is_first_deploy = miner.deployed.iter().sum::<u64>() == 0;
 
-    // Exit if automation doesn't have enough to cover all requested squares.
+    // Close automation if it doesn't have enough balance to cover all requested squares.
     if is_first_deploy {
         if let Some(automation) = &automation {
             let required_squares = squares.iter().filter(|&&s| s).count() as u64;
