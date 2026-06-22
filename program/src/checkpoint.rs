@@ -12,9 +12,13 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    let board = board_info.as_account::<Board>(&ore_api::ID)?;
+    let board = board_info
+        .has_address(&BOARD_ADDRESS)?
+        .as_account::<Board>(&ore_api::ID)?;
     let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info
+        .has_address(&TREASURY_ADDRESS)?
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // If miner has already checkpointed this round, return.

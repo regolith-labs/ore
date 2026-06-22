@@ -19,9 +19,13 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let sender = sender_info
         .is_writable()?
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
-    board_info.as_account_mut::<Board>(&ore_api::ID)?;
+    board_info
+        .has_address(&BOARD_ADDRESS)?
+        .as_account_mut::<Board>(&ore_api::ID)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    treasury_info
+        .has_address(&TREASURY_ADDRESS)?
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_ore_info.as_associated_token_account(treasury_info.key, &MINT_ADDRESS)?;
     token_program.is_program(&spl_token::ID)?;
     ore_program.is_program(&ore_api::ID)?;

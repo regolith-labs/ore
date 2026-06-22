@@ -11,7 +11,7 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    board_info.has_seeds(&[BOARD], &ore_api::ID)?;
+    board_info.has_address(&BOARD_ADDRESS)?;
     let miner = miner_info
         .has_seeds(&[MINER, &signer_info.key.to_bytes()], &ore_api::ID)?
         .as_account_mut::<Miner>(&ore_api::ID)?

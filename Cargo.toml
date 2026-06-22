@@ -43,6 +43,7 @@ spl-associated-token-account = { version = "^6", features = [ "no-entrypoint" ] 
 steel = { features = ["spl"], version = "4.0.9" }
 thiserror = "1.0.57"
 tokio = { version = "1.37.0", features = ["full"] }
+getrandom = ">=0.2.0, <0.4"
 
 [profile.release]
 overflow-checks = true

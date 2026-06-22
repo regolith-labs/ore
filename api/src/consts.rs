@@ -108,3 +108,12 @@ pub const VAR_ADDRESS: Pubkey = pubkey!("BWCaDY96Xe4WkFq1M7UiCCRcChsJ3p51L5KrGzh
 
 /// The address which can call the bury and wrap instructions.
 pub const BURY_AUTHORITY: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
+
+/// The address of the board account.
+pub const BOARD_ADDRESS: Pubkey = pubkey!("BrcSxdp1nXFzou1YyDnQJcPNBNHgoypZmTsyKBSLLXzi");
+
+/// The address of the treasury account.
+pub const TREASURY_ADDRESS: Pubkey = pubkey!("45db2FSR4mcXdSVVZbKbwojU6uYDpMyhpEi7cC8nHaWG");
+
+/// The address of the config account.
+pub const CONFIG_ADDRESS: Pubkey = pubkey!("9c9X7aDRAF41faiDs94ELjT19UrGnn72wBW9hPsS4Awy");

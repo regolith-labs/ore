@@ -20,6 +20,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     };
     signer_info.is_signer()?;
     let board = board_info
+        .has_address(&BOARD_ADDRESS)?
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.end_slot + INTERMISSION_SLOTS)?;
     fee_collector_info
@@ -33,7 +34,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .is_writable()?
         .has_seeds(&[ROUND, &(board.round_id + 1).to_le_bytes()], &ore_api::ID)?;
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
-    let treasury = treasury_info.as_account_mut::<Treasury>(&ore_api::ID)?;
+    let treasury = treasury_info
+        .has_address(&TREASURY_ADDRESS)?
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;

@@ -26,7 +26,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .is_writable()?
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
-        .has_seeds(&[BOARD], &ore_api::ID)?
+        .has_address(&BOARD_ADDRESS)?
         .as_account_mut::<Board>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
     let round = round_info
