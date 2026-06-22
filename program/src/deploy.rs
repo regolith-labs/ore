@@ -160,6 +160,18 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Update total miners for round.
     let is_first_deploy = miner.deployed.iter().sum::<u64>() == 0;
 
+    // Close automation if it doesn't have enough balance to cover all requested squares.
+    if is_first_deploy {
+        if let Some(automation) = &automation {
+            let required_squares = squares.iter().filter(|&&s| s).count() as u64;
+            if automation.balance < (amount * required_squares) + automation.fee {
+                automation_info.send(automation.fee, &signer_info);
+                automation_info.close(authority_info)?;
+                return Ok(());
+            }
+        }
+    }
+
     // Calculate all deployments.
     let mut total_amount = 0;
     let mut total_squares = 0;
@@ -198,8 +210,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
         // Exit early if automation does not have enough balance for another square.
         if let Some(automation) = &automation {
-            if total_amount + automation.fee + amount > automation.balance {
-                break;
+            if automation.balance < total_amount + automation.fee + amount {
+                return Err(ProgramError::InsufficientFunds);
             }
         }
     }
