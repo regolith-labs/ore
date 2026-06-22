@@ -57,6 +57,9 @@ pub struct RoundV4 {
     /// The amount of SOL deployed in each square.
     pub sol: [u64; 25],
 
+    /// The amount of mass deployed in each square.
+    pub mass: [u64; 25],
+
     /// The number of unique miners on each square.
     pub miners: [u64; 25],
 

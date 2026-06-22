@@ -72,8 +72,11 @@ pub struct MinerV4 {
     /// The amount of SOL deployed on each square.
     pub sol: [u64; 25],
 
-    /// The cumulative sol on each square prior to this miner's deployment on that square.
-    pub sol_cumulative: [u64; 25],
+    /// The amount of SOL deployed on each square, weighted by the time remaining when deployed.
+    pub mass: [u64; 25],
+
+    /// The cumulative mass on each square prior to this miner's deployment on that square.
+    pub mass_cumulative: [u64; 25],
 
     /// The round ID.
     pub round_id: u64,
@@ -96,14 +99,14 @@ pub struct MinerV4 {
     /// The last time this miner claimed SOL rewards.
     pub last_claim_sol_at: i64,
 
-    /// The total amount of SOL this miner has returned across all blocks.
-    pub lifetime_returned_sol: u64,
-
     /// The total amount of ORE this miner has mined across all blocks.
     pub lifetime_rewards: u64,
 
     /// The total amount of SOL this miner has deployed across all rounds.
     pub lifetime_deployed: u64,
+
+    /// The total amount of SOL this miner has mined across all blocks.
+    pub lifetime_returned_sol: u64,
 }
 
 impl Miner {
@@ -236,7 +239,7 @@ impl MinerAccount {
     pub fn cumulative(&self) -> [u64; 25] {
         match self {
             MinerAccount::Miner(miner) => miner.cumulative,
-            MinerAccount::MinerV4(miner) => miner.sol_cumulative,
+            MinerAccount::MinerV4(miner) => miner.mass_cumulative,
         }
     }
 
