@@ -61,6 +61,7 @@ pub struct TreasuryV4 {
 account!(OreAccountV1, TreasuryV1);
 account!(OreAccountV4, TreasuryV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Treasury {
     V1(TreasuryV1),
     V4(TreasuryV4),

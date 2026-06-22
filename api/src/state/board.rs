@@ -53,6 +53,7 @@ impl BoardV4 {
 account!(OreAccountV1, BoardV1);
 account!(OreAccountV4, BoardV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Board {
     V1(BoardV1),
     V4(BoardV4),

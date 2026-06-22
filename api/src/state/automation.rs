@@ -131,6 +131,7 @@ impl AutomationV4 {
 account!(OreAccountV1, AutomationV1);
 account!(OreAccountV4, AutomationV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Automation {
     V1(AutomationV1),
     V4(AutomationV4),

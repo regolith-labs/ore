@@ -199,6 +199,7 @@ impl RoundV4 {
 account!(OreAccountV1, RoundV1);
 account!(OreAccountV4, RoundV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Round {
     V1(RoundV1),
     V4(RoundV4),

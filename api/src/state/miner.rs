@@ -294,6 +294,7 @@ impl MinerV4 {
 account!(OreAccountV1, MinerV1);
 account!(OreAccountV4, MinerV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Miner {
     V1(MinerV1),
     V4(MinerV4),

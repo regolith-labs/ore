@@ -90,6 +90,7 @@ impl ConfigV4 {
 account!(OreAccountV1, ConfigV1);
 account!(OreAccountV4, ConfigV4);
 
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Config {
     V1(ConfigV1),
     V4(ConfigV4),
