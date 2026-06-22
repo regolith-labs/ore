@@ -200,148 +200,148 @@ account!(OreAccountV1, RoundV1);
 account!(OreAccountV4, RoundV4);
 
 pub enum Round {
-    RoundV1(RoundV1),
-    RoundV4(RoundV4),
+    V1(RoundV1),
+    V4(RoundV4),
 }
 
 impl Round {
     pub fn id(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.id,
-            Round::RoundV4(r) => r.id,
+            Round::V1(r) => r.id,
+            Round::V4(r) => r.id,
         }
     }
 
     pub fn deployed(&self) -> [u64; 25] {
         match self {
-            Round::RoundV1(r) => r.deployed,
-            Round::RoundV4(r) => r.sol,
+            Round::V1(r) => r.deployed,
+            Round::V4(r) => r.sol,
         }
     }
 
     pub fn slot_hash(&self) -> [u8; 32] {
         match self {
-            Round::RoundV1(r) => r.slot_hash,
-            Round::RoundV4(r) => r.entropy,
+            Round::V1(r) => r.slot_hash,
+            Round::V4(r) => r.entropy,
         }
     }
 
     pub fn count(&self) -> [u64; 25] {
         match self {
-            Round::RoundV1(r) => r.count,
-            Round::RoundV4(r) => r.miners,
+            Round::V1(r) => r.count,
+            Round::V4(r) => r.miners,
         }
     }
 
     pub fn expires_at(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.expires_at,
-            Round::RoundV4(r) => r.closes_at,
+            Round::V1(r) => r.expires_at,
+            Round::V4(r) => r.closes_at,
         }
     }
 
     pub fn motherlode(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.motherlode,
-            Round::RoundV4(r) => r.motherlode,
+            Round::V1(r) => r.motherlode,
+            Round::V4(r) => r.motherlode,
         }
     }
 
     pub fn rent_payer(&self) -> Pubkey {
         match self {
-            Round::RoundV1(r) => r.rent_payer,
-            Round::RoundV4(r) => r.rent_payer,
+            Round::V1(r) => r.rent_payer,
+            Round::V4(r) => r.rent_payer,
         }
     }
 
     pub fn top_miner(&self) -> Pubkey {
         match self {
-            Round::RoundV1(r) => r.top_miner,
-            Round::RoundV4(r) => r.winner,
+            Round::V1(r) => r.top_miner,
+            Round::V4(r) => r.winner,
         }
     }
 
     pub fn top_miner_reward(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.top_miner_reward,
-            Round::RoundV4(_) => 0,
+            Round::V1(r) => r.top_miner_reward,
+            Round::V4(_) => 0,
         }
     }
 
     pub fn total_deployed(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.total_deployed,
-            Round::RoundV4(r) => r.sol.iter().sum(),
+            Round::V1(r) => r.total_deployed,
+            Round::V4(r) => r.sol.iter().sum(),
         }
     }
 
     pub fn total_miners(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.total_miners,
-            Round::RoundV4(r) => r.unique_miners,
+            Round::V1(r) => r.total_miners,
+            Round::V4(r) => r.unique_miners,
         }
     }
 
     pub fn total_vaulted(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.total_vaulted,
-            Round::RoundV4(_) => 0,
+            Round::V1(r) => r.total_vaulted,
+            Round::V4(_) => 0,
         }
     }
 
     pub fn total_winnings(&self) -> u64 {
         match self {
-            Round::RoundV1(r) => r.total_winnings,
-            Round::RoundV4(_) => 0,
+            Round::V1(r) => r.total_winnings,
+            Round::V4(_) => 0,
         }
     }
 
     pub fn pda(&self) -> (Pubkey, u8) {
         match self {
-            Round::RoundV1(r) => r.pda(),
-            Round::RoundV4(r) => r.pda(),
+            Round::V1(r) => r.pda(),
+            Round::V4(r) => r.pda(),
         }
     }
 
     pub fn rng(&self) -> Option<u64> {
         match self {
-            Round::RoundV1(r) => r.rng(),
-            Round::RoundV4(r) => r.rng(),
+            Round::V1(r) => r.rng(),
+            Round::V4(r) => r.rng(),
         }
     }
 
     pub fn winning_square(&self, rng: u64) -> usize {
         match self {
-            Round::RoundV1(r) => r.winning_square(rng),
-            Round::RoundV4(r) => r.winning_square(rng),
+            Round::V1(r) => r.winning_square(rng),
+            Round::V4(r) => r.winning_square(rng),
         }
     }
 
     pub fn top_miner_sample(&self, rng: u64, winning_square: usize) -> u64 {
         match self {
-            Round::RoundV1(r) => r.top_miner_sample(rng, winning_square),
-            Round::RoundV4(r) => r.top_miner_sample(rng, winning_square),
+            Round::V1(r) => r.top_miner_sample(rng, winning_square),
+            Round::V4(r) => r.top_miner_sample(rng, winning_square),
         }
     }
 
     pub fn calculate_total_winnings(&self, winning_square: usize) -> u64 {
         match self {
-            Round::RoundV1(r) => r.calculate_total_winnings(winning_square),
-            Round::RoundV4(r) => r.calculate_total_winnings(winning_square),
+            Round::V1(r) => r.calculate_total_winnings(winning_square),
+            Round::V4(r) => r.calculate_total_winnings(winning_square),
         }
     }
 
     pub fn is_split_reward(&self, rng: u64) -> bool {
         match self {
-            Round::RoundV1(r) => r.is_split_reward(rng),
-            Round::RoundV4(r) => r.is_split_reward(rng),
+            Round::V1(r) => r.is_split_reward(rng),
+            Round::V4(r) => r.is_split_reward(rng),
         }
     }
 
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {
         match self {
-            Round::RoundV1(r) => r.did_hit_motherlode(rng),
-            Round::RoundV4(r) => r.did_hit_motherlode(rng),
+            Round::V1(r) => r.did_hit_motherlode(rng),
+            Round::V4(r) => r.did_hit_motherlode(rng),
         }
     }
 }

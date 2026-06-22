@@ -62,72 +62,72 @@ account!(OreAccountV1, TreasuryV1);
 account!(OreAccountV4, TreasuryV4);
 
 pub enum Treasury {
-    TreasuryV1(TreasuryV1),
-    TreasuryV4(TreasuryV4),
+    V1(TreasuryV1),
+    V4(TreasuryV4),
 }
 
 #[allow(deprecated)]
 impl Treasury {
     pub fn balance(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.balance,
-            Treasury::TreasuryV4(_) => 0,
+            Treasury::V1(t) => t.balance,
+            Treasury::V4(_) => 0,
         }
     }
 
     pub fn buffer_a(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.buffer_a,
-            Treasury::TreasuryV4(_) => 0,
+            Treasury::V1(t) => t.buffer_a,
+            Treasury::V4(_) => 0,
         }
     }
 
     pub fn motherlode(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.motherlode,
-            Treasury::TreasuryV4(t) => t.motherlode,
+            Treasury::V1(t) => t.motherlode,
+            Treasury::V4(t) => t.motherlode,
         }
     }
 
     pub fn miner_rewards_factor(&self) -> Numeric {
         match self {
-            Treasury::TreasuryV1(t) => t.miner_rewards_factor,
-            Treasury::TreasuryV4(t) => t.rewards_factor,
+            Treasury::V1(t) => t.miner_rewards_factor,
+            Treasury::V4(t) => t.rewards_factor,
         }
     }
 
     pub fn stake_rewards_factor(&self) -> Numeric {
         match self {
-            Treasury::TreasuryV1(t) => t.stake_rewards_factor,
-            Treasury::TreasuryV4(_) => Numeric::ZERO,
+            Treasury::V1(t) => t.stake_rewards_factor,
+            Treasury::V4(_) => Numeric::ZERO,
         }
     }
 
     pub fn buffer_b(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.buffer_b,
-            Treasury::TreasuryV4(_) => 0,
+            Treasury::V1(t) => t.buffer_b,
+            Treasury::V4(_) => 0,
         }
     }
 
     pub fn total_refined(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.total_refined,
-            Treasury::TreasuryV4(t) => t.total_refined,
+            Treasury::V1(t) => t.total_refined,
+            Treasury::V4(t) => t.total_refined,
         }
     }
 
     pub fn total_staked(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.total_staked,
-            Treasury::TreasuryV4(_) => 0,
+            Treasury::V1(t) => t.total_staked,
+            Treasury::V4(_) => 0,
         }
     }
 
     pub fn total_unclaimed(&self) -> u64 {
         match self {
-            Treasury::TreasuryV1(t) => t.total_unclaimed,
-            Treasury::TreasuryV4(t) => t.total_unrefined,
+            Treasury::V1(t) => t.total_unclaimed,
+            Treasury::V4(t) => t.total_unrefined,
         }
     }
 }

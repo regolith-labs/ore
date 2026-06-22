@@ -54,43 +54,43 @@ account!(OreAccountV1, BoardV1);
 account!(OreAccountV4, BoardV4);
 
 pub enum Board {
-    BoardV1(BoardV1),
-    BoardV4(BoardV4),
+    V1(BoardV1),
+    V4(BoardV4),
 }
 
 impl Board {
     pub fn round_id(&self) -> u64 {
         match self {
-            Board::BoardV1(b) => b.round_id,
-            Board::BoardV4(b) => b.round_id,
+            Board::V1(b) => b.round_id,
+            Board::V4(b) => b.round_id,
         }
     }
 
     pub fn start_slot(&self) -> u64 {
         match self {
-            Board::BoardV1(b) => b.start_slot,
-            Board::BoardV4(b) => b.start_slot,
+            Board::V1(b) => b.start_slot,
+            Board::V4(b) => b.start_slot,
         }
     }
 
     pub fn end_slot(&self) -> u64 {
         match self {
-            Board::BoardV1(b) => b.end_slot,
-            Board::BoardV4(b) => b.end_slot,
+            Board::V1(b) => b.end_slot,
+            Board::V4(b) => b.end_slot,
         }
     }
 
     pub fn epoch_id(&self) -> u64 {
         match self {
-            Board::BoardV1(b) => b.epoch_id,
-            Board::BoardV4(b) => 0,
+            Board::V1(b) => b.epoch_id,
+            Board::V4(_) => 0,
         }
     }
 
     pub fn pda(&self) -> (Pubkey, u8) {
         match self {
-            Board::BoardV1(b) => b.pda(),
-            Board::BoardV4(b) => b.pda(),
+            Board::V1(b) => b.pda(),
+            Board::V4(b) => b.pda(),
         }
     }
 }

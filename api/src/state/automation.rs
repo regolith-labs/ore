@@ -132,64 +132,64 @@ account!(OreAccountV1, AutomationV1);
 account!(OreAccountV4, AutomationV4);
 
 pub enum Automation {
-    AutomationV1(AutomationV1),
-    AutomationV4(AutomationV4),
+    V1(AutomationV1),
+    V4(AutomationV4),
 }
 
 impl Automation {
     pub fn amount(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.amount,
-            Automation::AutomationV4(a) => a.amount,
+            Automation::V1(a) => a.amount,
+            Automation::V4(a) => a.amount,
         }
     }
 
     pub fn authority(&self) -> Pubkey {
         match self {
-            Automation::AutomationV1(a) => a.authority,
-            Automation::AutomationV4(a) => a.authority,
+            Automation::V1(a) => a.authority,
+            Automation::V4(a) => a.authority,
         }
     }
 
     pub fn balance(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.balance,
-            Automation::AutomationV4(a) => a.balance,
+            Automation::V1(a) => a.balance,
+            Automation::V4(a) => a.balance,
         }
     }
 
     pub fn executor(&self) -> Pubkey {
         match self {
-            Automation::AutomationV1(a) => a.executor,
-            Automation::AutomationV4(a) => a.executor,
+            Automation::V1(a) => a.executor,
+            Automation::V4(a) => a.executor,
         }
     }
 
     pub fn fee(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.fee,
-            Automation::AutomationV4(a) => a.fee,
+            Automation::V1(a) => a.fee,
+            Automation::V4(a) => a.fee,
         }
     }
 
     pub fn strategy(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.strategy,
-            Automation::AutomationV4(a) => a.strategy,
+            Automation::V1(a) => a.strategy,
+            Automation::V4(a) => a.strategy,
         }
     }
 
     pub fn mask(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.mask,
-            Automation::AutomationV4(a) => a.mask,
+            Automation::V1(a) => a.mask,
+            Automation::V4(a) => a.mask,
         }
     }
 
     pub fn reload(&self) -> u64 {
         match self {
-            Automation::AutomationV1(a) => a.reload,
-            Automation::AutomationV4(a) => a.reload,
+            Automation::V1(a) => a.reload,
+            Automation::V4(a) => a.reload,
         }
     }
 }

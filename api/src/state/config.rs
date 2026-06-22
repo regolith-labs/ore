@@ -91,50 +91,50 @@ account!(OreAccountV1, ConfigV1);
 account!(OreAccountV4, ConfigV4);
 
 pub enum Config {
-    ConfigV1(ConfigV1),
-    ConfigV4(ConfigV4),
+    V1(ConfigV1),
+    V4(ConfigV4),
 }
 
 impl Config {
     pub fn admin(&self) -> Pubkey {
         match self {
-            Config::ConfigV1(c) => c.admin,
-            Config::ConfigV4(c) => c.admin.authority,
+            Config::V1(c) => c.admin,
+            Config::V4(c) => c.admin.authority,
         }
     }
 
     pub fn buffer_a(&self) -> [u8; 32] {
         match self {
-            Config::ConfigV1(c) => c.buffer_a,
-            Config::ConfigV4(_) => [0; 32],
+            Config::V1(c) => c.buffer_a,
+            Config::V4(_) => [0; 32],
         }
     }
 
     pub fn buffer_b(&self) -> [u8; 32] {
         match self {
-            Config::ConfigV1(c) => c.buffer_b,
-            Config::ConfigV4(_) => [0; 32],
+            Config::V1(c) => c.buffer_b,
+            Config::V4(_) => [0; 32],
         }
     }
 
     pub fn buffer_c(&self) -> [u8; 32] {
         match self {
-            Config::ConfigV1(c) => c.buffer_c,
-            Config::ConfigV4(_) => [0; 32],
+            Config::V1(c) => c.buffer_c,
+            Config::V4(_) => [0; 32],
         }
     }
 
     pub fn buffer_d(&self) -> [u8; 32] {
         match self {
-            Config::ConfigV1(c) => c.buffer_d,
-            Config::ConfigV4(_) => [0; 32],
+            Config::V1(c) => c.buffer_d,
+            Config::V4(_) => [0; 32],
         }
     }
 
     pub fn buffer_e(&self) -> [u8; 8] {
         match self {
-            Config::ConfigV1(c) => c.buffer_e,
-            Config::ConfigV4(_) => [0; 8],
+            Config::V1(c) => c.buffer_e,
+            Config::V4(_) => [0; 8],
         }
     }
 }

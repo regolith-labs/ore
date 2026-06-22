@@ -295,151 +295,151 @@ account!(OreAccountV1, MinerV1);
 account!(OreAccountV4, MinerV4);
 
 pub enum Miner {
-    MinerV1(MinerV1),
-    MinerV4(MinerV4),
+    V1(MinerV1),
+    V4(MinerV4),
 }
 
 impl Miner {
     pub fn authority(&self) -> Pubkey {
         match self {
-            Miner::MinerV1(miner) => miner.authority,
-            Miner::MinerV4(miner) => miner.authority,
+            Miner::V1(miner) => miner.authority,
+            Miner::V4(miner) => miner.authority,
         }
     }
 
     pub fn deployed(&self) -> [u64; 25] {
         match self {
-            Miner::MinerV1(miner) => miner.deployed,
-            Miner::MinerV4(miner) => miner.sol,
+            Miner::V1(miner) => miner.deployed,
+            Miner::V4(miner) => miner.sol,
         }
     }
 
     pub fn cumulative(&self) -> [u64; 25] {
         match self {
-            Miner::MinerV1(miner) => miner.cumulative,
-            Miner::MinerV4(miner) => miner.mass_cumulative,
+            Miner::V1(miner) => miner.cumulative,
+            Miner::V4(miner) => miner.mass_cumulative,
         }
     }
 
     pub fn checkpoint_fee(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.checkpoint_fee,
-            Miner::MinerV4(miner) => miner.checkpoint_fee,
+            Miner::V1(miner) => miner.checkpoint_fee,
+            Miner::V4(miner) => miner.checkpoint_fee,
         }
     }
 
     pub fn checkpoint_id(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.checkpoint_id,
-            Miner::MinerV4(miner) => miner.checkpoint_id,
+            Miner::V1(miner) => miner.checkpoint_id,
+            Miner::V4(miner) => miner.checkpoint_id,
         }
     }
 
     pub fn last_claim_ore_at(&self) -> i64 {
         match self {
-            Miner::MinerV1(miner) => miner.last_claim_ore_at,
-            Miner::MinerV4(miner) => miner.last_claim_ore_at,
+            Miner::V1(miner) => miner.last_claim_ore_at,
+            Miner::V4(miner) => miner.last_claim_ore_at,
         }
     }
 
     pub fn last_claim_sol_at(&self) -> i64 {
         match self {
-            Miner::MinerV1(miner) => miner.last_claim_sol_at,
-            Miner::MinerV4(miner) => miner.last_claim_sol_at,
+            Miner::V1(miner) => miner.last_claim_sol_at,
+            Miner::V4(miner) => miner.last_claim_sol_at,
         }
     }
     pub fn rewards_factor(&self) -> Numeric {
         match self {
-            Miner::MinerV1(miner) => miner.rewards_factor,
-            Miner::MinerV4(miner) => miner.rewards_factor,
+            Miner::V1(miner) => miner.rewards_factor,
+            Miner::V4(miner) => miner.rewards_factor,
         }
     }
 
     pub fn rewards_sol(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.rewards_sol,
-            Miner::MinerV4(miner) => miner.sol_returned,
+            Miner::V1(miner) => miner.rewards_sol,
+            Miner::V4(miner) => miner.sol_returned,
         }
     }
 
     pub fn rewards_ore(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.rewards_ore,
-            Miner::MinerV4(miner) => miner.ore_unrefined,
+            Miner::V1(miner) => miner.rewards_ore,
+            Miner::V4(miner) => miner.ore_unrefined,
         }
     }
 
     pub fn refined_ore(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.refined_ore,
-            Miner::MinerV4(miner) => miner.ore_refined,
+            Miner::V1(miner) => miner.refined_ore,
+            Miner::V4(miner) => miner.ore_refined,
         }
     }
 
     pub fn round_id(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.round_id,
-            Miner::MinerV4(miner) => miner.round_id,
+            Miner::V1(miner) => miner.round_id,
+            Miner::V4(miner) => miner.round_id,
         }
     }
 
     pub fn lifetime_rewards_sol(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.lifetime_rewards_sol,
-            Miner::MinerV4(miner) => miner.lifetime_returned_sol,
+            Miner::V1(miner) => miner.lifetime_rewards_sol,
+            Miner::V4(miner) => miner.lifetime_returned_sol,
         }
     }
 
     pub fn lifetime_rewards_ore(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.lifetime_rewards_ore,
-            Miner::MinerV4(miner) => miner.lifetime_rewards,
+            Miner::V1(miner) => miner.lifetime_rewards_ore,
+            Miner::V4(miner) => miner.lifetime_rewards,
         }
     }
 
     pub fn lifetime_deployed(&self) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.lifetime_deployed,
-            Miner::MinerV4(miner) => miner.lifetime_deployed,
+            Miner::V1(miner) => miner.lifetime_deployed,
+            Miner::V4(miner) => miner.lifetime_deployed,
         }
     }
 
     pub fn pda(&self) -> (Pubkey, u8) {
         match self {
-            Miner::MinerV1(miner) => miner.pda(),
-            Miner::MinerV4(miner) => miner.pda(),
+            Miner::V1(miner) => miner.pda(),
+            Miner::V4(miner) => miner.pda(),
         }
     }
 
     pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
         match self {
-            Miner::MinerV1(miner) => match treasury {
-                Treasury::TreasuryV1(treasury) => miner.claim_ore_v1(clock, treasury),
-                Treasury::TreasuryV4(treasury) => miner.claim_ore_v4(clock, treasury),
+            Miner::V1(miner) => match treasury {
+                Treasury::V1(treasury) => miner.claim_ore_v1(clock, treasury),
+                Treasury::V4(treasury) => miner.claim_ore_v4(clock, treasury),
             },
-            Miner::MinerV4(miner) => match treasury {
-                Treasury::TreasuryV1(treasury) => miner.claim_ore_v1(clock, treasury),
-                Treasury::TreasuryV4(treasury) => miner.claim_ore_v4(clock, treasury),
+            Miner::V4(miner) => match treasury {
+                Treasury::V1(treasury) => miner.claim_ore_v1(clock, treasury),
+                Treasury::V4(treasury) => miner.claim_ore_v4(clock, treasury),
             },
         }
     }
 
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {
         match self {
-            Miner::MinerV1(miner) => miner.claim_sol(clock),
-            Miner::MinerV4(miner) => miner.claim_sol(clock),
+            Miner::V1(miner) => miner.claim_sol(clock),
+            Miner::V4(miner) => miner.claim_sol(clock),
         }
     }
 
     pub fn update_rewards(&mut self, treasury: &Treasury) {
         match self {
-            Miner::MinerV1(miner) => match treasury {
-                Treasury::TreasuryV1(treasury) => miner.update_rewards_v1(treasury),
-                Treasury::TreasuryV4(treasury) => miner.update_rewards_v4(treasury),
+            Miner::V1(miner) => match treasury {
+                Treasury::V1(treasury) => miner.update_rewards_v1(treasury),
+                Treasury::V4(treasury) => miner.update_rewards_v4(treasury),
             },
-            Miner::MinerV4(miner) => match treasury {
-                Treasury::TreasuryV1(treasury) => miner.update_rewards_v1(treasury),
-                Treasury::TreasuryV4(treasury) => miner.update_rewards_v4(treasury),
+            Miner::V4(miner) => match treasury {
+                Treasury::V1(treasury) => miner.update_rewards_v1(treasury),
+                Treasury::V4(treasury) => miner.update_rewards_v4(treasury),
             },
         }
     }
