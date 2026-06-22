@@ -49,6 +49,9 @@ pub const AUTOMATION: &[u8] = b"automation";
 /// The seed of the board account PDA.
 pub const BOARD: &[u8] = b"board";
 
+/// The seed of the stats account PDA.
+pub const STATS: &[u8] = b"stats";
+
 /// The seed of the config account PDA.
 pub const CONFIG: &[u8] = b"config";
 

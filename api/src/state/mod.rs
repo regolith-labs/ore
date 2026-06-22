@@ -27,12 +27,27 @@ pub enum OreAccount {
     Round = 109,
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
+pub enum OreAccountV4 {
+    AutomationV4 = 100,
+    ConfigV4 = 101,
+    MinerV4 = 103,
+    TreasuryV4 = 104,
+    BoardV4 = 105,
+    RoundV4 = 109,
+}
+
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[AUTOMATION, &authority.to_bytes()], &crate::ID)
 }
 
 pub fn board_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[BOARD], &crate::ID)
+}
+
+pub fn stats_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[STATS], &crate::ID)
 }
 
 pub fn config_pda() -> (Pubkey, u8) {
