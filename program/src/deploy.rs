@@ -27,11 +27,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
-        .as_account_mut::<Board>(&ore_api::ID)?
+        .as_account_mut::<BoardV1>(&ore_api::ID)?
         .assert_mut(|b| clock.slot >= b.start_slot && clock.slot < b.end_slot)?;
     let round = round_info
         .has_seeds(&[ROUND, &board.round_id.to_le_bytes()], &ore_api::ID)?
-        .as_account_mut::<Round>(&ore_api::ID)?
+        .as_account_mut::<RoundV1>(&ore_api::ID)?
         .assert_mut(|r| r.id == board.round_id)?;
     miner_info
         .is_writable()?
@@ -67,7 +67,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let mut strategy = u64::MAX;
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
-            .as_account_mut::<Automation>(&ore_api::ID)?
+            .as_account_mut::<AutomationV1>(&ore_api::ID)?
             .assert_mut(|a| a.executor == *signer_info.key || a.executor == EXECUTOR_ADDRESS)?
             .assert_mut(|a| a.authority == *authority_info.key)?;
         strategy = automation.strategy as u64;
@@ -113,14 +113,14 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Open miner account.
     let miner = if miner_info.data_is_empty() {
-        create_program_account::<Miner>(
+        create_program_account::<MinerV1>(
             miner_info,
             system_program,
             signer_info,
             &ore_api::ID,
             &[MINER, &signer_info.key.to_bytes()],
         )?;
-        let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
+        let miner = miner_info.as_account_mut::<MinerV1>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
         miner.deployed = [0; 25];
         miner.cumulative = [0; 25];
@@ -133,7 +133,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         miner
     } else {
         miner_info
-            .as_account_mut::<Miner>(&ore_api::ID)?
+            .as_account_mut::<MinerV1>(&ore_api::ID)?
             .assert_mut(|m| {
                 if let Some(automation) = &automation {
                     m.authority == automation.authority

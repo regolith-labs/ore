@@ -14,7 +14,7 @@ pub fn process_claim_sol(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     board_info.has_address(&BOARD_ADDRESS)?;
     let miner = miner_info
         .has_seeds(&[MINER, &signer_info.key.to_bytes()], &ore_api::ID)?
-        .as_account_mut::<Miner>(&ore_api::ID)?
+        .as_account_mut::<MinerV1>(&ore_api::ID)?
         .assert_mut(|m| m.authority == *signer_info.key)?;
     system_program.is_program(&system_program::ID)?;
     ore_program.is_program(&ore_api::ID)?;

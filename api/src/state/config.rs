@@ -3,11 +3,11 @@ use steel::*;
 
 use crate::state::{config_pda, OreAccountV4};
 
-use super::OreAccount;
+use super::OreAccountV1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct Config {
+pub struct ConfigV1 {
     /// The address that can update the config.
     pub admin: Pubkey,
 
@@ -75,7 +75,7 @@ pub struct ProtocolConfig {
     pub entropy_program_id: Pubkey,
 }
 
-impl Config {
+impl ConfigV1 {
     pub fn pda() -> (Pubkey, u8) {
         config_pda()
     }
@@ -87,54 +87,54 @@ impl ConfigV4 {
     }
 }
 
-account!(OreAccount, Config);
+account!(OreAccountV1, ConfigV1);
 account!(OreAccountV4, ConfigV4);
 
-pub enum ConfigAccount {
-    Config(Config),
+pub enum Config {
+    ConfigV1(ConfigV1),
     ConfigV4(ConfigV4),
 }
 
-impl ConfigAccount {
+impl Config {
     pub fn admin(&self) -> Pubkey {
         match self {
-            ConfigAccount::Config(c) => c.admin,
-            ConfigAccount::ConfigV4(c) => c.admin.authority,
+            Config::ConfigV1(c) => c.admin,
+            Config::ConfigV4(c) => c.admin.authority,
         }
     }
 
     pub fn buffer_a(&self) -> [u8; 32] {
         match self {
-            ConfigAccount::Config(c) => c.buffer_a,
-            ConfigAccount::ConfigV4(_) => [0; 32],
+            Config::ConfigV1(c) => c.buffer_a,
+            Config::ConfigV4(_) => [0; 32],
         }
     }
 
     pub fn buffer_b(&self) -> [u8; 32] {
         match self {
-            ConfigAccount::Config(c) => c.buffer_b,
-            ConfigAccount::ConfigV4(_) => [0; 32],
+            Config::ConfigV1(c) => c.buffer_b,
+            Config::ConfigV4(_) => [0; 32],
         }
     }
 
     pub fn buffer_c(&self) -> [u8; 32] {
         match self {
-            ConfigAccount::Config(c) => c.buffer_c,
-            ConfigAccount::ConfigV4(_) => [0; 32],
+            Config::ConfigV1(c) => c.buffer_c,
+            Config::ConfigV4(_) => [0; 32],
         }
     }
 
     pub fn buffer_d(&self) -> [u8; 32] {
         match self {
-            ConfigAccount::Config(c) => c.buffer_d,
-            ConfigAccount::ConfigV4(_) => [0; 32],
+            Config::ConfigV1(c) => c.buffer_d,
+            Config::ConfigV4(_) => [0; 32],
         }
     }
 
     pub fn buffer_e(&self) -> [u8; 8] {
         match self {
-            ConfigAccount::Config(c) => c.buffer_e,
-            ConfigAccount::ConfigV4(_) => [0; 8],
+            Config::ConfigV1(c) => c.buffer_e,
+            Config::ConfigV4(_) => [0; 8],
         }
     }
 }

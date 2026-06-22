@@ -4,11 +4,11 @@ use steel::*;
 
 use crate::state::{automation_pda, OreAccountV4};
 
-use super::OreAccount;
+use super::OreAccountV1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct Automation {
+pub struct AutomationV1 {
     /// The amount of SOL to deploy on each territory per round.
     pub amount: u64,
 
@@ -128,68 +128,68 @@ impl AutomationV4 {
     }
 }
 
-account!(OreAccount, Automation);
+account!(OreAccountV1, AutomationV1);
 account!(OreAccountV4, AutomationV4);
 
-pub enum AutomationAccount {
-    Automation(Automation),
+pub enum Automation {
+    AutomationV1(AutomationV1),
     AutomationV4(AutomationV4),
 }
 
-impl AutomationAccount {
+impl Automation {
     pub fn amount(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.amount,
-            AutomationAccount::AutomationV4(a) => a.amount,
+            Automation::AutomationV1(a) => a.amount,
+            Automation::AutomationV4(a) => a.amount,
         }
     }
 
     pub fn authority(&self) -> Pubkey {
         match self {
-            AutomationAccount::Automation(a) => a.authority,
-            AutomationAccount::AutomationV4(a) => a.authority,
+            Automation::AutomationV1(a) => a.authority,
+            Automation::AutomationV4(a) => a.authority,
         }
     }
 
     pub fn balance(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.balance,
-            AutomationAccount::AutomationV4(a) => a.balance,
+            Automation::AutomationV1(a) => a.balance,
+            Automation::AutomationV4(a) => a.balance,
         }
     }
 
     pub fn executor(&self) -> Pubkey {
         match self {
-            AutomationAccount::Automation(a) => a.executor,
-            AutomationAccount::AutomationV4(a) => a.executor,
+            Automation::AutomationV1(a) => a.executor,
+            Automation::AutomationV4(a) => a.executor,
         }
     }
 
     pub fn fee(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.fee,
-            AutomationAccount::AutomationV4(a) => a.fee,
+            Automation::AutomationV1(a) => a.fee,
+            Automation::AutomationV4(a) => a.fee,
         }
     }
 
     pub fn strategy(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.strategy,
-            AutomationAccount::AutomationV4(a) => a.strategy,
+            Automation::AutomationV1(a) => a.strategy,
+            Automation::AutomationV4(a) => a.strategy,
         }
     }
 
     pub fn mask(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.mask,
-            AutomationAccount::AutomationV4(a) => a.mask,
+            Automation::AutomationV1(a) => a.mask,
+            Automation::AutomationV4(a) => a.mask,
         }
     }
 
     pub fn reload(&self) -> u64 {
         match self {
-            AutomationAccount::Automation(a) => a.reload,
-            AutomationAccount::AutomationV4(a) => a.reload,
+            Automation::AutomationV1(a) => a.reload,
+            Automation::AutomationV4(a) => a.reload,
         }
     }
 }

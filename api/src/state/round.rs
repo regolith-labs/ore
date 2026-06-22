@@ -3,11 +3,11 @@ use steel::*;
 
 use crate::state::{round_pda, OreAccountV4};
 
-use super::OreAccount;
+use super::OreAccountV1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct Round {
+pub struct RoundV1 {
     /// The round number.
     pub id: u64,
 
@@ -88,7 +88,7 @@ pub struct RoundV4 {
     pub winner: Pubkey,
 }
 
-impl Round {
+impl RoundV1 {
     pub fn pda(&self) -> (Pubkey, u8) {
         round_pda(self.id)
     }
@@ -196,152 +196,152 @@ impl RoundV4 {
     }
 }
 
-account!(OreAccount, Round);
+account!(OreAccountV1, RoundV1);
 account!(OreAccountV4, RoundV4);
 
-pub enum RoundAccount {
-    Round(Round),
+pub enum Round {
+    RoundV1(RoundV1),
     RoundV4(RoundV4),
 }
 
-impl RoundAccount {
+impl Round {
     pub fn id(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.id,
-            RoundAccount::RoundV4(r) => r.id,
+            Round::RoundV1(r) => r.id,
+            Round::RoundV4(r) => r.id,
         }
     }
 
     pub fn deployed(&self) -> [u64; 25] {
         match self {
-            RoundAccount::Round(r) => r.deployed,
-            RoundAccount::RoundV4(r) => r.sol,
+            Round::RoundV1(r) => r.deployed,
+            Round::RoundV4(r) => r.sol,
         }
     }
 
     pub fn slot_hash(&self) -> [u8; 32] {
         match self {
-            RoundAccount::Round(r) => r.slot_hash,
-            RoundAccount::RoundV4(r) => r.entropy,
+            Round::RoundV1(r) => r.slot_hash,
+            Round::RoundV4(r) => r.entropy,
         }
     }
 
     pub fn count(&self) -> [u64; 25] {
         match self {
-            RoundAccount::Round(r) => r.count,
-            RoundAccount::RoundV4(r) => r.miners,
+            Round::RoundV1(r) => r.count,
+            Round::RoundV4(r) => r.miners,
         }
     }
 
     pub fn expires_at(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.expires_at,
-            RoundAccount::RoundV4(r) => r.closes_at,
+            Round::RoundV1(r) => r.expires_at,
+            Round::RoundV4(r) => r.closes_at,
         }
     }
 
     pub fn motherlode(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.motherlode,
-            RoundAccount::RoundV4(r) => r.motherlode,
+            Round::RoundV1(r) => r.motherlode,
+            Round::RoundV4(r) => r.motherlode,
         }
     }
 
     pub fn rent_payer(&self) -> Pubkey {
         match self {
-            RoundAccount::Round(r) => r.rent_payer,
-            RoundAccount::RoundV4(r) => r.rent_payer,
+            Round::RoundV1(r) => r.rent_payer,
+            Round::RoundV4(r) => r.rent_payer,
         }
     }
 
     pub fn top_miner(&self) -> Pubkey {
         match self {
-            RoundAccount::Round(r) => r.top_miner,
-            RoundAccount::RoundV4(r) => r.winner,
+            Round::RoundV1(r) => r.top_miner,
+            Round::RoundV4(r) => r.winner,
         }
     }
 
     pub fn top_miner_reward(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.top_miner_reward,
-            RoundAccount::RoundV4(_) => 0,
+            Round::RoundV1(r) => r.top_miner_reward,
+            Round::RoundV4(_) => 0,
         }
     }
 
     pub fn total_deployed(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.total_deployed,
-            RoundAccount::RoundV4(r) => r.sol.iter().sum(),
+            Round::RoundV1(r) => r.total_deployed,
+            Round::RoundV4(r) => r.sol.iter().sum(),
         }
     }
 
     pub fn total_miners(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.total_miners,
-            RoundAccount::RoundV4(r) => r.unique_miners,
+            Round::RoundV1(r) => r.total_miners,
+            Round::RoundV4(r) => r.unique_miners,
         }
     }
 
     pub fn total_vaulted(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.total_vaulted,
-            RoundAccount::RoundV4(_) => 0,
+            Round::RoundV1(r) => r.total_vaulted,
+            Round::RoundV4(_) => 0,
         }
     }
 
     pub fn total_winnings(&self) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.total_winnings,
-            RoundAccount::RoundV4(_) => 0,
+            Round::RoundV1(r) => r.total_winnings,
+            Round::RoundV4(_) => 0,
         }
     }
 
     pub fn pda(&self) -> (Pubkey, u8) {
         match self {
-            RoundAccount::Round(r) => r.pda(),
-            RoundAccount::RoundV4(r) => r.pda(),
+            Round::RoundV1(r) => r.pda(),
+            Round::RoundV4(r) => r.pda(),
         }
     }
 
     pub fn rng(&self) -> Option<u64> {
         match self {
-            RoundAccount::Round(r) => r.rng(),
-            RoundAccount::RoundV4(r) => r.rng(),
+            Round::RoundV1(r) => r.rng(),
+            Round::RoundV4(r) => r.rng(),
         }
     }
 
     pub fn winning_square(&self, rng: u64) -> usize {
         match self {
-            RoundAccount::Round(r) => r.winning_square(rng),
-            RoundAccount::RoundV4(r) => r.winning_square(rng),
+            Round::RoundV1(r) => r.winning_square(rng),
+            Round::RoundV4(r) => r.winning_square(rng),
         }
     }
 
     pub fn top_miner_sample(&self, rng: u64, winning_square: usize) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.top_miner_sample(rng, winning_square),
-            RoundAccount::RoundV4(r) => r.top_miner_sample(rng, winning_square),
+            Round::RoundV1(r) => r.top_miner_sample(rng, winning_square),
+            Round::RoundV4(r) => r.top_miner_sample(rng, winning_square),
         }
     }
 
     pub fn calculate_total_winnings(&self, winning_square: usize) -> u64 {
         match self {
-            RoundAccount::Round(r) => r.calculate_total_winnings(winning_square),
-            RoundAccount::RoundV4(r) => r.calculate_total_winnings(winning_square),
+            Round::RoundV1(r) => r.calculate_total_winnings(winning_square),
+            Round::RoundV4(r) => r.calculate_total_winnings(winning_square),
         }
     }
 
     pub fn is_split_reward(&self, rng: u64) -> bool {
         match self {
-            RoundAccount::Round(r) => r.is_split_reward(rng),
-            RoundAccount::RoundV4(r) => r.is_split_reward(rng),
+            Round::RoundV1(r) => r.is_split_reward(rng),
+            Round::RoundV4(r) => r.is_split_reward(rng),
         }
     }
 
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {
         match self {
-            RoundAccount::Round(r) => r.did_hit_motherlode(rng),
-            RoundAccount::RoundV4(r) => r.did_hit_motherlode(rng),
+            Round::RoundV1(r) => r.did_hit_motherlode(rng),
+            Round::RoundV4(r) => r.did_hit_motherlode(rng),
         }
     }
 }

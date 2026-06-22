@@ -3,11 +3,11 @@ use steel::*;
 
 use crate::state::{board_pda, stats_pda, OreAccountV4};
 
-use super::OreAccount;
+use super::OreAccountV1;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct Board {
+pub struct BoardV1 {
     /// The current round number.
     pub round_id: u64,
 
@@ -38,7 +38,7 @@ pub struct BoardV4 {
     pub production_cost_ema: u64,
 }
 
-impl Board {
+impl BoardV1 {
     pub fn pda(&self) -> (Pubkey, u8) {
         board_pda()
     }
@@ -50,47 +50,47 @@ impl BoardV4 {
     }
 }
 
-account!(OreAccount, Board);
+account!(OreAccountV1, BoardV1);
 account!(OreAccountV4, BoardV4);
 
-pub enum BoardAccount {
-    Board(Board),
+pub enum Board {
+    BoardV1(BoardV1),
     BoardV4(BoardV4),
 }
 
-impl BoardAccount {
+impl Board {
     pub fn round_id(&self) -> u64 {
         match self {
-            BoardAccount::Board(b) => b.round_id,
-            BoardAccount::BoardV4(b) => b.round_id,
+            Board::BoardV1(b) => b.round_id,
+            Board::BoardV4(b) => b.round_id,
         }
     }
 
     pub fn start_slot(&self) -> u64 {
         match self {
-            BoardAccount::Board(b) => b.start_slot,
-            BoardAccount::BoardV4(b) => b.start_slot,
+            Board::BoardV1(b) => b.start_slot,
+            Board::BoardV4(b) => b.start_slot,
         }
     }
 
     pub fn end_slot(&self) -> u64 {
         match self {
-            BoardAccount::Board(b) => b.end_slot,
-            BoardAccount::BoardV4(b) => b.end_slot,
+            Board::BoardV1(b) => b.end_slot,
+            Board::BoardV4(b) => b.end_slot,
         }
     }
 
     pub fn epoch_id(&self) -> u64 {
         match self {
-            BoardAccount::Board(b) => b.epoch_id,
-            BoardAccount::BoardV4(b) => 0,
+            Board::BoardV1(b) => b.epoch_id,
+            Board::BoardV4(b) => 0,
         }
     }
 
     pub fn pda(&self) -> (Pubkey, u8) {
         match self {
-            BoardAccount::Board(b) => b.pda(),
-            BoardAccount::BoardV4(b) => b.pda(),
+            Board::BoardV1(b) => b.pda(),
+            Board::BoardV4(b) => b.pda(),
         }
     }
 }

@@ -14,7 +14,7 @@ pub fn process_set_admin(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     signer_info.is_signer()?;
     let config = config_info
         .has_seeds(&[CONFIG], &ore_api::ID)?
-        .as_account_mut::<Config>(&ore_api::ID)?
+        .as_account_mut::<ConfigV1>(&ore_api::ID)?
         .assert_mut_err(
             |c| c.admin == *signer_info.key,
             OreError::NotAuthorized.into(),

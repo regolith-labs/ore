@@ -18,13 +18,13 @@ use steel::*;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
-pub enum OreAccount {
-    Automation = 100,
-    Config = 101,
-    Miner = 103,
-    Treasury = 104,
-    Board = 105,
-    Round = 109,
+pub enum OreAccountV1 {
+    AutomationV1 = 100,
+    ConfigV1 = 101,
+    MinerV1 = 103,
+    TreasuryV1 = 104,
+    BoardV1 = 105,
+    RoundV1 = 109,
 }
 
 #[repr(u8)]
