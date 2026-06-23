@@ -21,9 +21,9 @@ pub fn process_new_var(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .as_account_mut::<BoardV1>(&ore_api::ID)?;
     config_info
         .has_address(&CONFIG_ADDRESS)?
-        .as_account_mut::<ConfigV1>(&ore_api::ID)?
+        .as_account_mut::<ConfigV4>(&ore_api::ID)?
         .assert_mut_err(
-            |c| c.admin == *signer_info.key,
+            |c| c.protocol.authority == *signer_info.key,
             OreError::NotAuthorized.into(),
         )?;
     entropy_program.is_program(&entropy_api::ID)?;

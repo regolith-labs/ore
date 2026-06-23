@@ -21,6 +21,9 @@ pub enum OreInstruction {
     SetAdmin = 15,
     NewVar = 19,
     Liq = 25,
+
+    // Migration
+    Migrate = 100,
 }
 
 #[repr(C)]
@@ -146,6 +149,10 @@ pub struct SetSwapProgram {}
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetVarAddress {}
 
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Migrate {}
+
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
@@ -160,3 +167,4 @@ instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, NewVar);
+instruction!(OreInstruction, Migrate);
