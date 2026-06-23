@@ -376,6 +376,19 @@ pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
     }
 }
 
+pub fn migrate(signer: Pubkey) -> Instruction {
+    let config_address = config_pda().0;
+    Instruction {
+        program_id: crate::ID,
+        accounts: vec![
+            AccountMeta::new(signer, true),
+            AccountMeta::new(config_address, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data: Migrate {}.to_bytes(),
+    }
+}
+
 pub fn new_var(
     signer: Pubkey,
     provider: Pubkey,

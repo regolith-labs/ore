@@ -168,7 +168,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     // Assert miner account has sufficient funds for rent and rewards.
-    let account_size = 8 + std::mem::size_of::<Miner>();
+    let account_size = 8 + std::mem::size_of::<MinerV1>();
     let required_rent = Rent::get()?.minimum_balance(account_size);
     assert!(
         miner_info.lamports() >= required_rent + miner.checkpoint_fee + miner.rewards_sol,

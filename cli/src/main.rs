@@ -113,6 +113,9 @@ async fn main() {
         "audit_curves" => {
             audit_curves(&rpc).await.unwrap();
         }
+        "migrate" => {
+            migrate(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
 }
@@ -580,7 +583,7 @@ fn is_on_curve(pubkey: &Pubkey) -> bool {
 }
 
 async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let program_id = pubkey!("stakecNP3FpiExZPCgZfqRgumVzi6dNqnfrjwXyTgeH");
+    let program_id = pubkey!("oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv");
     let accounts = rpc.get_program_accounts(&program_id).await?;
     let mut on_curve_count = 0;
     println!("Checking {} accounts...", accounts.len());
@@ -599,6 +602,16 @@ async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
             accounts.len()
         );
     }
+    Ok(())
+}
+
+async fn migrate(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let ix = ore_api::sdk::migrate(payer.pubkey());
+    let sig = submit_transaction(rpc, payer, &[ix]).await?;
+    println!("Migrate: {}", sig);
     Ok(())
 }
 
@@ -721,7 +734,7 @@ async fn log_miner(
     let treasury = get_treasury(&rpc).await?;
     let miner_address = ore_api::state::miner_pda(authority).0;
     let mut miner = get_miner(&rpc, authority).await?;
-    miner.update_rewards(&treasury);
+    miner.update_rewards_v1(&treasury);
     println!("Miner");
     println!("  address: {}", miner_address);
     println!("  authority: {}", miner.authority);
@@ -776,8 +789,19 @@ async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 
 async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let config = get_config(&rpc).await?;
-    println!("Config");
-    println!("  admin: {}", config.admin);
+    println!("Admin");
+    println!("  authority: {}", config.admin.authority);
+    println!("  fee_collector: {}", config.admin.fee_collector);
+    println!("  fee_rate: {}%", config.admin.fee_rate as f64 / 100.0);
+    println!("Protocol");
+    println!("  authority: {}", config.protocol.authority);
+    println!("  fee_collector: {}", config.protocol.fee_collector);
+    println!("  fee_rate: {}%", config.protocol.fee_rate as f64 / 100.0);
+    println!(
+        "  intermission_slots: {}",
+        config.protocol.intermission_slots
+    );
+    println!("  round_slots: {}", config.protocol.round_slots);
     Ok(())
 }
 
@@ -788,7 +812,7 @@ async fn log_board(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn print_board(board: Board, clock: &Clock) {
+fn print_board(board: BoardV1, clock: &Clock) {
     let current_slot = clock.slot;
     println!("Board");
     println!("  Id: {:?}", board.round_id);
@@ -801,26 +825,26 @@ fn print_board(board: Board, clock: &Clock) {
     println!("  Epoch id: {:?}", board.epoch_id);
 }
 
-async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<Automation, anyhow::Error> {
+async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<AutomationV1, anyhow::Error> {
     let account = rpc.get_account(&address).await?;
-    let automation = Automation::try_from_bytes(&account.data)?;
+    let automation = AutomationV1::try_from_bytes(&account.data)?;
     Ok(*automation)
 }
 
-async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {
+async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, AutomationV1)>, anyhow::Error> {
     const REGOLITH_EXECUTOR: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
         56,
         &REGOLITH_EXECUTOR.to_bytes(),
     ));
-    let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![filter]).await?;
+    let automations = get_program_accounts::<AutomationV1>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(automations)
 }
 
-async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {
+async fn get_board(rpc: &RpcClient) -> Result<BoardV1, anyhow::Error> {
     let board_pda = ore_api::state::board_pda();
     let account = rpc.get_account(&board_pda.0).await?;
-    let board = Board::try_from_bytes(&account.data)?;
+    let board = BoardV1::try_from_bytes(&account.data)?;
     Ok(*board)
 }
 
@@ -830,31 +854,31 @@ async fn get_var(rpc: &RpcClient, address: Pubkey) -> Result<Var, anyhow::Error>
     Ok(*var)
 }
 
-async fn get_round(rpc: &RpcClient, id: u64) -> Result<Round, anyhow::Error> {
+async fn get_round(rpc: &RpcClient, id: u64) -> Result<RoundV1, anyhow::Error> {
     let round_pda = ore_api::state::round_pda(id);
     let account = rpc.get_account(&round_pda.0).await?;
-    let round = Round::try_from_bytes(&account.data)?;
+    let round = RoundV1::try_from_bytes(&account.data)?;
     Ok(*round)
 }
 
-async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
+async fn get_treasury(rpc: &RpcClient) -> Result<TreasuryV1, anyhow::Error> {
     let treasury_pda = ore_api::state::treasury_pda();
     let account = rpc.get_account(&treasury_pda.0).await?;
-    let treasury = Treasury::try_from_bytes(&account.data)?;
+    let treasury = TreasuryV1::try_from_bytes(&account.data)?;
     Ok(*treasury)
 }
 
-async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
+async fn get_config(rpc: &RpcClient) -> Result<ConfigV4, anyhow::Error> {
     let config_pda = ore_api::state::config_pda();
     let account = rpc.get_account(&config_pda.0).await?;
-    let config = Config::try_from_bytes(&account.data)?;
+    let config = ConfigV4::try_from_bytes(&account.data)?;
     Ok(*config)
 }
 
-async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {
+async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<MinerV1, anyhow::Error> {
     let miner_pda = ore_api::state::miner_pda(authority);
     let account = rpc.get_account(&miner_pda.0).await?;
-    let miner = Miner::try_from_bytes(&account.data)?;
+    let miner = MinerV1::try_from_bytes(&account.data)?;
     Ok(*miner)
 }
 
@@ -864,23 +888,23 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Error> {
-    let rounds = get_program_accounts::<Round>(rpc, ore_api::ID, vec![]).await?;
+async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV1)>, anyhow::Error> {
+    let rounds = get_program_accounts::<RoundV1>(rpc, ore_api::ID, vec![]).await?;
     Ok(rounds)
 }
 
 #[allow(dead_code)]
-async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
-    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
+async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerV1)>, anyhow::Error> {
+    let miners = get_program_accounts::<MinerV1>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 
 async fn get_miners_participating(
     rpc: &RpcClient,
     round_id: u64,
-) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
+) -> Result<Vec<(Pubkey, MinerV1)>, anyhow::Error> {
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(512, &round_id.to_le_bytes()));
-    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![filter]).await?;
+    let miners = get_program_accounts::<MinerV1>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(miners)
 }
 
