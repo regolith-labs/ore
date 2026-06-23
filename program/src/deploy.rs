@@ -236,6 +236,11 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         automation.balance -= total_amount + automation_fee;
         automation_info.send(total_amount, &round_info);
         automation_info.send(automation_fee, &signer_info);
+
+        // Close automation if balance is less than what's required to deploy 1 square.
+        if automation.balance < automation.amount + automation.fee {
+            automation_info.close(authority_info)?;
+        }
     } else {
         round_info.collect(total_amount, &signer_info)?;
     }
