@@ -207,13 +207,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         total_amount += amount;
         total_squares += 1;
         deployed_squares[square_id] = true;
-
-        // Exit early if automation does not have enough balance for another square.
-        if let Some(automation) = &automation {
-            if automation.balance < total_amount + automation.fee + amount {
-                return Err(ProgramError::InsufficientFunds);
-            }
-        }
     }
 
     // Update total miners for round.
