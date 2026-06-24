@@ -811,7 +811,7 @@ async fn log_board(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn print_board(board: BoardV4, clock: &Clock) {
+fn print_board(board: Board, clock: &Clock) {
     let current_slot = clock.slot;
     println!("Board");
     println!("  Id: {:?}", board.round_id);
@@ -821,7 +821,10 @@ fn print_board(board: BoardV4, clock: &Clock) {
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
     );
-    println!("  Production cost EMA: {:?}", board.production_cost_ema);
+    println!(
+        "  Production cost: {:?} SOL",
+        lamports_to_sol(board.production_cost_ema)
+    );
 }
 
 async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<AutomationV1, anyhow::Error> {
@@ -840,10 +843,10 @@ async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, AutomationV1)>,
     Ok(automations)
 }
 
-async fn get_board(rpc: &RpcClient) -> Result<BoardV4, anyhow::Error> {
+async fn get_board(rpc: &RpcClient) -> Result<Board, anyhow::Error> {
     let board_pda = ore_api::state::board_pda();
     let account = rpc.get_account(&board_pda.0).await?;
-    let board = BoardV4::try_from_bytes(&account.data)?;
+    let board = Board::try_from_bytes(&account.data)?;
     Ok(*board)
 }
 
@@ -867,10 +870,10 @@ async fn get_treasury(rpc: &RpcClient) -> Result<TreasuryV1, anyhow::Error> {
     Ok(*treasury)
 }
 
-async fn get_config(rpc: &RpcClient) -> Result<ConfigV4, anyhow::Error> {
+async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     let config_pda = ore_api::state::config_pda();
     let account = rpc.get_account(&config_pda.0).await?;
-    let config = ConfigV4::try_from_bytes(&account.data)?;
+    let config = Config::try_from_bytes(&account.data)?;
     Ok(*config)
 }
 

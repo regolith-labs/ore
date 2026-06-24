@@ -18,7 +18,7 @@ pub fn process_new_var(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
     signer_info.is_signer()?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
-        .as_account_mut::<BoardV4>(&ore_api::ID)?;
+        .as_account_mut::<Board>(&ore_api::ID)?;
     config_info
         .has_address(&CONFIG_ADDRESS)?
         .as_account_mut::<Config>(&ore_api::ID)?

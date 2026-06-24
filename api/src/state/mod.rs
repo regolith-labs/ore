@@ -34,7 +34,7 @@ pub enum OreAccountV4 {
     Config = 101,
     MinerV4 = 103,
     TreasuryV4 = 104,
-    BoardV4 = 105,
+    Board = 105,
     RoundV4 = 109,
 }
 
