@@ -289,7 +289,7 @@ impl Round {
     pub fn total_vaulted(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_vaulted,
-            Round::V4(_) => 0,
+            Round::V4(r) => r.protocol_fee,
         }
     }
 

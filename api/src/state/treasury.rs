@@ -11,6 +11,7 @@ use super::OreAccountV1;
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct TreasuryV1 {
     // The amount of SOL collected for buy-bury operations.
+    #[deprecated(since = "3.9.0", note = "No more balance")]
     pub balance: u64,
 
     /// Buffer a (placeholder)
