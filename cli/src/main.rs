@@ -621,8 +621,7 @@ async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let address = automation_pda(authority).0;
     let automation = get_automation(rpc, address).await?;
     let account_balance = rpc.get_balance(&address).await?;
-    let size = 8 + std::mem::size_of::<Automation>();
-    let required_rent = Rent::default().minimum_balance(size);
+    let required_rent = Rent::default().minimum_balance(AutomationV1::SIZE);
     println!("Automation");
     println!("  address: {}", address);
     println!("  amount: {} SOL", lamports_to_sol(automation.amount));

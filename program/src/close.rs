@@ -27,8 +27,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     system_program.is_program(&system_program::ID)?;
 
     // Vault all unclaimed rewards.
-    let size = 8 + std::mem::size_of::<Round>();
-    let min_rent = Rent::get()?.minimum_balance(size);
+    let min_rent = Rent::get()?.minimum_balance(RoundV1::SIZE);
     let unclaimed_sol = round_info.lamports() - min_rent;
     if unclaimed_sol > 0 {
         round_info.send(unclaimed_sol, treasury_info);
