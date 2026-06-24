@@ -67,7 +67,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let mut strategy = u64::MAX;
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
-            .as_account_mut::<AutomationV1>(&ore_api::ID)?
+            .as_account_mut::<Automation>(&ore_api::ID)?
             .assert_mut(|a| a.executor == *signer_info.key || a.executor == EXECUTOR_ADDRESS)?
             .assert_mut(|a| a.authority == *authority_info.key)?;
         strategy = automation.strategy as u64;

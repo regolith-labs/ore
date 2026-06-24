@@ -58,7 +58,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     // Close account if executor is Pubkey::default().
     if *executor_info.key == Pubkey::default() {
         automation_info
-            .as_account_mut::<AutomationV1>(&ore_api::ID)?
+            .as_account_mut::<Automation>(&ore_api::ID)?
             .assert_mut_err(
                 |a| a.authority == *signer_info.key,
                 OreError::NotAuthorized.into(),
@@ -69,20 +69,20 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Create automation.
     let automation = if automation_info.data_is_empty() {
-        create_program_account::<AutomationV1>(
+        create_program_account::<Automation>(
             automation_info,
             system_program,
             signer_info,
             &ore_api::ID,
             &[AUTOMATION, &signer_info.key.to_bytes()],
         )?;
-        let automation = automation_info.as_account_mut::<AutomationV1>(&ore_api::ID)?;
+        let automation = automation_info.as_account_mut::<Automation>(&ore_api::ID)?;
         automation.balance = 0;
         automation.authority = *signer_info.key;
         automation
     } else {
         automation_info
-            .as_account_mut::<AutomationV1>(&ore_api::ID)?
+            .as_account_mut::<Automation>(&ore_api::ID)?
             .assert_mut_err(
                 |a| a.authority == *signer_info.key,
                 OreError::NotAuthorized.into(),

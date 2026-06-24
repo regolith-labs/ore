@@ -4,40 +4,9 @@ use steel::*;
 
 use crate::state::{automation_pda, OreAccountV4};
 
-use super::OreAccountV1;
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct AutomationV1 {
-    /// The amount of SOL to deploy on each territory per round.
-    pub amount: u64,
-
-    /// The authority of this automation account.
-    pub authority: Pubkey,
-
-    /// The amount of SOL this automation has left.
-    pub balance: u64,
-
-    /// The executor of this automation account.
-    pub executor: Pubkey,
-
-    /// The amount of SOL the executor should receive in fees.
-    pub fee: u64,
-
-    /// The strategy this automation uses.
-    pub strategy: u64,
-
-    /// The mask of squares this automation should deploy to if preferred strategy.
-    /// If strategy is Random, first bit is used to determine how many squares to deploy to.
-    pub mask: u64,
-
-    /// Whether or not to auto-reload SOL winnings into the automation balance.
-    pub reload: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
-pub struct AutomationV4 {
+pub struct Automation {
     /// The amount of SOL to deploy on each territory per round.
     pub amount: u64,
 
@@ -114,7 +83,7 @@ impl Default for AutomationConditions {
     }
 }
 
-impl AutomationV4 {
+impl Automation {
     pub fn pda(&self) -> (Pubkey, u8) {
         automation_pda(self.authority)
     }
@@ -128,69 +97,4 @@ impl AutomationV4 {
     }
 }
 
-account!(OreAccountV1, AutomationV1);
-account!(OreAccountV4, AutomationV4);
-
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub enum Automation {
-    V1(AutomationV1),
-    V4(AutomationV4),
-}
-
-impl Automation {
-    pub fn amount(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.amount,
-            Automation::V4(a) => a.amount,
-        }
-    }
-
-    pub fn authority(&self) -> Pubkey {
-        match self {
-            Automation::V1(a) => a.authority,
-            Automation::V4(a) => a.authority,
-        }
-    }
-
-    pub fn balance(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.balance,
-            Automation::V4(a) => a.balance,
-        }
-    }
-
-    pub fn executor(&self) -> Pubkey {
-        match self {
-            Automation::V1(a) => a.executor,
-            Automation::V4(a) => a.executor,
-        }
-    }
-
-    pub fn fee(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.fee,
-            Automation::V4(a) => a.fee,
-        }
-    }
-
-    pub fn strategy(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.strategy,
-            Automation::V4(a) => a.strategy,
-        }
-    }
-
-    pub fn mask(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.mask,
-            Automation::V4(a) => a.mask,
-        }
-    }
-
-    pub fn reload(&self) -> u64 {
-        match self {
-            Automation::V1(a) => a.reload,
-            Automation::V4(a) => a.reload,
-        }
-    }
-}
+account!(OreAccountV4, Automation);

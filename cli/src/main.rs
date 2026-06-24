@@ -47,6 +47,9 @@ async fn main() {
         "automations" => {
             log_automations(&rpc).await.unwrap();
         }
+        "automation" => {
+            log_automation(&rpc).await.unwrap();
+        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -106,9 +109,6 @@ async fn main() {
         }
         "lut" => {
             lut(&rpc, &payer).await.unwrap();
-        }
-        "automation" => {
-            log_automation(&rpc).await.unwrap();
         }
         "audit_curves" => {
             audit_curves(&rpc).await.unwrap();
@@ -609,9 +609,33 @@ async fn migrate(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::migrate(payer.pubkey());
-    let sig = submit_transaction(rpc, payer, &[ix]).await?;
-    println!("Migrate: {}", sig);
+    // let authority = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
+    // let automation = automation_pda(authority).0;
+    // let ix = ore_api::sdk::migrate(payer.pubkey(), automation);
+    // submit_transaction(rpc, payer, &[ix]).await?;
+    // simulate_transaction(rpc, payer, &[ix]).await;
+    // let automation = get_automation(rpc, payer.pubkey()).await?;
+
+    // let automations_v1 = get_automations_v1(rpc).await?;
+    // let automations_v4 = get_automations_v4(rpc).await?;
+    // println!("Automations v1: {}", automations_v1.len());
+    // println!("Automations v4: {}", automations_v4.len());
+    // let mut ixs = vec![];
+    // for (i, (address, _automation)) in automations_v1.iter().enumerate() {
+    //     println!(
+    //         "[{}/{}] Migrating automation: {}",
+    //         i + 1,
+    //         automations_v1.len(),
+    //         address
+    //     );
+    //     let ix = ore_api::sdk::migrate(payer.pubkey(), *address);
+    //     ixs.push(ix);
+    // }
+
+    // Submit migration instructions in batches
+    // const BATCH_SIZE: usize = 16;
+    // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
+    // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     Ok(())
 }
 
@@ -619,9 +643,9 @@ async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").expect("Missing AUTHORITY env var");
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
     let address = automation_pda(authority).0;
-    let automation = get_automation(rpc, address).await?;
+    let automation = get_automation(rpc, authority).await?;
     let account_balance = rpc.get_balance(&address).await?;
-    let required_rent = Rent::default().minimum_balance(AutomationV1::SIZE);
+    let required_rent = Rent::default().minimum_balance(Automation::SIZE);
     println!("Automation");
     println!("  address: {}", address);
     println!("  amount: {} SOL", lamports_to_sol(automation.amount));
@@ -827,19 +851,8 @@ fn print_board(board: Board, clock: &Clock) {
     );
 }
 
-async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<AutomationV1, anyhow::Error> {
-    let account = rpc.get_account(&address).await?;
-    let automation = AutomationV1::try_from_bytes(&account.data)?;
-    Ok(*automation)
-}
-
-async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, AutomationV1)>, anyhow::Error> {
-    const REGOLITH_EXECUTOR: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
-    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-        56,
-        &REGOLITH_EXECUTOR.to_bytes(),
-    ));
-    let automations = get_program_accounts::<AutomationV1>(rpc, ore_api::ID, vec![filter]).await?;
+async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {
+    let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![]).await?;
     Ok(automations)
 }
 
@@ -868,6 +881,13 @@ async fn get_treasury(rpc: &RpcClient) -> Result<TreasuryV1, anyhow::Error> {
     let account = rpc.get_account(&treasury_pda.0).await?;
     let treasury = TreasuryV1::try_from_bytes(&account.data)?;
     Ok(*treasury)
+}
+
+async fn get_automation(rpc: &RpcClient, authority: Pubkey) -> Result<Automation, anyhow::Error> {
+    let automation_pda = ore_api::state::automation_pda(authority);
+    let account = rpc.get_account(&automation_pda.0).await?;
+    let automation = Automation::try_from_bytes(&account.data)?;
+    Ok(*automation)
 }
 
 async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {

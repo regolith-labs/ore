@@ -30,7 +30,7 @@ pub enum OreAccountV1 {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccountV4 {
-    AutomationV4 = 100,
+    Automation = 100,
     Config = 101,
     MinerV4 = 103,
     TreasuryV4 = 104,
