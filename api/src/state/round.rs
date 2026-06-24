@@ -267,7 +267,7 @@ impl RoundAccount {
     pub fn top_miner_reward(&self) -> u64 {
         match self {
             RoundAccount::Round(r) => r.top_miner_reward,
-            RoundAccount::RoundV4(_) => 0,
+            RoundAccount::RoundV4(r) => r.rewards.iter().sum(),
         }
     }
 
@@ -288,7 +288,7 @@ impl RoundAccount {
     pub fn total_vaulted(&self) -> u64 {
         match self {
             RoundAccount::Round(r) => r.total_vaulted,
-            RoundAccount::RoundV4(_) => 0,
+            RoundAccount::RoundV4(r) => r.protocol_fee,
         }
     }
 
