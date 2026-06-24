@@ -81,6 +81,9 @@ pub struct RoundV4 {
     /// The total SOL collected by the protocol.
     pub protocol_fee: u64,
 
+    /// The total SOL returned to miners.
+    pub total_returned: u64,
+
     /// The total number of unique miners that played in the round.
     pub unique_miners: u64,
 
@@ -293,7 +296,7 @@ impl Round {
     pub fn total_winnings(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_winnings,
-            Round::V4(_) => 0,
+            Round::V4(r) => r.total_returned,
         }
     }
 

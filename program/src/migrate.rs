@@ -9,14 +9,27 @@ const NEW_ADMIN: Pubkey = pubkey!("J5K5tWj3nKfxuSkAJ25WTMf4u5EsxJRfUoRKKxgrfFGV"
 /// Migrates the config account.
 pub fn process_migrate(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
-    let [signer_info, config_info, system_program] = accounts else {
+    let [signer_info, round_info, system_program] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.has_address(&ADMIN_ADDRESS)?.is_signer()?;
-    config_info
-        .has_seeds(&[CONFIG], &ore_api::ID)?
-        .as_account_mut::<Config>(&ore_api::ID)?;
+    let round = round_info.as_account_mut::<RoundV1>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
+
+    // Record old data.
+    let id = round.id;
+    let deployed = round.deployed;
+    let slot_hash = round.slot_hash;
+    let count = round.count;
+    let expires_at = round.expires_at;
+    let motherlode = round.motherlode;
+    let rent_payer = round.rent_payer;
+    let top_miner = round.top_miner;
+    let top_miner_reward = round.top_miner_reward;
+    let total_deployed = round.total_deployed;
+    let total_miners = round.total_miners;
+    let total_vaulted = round.total_vaulted;
+    let total_winnings = round.total_winnings;
 
     // Migrate the config account.
     // let old_size = ConfigV1::SIZE;
