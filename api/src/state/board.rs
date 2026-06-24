@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{board_pda, stats_pda, OreAccountV4};
+use crate::state::{board_pda, OreAccountV4};
 
 /// BoardV4 is a singleton account tracking global game state.
 #[repr(C)]

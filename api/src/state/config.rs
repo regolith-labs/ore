@@ -3,8 +3,6 @@ use steel::*;
 
 use crate::state::{config_pda, OreAccountV4};
 
-use super::OreAccountV1;
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
 pub struct Config {
