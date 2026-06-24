@@ -31,7 +31,7 @@ pub enum OreAccountV1 {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, IntoPrimitive, TryFromPrimitive)]
 pub enum OreAccountV4 {
     AutomationV4 = 100,
-    ConfigV4 = 101,
+    Config = 101,
     MinerV4 = 103,
     TreasuryV4 = 104,
     BoardV4 = 105,

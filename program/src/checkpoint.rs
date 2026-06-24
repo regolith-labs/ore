@@ -14,7 +14,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     signer_info.is_signer()?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
-        .as_account::<BoardV1>(&ore_api::ID)?;
+        .as_account::<BoardV4>(&ore_api::ID)?;
     let miner = miner_info.as_account_mut::<MinerV1>(&ore_api::ID)?;
     let treasury = treasury_info
         .has_address(&TREASURY_ADDRESS)?

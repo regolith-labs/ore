@@ -21,7 +21,7 @@ pub fn process_bury(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
         .as_associated_token_account(&signer_info.key, &MINT_ADDRESS)?;
     board_info
         .has_address(&BOARD_ADDRESS)?
-        .as_account_mut::<BoardV1>(&ore_api::ID)?;
+        .as_account_mut::<BoardV4>(&ore_api::ID)?;
     mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info
         .has_address(&TREASURY_ADDRESS)?
