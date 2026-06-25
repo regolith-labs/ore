@@ -241,22 +241,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Validate top miner (dry-run - no errors on failure).
     if round.top_miner != SPLIT_ADDRESS {
-        if let Ok(miner) = top_miner_info.as_account::<MinerV1>(&ore_api::ID) {
-            if miner.round_id == round.id {
-                let top_miner_sample = round.top_miner_sample(r, winning_square);
-                if top_miner_sample >= miner.cumulative[winning_square]
-                    && top_miner_sample
-                        < miner.cumulative[winning_square] + miner.deployed[winning_square]
-                {
-                    sol_log("Top miner verified");
-                    round.top_miner = miner.authority;
-                } else {
-                    panic!("Top miner verification failed");
-                }
-            } else {
-                panic!("Top miner round id mismatch");
-            }
-        } else if let Ok(miner) = top_miner_info.as_account::<MinerV4>(&ore_api::ID) {
+        if let Ok(miner) = top_miner_info.as_account::<Miner>(&ore_api::ID) {
             if miner.round_id == round.id {
                 let top_miner_sample = round.top_miner_sample(r, winning_square);
                 if top_miner_sample >= miner.cumulative[winning_square]

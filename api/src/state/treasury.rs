@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::OreAccountV4;
+use crate::state::OreAccount;
 
 /// Treasury is a singleton account which is the mint authority for the ORE token and the authority of
 /// the program's global token account.
@@ -23,4 +23,4 @@ pub struct Treasury {
     pub total_unclaimed: u64,
 }
 
-account!(OreAccountV4, Treasury);
+account!(OreAccount, Treasury);

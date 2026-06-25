@@ -611,110 +611,75 @@ async fn migrate(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     // let authority = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
-    // let automation = automation_pda(authority).0;
-    let ix = ore_api::sdk::migrate(payer.pubkey(), TREASURY_ADDRESS);
-    submit_transaction(rpc, payer, &[ix]).await?;
+    // let miner_address = miner_pda(authority).0;
+    // let mut miner = get_miner(rpc, authority).await?;
+    // let treasury = get_treasury(&rpc).await?;
+    // miner.update_rewards(&treasury);
+
+    // let old_size = MinerV1::SIZE;
+    // let new_size = Miner::SIZE;
+    // let old_rent = Rent::default().minimum_balance(old_size);
+    // let new_rent = Rent::default().minimum_balance(new_size);
+    // let lamports = new_rent.saturating_sub(old_rent);
+    // let required_sol = 31523 * lamports;
+    // println!("Required SOL: {} SOL", lamports_to_sol(required_sol));
+
+    // println!("Miner");
+    // println!("  address: {}", miner_address);
+    // println!("  authority: {}", miner.authority);
+    // println!("  deployed: {:?}", miner.deployed);
+    // println!("  cumulative: {:?}", miner.cumulative);
+    // println!(
+    //     "  checkpoint_fee: {} SOL",
+    //     lamports_to_sol(miner.checkpoint_fee)
+    // );
+    // println!("  checkpoint_id: {}", miner.checkpoint_id);
+    // println!("  last_claim_ore_at: {}", miner.last_claim_ore_at);
+    // println!("  last_claim_sol_at: {}", miner.last_claim_sol_at);
+    // println!(
+    //     "  rewards_factor: {}",
+    //     miner.rewards_factor.to_i80f48().to_string()
+    // );
+    // println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
+    // println!(
+    //     "  rewards_ore: {} ORE",
+    //     amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
+    // );
+    // println!(
+    //     "  refined_ore: {} ORE",
+    //     amount_to_ui_amount(miner.refined_ore, TOKEN_DECIMALS)
+    // );
+    // println!("  round_id: {}", miner.round_id);
+    // println!(
+    //     "  lifetime_rewards_sol: {} SOL",
+    //     lamports_to_sol(miner.lifetime_rewards_sol)
+    // );
+    // println!(
+    //     "  lifetime_rewards_ore: {} ORE",
+    //     amount_to_ui_amount(miner.lifetime_rewards_ore, TOKEN_DECIMALS)
+    // );
+    // println!(
+    //     "  lifetime_deployed: {} SOL",
+    //     lamports_to_sol(miner.lifetime_deployed)
+    // );
+
+    // let ix = ore_api::sdk::migrate(payer.pubkey(), miner_address);
+    // submit_transaction(rpc, payer, &[ix]).await?;
     // simulate_transaction(rpc, payer, &[ix]).await;
     // let automation = get_automation(rpc, payer.pubkey()).await?;
 
-    // let mut rounds_v1 = get_rounds_v1(rpc).await?;
-    // let mut rounds_v4 = get_rounds_v4(rpc).await?;
-    // rounds_v1.sort_by_key(|(_, round)| round.id);
-    // println!("Rounds v1: {}", rounds_v1.len());
-    // println!("Rounds v4: {}", rounds_v4.len());
+    // let miners_v1 = get_miners_v1(rpc).await?;
+    // let miners = get_miners(rpc).await?;
+    // println!("Miners v1: {}", miners_v1.len());
+    // println!("Miners v4: {}", miners.len());
     // let mut ixs = vec![];
-    // for (i, (address, round)) in rounds_v1.iter().enumerate() {
+    // for (i, (address, miner)) in miners_v1.iter().enumerate() {
     //     let ix = ore_api::sdk::migrate(payer.pubkey(), *address);
     //     ixs.push(ix);
-
-    //     if i >= 99 {
-    //         break;
-    //     }
-    // }
-
-    // rounds_v1.sort_by_key(|(_, round)| round.id);
-    // let (round_address, round) = rounds_v1.first().unwrap();
-    // sol_log(&format!("var value: {:?}", value).to_string());
-    // let round_address = round_pda(310279).0;
-    // let round = get_round(rpc, 310279).await?;
-    // let rng = round.rng();
-    // println!("Round (v1)");
-    // println!("  Address: {}", round_address);
-    // println!("  Count: {:?}", round.count);
-    // println!("  Deployed: {:?}", round.deployed);
-    // println!("  Expires at: {}", round.expires_at);
-    // println!("  Id: {:?}", round.id);
-    // println!(
-    //     "  Motherlode: {} ORE",
-    //     amount_to_ui_amount(round.motherlode, TOKEN_DECIMALS)
-    // );
-    // println!("  Rent payer: {}", round.rent_payer);
-    // let value = keccak::Hash::new_from_array(round.slot_hash);
-    // println!("  Slot hash: {:?}", round.slot_hash);
-    // println!("  Slot hash: {:?}", value);
-    // println!("  Top miner: {:?}", round.top_miner);
-    // println!(
-    //     "  Top miner reward: {} ORE",
-    //     amount_to_ui_amount(round.top_miner_reward, TOKEN_DECIMALS)
-    // );
-    // println!("  Total miners: {}", round.total_miners);
-    // println!(
-    //     "  Total deployed: {} SOL",
-    //     lamports_to_sol(round.total_deployed)
-    // );
-    // println!(
-    //     "  Total vaulted: {} SOL",
-    //     lamports_to_sol(round.total_vaulted)
-    // );
-    // println!(
-    //     "  Total winnings: {} SOL",
-    //     lamports_to_sol(round.total_winnings)
-    // );
-    // if let Some(rng) = rng {
-    //     println!("  Winning square: {}", round.winning_square(rng));
-    // }
-
-    // rounds_v4.sort_by_key(|(_, round)| round.id);
-    // // for i in 0..10 {
-    // let (round_address, round) = rounds_v4.last().unwrap();
-    // let rng = round.rng();
-    // println!("Round (v4)");
-    // println!("  Address: {}", round_address);
-    // println!("  Count: {:?}", round.count);
-    // println!("  Deployed: {:?}", round.deployed);
-    // println!("  Expires at: {}", round.expires_at);
-    // println!("  Id: {:?}", round.id);
-    // println!(
-    //     "  Motherlode: {} ORE",
-    //     amount_to_ui_amount(round.motherlode, TOKEN_DECIMALS)
-    // );
-    // println!("  Rent payer: {}", round.rent_payer);
-    // println!("  Slot hash: {:?}", round.slot_hash);
-    // println!("  Top miner: {:?}", round.top_miner);
-    // println!(
-    //     "  Top miner reward: {} ORE",
-    //     amount_to_ui_amount(round.top_miner_reward(), TOKEN_DECIMALS)
-    // );
-    // println!("  Total miners: {}", round.total_miners);
-    // println!(
-    //     "  Total deployed: {} SOL",
-    //     lamports_to_sol(round.total_deployed())
-    // );
-    // println!(
-    //     "  Total vaulted: {} SOL",
-    //     lamports_to_sol(round.total_vaulted)
-    // );
-    // println!(
-    //     "  Total winnings: {} SOL",
-    //     lamports_to_sol(round.total_winnings)
-    // );
-    // if let Some(rng) = rng {
-    //     println!("  Winning square: {}", round.winning_square(rng));
-    // }
     // }
 
     // Submit migration instructions in batches
-    // const BATCH_SIZE: usize = 16;
+    // const BATCH_SIZE: usize = 25;
     // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     Ok(())
@@ -833,10 +798,10 @@ async fn log_miner(
 ) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
-    let treasury = get_treasury(&rpc).await?;
+    let treasury: Treasury = get_treasury(&rpc).await?;
     let miner_address = ore_api::state::miner_pda(authority).0;
     let mut miner = get_miner(&rpc, authority).await?;
-    miner.update_rewards_v4(&treasury);
+    miner.update_rewards(&treasury);
     println!("Miner");
     println!("  address: {}", miner_address);
     println!("  authority: {}", miner.authority);
@@ -976,10 +941,10 @@ async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     Ok(*config)
 }
 
-async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<MinerV1, anyhow::Error> {
+async fn get_miner(rpc: &RpcClient, authority: Pubkey) -> Result<Miner, anyhow::Error> {
     let miner_pda = ore_api::state::miner_pda(authority);
     let account = rpc.get_account(&miner_pda.0).await?;
-    let miner = MinerV1::try_from_bytes(&account.data)?;
+    let miner = Miner::try_from_bytes(&account.data)?;
     Ok(*miner)
 }
 
@@ -994,18 +959,17 @@ async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Err
     Ok(rounds)
 }
 
-#[allow(dead_code)]
-async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, MinerV1)>, anyhow::Error> {
-    let miners = get_program_accounts::<MinerV1>(rpc, ore_api::ID, vec![]).await?;
+async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
+    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)
 }
 
 async fn get_miners_participating(
     rpc: &RpcClient,
     round_id: u64,
-) -> Result<Vec<(Pubkey, MinerV1)>, anyhow::Error> {
+) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(512, &round_id.to_le_bytes()));
-    let miners = get_program_accounts::<MinerV1>(rpc, ore_api::ID, vec![filter]).await?;
+    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![filter]).await?;
     Ok(miners)
 }
 

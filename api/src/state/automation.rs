@@ -2,7 +2,7 @@ use ore_mint_api::consts::ONE_ORE;
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{automation_pda, OreAccountV4};
+use crate::state::{automation_pda, OreAccount};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -97,4 +97,4 @@ impl Automation {
     }
 }
 
-account!(OreAccountV4, Automation);
+account!(OreAccount, Automation);

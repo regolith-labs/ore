@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{config_pda, OreAccountV4};
+use crate::state::{config_pda, OreAccount};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -57,7 +57,7 @@ impl Config {
     }
 }
 
-account!(OreAccountV4, Config);
+account!(OreAccount, Config);
 
 // impl Config {
 //     pub fn admin(&self) -> Pubkey {

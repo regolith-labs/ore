@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{round_pda, OreAccountV4};
+use crate::state::{round_pda, OreAccount};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -116,4 +116,4 @@ impl Round {
     }
 }
 
-account!(OreAccountV4, Round);
+account!(OreAccount, Round);
