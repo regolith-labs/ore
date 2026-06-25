@@ -33,7 +33,7 @@ pub enum OreAccountV4 {
     Automation = 100,
     Config = 101,
     MinerV4 = 103,
-    TreasuryV4 = 104,
+    Treasury = 104,
     Board = 105,
     Round = 109,
 }

@@ -18,7 +18,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     let miner = miner_info.as_account_mut::<MinerV1>(&ore_api::ID)?;
     let treasury = treasury_info
         .has_address(&TREASURY_ADDRESS)?
-        .as_account_mut::<TreasuryV1>(&ore_api::ID)?;
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     system_program.is_program(&system_program::ID)?;
 
     // If miner has already checkpointed this round, return.
@@ -147,7 +147,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     // Checkpoint rewards.
-    miner.update_rewards_v1(treasury);
+    miner.update_rewards_v4(treasury);
 
     // Checkpoint miner.
     miner.checkpoint_id = round.id;

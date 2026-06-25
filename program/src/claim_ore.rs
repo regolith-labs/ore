@@ -23,7 +23,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     recipient_info.is_writable()?;
     let treasury = treasury_info
         .has_address(&TREASURY_ADDRESS)?
-        .as_account_mut::<TreasuryV1>(&ore_api::ID)?;
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -46,7 +46,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore_v1(&clock, treasury);
+    let amount = miner.claim_ore_v4(&clock, treasury);
 
     sol_log(
         &format!(

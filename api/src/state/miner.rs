@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{miner_pda, OreAccountV4, Treasury, TreasuryV1, TreasuryV4};
+use crate::state::{miner_pda, OreAccountV4, Treasury};
 
 use super::OreAccountV1;
 
@@ -114,8 +114,8 @@ impl MinerV1 {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore_v1(&mut self, clock: &Clock, treasury: &mut TreasuryV1) -> u64 {
-        self.update_rewards_v1(treasury);
+    pub fn claim_ore_v4(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
+        self.update_rewards_v4(treasury);
         let refined_ore = self.refined_ore;
         let rewards_ore = self.rewards_ore;
         let mut amount = refined_ore + rewards_ore;
@@ -130,29 +130,6 @@ impl MinerV1 {
             let fee = rewards_ore / 10;
             amount -= fee;
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
-            treasury.total_refined += fee;
-            self.lifetime_rewards_ore -= fee;
-        }
-
-        amount
-    }
-
-    pub fn claim_ore_v4(&mut self, clock: &Clock, treasury: &mut TreasuryV4) -> u64 {
-        self.update_rewards_v4(treasury);
-        let refined_ore = self.refined_ore;
-        let rewards_ore = self.rewards_ore;
-        let mut amount = refined_ore + rewards_ore;
-        self.refined_ore = 0;
-        self.rewards_ore = 0;
-        treasury.total_unrefined -= rewards_ore;
-        treasury.total_refined -= refined_ore;
-        self.last_claim_ore_at = clock.unix_timestamp;
-
-        // Charge a 10% fee and share with miners who haven't claimed yet.
-        if treasury.total_unrefined > 0 {
-            let fee = rewards_ore / 10;
-            amount -= fee;
-            treasury.rewards_factor += Numeric::from_fraction(fee, treasury.total_unrefined);
             treasury.total_refined += fee;
             self.lifetime_rewards_ore -= fee;
         }
@@ -167,7 +144,7 @@ impl MinerV1 {
         amount
     }
 
-    pub fn update_rewards_v1(&mut self, treasury: &TreasuryV1) {
+    pub fn update_rewards_v4(&mut self, treasury: &Treasury) {
         // Accumulate rewards, weighted by stake balance.
         if treasury.miner_rewards_factor > self.rewards_factor {
             let accumulated_rewards = treasury.miner_rewards_factor - self.rewards_factor;
@@ -182,22 +159,6 @@ impl MinerV1 {
         // Update this miner account's last seen rewards factor.
         self.rewards_factor = treasury.miner_rewards_factor;
     }
-
-    pub fn update_rewards_v4(&mut self, treasury: &TreasuryV4) {
-        // Accumulate rewards, weighted by stake balance.
-        if treasury.rewards_factor > self.rewards_factor {
-            let accumulated_rewards = treasury.rewards_factor - self.rewards_factor;
-            if accumulated_rewards < Numeric::ZERO {
-                panic!("Accumulated rewards is negative");
-            }
-            let personal_rewards = accumulated_rewards * Numeric::from_u64(self.rewards_ore);
-            self.refined_ore += personal_rewards.to_u64();
-            self.lifetime_rewards_ore += personal_rewards.to_u64();
-        }
-
-        // Update this miner account's last seen rewards factor.
-        self.rewards_factor = treasury.rewards_factor;
-    }
 }
 
 impl MinerV4 {
@@ -205,8 +166,8 @@ impl MinerV4 {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore_v1(&mut self, clock: &Clock, treasury: &mut TreasuryV1) -> u64 {
-        self.update_rewards_v1(treasury);
+    pub fn claim_ore_v4(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
+        self.update_rewards_v4(treasury);
         let refined_ore = self.ore_refined;
         let rewards_ore = self.ore_unrefined;
         let mut amount = refined_ore + rewards_ore;
@@ -228,29 +189,6 @@ impl MinerV4 {
         amount
     }
 
-    pub fn claim_ore_v4(&mut self, clock: &Clock, treasury: &mut TreasuryV4) -> u64 {
-        self.update_rewards_v4(treasury);
-        let refined_ore = self.ore_refined;
-        let rewards_ore = self.ore_unrefined;
-        let mut amount = refined_ore + rewards_ore;
-        self.ore_refined = 0;
-        self.ore_unrefined = 0;
-        treasury.total_unrefined -= rewards_ore;
-        treasury.total_refined -= refined_ore;
-        self.last_claim_ore_at = clock.unix_timestamp;
-
-        // Charge a 10% fee and share with miners who haven't claimed yet.
-        if treasury.total_unrefined > 0 {
-            let fee = rewards_ore / 10;
-            amount -= fee;
-            treasury.rewards_factor += Numeric::from_fraction(fee, treasury.total_unrefined);
-            treasury.total_refined += fee;
-            self.lifetime_rewards -= fee;
-        }
-
-        amount
-    }
-
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {
         let amount = self.sol_returned;
         self.sol_returned = 0;
@@ -258,23 +196,7 @@ impl MinerV4 {
         amount
     }
 
-    pub fn update_rewards_v4(&mut self, treasury: &TreasuryV4) {
-        // Accumulate rewards, weighted by stake balance.
-        if treasury.rewards_factor > self.rewards_factor {
-            let accumulated_rewards = treasury.rewards_factor - self.rewards_factor;
-            if accumulated_rewards < Numeric::ZERO {
-                panic!("Accumulated rewards is negative");
-            }
-            let personal_rewards = accumulated_rewards * Numeric::from_u64(self.ore_unrefined);
-            self.ore_refined += personal_rewards.to_u64();
-            self.lifetime_rewards += personal_rewards.to_u64();
-        }
-
-        // Update this miner account's last seen rewards factor.
-        self.rewards_factor = treasury.rewards_factor;
-    }
-
-    pub fn update_rewards_v1(&mut self, treasury: &TreasuryV1) {
+    pub fn update_rewards_v4(&mut self, treasury: &Treasury) {
         // Accumulate rewards, weighted by stake balance.
         if treasury.miner_rewards_factor > self.rewards_factor {
             let accumulated_rewards = treasury.miner_rewards_factor - self.rewards_factor;
@@ -414,14 +336,8 @@ impl Miner {
 
     pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
         match self {
-            Miner::V1(miner) => match treasury {
-                Treasury::V1(treasury) => miner.claim_ore_v1(clock, treasury),
-                Treasury::V4(treasury) => miner.claim_ore_v4(clock, treasury),
-            },
-            Miner::V4(miner) => match treasury {
-                Treasury::V1(treasury) => miner.claim_ore_v1(clock, treasury),
-                Treasury::V4(treasury) => miner.claim_ore_v4(clock, treasury),
-            },
+            Miner::V1(miner) => miner.claim_ore_v4(clock, treasury),
+            Miner::V4(miner) => miner.claim_ore_v4(clock, treasury),
         }
     }
 
@@ -434,14 +350,8 @@ impl Miner {
 
     pub fn update_rewards(&mut self, treasury: &Treasury) {
         match self {
-            Miner::V1(miner) => match treasury {
-                Treasury::V1(treasury) => miner.update_rewards_v1(treasury),
-                Treasury::V4(treasury) => miner.update_rewards_v4(treasury),
-            },
-            Miner::V4(miner) => match treasury {
-                Treasury::V1(treasury) => miner.update_rewards_v1(treasury),
-                Treasury::V4(treasury) => miner.update_rewards_v4(treasury),
-            },
+            Miner::V1(miner) => miner.update_rewards_v4(treasury),
+            Miner::V4(miner) => miner.update_rewards_v4(treasury),
         }
     }
 }

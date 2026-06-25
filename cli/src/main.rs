@@ -306,8 +306,9 @@ async fn buyback(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     // Get swap amount. Mirror on-chain math: liq gets total * 10 / 100, swap gets the rest.
-    let treasury = get_treasury(rpc).await?;
-    let total_amount = treasury.balance.min(10 * LAMPORTS_PER_SOL);
+    let lamports = rpc.get_balance(&TREASURY_ADDRESS).await?;
+    let balance = lamports - Rent::default().minimum_balance(Treasury::SIZE);
+    let total_amount = balance.min(10 * LAMPORTS_PER_SOL);
     let liq_amount = total_amount * 0 / 100;
     let amount = total_amount - liq_amount;
 
@@ -611,8 +612,8 @@ async fn migrate(
 ) -> Result<(), anyhow::Error> {
     // let authority = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
     // let automation = automation_pda(authority).0;
-    // let ix = ore_api::sdk::migrate(payer.pubkey(), automation);
-    // submit_transaction(rpc, payer, &[ix]).await?;
+    let ix = ore_api::sdk::migrate(payer.pubkey(), TREASURY_ADDRESS);
+    submit_transaction(rpc, payer, &[ix]).await?;
     // simulate_transaction(rpc, payer, &[ix]).await;
     // let automation = get_automation(rpc, payer.pubkey()).await?;
 
@@ -713,7 +714,7 @@ async fn migrate(
     // }
 
     // Submit migration instructions in batches
-    const BATCH_SIZE: usize = 16;
+    // const BATCH_SIZE: usize = 16;
     // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     Ok(())
@@ -761,8 +762,7 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
-    println!("  buffer_a: {}", treasury.buffer_a);
-    println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
+    // println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
     println!(
         "  motherlode: {} ORE",
         amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
@@ -771,7 +771,6 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         "  miner_rewards_factor: {}",
         treasury.miner_rewards_factor.to_i80f48().to_string()
     );
-    println!("  buffer_b: {}", treasury.buffer_b);
     println!(
         "  total_refined: {} ORE",
         amount_to_ui_amount(treasury.total_refined, TOKEN_DECIMALS)
@@ -837,7 +836,7 @@ async fn log_miner(
     let treasury = get_treasury(&rpc).await?;
     let miner_address = ore_api::state::miner_pda(authority).0;
     let mut miner = get_miner(&rpc, authority).await?;
-    miner.update_rewards_v1(&treasury);
+    miner.update_rewards_v4(&treasury);
     println!("Miner");
     println!("  address: {}", miner_address);
     println!("  authority: {}", miner.authority);
@@ -956,10 +955,10 @@ async fn get_round(rpc: &RpcClient, id: u64) -> Result<Round, anyhow::Error> {
     Ok(*round)
 }
 
-async fn get_treasury(rpc: &RpcClient) -> Result<TreasuryV1, anyhow::Error> {
+async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
     let treasury_pda = ore_api::state::treasury_pda();
     let account = rpc.get_account(&treasury_pda.0).await?;
-    let treasury = TreasuryV1::try_from_bytes(&account.data)?;
+    let treasury = Treasury::try_from_bytes(&account.data)?;
     Ok(*treasury)
 }
 

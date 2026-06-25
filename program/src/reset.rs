@@ -36,7 +36,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     let treasury = treasury_info
         .has_address(&TREASURY_ADDRESS)?
-        .as_account_mut::<TreasuryV1>(&ore_api::ID)?;
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
     treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
     system_program.is_program(&system_program::ID)?;
     token_program.is_program(&spl_token::ID)?;
@@ -139,7 +139,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if round.deployed[winning_square] == 0 {
         // Vault all deployed.
         round.total_vaulted = round.total_deployed() - total_admin_fee;
-        treasury.balance += round.total_deployed() - total_admin_fee;
+        // treasury.balance += round.total_deployed() - total_admin_fee;
 
         // Emit event.
         program_log(
@@ -185,7 +185,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let winnings = winnings - vault_amount;
     round.total_winnings = winnings;
     round.total_vaulted = vault_amount;
-    treasury.balance += vault_amount;
+    // treasury.balance += vault_amount;
 
     // Sanity check.
     assert!(
