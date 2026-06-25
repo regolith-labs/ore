@@ -139,7 +139,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     if round.deployed[winning_square] == 0 {
         // Vault all deployed.
         round.total_vaulted = round.total_deployed() - total_admin_fee;
-        // treasury.balance += round.total_deployed() - total_admin_fee;
 
         // Emit event.
         program_log(
@@ -185,7 +184,6 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let winnings = winnings - vault_amount;
     round.total_winnings = winnings;
     round.total_vaulted = vault_amount;
-    // treasury.balance += vault_amount;
 
     // Sanity check.
     assert!(
@@ -285,6 +283,20 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         }
         .to_bytes(),
     )?;
+
+    // Update production cost EMA (lamports per whole ORE).
+    // Protocol perspective: total_vaulted SOL / total ORE minted this round.
+    if total_mint_amount > 0 {
+        let production_cost = ((round.total_vaulted as u128) * (ONE_ORE as u128)
+            / (total_mint_amount as u128)) as u64;
+        const EMA_WINDOW: u128 = 20;
+        board.production_cost_ema = if board.production_cost_ema == 0 {
+            production_cost
+        } else {
+            ((production_cost as u128 + (EMA_WINDOW - 1) * board.production_cost_ema as u128)
+                / EMA_WINDOW) as u64
+        };
+    }
 
     // Reset board.
     board.round_id += 1;
