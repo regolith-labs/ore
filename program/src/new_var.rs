@@ -23,7 +23,7 @@ pub fn process_new_var(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .has_address(&CONFIG_ADDRESS)?
         .as_account_mut::<Config>(&ore_api::ID)?
         .assert_mut_err(
-            |c| c.admin == *signer_info.key,
+            |c| c.protocol.authority == *signer_info.key,
             OreError::NotAuthorized.into(),
         )?;
     entropy_program.is_program(&entropy_api::ID)?;

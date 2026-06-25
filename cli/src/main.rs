@@ -47,6 +47,9 @@ async fn main() {
         "automations" => {
             log_automations(&rpc).await.unwrap();
         }
+        "automation" => {
+            log_automation(&rpc).await.unwrap();
+        }
         "clock" => {
             log_clock(&rpc).await.unwrap();
         }
@@ -107,11 +110,11 @@ async fn main() {
         "lut" => {
             lut(&rpc, &payer).await.unwrap();
         }
-        "automation" => {
-            log_automation(&rpc).await.unwrap();
-        }
         "audit_curves" => {
             audit_curves(&rpc).await.unwrap();
+        }
+        "migrate" => {
+            migrate(&rpc, &payer).await.unwrap();
         }
         _ => panic!("Invalid command"),
     };
@@ -303,8 +306,9 @@ async fn buyback(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     // Get swap amount. Mirror on-chain math: liq gets total * 10 / 100, swap gets the rest.
-    let treasury = get_treasury(rpc).await?;
-    let total_amount = treasury.balance.min(10 * LAMPORTS_PER_SOL);
+    let lamports = rpc.get_balance(&TREASURY_ADDRESS).await?;
+    let balance = lamports - Rent::default().minimum_balance(Treasury::SIZE);
+    let total_amount = balance.min(10 * LAMPORTS_PER_SOL);
     let liq_amount = total_amount * 0 / 100;
     let amount = total_amount - liq_amount;
 
@@ -580,7 +584,7 @@ fn is_on_curve(pubkey: &Pubkey) -> bool {
 }
 
 async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let program_id = pubkey!("stakecNP3FpiExZPCgZfqRgumVzi6dNqnfrjwXyTgeH");
+    let program_id = pubkey!("oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv");
     let accounts = rpc.get_program_accounts(&program_id).await?;
     let mut on_curve_count = 0;
     println!("Checking {} accounts...", accounts.len());
@@ -602,14 +606,92 @@ async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+async fn migrate(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    // let authority = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
+    // let miner_address = miner_pda(authority).0;
+    // let mut miner = get_miner(rpc, authority).await?;
+    // let treasury = get_treasury(&rpc).await?;
+    // miner.update_rewards(&treasury);
+
+    // let old_size = MinerV1::SIZE;
+    // let new_size = Miner::SIZE;
+    // let old_rent = Rent::default().minimum_balance(old_size);
+    // let new_rent = Rent::default().minimum_balance(new_size);
+    // let lamports = new_rent.saturating_sub(old_rent);
+    // let required_sol = 31523 * lamports;
+    // println!("Required SOL: {} SOL", lamports_to_sol(required_sol));
+
+    // println!("Miner");
+    // println!("  address: {}", miner_address);
+    // println!("  authority: {}", miner.authority);
+    // println!("  deployed: {:?}", miner.deployed);
+    // println!("  cumulative: {:?}", miner.cumulative);
+    // println!(
+    //     "  checkpoint_fee: {} SOL",
+    //     lamports_to_sol(miner.checkpoint_fee)
+    // );
+    // println!("  checkpoint_id: {}", miner.checkpoint_id);
+    // println!("  last_claim_ore_at: {}", miner.last_claim_ore_at);
+    // println!("  last_claim_sol_at: {}", miner.last_claim_sol_at);
+    // println!(
+    //     "  rewards_factor: {}",
+    //     miner.rewards_factor.to_i80f48().to_string()
+    // );
+    // println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
+    // println!(
+    //     "  rewards_ore: {} ORE",
+    //     amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
+    // );
+    // println!(
+    //     "  refined_ore: {} ORE",
+    //     amount_to_ui_amount(miner.refined_ore, TOKEN_DECIMALS)
+    // );
+    // println!("  round_id: {}", miner.round_id);
+    // println!(
+    //     "  lifetime_rewards_sol: {} SOL",
+    //     lamports_to_sol(miner.lifetime_rewards_sol)
+    // );
+    // println!(
+    //     "  lifetime_rewards_ore: {} ORE",
+    //     amount_to_ui_amount(miner.lifetime_rewards_ore, TOKEN_DECIMALS)
+    // );
+    // println!(
+    //     "  lifetime_deployed: {} SOL",
+    //     lamports_to_sol(miner.lifetime_deployed)
+    // );
+
+    // let ix = ore_api::sdk::migrate(payer.pubkey(), miner_address);
+    // submit_transaction(rpc, payer, &[ix]).await?;
+    // simulate_transaction(rpc, payer, &[ix]).await;
+    // let automation = get_automation(rpc, payer.pubkey()).await?;
+
+    // let miners_v1 = get_miners_v1(rpc).await?;
+    // let miners = get_miners(rpc).await?;
+    // println!("Miners v1: {}", miners_v1.len());
+    // println!("Miners v4: {}", miners.len());
+    // let mut ixs = vec![];
+    // for (i, (address, miner)) in miners_v1.iter().enumerate() {
+    //     let ix = ore_api::sdk::migrate(payer.pubkey(), *address);
+    //     ixs.push(ix);
+    // }
+
+    // Submit migration instructions in batches
+    // const BATCH_SIZE: usize = 25;
+    // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
+    // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
+    Ok(())
+}
+
 async fn log_automation(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").expect("Missing AUTHORITY env var");
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
     let address = automation_pda(authority).0;
-    let automation = get_automation(rpc, address).await?;
+    let automation = get_automation(rpc, authority).await?;
     let account_balance = rpc.get_balance(&address).await?;
-    let size = 8 + std::mem::size_of::<Automation>();
-    let required_rent = Rent::default().minimum_balance(size);
+    let required_rent = Rent::default().minimum_balance(Automation::SIZE);
     println!("Automation");
     println!("  address: {}", address);
     println!("  amount: {} SOL", lamports_to_sol(automation.amount));
@@ -645,8 +727,7 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let treasury = get_treasury(rpc).await?;
     println!("Treasury");
     println!("  address: {}", treasury_address);
-    println!("  buffer_a: {}", treasury.buffer_a);
-    println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
+    // println!("  balance: {} SOL", lamports_to_sol(treasury.balance));
     println!(
         "  motherlode: {} ORE",
         amount_to_ui_amount(treasury.motherlode, TOKEN_DECIMALS)
@@ -655,7 +736,6 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         "  miner_rewards_factor: {}",
         treasury.miner_rewards_factor.to_i80f48().to_string()
     );
-    println!("  buffer_b: {}", treasury.buffer_b);
     println!(
         "  total_refined: {} ORE",
         amount_to_ui_amount(treasury.total_refined, TOKEN_DECIMALS)
@@ -688,12 +768,12 @@ async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  Top miner: {:?}", round.top_miner);
     println!(
         "  Top miner reward: {} ORE",
-        amount_to_ui_amount(round.top_miner_reward, TOKEN_DECIMALS)
+        amount_to_ui_amount(round.top_miner_reward(), TOKEN_DECIMALS)
     );
     println!("  Total miners: {}", round.total_miners);
     println!(
         "  Total deployed: {} SOL",
-        lamports_to_sol(round.total_deployed)
+        lamports_to_sol(round.total_deployed())
     );
     println!(
         "  Total vaulted: {} SOL",
@@ -718,7 +798,7 @@ async fn log_miner(
 ) -> Result<(), anyhow::Error> {
     let authority = std::env::var("AUTHORITY").unwrap_or(payer.pubkey().to_string());
     let authority = Pubkey::from_str(&authority).expect("Invalid AUTHORITY");
-    let treasury = get_treasury(&rpc).await?;
+    let treasury: Treasury = get_treasury(&rpc).await?;
     let miner_address = ore_api::state::miner_pda(authority).0;
     let mut miner = get_miner(&rpc, authority).await?;
     miner.update_rewards(&treasury);
@@ -776,8 +856,19 @@ async fn log_clock(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 
 async fn log_config(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let config = get_config(&rpc).await?;
-    println!("Config");
-    println!("  admin: {}", config.admin);
+    println!("Admin");
+    println!("  authority: {}", config.admin.authority);
+    println!("  fee_collector: {}", config.admin.fee_collector);
+    println!("  fee_rate: {}%", config.admin.fee_rate as f64 / 100.0);
+    println!("Protocol");
+    println!("  authority: {}", config.protocol.authority);
+    println!("  fee_collector: {}", config.protocol.fee_collector);
+    println!("  fee_rate: {}%", config.protocol.fee_rate as f64 / 100.0);
+    println!(
+        "  intermission_slots: {}",
+        config.protocol.intermission_slots
+    );
+    println!("  round_slots: {}", config.protocol.round_slots);
     Ok(())
 }
 
@@ -798,22 +889,14 @@ fn print_board(board: Board, clock: &Clock) {
         "  Time remaining: {} sec",
         (board.end_slot.saturating_sub(current_slot) as f64) * 0.4
     );
-    println!("  Epoch id: {:?}", board.epoch_id);
-}
-
-async fn get_automation(rpc: &RpcClient, address: Pubkey) -> Result<Automation, anyhow::Error> {
-    let account = rpc.get_account(&address).await?;
-    let automation = Automation::try_from_bytes(&account.data)?;
-    Ok(*automation)
+    println!(
+        "  Production cost: {:?} SOL",
+        lamports_to_sol(board.production_cost_ema)
+    );
 }
 
 async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {
-    const REGOLITH_EXECUTOR: Pubkey = pubkey!("HNWhK5f8RMWBqcA7mXJPaxdTPGrha3rrqUrri7HSKb3T");
-    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(
-        56,
-        &REGOLITH_EXECUTOR.to_bytes(),
-    ));
-    let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![filter]).await?;
+    let automations = get_program_accounts::<Automation>(rpc, ore_api::ID, vec![]).await?;
     Ok(automations)
 }
 
@@ -844,6 +927,13 @@ async fn get_treasury(rpc: &RpcClient) -> Result<Treasury, anyhow::Error> {
     Ok(*treasury)
 }
 
+async fn get_automation(rpc: &RpcClient, authority: Pubkey) -> Result<Automation, anyhow::Error> {
+    let automation_pda = ore_api::state::automation_pda(authority);
+    let account = rpc.get_account(&automation_pda.0).await?;
+    let automation = Automation::try_from_bytes(&account.data)?;
+    Ok(*automation)
+}
+
 async fn get_config(rpc: &RpcClient) -> Result<Config, anyhow::Error> {
     let config_pda = ore_api::state::config_pda();
     let account = rpc.get_account(&config_pda.0).await?;
@@ -869,7 +959,6 @@ async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Err
     Ok(rounds)
 }
 
-#[allow(dead_code)]
 async fn get_miners(rpc: &RpcClient) -> Result<Vec<(Pubkey, Miner)>, anyhow::Error> {
     let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![]).await?;
     Ok(miners)

@@ -200,7 +200,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
         // Update board
         round.deployed[square_id] += amount;
-        round.total_deployed += amount;
+        // round.total_deployed += amount;
         round.count[square_id] += 1;
 
         // Update totals.

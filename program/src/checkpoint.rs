@@ -88,7 +88,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             // Calculate ORE rewards.
             if round.top_miner == SPLIT_ADDRESS {
                 // If round is split, split the reward evenly among all miners.
-                rewards_ore = ((round.top_miner_reward as u128
+                rewards_ore = ((round.top_miner_reward() as u128
                     * miner.deployed[winning_square] as u128)
                     / round.deployed[winning_square] as u128) as u64;
                 sol_log(
@@ -105,7 +105,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                     && top_miner_sample
                         < miner.cumulative[winning_square] + miner.deployed[winning_square]
                 {
-                    rewards_ore = round.top_miner_reward;
+                    rewards_ore = round.top_miner_reward();
                     round.top_miner = miner.authority;
                     sol_log(
                         &format!(
@@ -136,7 +136,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         // Sanity check.
         // If there is no rng, total deployed should have been reset to zero.
         assert!(
-            round.total_deployed == 0,
+            round.total_deployed() == 0,
             "Round total deployed should be zero."
         );
 
@@ -168,8 +168,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     // Assert miner account has sufficient funds for rent and rewards.
-    let account_size = 8 + std::mem::size_of::<Miner>();
-    let required_rent = Rent::get()?.minimum_balance(account_size);
+    let required_rent = Rent::get()?.minimum_balance(Miner::SIZE);
     assert!(
         miner_info.lamports() >= required_rent + miner.checkpoint_fee + miner.rewards_sol,
         "Miner does not have sufficient funds for rent and rewards"

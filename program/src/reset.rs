@@ -60,10 +60,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.rent_payer = *signer_info.key;
     round_next.motherlode = 0;
     round_next.top_miner = Pubkey::default();
-    round_next.top_miner_reward = 0;
-    round_next.total_deployed = 0;
+    round_next.rewards = [0; 25];
     round_next.total_vaulted = 0;
     round_next.total_winnings = 0;
+    round_next.total_miners = 0;
 
     // Sample random variable
     let (entropy_accounts, mint_accounts) = other_accounts.split_at(2);
@@ -97,7 +97,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Slot hash could not be found, refund all SOL.
         round.total_vaulted = 0;
         round.total_winnings = 0;
-        round.total_deployed = 0;
+        round.deployed = [0; 25];
 
         // Emit event.
         program_log(
@@ -111,7 +111,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 top_miner: Pubkey::default(),
                 num_winners: 0,
                 motherlode: 0,
-                total_deployed: round.total_deployed,
+                total_deployed: round.total_deployed(),
                 total_vaulted: round.total_vaulted,
                 total_winnings: round.total_winnings,
                 total_minted: 0,
@@ -130,7 +130,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     };
 
     // Caculate admin fees.
-    let total_admin_fee = round.total_deployed / 100;
+    let total_admin_fee = round.total_deployed() / 100;
 
     // Get the winning square.
     let winning_square = round.winning_square(r);
@@ -138,8 +138,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // If no one deployed on the winning square, vault all deployed.
     if round.deployed[winning_square] == 0 {
         // Vault all deployed.
-        round.total_vaulted = round.total_deployed - total_admin_fee;
-        treasury.balance += round.total_deployed - total_admin_fee;
+        round.total_vaulted = round.total_deployed() - total_admin_fee;
+        // treasury.balance += round.total_deployed() - total_admin_fee;
 
         // Emit event.
         program_log(
@@ -153,7 +153,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 top_miner: Pubkey::default(),
                 num_winners: 0,
                 motherlode: 0,
-                total_deployed: round.total_deployed,
+                total_deployed: round.total_deployed(),
                 total_vaulted: round.total_vaulted,
                 total_winnings: round.total_winnings,
                 total_minted: 0,
@@ -171,7 +171,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
         // Do SOL transfers.
         round_info.send(total_admin_fee, &fee_collector_info);
-        round_info.send(round.total_deployed - total_admin_fee, &treasury_info);
+        round_info.send(round.total_deployed() - total_admin_fee, &treasury_info);
         return Ok(());
     }
 
@@ -185,11 +185,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let winnings = winnings - vault_amount;
     round.total_winnings = winnings;
     round.total_vaulted = vault_amount;
-    treasury.balance += vault_amount;
+    // treasury.balance += vault_amount;
 
     // Sanity check.
     assert!(
-        round.total_deployed
+        round.total_deployed()
             >= round.total_vaulted
                 + round.total_winnings
                 + round.deployed[winning_square]
@@ -204,7 +204,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let total_mint_amount = mint_amount + motherlode_mint_amount;
 
     // Reward +1 ORE for the winning miner(s).
-    round.top_miner_reward = mint_amount;
+    round.rewards[0] = mint_amount;
 
     // With 1 in 2 odds, split the +1 ORE reward.
     if round.is_split_reward(r) {
@@ -275,7 +275,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             top_miner: round.top_miner,
             motherlode: round.motherlode,
             num_winners: round.count[winning_square],
-            total_deployed: round.total_deployed,
+            total_deployed: round.total_deployed(),
             total_vaulted: round.total_vaulted,
             total_winnings: round.total_winnings,
             total_minted: total_mint_amount,

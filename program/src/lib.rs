@@ -7,6 +7,7 @@ mod claim_sol;
 mod close;
 mod deploy;
 mod log;
+mod migrate;
 mod new_var;
 mod reload_sol;
 mod reset;
@@ -22,6 +23,7 @@ use claim_sol::*;
 use close::*;
 use deploy::*;
 use log::*;
+use migrate::*;
 use new_var::*;
 use reload_sol::*;
 use reset::*;
@@ -58,6 +60,7 @@ pub fn process_instruction(
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::Liq => return Err(ProgramError::InvalidInstructionData),
+        OreInstruction::Migrate => process_migrate(accounts, data)?,
     }
 
     Ok(())
@@ -67,7 +70,7 @@ entrypoint!(process_instruction);
 
 security_txt! {
     name: "ORE",
-    project_url: "https://ore.supply",
+    project_url: "https://ore.com",
     contacts: "email:hardhatchad@gmail.com,discord:hardhatchad",
     policy: "https://github.com/regolith-labs/ore/blob/master/SECURITY.md",
     preferred_languages: "en",
