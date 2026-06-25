@@ -13,6 +13,22 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
+    if let Ok(miner) = miner_info.as_account_mut::<MinerV4>(&ore_api::ID) {
+        process_claim_ore_v4(accounts, _data)
+    } else {
+        process_claim_ore_v1(accounts, _data)
+    }
+}
+
+/// Claims a block reward.
+pub fn process_claim_ore_v1(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+    // Load accounts.
+    let clock = Clock::get()?;
+    let [signer_info, board_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
+        accounts
+    else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
     signer_info.is_signer()?;
     board_info.has_address(&BOARD_ADDRESS)?;
     let miner = miner_info
@@ -46,7 +62,85 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore_v4(&clock, treasury);
+    let amount = miner.claim_ore(&clock, treasury);
+
+    sol_log(
+        &format!(
+            "Claiming {} ORE",
+            amount_to_ui_amount(amount, TOKEN_DECIMALS)
+        )
+        .as_str(),
+    );
+
+    // Transfer reward to recipient.
+    transfer_signed(
+        treasury_info,
+        treasury_tokens_info,
+        recipient_info,
+        token_program,
+        amount,
+        &[TREASURY],
+    )?;
+
+    // Emit claim event.
+    program_log(
+        &[board_info.clone(), ore_program.clone()],
+        ClaimEvent {
+            disc: 4,
+            authority: miner.authority,
+            amount,
+            claim_type: 1, // ORE
+            ts: clock.unix_timestamp,
+        }
+        .to_bytes(),
+    )?;
+
+    Ok(())
+}
+
+/// Claims a block reward.
+pub fn process_claim_ore_v4(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+    // Load accounts.
+    let clock = Clock::get()?;
+    let [signer_info, board_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
+        accounts
+    else {
+        return Err(ProgramError::NotEnoughAccountKeys);
+    };
+    signer_info.is_signer()?;
+    board_info.has_address(&BOARD_ADDRESS)?;
+    let miner = miner_info
+        .has_seeds(&[MINER, &signer_info.key.to_bytes()], &ore_api::ID)?
+        .as_account_mut::<MinerV4>(&ore_api::ID)?
+        .assert_mut(|m| m.authority == *signer_info.key)?;
+    mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
+    recipient_info.is_writable()?;
+    let treasury = treasury_info
+        .has_address(&TREASURY_ADDRESS)?
+        .as_account_mut::<Treasury>(&ore_api::ID)?;
+    treasury_tokens_info.as_associated_token_account(&treasury_info.key, &mint_info.key)?;
+    system_program.is_program(&system_program::ID)?;
+    token_program.is_program(&spl_token::ID)?;
+    associated_token_program.is_program(&spl_associated_token_account::ID)?;
+    ore_program.is_program(&ore_api::ID)?;
+
+    // Load recipient.
+    if recipient_info.data_is_empty() {
+        create_associated_token_account(
+            signer_info,
+            signer_info,
+            recipient_info,
+            mint_info,
+            system_program,
+            token_program,
+            associated_token_program,
+        )?;
+    } else {
+        recipient_info.as_associated_token_account(signer_info.key, mint_info.key)?;
+    }
+
+    // Normalize amount.
+    let amount = miner.claim_ore(&clock, treasury);
 
     sol_log(
         &format!(
