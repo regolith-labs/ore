@@ -55,19 +55,23 @@ pub struct RoundV4 {
     pub id: u64,
 
     /// The amount of SOL deployed in each square.
-    pub sol: [u64; 25],
+    /// TODO: Rename to sol.
+    pub deployed: [u64; 25],
 
     /// The amount of mass deployed in each square.
     pub mass: [u64; 25],
 
     /// The number of unique miners on each square.
-    pub miners: [u64; 25],
+    /// TODO rename to miners.
+    pub count: [u64; 25],
 
     /// The entropy value.
-    pub entropy: [u8; 32],
+    /// TODO: Rename to entropy.
+    pub slot_hash: [u8; 32],
 
     /// The slot after which this account may be closed.
-    pub closes_at: u64,
+    /// TODO: Rename to closes_at.
+    pub expires_at: u64,
 
     /// The amount of ORE distributed as the motherlode reward.
     pub motherlode: u64,
@@ -79,16 +83,20 @@ pub struct RoundV4 {
     pub rewards: [u64; 25],
 
     /// The total SOL collected by the protocol.
-    pub protocol_fee: u64,
+    /// TODO: Rename to protocol_fee.
+    pub total_vaulted: u64,
 
     /// The total SOL returned to miners.
-    pub total_returned: u64,
+    /// TODO: Rename to total_returned.
+    pub total_winnings: u64,
 
     /// The total number of unique miners that played in the round.
-    pub unique_miners: u64,
+    /// TODO rename to unique_miners.
+    pub total_miners: u64,
 
     /// The winner of the solo reward.
-    pub winner: Pubkey,
+    /// TODO: Rename to winner.
+    pub top_miner: Pubkey,
 }
 
 impl RoundV1 {
@@ -151,13 +159,13 @@ impl RoundV4 {
     }
 
     pub fn rng(&self) -> Option<u64> {
-        if self.entropy == [0; 32] || self.entropy == [u8::MAX; 32] {
+        if self.slot_hash == [0; 32] || self.slot_hash == [u8::MAX; 32] {
             return None;
         }
-        let r1 = u64::from_le_bytes(self.entropy[0..8].try_into().unwrap());
-        let r2 = u64::from_le_bytes(self.entropy[8..16].try_into().unwrap());
-        let r3 = u64::from_le_bytes(self.entropy[16..24].try_into().unwrap());
-        let r4 = u64::from_le_bytes(self.entropy[24..32].try_into().unwrap());
+        let r1 = u64::from_le_bytes(self.slot_hash[0..8].try_into().unwrap());
+        let r2 = u64::from_le_bytes(self.slot_hash[8..16].try_into().unwrap());
+        let r3 = u64::from_le_bytes(self.slot_hash[16..24].try_into().unwrap());
+        let r4 = u64::from_le_bytes(self.slot_hash[24..32].try_into().unwrap());
         let r = r1 ^ r2 ^ r3 ^ r4;
         Some(r)
     }
@@ -167,17 +175,17 @@ impl RoundV4 {
     }
 
     pub fn top_miner_sample(&self, rng: u64, winning_square: usize) -> u64 {
-        if self.sol[winning_square] == 0 {
+        if self.deployed[winning_square] == 0 {
             return 0;
         }
-        rng.reverse_bits() % self.sol[winning_square]
+        rng.reverse_bits() % self.deployed[winning_square]
     }
 
     pub fn calculate_total_winnings(&self, winning_square: usize) -> u64 {
         let mut total_winnings = 0;
-        for (i, &sol) in self.sol.iter().enumerate() {
+        for (i, &deployed) in self.deployed.iter().enumerate() {
             if i != winning_square {
-                total_winnings += sol;
+                total_winnings += deployed;
             }
         }
         total_winnings
@@ -196,6 +204,14 @@ impl RoundV4 {
 
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {
         rng.reverse_bits() % 625 == 0
+    }
+
+    pub fn total_deployed(&self) -> u64 {
+        self.deployed.iter().sum()
+    }
+
+    pub fn top_miner_reward(&self) -> u64 {
+        self.rewards.iter().sum()
     }
 }
 
@@ -219,28 +235,28 @@ impl Round {
     pub fn deployed(&self) -> [u64; 25] {
         match self {
             Round::V1(r) => r.deployed,
-            Round::V4(r) => r.sol,
+            Round::V4(r) => r.deployed,
         }
     }
 
     pub fn slot_hash(&self) -> [u8; 32] {
         match self {
             Round::V1(r) => r.slot_hash,
-            Round::V4(r) => r.entropy,
+            Round::V4(r) => r.slot_hash,
         }
     }
 
     pub fn count(&self) -> [u64; 25] {
         match self {
             Round::V1(r) => r.count,
-            Round::V4(r) => r.miners,
+            Round::V4(r) => r.count,
         }
     }
 
     pub fn expires_at(&self) -> u64 {
         match self {
             Round::V1(r) => r.expires_at,
-            Round::V4(r) => r.closes_at,
+            Round::V4(r) => r.expires_at,
         }
     }
 
@@ -261,42 +277,42 @@ impl Round {
     pub fn top_miner(&self) -> Pubkey {
         match self {
             Round::V1(r) => r.top_miner,
-            Round::V4(r) => r.winner,
+            Round::V4(r) => r.top_miner,
         }
     }
 
     pub fn top_miner_reward(&self) -> u64 {
         match self {
             Round::V1(r) => r.top_miner_reward,
-            Round::V4(_) => 0,
+            Round::V4(r) => r.rewards.iter().sum(),
         }
     }
 
     pub fn total_deployed(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_deployed,
-            Round::V4(r) => r.sol.iter().sum(),
+            Round::V4(r) => r.deployed.iter().sum(),
         }
     }
 
     pub fn total_miners(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_miners,
-            Round::V4(r) => r.unique_miners,
+            Round::V4(r) => r.total_miners,
         }
     }
 
     pub fn total_vaulted(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_vaulted,
-            Round::V4(r) => r.protocol_fee,
+            Round::V4(r) => r.total_vaulted,
         }
     }
 
     pub fn total_winnings(&self) -> u64 {
         match self {
             Round::V1(r) => r.total_winnings,
-            Round::V4(r) => r.total_returned,
+            Round::V4(r) => r.total_winnings,
         }
     }
 

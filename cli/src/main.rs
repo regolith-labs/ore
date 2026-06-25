@@ -910,8 +910,13 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV1)>, anyhow::Error> {
+async fn get_rounds_v1(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV1)>, anyhow::Error> {
     let rounds = get_program_accounts::<RoundV1>(rpc, ore_api::ID, vec![]).await?;
+    Ok(rounds)
+}
+
+async fn get_rounds_v4(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV4)>, anyhow::Error> {
+    let rounds = get_program_accounts::<RoundV4>(rpc, ore_api::ID, vec![]).await?;
     Ok(rounds)
 }
 
