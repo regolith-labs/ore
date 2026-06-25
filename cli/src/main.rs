@@ -748,9 +748,20 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 }
 
 async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let rounds = get_rounds(rpc).await?;
+    println!("Rounds: {}", rounds.len());
+    for (i, (address, round)) in rounds.iter().enumerate() {
+        println!("[{}/{}] {}", i + 1, rounds.len(), address);
+        println!("  Count: {:?}", round.count);
+        println!("  Deployed: {:?}", round.deployed);
+        println!("  Expires at: {}", round.expires_at);
+        println!("  Id: {:?}", round.id);
+    }
+
     let id = std::env::var("ID").expect("Missing ID env var");
     let id = u64::from_str(&id).expect("Invalid ID");
     let round_address = round_pda(id).0;
+    println!("Round address: {}", round_address);
     let round = get_round(rpc, id).await?;
     let rng = round.rng();
     println!("Round");

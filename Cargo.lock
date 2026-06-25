@@ -1129,7 +1129,7 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "3.8.11"
+version = "3.8.5"
 dependencies = [
  "base64 0.22.1",
  "bytemuck",
@@ -1163,7 +1163,7 @@ dependencies = [
 
 [[package]]
 name = "ore-program"
-version = "3.8.11"
+version = "3.8.5"
 dependencies = [
  "bincode",
  "entropy-api",
