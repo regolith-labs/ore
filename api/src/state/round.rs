@@ -45,6 +45,9 @@ pub struct Round {
     /// TODO: Rename to total_returned.
     pub total_winnings: u64,
 
+    /// The total SOL returned to miners.
+    pub total_returned: u64,
+
     /// The total number of unique miners that played in the round.
     /// TODO rename to unique_miners.
     pub total_miners: u64,
