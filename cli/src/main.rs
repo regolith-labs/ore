@@ -113,9 +113,6 @@ async fn main() {
         "audit_curves" => {
             audit_curves(&rpc).await.unwrap();
         }
-        "migrate" => {
-            migrate(&rpc, &payer).await.unwrap();
-        }
         _ => panic!("Invalid command"),
     };
 }
@@ -603,85 +600,6 @@ async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
             accounts.len()
         );
     }
-    Ok(())
-}
-
-async fn migrate(
-    rpc: &RpcClient,
-    payer: &solana_sdk::signer::keypair::Keypair,
-) -> Result<(), anyhow::Error> {
-    // let authority = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
-    // let miner_address = miner_pda(authority).0;
-    // let mut miner = get_miner(rpc, authority).await?;
-    // let treasury = get_treasury(&rpc).await?;
-    // miner.update_rewards(&treasury);
-
-    // let old_size = MinerV1::SIZE;
-    // let new_size = Miner::SIZE;
-    // let old_rent = Rent::default().minimum_balance(old_size);
-    // let new_rent = Rent::default().minimum_balance(new_size);
-    // let lamports = new_rent.saturating_sub(old_rent);
-    // let required_sol = 31523 * lamports;
-    // println!("Required SOL: {} SOL", lamports_to_sol(required_sol));
-
-    // println!("Miner");
-    // println!("  address: {}", miner_address);
-    // println!("  authority: {}", miner.authority);
-    // println!("  deployed: {:?}", miner.deployed);
-    // println!("  cumulative: {:?}", miner.cumulative);
-    // println!(
-    //     "  checkpoint_fee: {} SOL",
-    //     lamports_to_sol(miner.checkpoint_fee)
-    // );
-    // println!("  checkpoint_id: {}", miner.checkpoint_id);
-    // println!("  last_claim_ore_at: {}", miner.last_claim_ore_at);
-    // println!("  last_claim_sol_at: {}", miner.last_claim_sol_at);
-    // println!(
-    //     "  rewards_factor: {}",
-    //     miner.rewards_factor.to_i80f48().to_string()
-    // );
-    // println!("  rewards_sol: {} SOL", lamports_to_sol(miner.rewards_sol));
-    // println!(
-    //     "  rewards_ore: {} ORE",
-    //     amount_to_ui_amount(miner.rewards_ore, TOKEN_DECIMALS)
-    // );
-    // println!(
-    //     "  refined_ore: {} ORE",
-    //     amount_to_ui_amount(miner.refined_ore, TOKEN_DECIMALS)
-    // );
-    // println!("  round_id: {}", miner.round_id);
-    // println!(
-    //     "  lifetime_rewards_sol: {} SOL",
-    //     lamports_to_sol(miner.lifetime_rewards_sol)
-    // );
-    // println!(
-    //     "  lifetime_rewards_ore: {} ORE",
-    //     amount_to_ui_amount(miner.lifetime_rewards_ore, TOKEN_DECIMALS)
-    // );
-    // println!(
-    //     "  lifetime_deployed: {} SOL",
-    //     lamports_to_sol(miner.lifetime_deployed)
-    // );
-
-    // let ix = ore_api::sdk::migrate(payer.pubkey(), miner_address);
-    // submit_transaction(rpc, payer, &[ix]).await?;
-    // simulate_transaction(rpc, payer, &[ix]).await;
-    // let automation = get_automation(rpc, payer.pubkey()).await?;
-
-    // let miners_v1 = get_miners_v1(rpc).await?;
-    // let miners = get_miners(rpc).await?;
-    // println!("Miners v1: {}", miners_v1.len());
-    // println!("Miners v4: {}", miners.len());
-    // let mut ixs = vec![];
-    // for (i, (address, miner)) in miners_v1.iter().enumerate() {
-    //     let ix = ore_api::sdk::migrate(payer.pubkey(), *address);
-    //     ixs.push(ix);
-    // }
-
-    // Submit migration instructions in batches
-    // const BATCH_SIZE: usize = 25;
-    // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
-    // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     Ok(())
 }
 

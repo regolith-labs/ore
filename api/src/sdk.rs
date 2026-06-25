@@ -376,18 +376,6 @@ pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
     }
 }
 
-pub fn migrate(signer: Pubkey, account: Pubkey) -> Instruction {
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(account, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: Migrate {}.to_bytes(),
-    }
-}
-
 pub fn new_var(
     signer: Pubkey,
     provider: Pubkey,
