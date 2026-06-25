@@ -35,7 +35,7 @@ pub enum OreAccountV4 {
     MinerV4 = 103,
     TreasuryV4 = 104,
     Board = 105,
-    RoundV4 = 109,
+    Round = 109,
 }
 
 pub fn automation_pda(authority: Pubkey) -> (Pubkey, u8) {

@@ -616,24 +616,104 @@ async fn migrate(
     // simulate_transaction(rpc, payer, &[ix]).await;
     // let automation = get_automation(rpc, payer.pubkey()).await?;
 
-    // let automations_v1 = get_automations_v1(rpc).await?;
-    // let automations_v4 = get_automations_v4(rpc).await?;
-    // println!("Automations v1: {}", automations_v1.len());
-    // println!("Automations v4: {}", automations_v4.len());
+    // let mut rounds_v1 = get_rounds_v1(rpc).await?;
+    // let mut rounds_v4 = get_rounds_v4(rpc).await?;
+    // rounds_v1.sort_by_key(|(_, round)| round.id);
+    // println!("Rounds v1: {}", rounds_v1.len());
+    // println!("Rounds v4: {}", rounds_v4.len());
     // let mut ixs = vec![];
-    // for (i, (address, _automation)) in automations_v1.iter().enumerate() {
-    //     println!(
-    //         "[{}/{}] Migrating automation: {}",
-    //         i + 1,
-    //         automations_v1.len(),
-    //         address
-    //     );
+    // for (i, (address, round)) in rounds_v1.iter().enumerate() {
     //     let ix = ore_api::sdk::migrate(payer.pubkey(), *address);
     //     ixs.push(ix);
+
+    //     if i >= 99 {
+    //         break;
+    //     }
+    // }
+
+    // rounds_v1.sort_by_key(|(_, round)| round.id);
+    // let (round_address, round) = rounds_v1.first().unwrap();
+    // sol_log(&format!("var value: {:?}", value).to_string());
+    // let round_address = round_pda(310279).0;
+    // let round = get_round(rpc, 310279).await?;
+    // let rng = round.rng();
+    // println!("Round (v1)");
+    // println!("  Address: {}", round_address);
+    // println!("  Count: {:?}", round.count);
+    // println!("  Deployed: {:?}", round.deployed);
+    // println!("  Expires at: {}", round.expires_at);
+    // println!("  Id: {:?}", round.id);
+    // println!(
+    //     "  Motherlode: {} ORE",
+    //     amount_to_ui_amount(round.motherlode, TOKEN_DECIMALS)
+    // );
+    // println!("  Rent payer: {}", round.rent_payer);
+    // let value = keccak::Hash::new_from_array(round.slot_hash);
+    // println!("  Slot hash: {:?}", round.slot_hash);
+    // println!("  Slot hash: {:?}", value);
+    // println!("  Top miner: {:?}", round.top_miner);
+    // println!(
+    //     "  Top miner reward: {} ORE",
+    //     amount_to_ui_amount(round.top_miner_reward, TOKEN_DECIMALS)
+    // );
+    // println!("  Total miners: {}", round.total_miners);
+    // println!(
+    //     "  Total deployed: {} SOL",
+    //     lamports_to_sol(round.total_deployed)
+    // );
+    // println!(
+    //     "  Total vaulted: {} SOL",
+    //     lamports_to_sol(round.total_vaulted)
+    // );
+    // println!(
+    //     "  Total winnings: {} SOL",
+    //     lamports_to_sol(round.total_winnings)
+    // );
+    // if let Some(rng) = rng {
+    //     println!("  Winning square: {}", round.winning_square(rng));
+    // }
+
+    // rounds_v4.sort_by_key(|(_, round)| round.id);
+    // // for i in 0..10 {
+    // let (round_address, round) = rounds_v4.last().unwrap();
+    // let rng = round.rng();
+    // println!("Round (v4)");
+    // println!("  Address: {}", round_address);
+    // println!("  Count: {:?}", round.count);
+    // println!("  Deployed: {:?}", round.deployed);
+    // println!("  Expires at: {}", round.expires_at);
+    // println!("  Id: {:?}", round.id);
+    // println!(
+    //     "  Motherlode: {} ORE",
+    //     amount_to_ui_amount(round.motherlode, TOKEN_DECIMALS)
+    // );
+    // println!("  Rent payer: {}", round.rent_payer);
+    // println!("  Slot hash: {:?}", round.slot_hash);
+    // println!("  Top miner: {:?}", round.top_miner);
+    // println!(
+    //     "  Top miner reward: {} ORE",
+    //     amount_to_ui_amount(round.top_miner_reward(), TOKEN_DECIMALS)
+    // );
+    // println!("  Total miners: {}", round.total_miners);
+    // println!(
+    //     "  Total deployed: {} SOL",
+    //     lamports_to_sol(round.total_deployed())
+    // );
+    // println!(
+    //     "  Total vaulted: {} SOL",
+    //     lamports_to_sol(round.total_vaulted)
+    // );
+    // println!(
+    //     "  Total winnings: {} SOL",
+    //     lamports_to_sol(round.total_winnings)
+    // );
+    // if let Some(rng) = rng {
+    //     println!("  Winning square: {}", round.winning_square(rng));
+    // }
     // }
 
     // Submit migration instructions in batches
-    // const BATCH_SIZE: usize = 16;
+    const BATCH_SIZE: usize = 16;
     // submit_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     // simulate_transaction_batches(rpc, payer, ixs, BATCH_SIZE).await?;
     Ok(())
@@ -724,12 +804,12 @@ async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     println!("  Top miner: {:?}", round.top_miner);
     println!(
         "  Top miner reward: {} ORE",
-        amount_to_ui_amount(round.top_miner_reward, TOKEN_DECIMALS)
+        amount_to_ui_amount(round.top_miner_reward(), TOKEN_DECIMALS)
     );
     println!("  Total miners: {}", round.total_miners);
     println!(
         "  Total deployed: {} SOL",
-        lamports_to_sol(round.total_deployed)
+        lamports_to_sol(round.total_deployed())
     );
     println!(
         "  Total vaulted: {} SOL",
@@ -869,10 +949,10 @@ async fn get_var(rpc: &RpcClient, address: Pubkey) -> Result<Var, anyhow::Error>
     Ok(*var)
 }
 
-async fn get_round(rpc: &RpcClient, id: u64) -> Result<RoundV1, anyhow::Error> {
+async fn get_round(rpc: &RpcClient, id: u64) -> Result<Round, anyhow::Error> {
     let round_pda = ore_api::state::round_pda(id);
     let account = rpc.get_account(&round_pda.0).await?;
-    let round = RoundV1::try_from_bytes(&account.data)?;
+    let round = Round::try_from_bytes(&account.data)?;
     Ok(*round)
 }
 
@@ -910,13 +990,8 @@ async fn get_clock(rpc: &RpcClient) -> Result<Clock, anyhow::Error> {
     Ok(clock)
 }
 
-async fn get_rounds_v1(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV1)>, anyhow::Error> {
-    let rounds = get_program_accounts::<RoundV1>(rpc, ore_api::ID, vec![]).await?;
-    Ok(rounds)
-}
-
-async fn get_rounds_v4(rpc: &RpcClient) -> Result<Vec<(Pubkey, RoundV4)>, anyhow::Error> {
-    let rounds = get_program_accounts::<RoundV4>(rpc, ore_api::ID, vec![]).await?;
+async fn get_rounds(rpc: &RpcClient) -> Result<Vec<(Pubkey, Round)>, anyhow::Error> {
+    let rounds = get_program_accounts::<Round>(rpc, ore_api::ID, vec![]).await?;
     Ok(rounds)
 }
 
