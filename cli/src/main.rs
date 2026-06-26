@@ -404,8 +404,13 @@ async fn reset(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let board = get_board(rpc).await?;
-    let var = get_var(rpc, ORE_VAR_ADDRESS).await?;
+    let mut var = get_var(rpc, ORE_VAR_ADDRESS).await?;
 
+    let hash = solana_program::keccak::hashv(&[&var.end_at.to_le_bytes()]);
+    var.slot_hash = hash.to_bytes();
+    let v = keccak::Hash::new_from_array(var.slot_hash);
+
+    println!("Hash: {:?}", v);
     println!("Var: {:?}", var);
 
     let client = reqwest::Client::new();
@@ -418,6 +423,12 @@ async fn reset(
         .await?;
     println!("Entropy seed: {:?}", response);
 
+    let v = keccak::Hash::new_from_array(response.seed);
+    println!("Seed: {:?}", v);
+
+    let top_miner = calculate_top_miner(rpc, &mut var, response.seed, board.round_id).await?;
+    println!("Top miner: {}", top_miner);
+
     let config = get_config(rpc).await?;
     let sample_ix = entropy_api::sdk::sample(payer.pubkey(), ORE_VAR_ADDRESS);
     let reveal_ix = entropy_api::sdk::reveal(payer.pubkey(), ORE_VAR_ADDRESS, response.seed);
@@ -425,12 +436,77 @@ async fn reset(
         payer.pubkey(),
         ADMIN_FEE_COLLECTOR,
         board.round_id,
-        Pubkey::default(),
+        top_miner,
     );
     let sig = submit_transaction(rpc, payer, &[sample_ix, reveal_ix, reset_ix]).await?;
     println!("Reset: {}", sig);
 
     Ok(())
+}
+
+async fn calculate_top_miner(
+    rpc: &RpcClient,
+    var: &entropy_api::state::Var,
+    seed: [u8; 32],
+    round_id: u64,
+) -> Result<Pubkey, anyhow::Error> {
+    // Compute the finalized value using the same formula as entropy-api
+
+    let value =
+        solana_sdk::keccak::hashv(&[&var.slot_hash, &seed, &var.samples.to_le_bytes()]).to_bytes();
+    let v = keccak::Hash::new_from_array(value);
+    println!("Value: {:?}", v);
+
+    let r1 = u64::from_le_bytes(value[0..8].try_into().unwrap());
+    let r2 = u64::from_le_bytes(value[8..16].try_into().unwrap());
+    let r3 = u64::from_le_bytes(value[16..24].try_into().unwrap());
+    let r4 = u64::from_le_bytes(value[24..32].try_into().unwrap());
+    let r = r1 ^ r2 ^ r3 ^ r4;
+
+    // Fetch round account
+    let round = get_round(rpc, round_id).await?;
+
+    // Check if split
+    if round.is_split_reward(r) {
+        println!("Round {} is split, no top miner needed", round_id);
+        return Ok(Pubkey::default());
+    }
+
+    // Calculate winning square and sample
+    let winning_square = round.winning_square(r) as usize;
+    let top_miner_sample = round.top_miner_sample(r, winning_square);
+
+    println!(
+        "Round {} not split. winning_square={}, top_miner_sample={}",
+        round_id, winning_square, top_miner_sample
+    );
+
+    // Fetch all miners for this round (round_id is at offset 512 in Miner account)
+    let filter = RpcFilterType::Memcmp(Memcmp::new_base58_encoded(664, &round_id.to_le_bytes()));
+    let miners = get_program_accounts::<Miner>(rpc, ore_api::ID, vec![filter]).await?;
+
+    println!("Fetched {} miners for round {}", miners.len(), round_id);
+
+    // Linear search for matching miner
+    for (miner_pda, miner) in miners.iter() {
+        let cumulative = miner.cumulative[winning_square];
+        let deployed = miner.deployed[winning_square];
+
+        if top_miner_sample >= cumulative && top_miner_sample < cumulative + deployed {
+            println!(
+                "Found top miner: {} (cumulative={}, deployed={})",
+                miner_pda, cumulative, deployed
+            );
+            return Ok(miner.authority);
+        }
+    }
+
+    // No matching miner found - fall back to default
+    println!(
+        "No matching miner found for top_miner_sample={}",
+        top_miner_sample
+    );
+    Ok(Pubkey::default())
 }
 
 async fn deploy(
@@ -581,7 +657,7 @@ fn is_on_curve(pubkey: &Pubkey) -> bool {
 }
 
 async fn audit_curves(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let program_id = pubkey!("oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv");
+    let program_id = pubkey!("3jSkUuYBoJzQPMEzTvkDFXCZUBksPamrVhrnHR9igu2X");
     let accounts = rpc.get_program_accounts(&program_id).await?;
     let mut on_curve_count = 0;
     println!("Checking {} accounts...", accounts.len());
