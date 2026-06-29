@@ -364,7 +364,7 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
                 if automation.reload > 0 {
                     miner.rewards_sol -= rewards_sol;
                     automation.balance += rewards_sol;
-                    automation_info.send(rewards_sol, &automation_info);
+                    round_info.send(rewards_sol, &automation_info);
                 }
             }
             _ => {
