@@ -185,8 +185,6 @@ fn process_checkpoint_v1(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     Ok(())
 }
 
-pub const TESTER: Pubkey = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
-
 /// Checkpoints a miner's rewards.
 fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
@@ -197,7 +195,7 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    authority_info.is_writable()?.has_address(&TESTER)?;
+    authority_info.is_writable()?;
     automation_info.has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
@@ -371,19 +369,21 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
                 round_info.send(rewards_sol, &automation_info);
             }
             _ => {
-                if miner.auto_return > 0 {
-                    sol_log(
-                        &format!("Sending {} SOL to authority", lamports_to_sol(rewards_sol))
-                            .as_str(),
-                    );
-                    miner.rewards_sol -= rewards_sol;
-                    round_info.send(rewards_sol, &authority_info);
-                } else {
-                    sol_log(
-                        &format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str(),
-                    );
-                    round_info.send(rewards_sol, &miner_info);
-                }
+                sol_log(&format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str());
+                round_info.send(rewards_sol, &miner_info);
+                // if miner.auto_return > 0 {
+                //     sol_log(
+                //         &format!("Sending {} SOL to authority", lamports_to_sol(rewards_sol))
+                //             .as_str(),
+                //     );
+                //     miner.rewards_sol -= rewards_sol;
+                //     round_info.send(rewards_sol, &authority_info);
+                // } else {
+                //     sol_log(
+                //         &format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str(),
+                //     );
+                //     round_info.send(rewards_sol, &miner_info);
+                // }
             }
         }
     }
