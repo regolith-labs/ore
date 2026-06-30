@@ -6,7 +6,7 @@ Future-proof electronic cash.
 ## API
 - [`Consts`](api/src/consts.rs) – Program constants.
 - [`Error`](api/src/error.rs) – Custom program errors.
-- [`Event`](api/src/error.rs) – Custom program events.
+- [`Event`](api/src/event.rs) – Custom program events.
 - [`Instruction`](api/src/instruction.rs) – Declared instructions and arguments.
 
 ## Instructions
