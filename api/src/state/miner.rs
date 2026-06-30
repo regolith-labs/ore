@@ -70,27 +70,60 @@ impl Miner {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
+    pub fn claim_ore(&mut self, amount: u64, clock: &Clock, treasury: &mut Treasury) -> u64 {
         self.update_rewards(treasury);
-        let refined_ore = self.refined_ore;
-        let rewards_ore = self.rewards_ore;
-        let mut amount = refined_ore + rewards_ore;
-        self.refined_ore = 0;
-        self.rewards_ore = 0;
-        treasury.total_unclaimed -= rewards_ore;
-        treasury.total_refined -= refined_ore;
-        self.last_claim_ore_at = clock.unix_timestamp;
 
-        // Charge a 10% fee and share with miners who haven't claimed yet.
-        if treasury.total_unclaimed > 0 {
-            let fee = rewards_ore / 10;
-            amount -= fee;
-            treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
-            treasury.total_refined += fee;
-            self.lifetime_rewards_ore -= fee;
+        let refined_available = self.refined_ore;
+        let rewards_available = self.rewards_ore;
+        let total_available = refined_available + rewards_available;
+        let amount_to_claim = amount.min(total_available);
+
+        // Distribute the claim evenly between refined_ore and rewards_ore, but if one is low, take the remainder from the other.
+        let mut refined_to_claim = (amount_to_claim / 2).min(refined_available);
+        let mut rewards_to_claim = (amount_to_claim / 2).min(rewards_available);
+
+        // If uneven division or one source is low, allocate additional from the other
+        let claimed_so_far = refined_to_claim + rewards_to_claim;
+        if claimed_so_far < amount_to_claim {
+            // deduct remainder from whichever has more left
+            let remainder = amount_to_claim - claimed_so_far;
+            if refined_available - refined_to_claim >= rewards_available - rewards_to_claim {
+                let extra = remainder.min(refined_available - refined_to_claim);
+                refined_to_claim += extra;
+                // if still not enough, add to rewards_to_claim
+                if refined_to_claim + rewards_to_claim < amount_to_claim {
+                    rewards_to_claim += amount_to_claim - (refined_to_claim + rewards_to_claim);
+                }
+            } else {
+                let extra = remainder.min(rewards_available - rewards_to_claim);
+                rewards_to_claim += extra;
+                // if still not enough, add to refined_to_claim
+                if refined_to_claim + rewards_to_claim < amount_to_claim {
+                    refined_to_claim += amount_to_claim - (refined_to_claim + rewards_to_claim);
+                }
+            }
         }
 
-        amount
+        // Remove claimed amounts from miner's balances and treasury totals
+        self.refined_ore -= refined_to_claim;
+        self.rewards_ore -= rewards_to_claim;
+        treasury.total_refined = treasury.total_refined.saturating_sub(refined_to_claim);
+        treasury.total_unclaimed = treasury.total_unclaimed.saturating_sub(rewards_to_claim);
+        self.last_claim_ore_at = clock.unix_timestamp;
+
+        // Rewards portion pays a 10% fee; refined pays 0%.
+        if treasury.total_unclaimed > 0 && rewards_to_claim > 0 {
+            let fee = rewards_to_claim / 10;
+            // Only deduct fee up to actual rewards claimed (prevents underflow).
+            let claim_after_fee = (refined_to_claim) + (rewards_to_claim - fee);
+            treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
+            treasury.total_refined += fee;
+            self.lifetime_rewards_ore = self.lifetime_rewards_ore.saturating_sub(fee);
+            return claim_after_fee;
+        }
+
+        // If no fee (all from refined, or no unclaimed to share), return total claimed.
+        refined_to_claim + rewards_to_claim
     }
 
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {
