@@ -1,5 +1,5 @@
 use ore_api::prelude::*;
-use solana_program::{log::sol_log, native_token::lamports_to_sol, rent::Rent};
+use solana_program::{log::sol_log, native_token::lamports_to_sol, pubkey, rent::Rent};
 use spl_token::amount_to_ui_amount;
 use steel::*;
 
@@ -185,6 +185,8 @@ fn process_checkpoint_v1(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     Ok(())
 }
 
+pub const TESTER: Pubkey = pubkey!("iqsobyCTnvKErPnQybqTY6ZvhQjpmCverBbxDJfTTWR");
+
 /// Checkpoints a miner's rewards.
 fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
@@ -195,7 +197,7 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
-    authority_info.is_writable()?;
+    authority_info.is_writable()?.has_address(&TESTER)?;
     automation_info.has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
