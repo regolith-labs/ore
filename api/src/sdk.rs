@@ -325,6 +325,7 @@ pub fn close(signer: Pubkey, round_id: u64, rent_payer: Pubkey) -> Instruction {
 // let [signer_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
 
 pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instruction {
+    let automation_address = automation_pda(authority).0;
     let miner_address = miner_pda(authority).0;
     let board_address = board_pda().0;
     let round_address = round_pda(round_id).0;
@@ -333,6 +334,8 @@ pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instructi
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(authority, false),
+            AccountMeta::new(automation_address, false),
             AccountMeta::new(board_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(round_address, false),

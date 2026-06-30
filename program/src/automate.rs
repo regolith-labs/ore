@@ -45,6 +45,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         miner.round_id = 0;
         miner.lifetime_rewards_sol = 0;
         miner.lifetime_rewards_ore = 0;
+        miner.auto_return = 1;
         miner
     } else {
         miner_info
