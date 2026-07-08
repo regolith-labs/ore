@@ -219,8 +219,8 @@ async fn lut(
     };
 
     submit_transaction(rpc, payer, &[ix_1]).await?;
-    submit_transaction(rpc, payer, &[ix_2]).await?;
-    submit_transaction(rpc, payer, &[ix_3]).await?;
+    // submit_transaction(rpc, payer, &[ix_2]).await?;
+    // submit_transaction(rpc, payer, &[ix_3]).await?;
     println!("LUT address: {}", lut_address);
     Ok(())
 }
@@ -293,7 +293,7 @@ async fn claim(
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
     let ix_sol = ore_api::sdk::claim_sol(payer.pubkey());
-    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey());
+    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey(), 0);
     submit_transaction(rpc, payer, &[ix_sol, ix_ore]).await?;
     Ok(())
 }

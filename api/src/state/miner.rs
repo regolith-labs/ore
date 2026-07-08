@@ -107,18 +107,19 @@ impl Miner {
         // Remove claimed amounts from miner's balances and treasury totals
         self.refined_ore -= refined_to_claim;
         self.rewards_ore -= rewards_to_claim;
-        treasury.total_refined = treasury.total_refined.saturating_sub(refined_to_claim);
-        treasury.total_unclaimed = treasury.total_unclaimed.saturating_sub(rewards_to_claim);
+        treasury.total_refined -= refined_to_claim;
+        treasury.total_unclaimed -= rewards_to_claim;
         self.last_claim_ore_at = clock.unix_timestamp;
 
         // Rewards portion pays a 10% fee; refined pays 0%.
         if treasury.total_unclaimed > 0 && rewards_to_claim > 0 {
             let fee = rewards_to_claim / 10;
+
             // Only deduct fee up to actual rewards claimed (prevents underflow).
             let claim_after_fee = (refined_to_claim) + (rewards_to_claim - fee);
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
             treasury.total_refined += fee;
-            self.lifetime_rewards_ore = self.lifetime_rewards_ore.saturating_sub(fee);
+            self.lifetime_rewards_ore -= fee;
             return claim_after_fee;
         }
 
