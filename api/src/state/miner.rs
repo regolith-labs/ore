@@ -87,17 +87,17 @@ impl Miner {
         self.last_claim_ore_at = clock.unix_timestamp;
 
         // Apply 10% fee on unrefined portion (rewards_ore)
-        let mut transfer_amount = claim_refined + claim_rewards;
+        let mut amount = claim_refined + claim_rewards;
         if claim_rewards > 0 && treasury.total_unclaimed > 0 {
             let fee = claim_rewards / 10;
-            transfer_amount -= fee;
+            amount -= fee;
             // Distribute the tax
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
             treasury.total_refined += fee;
             self.lifetime_rewards_ore -= fee;
         }
 
-        transfer_amount
+        amount
     }
 
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {
