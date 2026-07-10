@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use steel::*;
 
-use crate::state::{miner_pda, OreAccount, Treasury};
+use crate::state::{miner_pda, OreAccount, Treasury, DENOMINATOR_BPS};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable, Serialize, Deserialize)]
@@ -70,27 +70,35 @@ impl Miner {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury) -> u64 {
+    pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury, bps: u64) -> u64 {
         self.update_rewards(treasury);
-        let refined_ore = self.refined_ore;
-        let rewards_ore = self.rewards_ore;
-        let mut amount = refined_ore + rewards_ore;
-        self.refined_ore = 0;
-        self.rewards_ore = 0;
-        treasury.total_unclaimed -= rewards_ore;
-        treasury.total_refined -= refined_ore;
-        self.last_claim_ore_at = clock.unix_timestamp;
 
-        // Charge a 10% fee and share with miners who haven't claimed yet.
-        if treasury.total_unclaimed > 0 {
-            let fee = rewards_ore / 10;
-            amount -= fee;
+        // Compute % claimable
+        // bps = basis points, so 10000 == 100%
+        let bps = bps.min(DENOMINATOR_BPS);
+        let claim_refined = (self.refined_ore * bps) / DENOMINATOR_BPS;
+        let claim_rewards = (self.rewards_ore * bps) / DENOMINATOR_BPS;
+
+        // Withdraw amounts
+        self.refined_ore -= claim_refined;
+        self.rewards_ore -= claim_rewards;
+        treasury.total_refined -= claim_refined;
+        treasury.total_unclaimed -= claim_rewards;
+
+        // Apply 10% fee on unrefined portion (rewards_ore)
+        let mut transfer_amount = claim_refined + claim_rewards;
+        if claim_rewards > 0 && treasury.total_unclaimed > 0 {
+            let fee = claim_rewards / 10;
+            transfer_amount -= fee;
+            // Distribute the tax
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
             treasury.total_refined += fee;
-            self.lifetime_rewards_ore -= fee;
+            self.lifetime_rewards_ore = self.lifetime_rewards_ore.saturating_sub(fee);
         }
 
-        amount
+        self.last_claim_ore_at = clock.unix_timestamp;
+
+        transfer_amount
     }
 
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {
