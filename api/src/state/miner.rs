@@ -90,7 +90,7 @@ impl Miner {
         let mut fee = 0;
         let mut amount = claim_refined + claim_rewards;
         if claim_rewards > 0 && treasury.total_unclaimed > 0 {
-            fee = claim_rewards / 10;
+            fee = 1.max(claim_rewards / 10);
             amount -= fee;
             // Distribute the tax
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
