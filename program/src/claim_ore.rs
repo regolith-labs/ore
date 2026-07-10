@@ -50,7 +50,7 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore(&clock, treasury);
+    let amount = miner.claim_ore(&clock, treasury, bps);
 
     sol_log(
         &format!(
