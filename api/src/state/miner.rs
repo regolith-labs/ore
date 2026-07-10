@@ -70,7 +70,7 @@ impl Miner {
         miner_pda(self.authority)
     }
 
-    pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury, bps: u64) -> u64 {
+    pub fn claim_ore(&mut self, clock: &Clock, treasury: &mut Treasury, bps: u64) -> (u64, u64) {
         self.update_rewards(treasury);
 
         // Compute % claimable
@@ -87,9 +87,10 @@ impl Miner {
         self.last_claim_ore_at = clock.unix_timestamp;
 
         // Apply 10% fee on unrefined portion (rewards_ore)
+        let mut fee = 0;
         let mut amount = claim_refined + claim_rewards;
         if claim_rewards > 0 && treasury.total_unclaimed > 0 {
-            let fee = claim_rewards / 10;
+            fee = claim_rewards / 10;
             amount -= fee;
             // Distribute the tax
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
@@ -97,7 +98,7 @@ impl Miner {
             self.lifetime_rewards_ore -= fee;
         }
 
-        amount
+        (amount, fee)
     }
 
     pub fn claim_sol(&mut self, clock: &Clock) -> u64 {

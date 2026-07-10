@@ -50,12 +50,13 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore(&clock, treasury, bps);
+    let (amount, fee) = miner.claim_ore(&clock, treasury, bps);
 
     sol_log(
         &format!(
-            "Claiming {} ORE",
-            amount_to_ui_amount(amount, TOKEN_DECIMALS)
+            "Claiming {} ORE. Paid {} ORE in refining fees.",
+            amount_to_ui_amount(amount, TOKEN_DECIMALS),
+            amount_to_ui_amount(fee, TOKEN_DECIMALS)
         )
         .as_str(),
     );
