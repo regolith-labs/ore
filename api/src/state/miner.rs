@@ -93,7 +93,7 @@ impl Miner {
             // Distribute the tax
             treasury.miner_rewards_factor += Numeric::from_fraction(fee, treasury.total_unclaimed);
             treasury.total_refined += fee;
-            self.lifetime_rewards_ore = self.lifetime_rewards_ore.saturating_sub(fee);
+            self.lifetime_rewards_ore -= fee;
         }
 
         self.last_claim_ore_at = clock.unix_timestamp;
