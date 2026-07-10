@@ -84,6 +84,7 @@ impl Miner {
         self.rewards_ore -= claim_rewards;
         treasury.total_refined -= claim_refined;
         treasury.total_unclaimed -= claim_rewards;
+        self.last_claim_ore_at = clock.unix_timestamp;
 
         // Apply 10% fee on unrefined portion (rewards_ore)
         let mut transfer_amount = claim_refined + claim_rewards;
@@ -95,8 +96,6 @@ impl Miner {
             treasury.total_refined += fee;
             self.lifetime_rewards_ore -= fee;
         }
-
-        self.last_claim_ore_at = clock.unix_timestamp;
 
         transfer_amount
     }
