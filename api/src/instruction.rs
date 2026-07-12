@@ -40,7 +40,9 @@ pub struct ClaimSOL {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ClaimORE {}
+pub struct ClaimORE {
+    pub bps: [u8; 8],
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]

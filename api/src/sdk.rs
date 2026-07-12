@@ -75,7 +75,7 @@ pub fn claim_sol(signer: Pubkey) -> Instruction {
 
 // let [signer_info, board_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
 
-pub fn claim_ore(signer: Pubkey) -> Instruction {
+pub fn claim_ore(signer: Pubkey, bps: u64) -> Instruction {
     let board_address = board_pda().0;
     let miner_address = miner_pda(signer).0;
     let treasury_address = treasury_pda().0;
@@ -96,7 +96,10 @@ pub fn claim_ore(signer: Pubkey) -> Instruction {
             AccountMeta::new_readonly(spl_associated_token_account::ID, false),
             AccountMeta::new_readonly(crate::ID, false),
         ],
-        data: ClaimORE {}.to_bytes(),
+        data: ClaimORE {
+            bps: bps.to_le_bytes(),
+        }
+        .to_bytes(),
     }
 }
 

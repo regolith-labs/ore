@@ -5,7 +5,13 @@ use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Claims a block reward.
-pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+pub fn process_claim_ore(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
+    // Load data.
+    let mut bps = DENOMINATOR_BPS;
+    if let Ok(args) = ClaimORE::try_from_bytes(data) {
+        bps = u64::from_le_bytes(args.bps);
+    }
+
     // Load accounts.
     let clock = Clock::get()?;
     let [signer_info, board_info, miner_info, mint_info, recipient_info, treasury_info, treasury_tokens_info, system_program, token_program, associated_token_program, ore_program] =
@@ -46,12 +52,13 @@ pub fn process_claim_ore(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
     }
 
     // Normalize amount.
-    let amount = miner.claim_ore(&clock, treasury);
+    let (amount, fee) = miner.claim_ore(&clock, treasury, bps);
 
     sol_log(
         &format!(
-            "Claiming {} ORE",
-            amount_to_ui_amount(amount, TOKEN_DECIMALS)
+            "Claiming {} ORE. Paid {} ORE in refining fees.",
+            amount_to_ui_amount(amount, TOKEN_DECIMALS),
+            amount_to_ui_amount(fee, TOKEN_DECIMALS)
         )
         .as_str(),
     );
