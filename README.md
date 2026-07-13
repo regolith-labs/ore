@@ -19,7 +19,6 @@ Future-proof electronic cash.
 - [`Deploy`](program/src/deploy.rs) – Deploys SOL to claim space on the board.
 - [`Initialize`](program/src/initialize.rs) - Initializes program variables.
 - [`Log`](program/src/log.rs) – Logs non-truncatable event data.
-- [`ReloadSOL`](program/src/reload_sol.rs) - Reloads SOL mining rewards into automation.
 - [`Reset`](program/src/reset.rs) - Resets the board for a new round.
 
 #### Admin
