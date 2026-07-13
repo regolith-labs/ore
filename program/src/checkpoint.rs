@@ -348,11 +348,11 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
 
     // Load the automation account if it exists.
     let automation = if !automation_info.data_is_empty() {
-        Some(
-            automation_info
-                .as_account_mut::<Automation>(&ore_api::ID)?
-                .assert_mut(|a| a.authority == miner.authority)?,
-        )
+        let automation = automation_info
+            .as_account_mut::<Automation>(&ore_api::ID)?
+            .assert_mut(|a| a.authority == miner.authority)?;
+        automation.total_ore_earned += rewards_ore;
+        Some(automation)
     } else {
         None
     };
@@ -369,21 +369,19 @@ fn process_checkpoint_v2(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramR
                 round_info.send(rewards_sol, &automation_info);
             }
             _ => {
-                sol_log(&format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str());
-                round_info.send(rewards_sol, &miner_info);
-                // if miner.auto_return > 0 {
-                //     sol_log(
-                //         &format!("Sending {} SOL to authority", lamports_to_sol(rewards_sol))
-                //             .as_str(),
-                //     );
-                //     miner.rewards_sol -= rewards_sol;
-                //     round_info.send(rewards_sol, &authority_info);
-                // } else {
-                //     sol_log(
-                //         &format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str(),
-                //     );
-                //     round_info.send(rewards_sol, &miner_info);
-                // }
+                if miner.auto_return > 0 {
+                    sol_log(
+                        &format!("Sending {} SOL to authority", lamports_to_sol(rewards_sol))
+                            .as_str(),
+                    );
+                    miner.rewards_sol -= rewards_sol;
+                    round_info.send(rewards_sol, &authority_info);
+                } else {
+                    sol_log(
+                        &format!("Sending {} SOL to miner", lamports_to_sol(rewards_sol)).as_str(),
+                    );
+                    round_info.send(rewards_sol, &miner_info);
+                }
             }
         }
     }
