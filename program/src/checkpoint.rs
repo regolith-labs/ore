@@ -19,6 +19,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         .has_address(&BOARD_ADDRESS)?
         .as_account::<Board>(&ore_api::ID)?;
     let miner = miner_info
+        .has_seeds(&[MINER, &authority_info.key.to_bytes()], &ore_api::ID)?
         .as_account_mut::<Miner>(&ore_api::ID)?
         .assert_mut(|m| m.authority == *authority_info.key)?;
     let treasury = treasury_info
