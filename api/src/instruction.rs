@@ -12,6 +12,7 @@ pub enum OreInstruction {
     Deploy = 6,
     Log = 8,
     Reset = 9,
+    #[deprecated(since = "3.8.15", note = "Rolled into checkpoint")]
     ReloadSOL = 21,
 
     // Admin
@@ -61,27 +62,6 @@ pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Mine {
-    pub nonce: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Swap {
-    pub amount: [u8; 8],
-    pub direction: u8,
-    pub precision: u8,
-    pub seed: [u8; 32],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Uncommit {
-    pub amount: [u8; 8],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetAdmin {
     pub admin: [u8; 32],
 }
@@ -114,6 +94,7 @@ pub struct Bury {
     pub amount: [u8; 8],
 }
 
+#[deprecated(since = "3.8.15", note = "Rolled into checkpoint")]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct ReloadSOL {}
