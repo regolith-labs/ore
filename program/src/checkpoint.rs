@@ -4,7 +4,7 @@ use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Checkpoints a miner's rewards.
-fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
+pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResult {
     // Load accounts.
     let clock = Clock::get()?;
     let [signer_info, authority_info, automation_info, board_info, miner_info, round_info, treasury_info, system_program] =
