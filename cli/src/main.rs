@@ -292,9 +292,34 @@ async fn claim(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix_sol = ore_api::sdk::claim_sol(payer.pubkey());
-    let ix_ore = ore_api::sdk::claim_ore(payer.pubkey());
-    submit_transaction(rpc, payer, &[ix_sol, ix_ore]).await?;
+    // Calculate rewards.
+    let recipient = std::env::var("RECIPIENT");
+    let authority = payer.pubkey();
+    let treasury: Treasury = get_treasury(&rpc).await?;
+    let mut miner = get_miner(&rpc, authority).await?;
+    miner.update_rewards(&treasury);
+
+    // Claim rewards.
+    let mut ixs = vec![];
+    ixs.push(ore_api::sdk::claim_sol(payer.pubkey()));
+    ixs.push(ore_api::sdk::claim_ore(payer.pubkey(), DENOMINATOR_BPS));
+
+    // Transfer rewards to miner.
+    if let Ok(recipient) = recipient {
+        if let Ok(recipient) = Pubkey::from_str(&recipient) {
+            ixs.push(spl_token::instruction::transfer(
+                &spl_token::ID,
+                &authority,
+                &recipient,
+                &authority,
+                &[&authority],
+                miner.rewards_ore + miner.refined_ore,
+            )?);
+        }
+    }
+
+    // Submit transaction.
+    submit_transaction(rpc, payer, &ixs).await?;
     Ok(())
 }
 
