@@ -104,11 +104,7 @@ impl Round {
     }
 
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {
-        if self.id >= 335_000 {
-            rng.reverse_bits() % 500 == 0
-        } else {
-            rng.reverse_bits() % 625 == 0
-        }
+        rng.reverse_bits() % 500 == 0
     }
 
     pub fn total_deployed(&self) -> u64 {
