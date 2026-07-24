@@ -276,7 +276,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             winning_square: winning_square as u64,
             top_miner: round.top_miner,
             motherlode: round.motherlode,
-            unique_miners: round.total_miners,
+            total_miners: round.total_miners,
             total_deployed: round.total_deployed(),
             total_vaulted: round.total_vaulted,
             total_winnings: round.total_winnings,
