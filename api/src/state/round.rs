@@ -152,11 +152,13 @@ impl Round {
             indices.swap(i, j);
             random_offset += 2;
         }
+
         // Set mask bits for the first 10 shuffled indices
         let mut mask: u32 = 0;
         for &idx in &indices[..BITS as usize] {
             mask |= 1 << idx;
         }
+
         // Only first 25 bits are used, highest 7 bits remain 0
         mask
     }
