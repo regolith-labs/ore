@@ -52,6 +52,10 @@ pub struct Round {
     /// The winner of the solo reward.
     /// TODO: Rename to winner.
     pub top_miner: Pubkey,
+
+    /// A binary mask that indicates how rewards are distribution on each tile.
+    /// If the bit is set, the reward on that tile is split.
+    pub distribution_mask: u64,
 }
 
 impl Round {
