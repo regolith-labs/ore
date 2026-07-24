@@ -30,8 +30,8 @@ pub struct ResetEvent {
     /// The top miner of the round.
     pub top_miner: Pubkey,
 
-    /// The number of miners on the winning square.
-    pub num_winners: u64,
+    /// The total number of miners in the round.
+    pub total_miners: u64,
 
     /// The amount of ORE payout for the motherlode.
     pub motherlode: u64,
