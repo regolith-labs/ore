@@ -118,22 +118,25 @@ impl Round {
 
     /// Generates a mask that indicates how rewards are distributed on each tile.
     /// The mask is a 32-bit integer where the first 25 bits represent the tiles.
-    /// The bits are set to 0 if the reward on that tile is not split.
-    /// The bits are set to 1 if the reward on that tile is split.
+    /// The bits are set to 0 if the reward on that tile is split.
+    /// The bits are set to 1 if the reward on that tile is not split.
     /// The mask is generated using a Fisher-Yates shuffle of the rng hash.
     /// The shuffle is done using a Fisher-Yates shuffle for unbiased selection.
     pub fn distribution_mask(&self) -> u32 {
         const BITS: u32 = 10;
         let rng = keccak::hashv(&[self.id.to_le_bytes().as_ref()]);
+
         // Deterministically select 10 unique indices out of 25 (first 25 bits)
         // using Fisher-Yates shuffle seeded from rng for reproducibility.
         let mut indices: [u8; 25] = [0; 25];
         for i in 0..25 {
             indices[i] = i as u8;
         }
+
         // Use bytes from the rng hash as randomness source
         let mut randomness = rng.0;
         let mut random_offset = 0;
+
         // Do a Fisher-Yates shuffle for unbiased selection
         for i in (1..25).rev() {
             // If we've used up all the randomness, rehash (although 32 bytes is plenty for this)
