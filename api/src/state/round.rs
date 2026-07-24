@@ -104,6 +104,12 @@ impl Round {
         r % 2 == 0
     }
 
+    /// Determines if the reward on a given tile (winning_square) is split under the new reward distribution.
+    /// Returns true if the reward is split (bit at winning_square index is 0), false otherwise.
+    pub fn is_split_reward_v2(&self, winning_square: usize) -> bool {
+        self.distribution_mask() & (1 << winning_square) == 0
+    }
+
     pub fn did_hit_motherlode(&self, rng: u64) -> bool {
         rng.reverse_bits() % 500 == 0
     }
