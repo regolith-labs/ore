@@ -50,13 +50,22 @@ pub struct AutomationConditions {
     /// Default: u64::MAX (no upper bound).
     pub max_production_cost: u64,
 
-    /// Min motherlode amount (ORE units). Deploy blocked if motherlode is below this.
+    /// Min motherlode amount (whole ORE units). Deploy blocked if motherlode is below this.
     /// Default: 0 (no lower bound).
-    pub min_motherlode: u64,
+    pub min_motherlode: u16,
 
-    /// Max motherlode amount (ORE units). Deploy blocked if motherlode exceeds this.
+    /// Max motherlode amount (whole ORE units). Deploy blocked if motherlode exceeds this.
     /// Default: u64::MAX (no upper bound).
-    pub max_motherlode: u64,
+    pub max_motherlode: u16,
+
+    /// Number of dust tiles to target.
+    pub dust_tiles: u16,
+
+    /// Number of nugget tiles to target.
+    pub nugget_tiles: u16,
+
+    /// Buffer space
+    pub _buffer: u64,
 }
 
 #[repr(u8)]
@@ -78,7 +87,10 @@ impl Default for AutomationConditions {
         Self {
             max_production_cost: u64::MAX,
             min_motherlode: 0,
-            max_motherlode: u64::MAX,
+            max_motherlode: u16::MAX,
+            dust_tiles: 0,
+            nugget_tiles: 0,
+            _buffer: 0,
         }
     }
 }
