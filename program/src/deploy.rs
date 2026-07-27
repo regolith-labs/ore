@@ -91,9 +91,19 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             AutomationStrategy::Random => {
                 // Random automation strategy. Generate a random mask based on number of squares user wants to deploy to.
                 amount = automation.amount;
-                let num_squares = ((automation.mask & 0xFF) as u64).min(25);
-                let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
-                squares = generate_random_mask(num_squares, &r);
+                // If first deploy, use the mask provided by the user.
+                if automation.total_sol_spent == 0 {
+                    for i in 0..25 {
+                        squares[i] = (automation.mask & (1 << i)) != 0;
+                    }
+                } else {
+                    // If not first deploy, generate a random mask based on number of squares user wants to deploy to.
+                    let num_squares = (0..25)
+                        .filter(|i| (automation.mask & (1 << i)) != 0)
+                        .count() as u64;
+                    let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
+                    squares = generate_random_mask(num_squares, &r);
+                }
             }
             AutomationStrategy::Discretionary => {
                 // Discretionary automation strategy. Use the executor's provided mask.

@@ -1,5 +1,7 @@
 use steel::*;
 
+use crate::state::AutomationConditions;
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {
@@ -24,6 +26,12 @@ pub enum OreInstruction {
     Liq = 25,
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
+pub enum OreInstructionV2 {
+    AutomateV2 = 0,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Automate {
@@ -33,6 +41,18 @@ pub struct Automate {
     pub mask: [u8; 8],
     pub strategy: u8,
     pub reload: [u8; 8],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct AutomateV2 {
+    pub amount: [u8; 8],
+    pub deposit: [u8; 8],
+    pub fee: [u8; 8],
+    pub mask: [u8; 8],
+    pub strategy: u8,
+    pub reload: [u8; 8],
+    pub conditions: [u8; 24],
 }
 
 #[repr(C)]
@@ -143,3 +163,4 @@ instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
 instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, NewVar);
+instruction!(OreInstructionV2, AutomateV2);

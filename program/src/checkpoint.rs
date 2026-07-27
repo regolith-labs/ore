@@ -67,6 +67,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     }
 
     // Calculate miner rewards.
+    let mut cost_sol = 0;
     let mut rewards_sol = 0;
     let mut rewards_ore = 0;
 
@@ -74,6 +75,13 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     if let Some(r) = round.rng() {
         // Get the winning square.
         let winning_square = round.winning_square(r) as usize;
+
+        // Calculate miner cost.
+        for i in 0..25 {
+            if i != winning_square {
+                cost_sol += miner.deployed[i];
+            }
+        }
 
         // If the miner deployed to the winning square, calculate rewards.
         if miner.deployed[winning_square] > 0 {
@@ -86,6 +94,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             // Calculate SOL rewards.
             let original_deployment = miner.deployed[winning_square];
             let admin_fee = (original_deployment / 100).max(1);
+            cost_sol += admin_fee;
             rewards_sol = original_deployment - admin_fee;
             rewards_sol += ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
                 / round.deployed[winning_square] as u128) as u64;
@@ -170,6 +179,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         let automation = automation_info
             .as_account_mut::<Automation>(&ore_api::ID)?
             .assert_mut(|a| a.authority == miner.authority)?;
+        automation.total_sol_spent += cost_sol;
         automation.total_ore_earned += rewards_ore;
         Some(automation)
     } else {

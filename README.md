@@ -1,6 +1,6 @@
 # ORE
 
-Future-proof electronic cash.
+Hard Money for the Digital Age.
 
 
 ## API
