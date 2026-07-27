@@ -91,6 +91,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
             AutomationStrategy::Random => {
                 // Random automation strategy. Generate a random mask based on number of squares user wants to deploy to.
                 amount = automation.amount;
+
                 // If first deploy, use the mask provided by the user.
                 if automation.total_sol_spent == 0 {
                     for i in 0..25 {
@@ -236,6 +237,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Transfer SOL.
     if let Some(automation) = automation {
+        // Update automation total sol spent.
+        automation.total_sol_spent += total_amount;
+
         // Calculate automation fee.
         let automation_fee = if is_first_deploy && total_amount > 0 {
             automation.fee

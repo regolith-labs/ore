@@ -58,11 +58,11 @@ pub struct AutomationConditions {
     /// Default: u64::MAX (no upper bound).
     pub max_motherlode: u16,
 
-    /// Number of dust tiles to target.
-    pub dust_tiles: u16,
+    /// Number of split tiles to target.
+    pub split_tiles: u16,
 
-    /// Number of nugget tiles to target.
-    pub nugget_tiles: u16,
+    /// Number of solo tiles to target.
+    pub solo_tiles: u16,
 
     /// Buffer space
     pub _buffer: u64,
@@ -88,8 +88,8 @@ impl Default for AutomationConditions {
             max_production_cost: u64::MAX,
             min_motherlode: 0,
             max_motherlode: u16::MAX,
-            dust_tiles: 0,
-            nugget_tiles: 0,
+            split_tiles: 0,
+            solo_tiles: 0,
             _buffer: 0,
         }
     }
