@@ -1,7 +1,5 @@
 use steel::*;
 
-use crate::state::AutomationConditions;
-
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, TryFromPrimitive)]
 pub enum OreInstruction {

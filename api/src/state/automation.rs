@@ -88,10 +88,23 @@ impl Default for AutomationConditions {
             max_production_cost: u64::MAX,
             min_motherlode: 0,
             max_motherlode: u16::MAX,
-            split_tiles: 0,
-            solo_tiles: 0,
+            split_tiles: u16::MAX,
+            solo_tiles: u16::MAX,
             _buffer: 0,
         }
+    }
+}
+
+impl AutomationConditions {
+    pub fn to_bytes(&self) -> [u8; 24] {
+        let mut bytes = [0; 24];
+        bytes[0..8].copy_from_slice(&self.max_production_cost.to_le_bytes());
+        bytes[8..10].copy_from_slice(&self.min_motherlode.to_le_bytes());
+        bytes[10..12].copy_from_slice(&self.max_motherlode.to_le_bytes());
+        bytes[12..14].copy_from_slice(&self.split_tiles.to_le_bytes());
+        bytes[14..16].copy_from_slice(&self.solo_tiles.to_le_bytes());
+        bytes[16..24].copy_from_slice(&self._buffer.to_le_bytes());
+        bytes
     }
 }
 

@@ -1,10 +1,34 @@
+use std::u64;
+
 use ore_api::prelude::*;
 use steel::*;
 
 /// Sets the executor.
 pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
     // Parse data.
-    let args = Automate::try_from_bytes(data)?;
+    let args = if let Ok(args) = AutomateV2::try_from_bytes(data) {
+        *args
+    } else if let Ok(args) = Automate::try_from_bytes(data) {
+        AutomateV2 {
+            amount: args.amount,
+            deposit: args.deposit,
+            fee: args.fee,
+            mask: args.mask,
+            strategy: args.strategy,
+            reload: args.reload,
+            conditions: AutomationConditions {
+                max_production_cost: u64::MAX,
+                min_motherlode: 0,
+                max_motherlode: u16::MAX,
+                split_tiles: u16::MAX,
+                solo_tiles: u16::MAX,
+                _buffer: 0,
+            }
+            .to_bytes(),
+        }
+    } else {
+        return Err(ProgramError::InvalidInstructionData);
+    };
     let amount = u64::from_le_bytes(args.amount);
     let deposit = u64::from_le_bytes(args.deposit);
     let fee = u64::from_le_bytes(args.fee);
