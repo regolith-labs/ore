@@ -97,16 +97,92 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     for i in 0..25 {
                         squares[i] = (automation.mask & (1 << i)) != 0;
                     }
+                } else if automation.conditions.solo_tiles > 0
+                    || automation.conditions.split_tiles > 0
+                {
+                    // User has a preferred solo / split strategy. Generate a mask based on this preferrence.
+
+                    // First generate the solo / split mask.
+                    let distribution_mask = round.distribution_mask();
+
+                    // Build squares array based on user's preferred solo and split tiles using fixed-size arrays.
+
+                    // First collect the indices of solos and splits (maximum 25 of each).
+                    let mut solo_idxs = [0usize; 25];
+                    let mut split_idxs = [0usize; 25];
+                    let mut num_solo = 0usize;
+                    let mut num_split = 0usize;
+                    for i in 0..25 {
+                        if (distribution_mask & (1 << i)) != 0 {
+                            solo_idxs[num_solo] = i;
+                            num_solo += 1;
+                        } else {
+                            split_idxs[num_split] = i;
+                            num_split += 1;
+                        }
+                    }
+
+                    let solo_pref = automation.conditions.solo_tiles as usize;
+                    let split_pref = automation.conditions.split_tiles as usize;
+
+                    // Build a random seed using user and round id for deterministic shuffle
+                    let mut seed = [0u8; 32];
+                    let h = hashv(&[
+                        &automation.authority.to_bytes(),
+                        &round.id.to_le_bytes(),
+                        b"solo_split_mask",
+                    ])
+                    .0;
+                    seed.copy_from_slice(&h);
+
+                    // Deterministic shuffle for solo and split index arrays in place
+                    fn deterministic_shuffle(idxs: &mut [usize], len: usize, seed: &[u8; 32]) {
+                        let mut local_seed = [0u8; 8];
+                        for i in (1..len).rev() {
+                            // Use 8 bytes from the 32-byte seed cycling per index
+                            let start = (i % (32 - 8 + 1)) as usize;
+                            local_seed.copy_from_slice(&seed[start..start + 8]);
+                            let hashval = u64::from_le_bytes(local_seed);
+                            let j = (hashval % (i as u64 + 1)) as usize;
+                            // Swap i <-> j
+                            let tmp = idxs[i];
+                            idxs[i] = idxs[j];
+                            idxs[j] = tmp;
+                        }
+                    }
+
+                    // Apply shuffle to both solo and split slice parts
+                    let (solo_idxs_slice, split_idxs_slice) =
+                        (&mut solo_idxs[..num_solo], &mut split_idxs[..num_split]);
+                    deterministic_shuffle(solo_idxs_slice, num_solo, &seed);
+                    deterministic_shuffle(split_idxs_slice, num_split, &seed);
+
+                    // Prepare the tiles to select
+                    let num_solo_to_select = num_solo.min(solo_pref);
+                    let num_split_to_select = num_split.min(split_pref);
+
+                    // Clear current squares
+                    for i in 0..25 {
+                        squares[i] = false;
+                    }
+
+                    // Set true on chosen solo tiles
+                    for n in 0..num_solo_to_select {
+                        squares[solo_idxs[n]] = true;
+                    }
+
+                    // Set true on chosen split tiles
+                    for n in 0..num_split_to_select {
+                        squares[split_idxs[n]] = true;
+                    }
                 } else {
-                    // If not first deploy, generate a random mask based on number of squares user wants to deploy to.
+                    // If not first deploy and no preferred solo / split strategy, generate a random mask based on number of squares user wants to deploy to.
                     let num_squares = (0..25)
                         .filter(|i| (automation.mask & (1 << i)) != 0)
                         .count() as u64;
                     let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
                     squares = generate_random_mask(num_squares, &r);
                 }
-
-                // TODO Handle preference for solo or split tiles.
             }
             AutomationStrategy::Discretionary => {
                 // Discretionary automation strategy. Use the executor's provided mask.
