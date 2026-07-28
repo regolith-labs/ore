@@ -90,8 +90,8 @@ impl Default for AutomationConditions {
             max_production_cost: u64::MAX,
             min_motherlode: 0,
             max_motherlode: u16::MAX,
-            split_tiles: u16::MAX,
-            solo_tiles: u16::MAX,
+            split_tiles: 0,
+            solo_tiles: 0,
             _buffer: 0,
         }
     }
