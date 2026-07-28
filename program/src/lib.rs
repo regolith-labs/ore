@@ -8,7 +8,6 @@ mod close;
 mod deploy;
 mod log;
 mod new_var;
-mod reload_sol;
 mod reset;
 mod set_admin;
 mod wrap;
@@ -23,7 +22,6 @@ use close::*;
 use deploy::*;
 use log::*;
 use new_var::*;
-use reload_sol::*;
 use reset::*;
 use set_admin::*;
 use wrap::*;
@@ -49,7 +47,6 @@ pub fn process_instruction(
         OreInstruction::Log => process_log(accounts, data)?,
         OreInstruction::Close => process_close(accounts, data)?,
         OreInstruction::Reset => process_reset(accounts, data)?,
-        OreInstruction::ReloadSOL => process_reload_sol(accounts, data)?,
 
         // Admin
         OreInstruction::Buyback => process_buyback(accounts, data)?,

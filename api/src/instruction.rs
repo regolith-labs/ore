@@ -12,8 +12,6 @@ pub enum OreInstruction {
     Deploy = 6,
     Log = 8,
     Reset = 9,
-    #[deprecated(since = "3.8.15", note = "Rolled into checkpoint")]
-    ReloadSOL = 21,
 
     // Admin
     Buyback = 13,
@@ -112,11 +110,6 @@ pub struct Bury {
     pub amount: [u8; 8],
 }
 
-#[deprecated(since = "3.8.15", note = "Rolled into checkpoint")]
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct ReloadSOL {}
-
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct Checkpoint {}
@@ -152,7 +145,6 @@ instruction!(OreInstruction, Close);
 instruction!(OreInstruction, Checkpoint);
 instruction!(OreInstruction, ClaimSOL);
 instruction!(OreInstruction, ClaimORE);
-instruction!(OreInstruction, ReloadSOL);
 instruction!(OreInstruction, Deploy);
 instruction!(OreInstruction, Log);
 instruction!(OreInstruction, Wrap);

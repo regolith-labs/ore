@@ -367,23 +367,6 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
     }
 }
 
-// let [signer_info, automation_info, miner_info, system_program] = accounts else {
-
-pub fn reload_sol(signer: Pubkey, authority: Pubkey) -> Instruction {
-    let automation_address = automation_pda(authority).0;
-    let miner_address = miner_pda(authority).0;
-    Instruction {
-        program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new(signer, true),
-            AccountMeta::new(automation_address, false),
-            AccountMeta::new(miner_address, false),
-            AccountMeta::new_readonly(system_program::ID, false),
-        ],
-        data: ReloadSOL {}.to_bytes(),
-    }
-}
-
 pub fn new_var(
     signer: Pubkey,
     provider: Pubkey,
