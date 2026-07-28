@@ -16,15 +16,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
             mask: args.mask,
             strategy: args.strategy,
             reload: args.reload,
-            conditions: AutomationConditions {
-                max_production_cost: u64::MAX,
-                min_motherlode: 0,
-                max_motherlode: u16::MAX,
-                split_tiles: u16::MAX,
-                solo_tiles: u16::MAX,
-                _buffer: 0,
-            }
-            .to_bytes(),
+            conditions: AutomationConditions::default().to_bytes(),
         }
     } else {
         return Err(ProgramError::InvalidInstructionData);
