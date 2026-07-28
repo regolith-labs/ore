@@ -31,7 +31,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
 
     // Validate conditions.
     // If the user has specified a preference for solo or split tiles, they must use the Random strategy.
-    if (conditions.solo_tiles != u16::MAX || conditions.split_tiles != u16::MAX)
+    if (conditions.solo_tiles != 0 || conditions.split_tiles != 0)
         && strategy == AutomationStrategy::Random
     {
         return Err(ProgramError::InvalidInstructionData);
