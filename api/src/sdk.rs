@@ -33,6 +33,7 @@ pub fn automate(
     mask: u64,
     strategy: u8,
     reload: bool,
+    conditions: AutomationConditions,
 ) -> Instruction {
     let automation_address = automation_pda(signer).0;
     let miner_address = miner_pda(signer).0;
@@ -45,13 +46,14 @@ pub fn automate(
             AccountMeta::new(miner_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
-        data: Automate {
+        data: AutomateV2 {
             amount: amount.to_le_bytes(),
             deposit: deposit.to_le_bytes(),
             fee: fee.to_le_bytes(),
             mask: mask.to_le_bytes(),
             strategy: strategy as u8,
             reload: (reload as u64).to_le_bytes(),
+            conditions: conditions.to_bytes(),
         }
         .to_bytes(),
     }

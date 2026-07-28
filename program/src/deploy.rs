@@ -97,8 +97,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     for i in 0..25 {
                         squares[i] = (automation.mask & (1 << i)) != 0;
                     }
-                } else if automation.conditions.solo_tiles != 0
-                    || automation.conditions.split_tiles != 0
+                } else if automation.conditions.solo_tiles > 0
+                    || automation.conditions.split_tiles > 0
                 {
                     // User has a preferred solo / split strategy. Generate a mask based on this preferrence.
 
