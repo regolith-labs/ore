@@ -3,11 +3,11 @@ resolver = "2"
 members = ["api", "program"]
 
 [workspace.package]
-version = "3.8.16"
+version = "3.8.17"
 edition = "2021"
 license = "Apache-2.0"
 homepage = "https://ore.com"
-description = "Future-proof electronic cash."
+description = "Hard Money for the Digital Age."
 documentation = "https://docs.rs/ore-api/latest/ore_api/"
 repository = "https://github.com/regolith-labs/ore"
 readme = "./README.md"
