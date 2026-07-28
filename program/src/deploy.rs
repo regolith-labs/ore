@@ -105,6 +105,8 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     let r = hashv(&[&automation.authority.to_bytes(), &round.id.to_le_bytes()]).0;
                     squares = generate_random_mask(num_squares, &r);
                 }
+
+                // TODO Handle preference for solo or split tiles.
             }
             AutomationStrategy::Discretionary => {
                 // Discretionary automation strategy. Use the executor's provided mask.

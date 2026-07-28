@@ -59,12 +59,14 @@ pub struct AutomationConditions {
     pub max_motherlode: u16,
 
     /// Number of split tiles to target.
+    /// Default: u16::MAX (no preference).
     pub split_tiles: u16,
 
     /// Number of solo tiles to target.
+    /// Default: u16::MAX (no preference).
     pub solo_tiles: u16,
 
-    /// Buffer space
+    /// Unused buffer space.
     pub _buffer: u64,
 }
 
@@ -105,6 +107,17 @@ impl AutomationConditions {
         bytes[14..16].copy_from_slice(&self.solo_tiles.to_le_bytes());
         bytes[16..24].copy_from_slice(&self._buffer.to_le_bytes());
         bytes
+    }
+
+    pub fn from_bytes(bytes: [u8; 24]) -> Self {
+        Self {
+            max_production_cost: u64::from_le_bytes(bytes[0..8].try_into().unwrap()),
+            min_motherlode: u16::from_le_bytes(bytes[8..10].try_into().unwrap()),
+            max_motherlode: u16::from_le_bytes(bytes[10..12].try_into().unwrap()),
+            split_tiles: u16::from_le_bytes(bytes[12..14].try_into().unwrap()),
+            solo_tiles: u16::from_le_bytes(bytes[14..16].try_into().unwrap()),
+            _buffer: u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
+        }
     }
 }
 

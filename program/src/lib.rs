@@ -7,6 +7,7 @@ mod claim_sol;
 mod close;
 mod deploy;
 mod log;
+mod migrate;
 mod new_var;
 mod reload_sol;
 mod reset;
@@ -22,6 +23,7 @@ use claim_sol::*;
 use close::*;
 use deploy::*;
 use log::*;
+use migrate::*;
 use new_var::*;
 use reload_sol::*;
 use reset::*;
@@ -58,6 +60,9 @@ pub fn process_instruction(
         OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
         OreInstruction::Liq => return Err(ProgramError::InvalidInstructionData),
+
+        // Migrate
+        OreInstruction::Migrate => process_migrate(accounts, data)?,
     }
 
     Ok(())

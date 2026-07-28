@@ -35,6 +35,15 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     let mask = u64::from_le_bytes(args.mask);
     let strategy = AutomationStrategy::from_u64(args.strategy as u64);
     let reload = u64::from_le_bytes(args.reload) > 0;
+    let conditions = AutomationConditions::from_bytes(args.conditions);
+
+    // Validate conditions.
+    // If the user has specified a preference for solo or split tiles, they must use the Random strategy.
+    if (conditions.solo_tiles != u16::MAX || conditions.split_tiles != u16::MAX)
+        && strategy == AutomationStrategy::Random
+    {
+        return Err(ProgramError::InvalidInstructionData);
+    }
 
     // Load accounts.
     let [signer_info, automation_info, executor_info, miner_info, system_program] = accounts else {
@@ -122,6 +131,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     automation.mask = mask;
     automation.strategy = strategy as u64;
     automation.reload = reload as u64;
+    automation.conditions = conditions;
 
     // Top up checkpoint fee.
     if miner.checkpoint_fee == 0 {
