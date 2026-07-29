@@ -93,6 +93,7 @@ impl Round {
         total_winnings
     }
 
+    #[deprecated(since = "3.8.19", note = "Use is_split_reward_v2 instead")]
     pub fn is_split_reward(&self, rng: u64) -> bool {
         // One out of four rounds get split rewards.
         let rng = rng.reverse_bits().to_le_bytes();

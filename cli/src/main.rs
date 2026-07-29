@@ -491,14 +491,16 @@ async fn calculate_top_miner(
     // Fetch round account
     let round = get_round(rpc, round_id).await?;
 
+    // Calculate winning square and sample
+    let winning_square = round.winning_square(r) as usize;
+
     // Check if split
-    if round.is_split_reward(r) {
+    if round.is_split_reward_v2(winning_square) {
         println!("Round {} is split, no top miner needed", round_id);
         return Ok(Pubkey::default());
     }
 
-    // Calculate winning square and sample
-    let winning_square = round.winning_square(r) as usize;
+    // Calculate top miner sample
     let top_miner_sample = round.top_miner_sample(r, winning_square);
 
     println!(
