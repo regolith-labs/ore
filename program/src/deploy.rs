@@ -41,7 +41,7 @@ pub fn process_deploy_v2(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         .has_seeds(&[ROUND, &board.round_id.to_le_bytes()], &ore_api::ID)?
         .as_account_mut::<Round>(&ore_api::ID)?
         .assert_mut(|r| r.id == board.round_id)?;
-    let _treasury = treasury_info
+    let treasury = treasury_info
         .has_address(&TREASURY_ADDRESS)?
         .as_account_mut::<Treasury>(&ore_api::ID)?;
     miner_info
@@ -74,7 +74,7 @@ pub fn process_deploy_v2(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
         )?;
     }
 
-    // Check if signer is the automation executor.
+    // Get the automation.
     let mut strategy = u64::MAX;
     let automation = if !automation_info.data_is_empty() {
         let automation = automation_info
@@ -82,6 +82,14 @@ pub fn process_deploy_v2(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRe
             .assert_mut(|a| a.executor == *signer_info.key || a.executor == EXECUTOR_ADDRESS)?
             .assert_mut(|a| a.authority == *authority_info.key)?;
 
+        // Conditional deploy.
+        let max_motherlode = automation.conditions.max_motherlode as u64 * ONE_ORE;
+        let min_motherlode = automation.conditions.min_motherlode as u64 * ONE_ORE;
+        if treasury.motherlode > max_motherlode || treasury.motherlode < min_motherlode {
+            return Ok(());
+        }
+
+        // Set strategy.
         strategy = automation.strategy as u64;
         Some(automation)
     } else {
