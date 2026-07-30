@@ -119,6 +119,7 @@ pub fn deploy(
     let config_address = config_pda().0;
     let miner_address = miner_pda(authority).0;
     let round_address = round_pda(round_id).0;
+    let treasury_address = treasury_pda().0;
     let entropy_var_address = entropy_api::state::var_pda(board_address, 0).0;
 
     // Convert array of 25 booleans into a 32-bit mask where each bit represents whether
@@ -140,6 +141,7 @@ pub fn deploy(
             AccountMeta::new(config_address, false),
             AccountMeta::new(miner_address, false),
             AccountMeta::new(round_address, false),
+            AccountMeta::new(treasury_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
             AccountMeta::new_readonly(crate::ID, false),
             // Entropy accounts.
