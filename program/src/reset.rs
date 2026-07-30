@@ -205,7 +205,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round.rewards[0] = mint_amount;
 
     // With 1 in 2 odds, split the +1 ORE reward.
-    if round.is_split_reward_v2(winning_square) {
+    if round.is_split_reward(winning_square) {
         round.top_miner = SPLIT_ADDRESS;
     }
 

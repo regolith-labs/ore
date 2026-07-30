@@ -93,21 +93,9 @@ impl Round {
         total_winnings
     }
 
-    #[deprecated(since = "3.8.19", note = "Use is_split_reward_v2 instead")]
-    pub fn is_split_reward(&self, rng: u64) -> bool {
-        // One out of four rounds get split rewards.
-        let rng = rng.reverse_bits().to_le_bytes();
-        let r1 = u16::from_le_bytes(rng[0..2].try_into().unwrap());
-        let r2 = u16::from_le_bytes(rng[2..4].try_into().unwrap());
-        let r3 = u16::from_le_bytes(rng[4..6].try_into().unwrap());
-        let r4 = u16::from_le_bytes(rng[6..8].try_into().unwrap());
-        let r = r1 ^ r2 ^ r3 ^ r4;
-        r % 2 == 0
-    }
-
     /// Determines if the reward on a given tile (winning_square) is split under the new reward distribution.
     /// Returns true if the reward is split (bit at winning_square index is 0), false otherwise.
-    pub fn is_split_reward_v2(&self, winning_square: usize) -> bool {
+    pub fn is_split_reward(&self, winning_square: usize) -> bool {
         self.distribution_mask() & (1 << winning_square) == 0
     }
 

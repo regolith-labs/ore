@@ -495,7 +495,7 @@ async fn calculate_top_miner(
     let winning_square = round.winning_square(r) as usize;
 
     // Check if split
-    if round.is_split_reward_v2(winning_square) {
+    if round.is_split_reward(winning_square) {
         println!("Round {} is split, no top miner needed", round_id);
         return Ok(Pubkey::default());
     }
