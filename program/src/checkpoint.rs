@@ -75,67 +75,80 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         // Get the winning square.
         let winning_square = round.winning_square(r) as usize;
 
-        // If the miner deployed to the winning square, calculate rewards.
-        if miner.deployed[winning_square] > 0 {
-            // Sanity check.
-            assert!(
-                round.deployed[winning_square] >= miner.deployed[winning_square],
-                "Invalid round deployed amount"
-            );
+        // Iterate over all squares.
+        for i in 0..25 {
+            // Continue if miner did not deploy to this square.
+            if miner.deployed[i] == 0 {
+                continue;
+            }
 
-            // Calculate SOL rewards.
-            let original_deployment = miner.deployed[winning_square];
-            let admin_fee = (original_deployment / 100).max(1);
-            rewards_sol = original_deployment - admin_fee;
-            rewards_sol += ((round.total_winnings as u128 * miner.deployed[winning_square] as u128)
-                / round.deployed[winning_square] as u128) as u64;
-            sol_log(&format!("Base rewards: {} SOL", lamports_to_sol(rewards_sol)).as_str());
-
-            // Calculate ORE rewards.
-            if round.top_miner == SPLIT_ADDRESS {
-                // If round is split, split the reward evenly among all miners.
-                rewards_ore = ((round.top_miner_reward() as u128
-                    * miner.deployed[winning_square] as u128)
-                    / round.deployed[winning_square] as u128) as u64;
-                sol_log(
-                    &format!(
-                        "Split rewards: {} ORE",
-                        amount_to_ui_amount(rewards_ore, TOKEN_DECIMALS)
-                    )
-                    .as_str(),
+            // Miner deployed to the winning square.
+            if i == winning_square {
+                // Sanity check.
+                assert!(
+                    round.deployed[winning_square] >= miner.deployed[winning_square],
+                    "Invalid round deployed amount"
                 );
-            } else {
-                // If round is not split, payout to the top miner.
-                let top_miner_sample = round.top_miner_sample(r, winning_square);
-                if top_miner_sample >= miner.cumulative[winning_square]
-                    && top_miner_sample
-                        < miner.cumulative[winning_square] + miner.deployed[winning_square]
-                {
-                    rewards_ore = round.top_miner_reward();
-                    round.top_miner = miner.authority;
+
+                // Calculate SOL rewards.
+                let original_deployment = miner.deployed[winning_square];
+                let admin_fee = (original_deployment / 100).max(1);
+                rewards_sol += original_deployment - admin_fee;
+
+                // Calculate ORE rewards.
+                if round.top_miner == SPLIT_ADDRESS {
+                    // If round is split, split the reward evenly among all miners.
+                    rewards_ore = ((round.top_miner_reward() as u128
+                        * miner.deployed[winning_square] as u128)
+                        / round.deployed[winning_square] as u128)
+                        as u64;
                     sol_log(
                         &format!(
-                            "Top miner rewards: {} ORE",
+                            "Split rewards: {} ORE",
                             amount_to_ui_amount(rewards_ore, TOKEN_DECIMALS)
                         )
                         .as_str(),
                     );
+                } else {
+                    // If round is not split, payout to the top miner.
+                    let top_miner_sample = round.top_miner_sample(r, winning_square);
+                    if top_miner_sample >= miner.cumulative[winning_square]
+                        && top_miner_sample
+                            < miner.cumulative[winning_square] + miner.deployed[winning_square]
+                    {
+                        rewards_ore = round.top_miner_reward();
+                        round.top_miner = miner.authority;
+                        sol_log(
+                            &format!(
+                                "Top miner rewards: {} ORE",
+                                amount_to_ui_amount(rewards_ore, TOKEN_DECIMALS)
+                            )
+                            .as_str(),
+                        );
+                    }
                 }
-            }
 
-            // Calculate motherlode rewards.
-            if round.motherlode > 0 {
-                let motherload_rewards =
-                    ((round.motherlode as u128 * miner.deployed[winning_square] as u128)
-                        / round.deployed[winning_square] as u128) as u64;
-                sol_log(
-                    &format!(
-                        "Motherlode rewards: {} ORE",
-                        amount_to_ui_amount(motherload_rewards, TOKEN_DECIMALS)
-                    )
-                    .as_str(),
-                );
-                rewards_ore += motherload_rewards;
+                // Calculate motherlode rewards.
+                if round.motherlode > 0 {
+                    let motherload_rewards = ((round.motherlode as u128
+                        * miner.deployed[winning_square] as u128)
+                        / round.deployed[winning_square] as u128)
+                        as u64;
+                    sol_log(
+                        &format!(
+                            "Motherlode rewards: {} ORE",
+                            amount_to_ui_amount(motherload_rewards, TOKEN_DECIMALS)
+                        )
+                        .as_str(),
+                    );
+                    rewards_ore += motherload_rewards;
+                }
+            } else {
+                // Calculate returned SOL rewards.
+                let original_deployment = miner.deployed[i];
+                let admin_fee = (original_deployment / 100).max(1);
+                let protocol_fee = (original_deployment / 10).max(1);
+                rewards_sol += original_deployment - admin_fee - protocol_fee;
             }
         }
     } else {
