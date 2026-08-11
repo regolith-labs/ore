@@ -97,6 +97,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         // Slot hash could not be found, refund all SOL.
         round.total_vaulted = 0;
         round.total_returned_sol = round.total_deployed();
+        round.deployed = [0; 25];
 
         // Emit event.
         program_log(

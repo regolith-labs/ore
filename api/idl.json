@@ -1017,7 +1017,7 @@
                         "type": "u64"
                     },
                     {
-                        "name": "total_winnings",
+                        "name": "total_returned_sol",
                         "type": "u64"
                     },
                     {
@@ -1220,7 +1220,7 @@
                     "index": false
                 },
                 {
-                    "name": "total_winnings",
+                    "name": "total_returned_sol",
                     "type": "u64",
                     "index": false
                 },
