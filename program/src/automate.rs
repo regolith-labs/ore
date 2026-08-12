@@ -46,10 +46,7 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
     system_program.is_program(&system_program::ID)?;
 
     // Do not allow permissionless execution with discretionary strategy.
-    if (strategy == AutomationStrategy::Discretionary
-        || strategy == AutomationStrategy::DiscretionaryBps)
-        && *executor_info.key == EXECUTOR_ADDRESS
-    {
+    if strategy == AutomationStrategy::Discretionary && *executor_info.key == EXECUTOR_ADDRESS {
         return Err(OreError::InvalidExecutor.into());
     }
 
@@ -117,11 +114,6 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
                 OreError::NotAuthorized.into(),
             )?
     };
-
-    // Validate fee bps.
-    if strategy == AutomationStrategy::DiscretionaryBps {
-        assert!(fee <= 100, "Fee bps must be less than 1%");
-    }
 
     // Set strategy and mask.
     automation.amount = amount;
