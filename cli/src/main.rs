@@ -113,6 +113,15 @@ async fn main() {
         "audit_curves" => {
             audit_curves(&rpc).await.unwrap();
         }
+        "uncheckpointed" => {
+            uncheckpointed(&rpc).await.unwrap();
+        }
+        "checkpoint_backfill" => {
+            checkpoint_backfill(&rpc, &payer).await.unwrap();
+        }
+        "topup_rounds" => {
+            topup_rounds(&rpc, &payer).await.unwrap();
+        }
         _ => panic!("Invalid command"),
     };
 }
@@ -925,6 +934,228 @@ fn print_board(board: Board, clock: &Clock) {
         "  Production cost: {:?} SOL",
         lamports_to_sol(board.production_cost_ema)
     );
+}
+
+async fn uncheckpointed(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+    let board = get_board(rpc).await?;
+    println!("Current round: {}", board.round_id);
+    println!("Fetching all miners...");
+    let miners = get_miners(rpc).await?;
+    println!("Total miners: {}", miners.len());
+
+    // Find miners with uncheckpointed rounds
+    let mut rounds: HashMap<u64, Vec<(Pubkey, u64)>> = HashMap::new();
+    for (addr, miner) in &miners {
+        if miner.checkpoint_id < miner.round_id {
+            rounds
+                .entry(miner.round_id)
+                .or_default()
+                .push((*addr, miner.deployed.iter().sum::<u64>()));
+        }
+    }
+
+    if rounds.is_empty() {
+        println!("\nNo uncheckpointed miners found.");
+        return Ok(());
+    }
+
+    // Sort by round ID
+    let mut round_ids: Vec<u64> = rounds.keys().copied().collect();
+    round_ids.sort();
+
+    println!("\n--- Uncheckpointed Miners by Round ---");
+    for round_id in round_ids {
+        let miners = &rounds[&round_id];
+        let total_deployed: u64 = miners.iter().map(|(_, d)| d).sum();
+        let is_current = round_id == board.round_id;
+        println!(
+            "\nRound {} ({}) — {} miners, {} SOL deployed",
+            round_id,
+            if is_current { "current" } else { "past" },
+            miners.len(),
+            lamports_to_sol(total_deployed),
+        );
+        for (addr, deployed) in miners {
+            println!("  {} — {} SOL", addr, lamports_to_sol(*deployed));
+        }
+    }
+
+    Ok(())
+}
+
+async fn topup_rounds(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let cutoff_round: u64 = std::env::var("CUTOFF_ROUND")
+        .unwrap_or("364830".to_string())
+        .parse()
+        .expect("Invalid CUTOFF_ROUND");
+
+    println!("Fetching all miners...");
+    let miners = get_miners(rpc).await?;
+
+    // Find insolvent rounds: group uncheckpointed miners by round.
+    let mut round_miners: HashMap<u64, Vec<(Pubkey, [u64; 25])>> = HashMap::new();
+    for (_addr, miner) in &miners {
+        if miner.checkpoint_id < miner.round_id && miner.round_id <= cutoff_round {
+            round_miners
+                .entry(miner.round_id)
+                .or_default()
+                .push((miner.authority, miner.deployed));
+        }
+    }
+
+    if round_miners.is_empty() {
+        println!("No insolvent rounds found.");
+        return Ok(());
+    }
+
+    let rent = Rent::default();
+    let round_rent_exempt = rent.minimum_balance(std::mem::size_of::<Round>() + 8);
+
+    let mut round_ids: Vec<u64> = round_miners.keys().copied().collect();
+    round_ids.sort();
+
+    let mut total_topup = 0u64;
+    let mut transfers: Vec<(Pubkey, u64)> = Vec::new();
+
+    for round_id in &round_ids {
+        let round_pda = ore_api::state::round_pda(*round_id).0;
+
+        // Get current round account balance.
+        let balance = rpc.get_balance(&round_pda).await?;
+
+        // Get round data to find winning square.
+        let round = get_round(rpc, *round_id).await?;
+        let rng = round.rng();
+
+        // Calculate total owed to uncheckpointed miners.
+        let mut total_owed = 0u64;
+        if let Some(r) = rng {
+            let winning_square = round.winning_square(r) as usize;
+            for (_authority, deployed) in &round_miners[round_id] {
+                if deployed[winning_square] > 0 {
+                    // Winning square: deployment minus admin fee + parimutuel share.
+                    let dep = deployed[winning_square];
+                    let admin_fee = (dep / 100).max(1);
+                    let base = dep - admin_fee;
+                    let parimutuel = ((round.total_returned_sol as u128 * dep as u128)
+                        / round.deployed[winning_square] as u128) as u64;
+                    total_owed += base + parimutuel;
+                }
+                // Losers get 0 under old parimutuel logic.
+            }
+        } else {
+            // No RNG — full refund for all miners.
+            for (_authority, deployed) in &round_miners[round_id] {
+                total_owed += deployed.iter().sum::<u64>();
+            }
+        }
+
+        // Calculate deficit.
+        let needed = total_owed + round_rent_exempt;
+        let deficit = needed.saturating_sub(balance);
+
+        println!(
+            "Round {} — balance: {} SOL, owed: {} SOL, rent: {} SOL, deficit: {} SOL",
+            round_id,
+            lamports_to_sol(balance),
+            lamports_to_sol(total_owed),
+            lamports_to_sol(round_rent_exempt),
+            lamports_to_sol(deficit),
+        );
+
+        if deficit > 0 {
+            transfers.push((round_pda, deficit));
+            total_topup += deficit;
+        }
+    }
+
+    if transfers.is_empty() {
+        println!("\nAll rounds are solvent.");
+        return Ok(());
+    }
+
+    println!(
+        "\nTotal top-up needed: {} SOL across {} rounds",
+        lamports_to_sol(total_topup),
+        transfers.len()
+    );
+    println!("Payer balance: {} SOL", lamports_to_sol(rpc.get_balance(&payer.pubkey()).await?));
+    println!("\nSending transfers...");
+
+    for (round_pda, amount) in &transfers {
+        let ix = solana_sdk::system_instruction::transfer(&payer.pubkey(), round_pda, *amount);
+        match submit_transaction_no_confirm(rpc, payer, &[ix]).await {
+            Ok(sig) => println!("  {} — sent {} SOL ({})", round_pda, lamports_to_sol(*amount), sig),
+            Err(e) => println!("  {} — FAILED: {}", round_pda, e),
+        }
+    }
+
+    println!("\nDone. Now re-run checkpoint_backfill.");
+    Ok(())
+}
+
+async fn checkpoint_backfill(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
+    let cutoff_round: u64 = std::env::var("CUTOFF_ROUND")
+        .unwrap_or("364830".to_string())
+        .parse()
+        .expect("Invalid CUTOFF_ROUND");
+
+    println!("Fetching all miners...");
+    let miners = get_miners(rpc).await?;
+    println!("Total miners: {}", miners.len());
+
+    // Find miners with uncheckpointed rounds at or before the cutoff.
+    let mut targets: Vec<(Pubkey, u64)> = Vec::new();
+    for (_addr, miner) in &miners {
+        if miner.checkpoint_id < miner.round_id && miner.round_id <= cutoff_round {
+            targets.push((miner.authority, miner.round_id));
+        }
+    }
+
+    // Sort by round ID.
+    targets.sort_by_key(|(_, round_id)| *round_id);
+
+    println!(
+        "\nFound {} miners to checkpoint (rounds <= {})",
+        targets.len(),
+        cutoff_round
+    );
+
+    if targets.is_empty() {
+        return Ok(());
+    }
+
+    // Print summary.
+    for (authority, round_id) in &targets {
+        println!("  {} — round {}", authority, round_id);
+    }
+
+    // Build checkpoint instructions.
+    let ixs: Vec<Instruction> = targets
+        .iter()
+        .map(|(authority, round_id)| {
+            ore_api::sdk::checkpoint(payer.pubkey(), *authority, *round_id)
+        })
+        .collect();
+
+    // Fire all off, one at a time, skipping failures.
+    let total = ixs.len();
+    for (i, ix) in ixs.iter().enumerate() {
+        println!("[{}/{}] round {} — {}", i + 1, total, targets[i].1, targets[i].0);
+        match submit_transaction_no_confirm(rpc, payer, &[ix.clone()]).await {
+            Ok(sig) => println!("  sent: {}", sig),
+            Err(e) => println!("  FAILED: {}", e),
+        }
+    }
+
+    println!("\nDone. Attempted {} checkpoint transactions.", total);
+    Ok(())
 }
 
 async fn get_automations(rpc: &RpcClient) -> Result<Vec<(Pubkey, Automation)>, anyhow::Error> {
