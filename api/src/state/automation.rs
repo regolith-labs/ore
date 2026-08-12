@@ -127,6 +127,14 @@ impl Automation {
         automation_pda(self.authority)
     }
 
+    pub fn min_fee(&self, deploy_amount: u64) -> u64 {
+        if self.strategy == AutomationStrategy::DiscretionaryBps as u64 {
+            ((deploy_amount as u128 * self.fee as u128) / crate::consts::DENOMINATOR_BPS as u128) as u64
+        } else {
+            self.fee
+        }
+    }
+
     pub fn production_cost(&self) -> u64 {
         if self.total_ore_earned == 0 {
             return 0;
