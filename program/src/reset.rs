@@ -182,7 +182,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Validate top miner (dry-run - no errors on failure).
     sol_log(&format!("Winning square: {}", winning_square).to_string());
-    if round.top_miner != SPLIT_ADDRESS {
+    if round.top_miner != SPLIT_ADDRESS && round.deployed[winning_square] > 0 {
         if let Ok(miner) = top_miner_info.as_account::<Miner>(&ore_api::ID) {
             if miner.round_id == round.id {
                 let top_miner_sample = round.top_miner_sample(r, winning_square);
