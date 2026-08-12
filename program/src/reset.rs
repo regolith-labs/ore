@@ -134,7 +134,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Get the protocol fee.
     let (admin_fee, protocol_fee) = round.calculate_fees(winning_square);
-    round.total_returned_sol = round.total_deployed() - admin_fee - protocol_fee;
+    round.total_returned_sol = round.total_deployed().saturating_sub(admin_fee + protocol_fee);
     round.total_vaulted = protocol_fee;
 
     // Calculate mint amounts.

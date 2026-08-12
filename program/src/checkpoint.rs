@@ -148,7 +148,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 let original_deployment = miner.deployed[i];
                 let admin_fee = (original_deployment / 100).max(1);
                 let protocol_fee = ((original_deployment - admin_fee) / 10).max(1);
-                rewards_sol += original_deployment - admin_fee - protocol_fee;
+                rewards_sol += original_deployment.saturating_sub(admin_fee + protocol_fee);
             }
         }
     } else {
