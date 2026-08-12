@@ -91,7 +91,7 @@ impl Round {
                 let sq_admin = ((deployed / 100) as u64).max(1);
                 admin_fee += sq_admin;
                 if i != winning_square {
-                    protocol_fee += (((deployed - sq_admin) / 10) as u64).max(1);
+                    protocol_fee += ((deployed.saturating_sub(sq_admin) / 10) as u64).max(1);
                 }
             }
         }
