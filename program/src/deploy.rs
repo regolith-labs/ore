@@ -9,7 +9,6 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let args = Deploy::try_from_bytes(data)?;
     let mut amount = u64::from_le_bytes(args.amount);
     let mask = u32::from_le_bytes(args.squares);
-
     // Load accounts.
     let clock = Clock::get()?;
     let (ore_accounts, entropy_accounts) = accounts.split_at(10);

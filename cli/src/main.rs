@@ -1144,17 +1144,10 @@ async fn checkpoint_backfill(
         })
         .collect();
 
-    // Fire all off, one at a time, skipping failures.
-    let total = ixs.len();
-    for (i, ix) in ixs.iter().enumerate() {
-        println!("[{}/{}] round {} — {}", i + 1, total, targets[i].1, targets[i].0);
-        match submit_transaction_no_confirm(rpc, payer, &[ix.clone()]).await {
-            Ok(sig) => println!("  sent: {}", sig),
-            Err(e) => println!("  FAILED: {}", e),
-        }
-    }
+    // Fire all off in batches, skipping failures.
+    submit_transaction_batches(rpc, payer, ixs, 5).await?;
 
-    println!("\nDone. Attempted {} checkpoint transactions.", total);
+    println!("\nDone. Attempted {} checkpoint transactions.", targets.len());
     Ok(())
 }
 
