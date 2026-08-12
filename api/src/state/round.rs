@@ -88,9 +88,10 @@ impl Round {
         let mut protocol_fee = 0;
         for (i, &deployed) in self.deployed.iter().enumerate() {
             if deployed > 0 {
-                admin_fee += ((deployed / 100) as u64).max(1);
+                let sq_admin = ((deployed / 100) as u64).max(1);
+                admin_fee += sq_admin;
                 if i != winning_square {
-                    protocol_fee += ((deployed / 10) as u64).max(1);
+                    protocol_fee += (((deployed - sq_admin) / 10) as u64).max(1);
                 }
             }
         }
