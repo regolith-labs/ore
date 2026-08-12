@@ -812,8 +812,8 @@ async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
         lamports_to_sol(round.total_vaulted)
     );
     println!(
-        "  Total winnings: {} SOL",
-        lamports_to_sol(round.total_winnings)
+        "  Total returned SOL: {} SOL",
+        lamports_to_sol(round.total_returned_sol)
     );
     if let Some(rng) = rng {
         println!("  Winning square: {}", round.winning_square(rng));

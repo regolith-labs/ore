@@ -44,7 +44,7 @@ pub struct Round {
 
     /// The total SOL returned to miners.
     /// TODO: Rename to total_returned.
-    pub total_winnings: u64,
+    pub total_returned_sol: u64,
 
     /// The total number of unique miners that played in the round.
     /// TODO rename to unique_miners.
@@ -83,14 +83,19 @@ impl Round {
         rng.reverse_bits() % self.deployed[winning_square]
     }
 
-    pub fn calculate_total_winnings(&self, winning_square: usize) -> u64 {
-        let mut total_winnings = 0;
+    pub fn calculate_fees(&self, winning_square: usize) -> (u64, u64) {
+        let mut admin_fee = 0;
+        let mut protocol_fee = 0;
         for (i, &deployed) in self.deployed.iter().enumerate() {
-            if i != winning_square {
-                total_winnings += deployed;
+            if deployed > 0 {
+                let sq_admin = ((deployed / 100) as u64).max(1);
+                admin_fee += sq_admin;
+                if i != winning_square {
+                    protocol_fee += (((deployed - sq_admin) / 10) as u64).max(1);
+                }
             }
         }
-        total_winnings
+        (admin_fee, protocol_fee)
     }
 
     /// Determines if the reward on a given tile (winning_square) is split under the new reward distribution.
@@ -177,7 +182,7 @@ mod tests {
             rent_payer: Pubkey::default(),
             rewards: [0; 25],
             total_vaulted: 0,
-            total_winnings: 0,
+            total_returned_sol: 0,
             total_miners: 0,
             top_miner: Pubkey::default(),
         }

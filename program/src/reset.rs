@@ -62,7 +62,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_next.top_miner = Pubkey::default();
     round_next.rewards = [0; 25];
     round_next.total_vaulted = 0;
-    round_next.total_winnings = 0;
+    round_next.total_returned_sol = 0;
     round_next.total_miners = 0;
 
     // Sample random variable
@@ -96,7 +96,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let Some(r) = round.rng() else {
         // Slot hash could not be found, refund all SOL.
         round.total_vaulted = 0;
-        round.total_winnings = 0;
+        round.total_returned_sol = round.total_deployed();
         round.deployed = [0; 25];
 
         // Emit event.
@@ -109,11 +109,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 end_slot: board.end_slot,
                 winning_square: u64::MAX,
                 top_miner: Pubkey::default(),
-                total_miners: 0,
+                total_miners: round.total_miners,
                 motherlode: 0,
                 total_deployed: round.total_deployed(),
                 total_vaulted: round.total_vaulted,
-                total_winnings: round.total_winnings,
+                total_winnings: round.total_returned_sol,
                 total_minted: 0,
                 ts: clock.unix_timestamp,
                 rng: 0,
@@ -129,70 +129,13 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         return Ok(());
     };
 
-    // Caculate admin fees.
-    let total_admin_fee = round.total_deployed() / 100;
-
     // Get the winning square.
     let winning_square = round.winning_square(r);
 
-    // If no one deployed on the winning square, vault all deployed.
-    if round.deployed[winning_square] == 0 {
-        // Vault all deployed.
-        round.total_vaulted = round.total_deployed() - total_admin_fee;
-
-        // Emit event.
-        program_log(
-            &[board_info.clone(), ore_program.clone()],
-            ResetEvent {
-                disc: 0,
-                round_id: round.id,
-                start_slot: board.start_slot,
-                end_slot: board.end_slot,
-                winning_square: winning_square as u64,
-                top_miner: Pubkey::default(),
-                total_miners: 0,
-                motherlode: 0,
-                total_deployed: round.total_deployed(),
-                total_vaulted: round.total_vaulted,
-                total_winnings: round.total_winnings,
-                total_minted: 0,
-                ts: clock.unix_timestamp,
-                rng: r,
-                deployed_winning_square: round.deployed[winning_square],
-            }
-            .to_bytes(),
-        )?;
-
-        // Update board for next round.
-        board.round_id += 1;
-        board.start_slot = clock.slot + 1;
-        board.end_slot = u64::MAX;
-
-        // Do SOL transfers.
-        round_info.send(total_admin_fee, &fee_collector_info);
-        round_info.send(round.total_deployed() - total_admin_fee, &treasury_info);
-        return Ok(());
-    }
-
-    // Get winnings amount (total deployed on all non-winning squares, minus admin fee).
-    let winnings = round.calculate_total_winnings(winning_square);
-    let winnings_admin_fee = winnings / 100; // 1% admin fee.
-    let winnings = winnings - winnings_admin_fee;
-
-    // Subtract vault amount from winnings.
-    let vault_amount = winnings / 10; // 10% of winnings.
-    let winnings = winnings - vault_amount;
-    round.total_winnings = winnings;
-    round.total_vaulted = vault_amount;
-
-    // Sanity check.
-    assert!(
-        round.total_deployed()
-            >= round.total_vaulted
-                + round.total_winnings
-                + round.deployed[winning_square]
-                + winnings_admin_fee
-    );
+    // Get the protocol fee.
+    let (admin_fee, protocol_fee) = round.calculate_fees(winning_square);
+    round.total_returned_sol = round.total_deployed() - admin_fee - protocol_fee;
+    round.total_vaulted = protocol_fee;
 
     // Calculate mint amounts.
     let mut mint_supply = mint.supply();
@@ -239,7 +182,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Validate top miner (dry-run - no errors on failure).
     sol_log(&format!("Winning square: {}", winning_square).to_string());
-    if round.top_miner != SPLIT_ADDRESS {
+    if round.top_miner != SPLIT_ADDRESS && round.deployed[winning_square] > 0 {
         if let Ok(miner) = top_miner_info.as_account::<Miner>(&ore_api::ID) {
             if miner.round_id == round.id {
                 let top_miner_sample = round.top_miner_sample(r, winning_square);
@@ -279,7 +222,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             total_miners: round.total_miners,
             total_deployed: round.total_deployed(),
             total_vaulted: round.total_vaulted,
-            total_winnings: round.total_winnings,
+            total_winnings: round.total_returned_sol,
             total_minted: total_mint_amount,
             ts: clock.unix_timestamp,
             rng: r,
@@ -308,8 +251,8 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     board.end_slot = u64::MAX;
 
     // Do SOL transfers.
-    round_info.send(total_admin_fee, &fee_collector_info);
-    round_info.send(vault_amount, &treasury_info);
+    round_info.send(admin_fee, &fee_collector_info);
+    round_info.send(protocol_fee, &treasury_info);
 
     Ok(())
 }
