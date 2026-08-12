@@ -196,7 +196,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     squares = generate_random_mask(num_squares, &r);
                 }
             }
-            AutomationStrategy::Discretionary | AutomationStrategy::DiscretionaryBps => {
+            AutomationStrategy::Discretionary => {
                 // Discretionary automation strategy. Use the executor's provided mask.
                 amount = amount.min(automation.amount);
                 for i in 0..25 {
@@ -332,11 +332,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
         // Calculate automation fee.
         let automation_fee = if is_first_deploy && total_amount > 0 {
-            if automation.strategy == AutomationStrategy::DiscretionaryBps as u64 {
-                (total_amount * automation.fee) / DENOMINATOR_BPS as u64
-            } else {
-                automation.fee
-            }
+            automation.fee
         } else {
             0
         };

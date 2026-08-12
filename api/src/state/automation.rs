@@ -76,7 +76,6 @@ pub enum AutomationStrategy {
     Random = 0,
     Preferred = 1,
     Discretionary = 2,
-    DiscretionaryBps = 3,
 }
 
 impl AutomationStrategy {
