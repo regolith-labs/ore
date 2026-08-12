@@ -196,7 +196,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
                     squares = generate_random_mask(num_squares, &r);
                 }
             }
-            AutomationStrategy::Discretionary => {
+            AutomationStrategy::Discretionary | AutomationStrategy::DiscretionaryBps => {
                 // Discretionary automation strategy. Use the executor's provided mask.
                 amount = amount.min(automation.amount);
                 for i in 0..25 {
@@ -266,8 +266,10 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     if is_first_deploy {
         if let Some(automation) = &automation {
             let required_squares = squares.iter().filter(|&&s| s).count() as u64;
-            if automation.balance < (amount * required_squares) + automation.fee {
-                automation_info.send(automation.fee, &signer_info);
+            let total_deploy = amount * required_squares;
+            let estimated_fee = automation.min_fee(total_deploy);
+            if automation.balance < total_deploy + estimated_fee {
+                automation_info.send(estimated_fee, &signer_info);
                 automation_info.close(authority_info)?;
                 return Ok(());
             }
@@ -332,7 +334,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
         // Calculate automation fee.
         let automation_fee = if is_first_deploy && total_amount > 0 {
-            automation.fee
+            automation.min_fee(total_amount)
         } else {
             0
         };
@@ -343,7 +345,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         automation_info.send(automation_fee, &signer_info);
 
         // Close automation if balance is less than what's required to deploy 1 square.
-        if automation.balance < automation.amount + automation.fee {
+        if automation.balance < automation.amount + automation.min_fee(automation.amount) {
             automation_info.close(authority_info)?;
         }
     } else {
