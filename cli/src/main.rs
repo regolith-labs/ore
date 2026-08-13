@@ -114,7 +114,7 @@ async fn main() {
             audit_curves(&rpc).await.unwrap();
         }
         "uncheckpointed" => {
-            uncheckpointed(&rpc).await.unwrap();
+            uncheckpointed(&rpc, &payer).await.unwrap();
         }
         "checkpoint_backfill" => {
             checkpoint_backfill(&rpc, &payer).await.unwrap();
@@ -778,23 +778,20 @@ async fn log_treasury(rpc: &RpcClient) -> Result<(), anyhow::Error> {
 }
 
 async fn log_round(rpc: &RpcClient) -> Result<(), anyhow::Error> {
-    let rounds = get_rounds(rpc).await?;
-    println!("Rounds: {}", rounds.len());
-    for (i, (address, round)) in rounds.iter().enumerate() {
-        println!("[{}/{}] {}", i + 1, rounds.len(), address);
-        println!("  Count: {:?}", round.count);
-        println!("  Deployed: {:?}", round.deployed);
-        println!("  Expires at: {}", round.expires_at);
-        println!("  Id: {:?}", round.id);
-    }
-
     let id = std::env::var("ID").expect("Missing ID env var");
     let id = u64::from_str(&id).expect("Invalid ID");
     let round_address = round_pda(id).0;
     println!("Round address: {}", round_address);
-    let round = get_round(rpc, id).await?;
+    // let round = get_round(rpc, id).await?;
+    let account = rpc.get_account(&round_address).await?;
+    let round = Round::try_from_bytes(&account.data)?;
     let rng = round.rng();
     println!("Round");
+    println!("  Lamports: {} SOL", lamports_to_sol(account.lamports));
+    println!(
+        "  Rent: {} SOL",
+        lamports_to_sol(Rent::default().minimum_balance(Round::SIZE))
+    );
     println!("  Address: {}", round_address);
     println!("  Count: {:?}", round.count);
     println!("  Deployed: {:?}", round.deployed);
@@ -936,7 +933,7 @@ fn print_board(board: Board, clock: &Clock) {
     );
 }
 
-async fn uncheckpointed(rpc: &RpcClient) -> Result<(), anyhow::Error> {
+async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Keypair) -> Result<(), anyhow::Error> {
     let board = get_board(rpc).await?;
     println!("Current round: {}", board.round_id);
     println!("Fetching all miners...");
@@ -963,21 +960,108 @@ async fn uncheckpointed(rpc: &RpcClient) -> Result<(), anyhow::Error> {
     let mut round_ids: Vec<u64> = rounds.keys().copied().collect();
     round_ids.sort();
 
+    let rent = Rent::default();
+    let round_rent_exempt = rent.minimum_balance(Round::SIZE);
+
+    let mut topup_ixs = vec![];
+    let mut total_topup = 0u64;
+
     println!("\n--- Uncheckpointed Miners by Round ---");
-    for round_id in round_ids {
-        let miners = &rounds[&round_id];
-        let total_deployed: u64 = miners.iter().map(|(_, d)| d).sum();
+    for round_id in &round_ids {
+        let round_id = *round_id;
+        let miners_list = &rounds[&round_id];
+        let total_deployed: u64 = miners_list.iter().map(|(_, d)| d).sum();
         let is_current = round_id == board.round_id;
+
+        // Get round account balance and data.
+        let round_pda = ore_api::state::round_pda(round_id).0;
+        let round_balance = rpc.get_balance(&round_pda).await.unwrap_or(0);
+        let available = round_balance.saturating_sub(round_rent_exempt);
+
+        // Calculate what's owed using checkpoint logic.
+        let mut total_owed = 0u64;
+        if let Ok(round) = get_round(rpc, round_id).await {
+            if let Some(r) = round.rng() {
+                let winning_square = round.winning_square(r) as usize;
+                for (_addr, miner_deployed) in miners_list {
+                    // Replicate the checkpoint SOL calculation.
+                    // We need per-square deployed, so fetch the full miner.
+                    let miner_pda = *_addr;
+                    if let Ok(account) = rpc.get_account(&miner_pda).await {
+                        if let Ok(miner) = Miner::try_from_bytes(&account.data) {
+                            let mut rewards_sol: u64 = 0;
+                            for i in 0..25 {
+                                if miner.deployed[i] == 0 {
+                                    continue;
+                                }
+                                if i == winning_square {
+                                    let dep = miner.deployed[i];
+                                    let admin_fee = (dep / 100).max(1);
+                                    rewards_sol += dep - admin_fee;
+                                } else {
+                                    let dep = miner.deployed[i];
+                                    let admin_fee = (dep / 100).max(1);
+                                    let protocol_fee = ((dep - admin_fee) / 10).max(1);
+                                    rewards_sol += dep.saturating_sub(admin_fee + protocol_fee);
+                                }
+                            }
+                            total_owed += rewards_sol;
+                        }
+                    }
+                }
+            } else {
+                // No RNG — full refund.
+                for (_addr, deployed) in miners_list {
+                    total_owed += deployed;
+                }
+            }
+        }
+
+        let deficit = total_owed.saturating_sub(available);
+
         println!(
             "\nRound {} ({}) — {} miners, {} SOL deployed",
             round_id,
             if is_current { "current" } else { "past" },
-            miners.len(),
+            miners_list.len(),
             lamports_to_sol(total_deployed),
         );
-        for (addr, deployed) in miners {
+        println!(
+            "  balance: {} SOL | rent: {} SOL | available: {} SOL | owed: {} SOL | deficit: {} SOL",
+            lamports_to_sol(round_balance),
+            lamports_to_sol(round_rent_exempt),
+            lamports_to_sol(available),
+            lamports_to_sol(total_owed),
+            lamports_to_sol(deficit),
+        );
+        if deficit > 0 {
+            println!("  *** NEEDS TOP-UP: {} lamports ({} SOL) to {}", deficit, lamports_to_sol(deficit), round_pda);
+            topup_ixs.push(solana_sdk::system_instruction::transfer(
+                &payer.pubkey(),
+                &round_pda,
+                deficit + 1000, // small buffer
+            ));
+            total_topup += deficit + 1000;
+        }
+        for (addr, deployed) in miners_list {
             println!("  {} — {} SOL", addr, lamports_to_sol(*deployed));
         }
+    }
+
+    // Send top-up transactions.
+    if !topup_ixs.is_empty() {
+        println!(
+            "\nSending {} top-up transfers totaling {} SOL...",
+            topup_ixs.len(),
+            lamports_to_sol(total_topup)
+        );
+        for ix in &topup_ixs {
+            match submit_transaction_no_confirm(rpc, payer, &[ix.clone()]).await {
+                Ok(sig) => println!("  sent: {}", sig),
+                Err(e) => println!("  FAILED: {}", e),
+            }
+        }
+        println!("Done.");
     }
 
     Ok(())
@@ -1041,7 +1125,8 @@ async fn topup_rounds(
                     let admin_fee = (dep / 100).max(1);
                     let base = dep - admin_fee;
                     let parimutuel = ((round.total_returned_sol as u128 * dep as u128)
-                        / round.deployed[winning_square] as u128) as u64;
+                        / round.deployed[winning_square] as u128)
+                        as u64;
                     total_owed += base + parimutuel;
                 }
                 // Losers get 0 under old parimutuel logic.
@@ -1082,13 +1167,21 @@ async fn topup_rounds(
         lamports_to_sol(total_topup),
         transfers.len()
     );
-    println!("Payer balance: {} SOL", lamports_to_sol(rpc.get_balance(&payer.pubkey()).await?));
+    println!(
+        "Payer balance: {} SOL",
+        lamports_to_sol(rpc.get_balance(&payer.pubkey()).await?)
+    );
     println!("\nSending transfers...");
 
     for (round_pda, amount) in &transfers {
         let ix = solana_sdk::system_instruction::transfer(&payer.pubkey(), round_pda, *amount);
         match submit_transaction_no_confirm(rpc, payer, &[ix]).await {
-            Ok(sig) => println!("  {} — sent {} SOL ({})", round_pda, lamports_to_sol(*amount), sig),
+            Ok(sig) => println!(
+                "  {} — sent {} SOL ({})",
+                round_pda,
+                lamports_to_sol(*amount),
+                sig
+            ),
             Err(e) => println!("  {} — FAILED: {}", round_pda, e),
         }
     }
@@ -1147,7 +1240,10 @@ async fn checkpoint_backfill(
     // Fire all off in batches, skipping failures.
     submit_transaction_batches(rpc, payer, ixs, 5).await?;
 
-    println!("\nDone. Attempted {} checkpoint transactions.", targets.len());
+    println!(
+        "\nDone. Attempted {} checkpoint transactions.",
+        targets.len()
+    );
     Ok(())
 }
 
