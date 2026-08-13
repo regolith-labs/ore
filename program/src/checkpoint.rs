@@ -93,7 +93,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 // Calculate SOL rewards.
                 let sq_total = round.deployed[winning_square];
                 let sq_admin = (sq_total / 100).max(1);
-                let sq_returned = sq_total - sq_admin;
+                let sq_returned = sq_total.saturating_sub(sq_admin);
                 rewards_sol += (miner.deployed[winning_square] as u128 * sq_returned as u128 / sq_total as u128) as u64;
 
                 // Calculate ORE rewards.
