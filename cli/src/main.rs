@@ -969,6 +969,9 @@ async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Ke
     println!("\n--- Uncheckpointed Miners by Round ---");
     for round_id in &round_ids {
         let round_id = *round_id;
+        if round_id == board.round_id {
+            continue; // Skip current round — not yet settled.
+        }
         let miners_list = &rounds[&round_id];
         let total_deployed: u64 = miners_list.iter().map(|(_, d)| d).sum();
         let is_current = round_id == board.round_id;
@@ -995,14 +998,18 @@ async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Ke
                                     continue;
                                 }
                                 if i == winning_square {
-                                    let dep = miner.deployed[i];
-                                    let admin_fee = (dep / 100).max(1);
-                                    rewards_sol += dep - admin_fee;
+                                    // Proportional share of winning square budget (matches on-chain).
+                                    let sq_total = round.deployed[winning_square];
+                                    let sq_admin = (sq_total / 100).max(1);
+                                    let sq_returned = sq_total.saturating_sub(sq_admin);
+                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
                                 } else {
-                                    let dep = miner.deployed[i];
-                                    let admin_fee = (dep / 100).max(1);
-                                    let protocol_fee = ((dep - admin_fee) / 10).max(1);
-                                    rewards_sol += dep.saturating_sub(admin_fee + protocol_fee);
+                                    // Proportional share of losing square budget (matches on-chain).
+                                    let sq_total = round.deployed[i];
+                                    let sq_admin = (sq_total / 100).max(1);
+                                    let sq_protocol = ((sq_total.saturating_sub(sq_admin)) / 10).max(1);
+                                    let sq_returned = sq_total.saturating_sub(sq_admin + sq_protocol);
+                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
                                 }
                             }
                             total_owed += rewards_sol;
@@ -1048,20 +1055,19 @@ async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Ke
         }
     }
 
-    // Send top-up transactions.
+    // Send top-up transactions (disabled — uncomment to enable).
     if !topup_ixs.is_empty() {
         println!(
-            "\nSending {} top-up transfers totaling {} SOL...",
+            "\nWould send {} top-up transfers totaling {} SOL (DISABLED — not sending)",
             topup_ixs.len(),
             lamports_to_sol(total_topup)
         );
-        for ix in &topup_ixs {
-            match submit_transaction_no_confirm(rpc, payer, &[ix.clone()]).await {
-                Ok(sig) => println!("  sent: {}", sig),
-                Err(e) => println!("  FAILED: {}", e),
-            }
-        }
-        println!("Done.");
+        // for ix in &topup_ixs {
+        //     match submit_transaction_no_confirm(rpc, payer, &[ix.clone()]).await {
+        //         Ok(sig) => println!("  sent: {}", sig),
+        //         Err(e) => println!("  FAILED: {}", e),
+        //     }
+        // }
     }
 
     Ok(())
