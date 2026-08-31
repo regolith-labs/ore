@@ -23,7 +23,7 @@ pub const ONE_DAY: i64 = 24 * ONE_HOUR;
 pub const ONE_WEEK: i64 = 7 * ONE_DAY;
 
 /// The number of slots in one week.
-pub const ONE_MINUTE_SLOTS: u64 = 150;
+pub const ONE_MINUTE_SLOTS: u64 = 200;
 
 /// The number of slots in one hour.
 pub const ONE_HOUR_SLOTS: u64 = 60 * ONE_MINUTE_SLOTS;
@@ -38,7 +38,7 @@ pub const ONE_DAY_SLOTS: u64 = 24 * ONE_HOUR_SLOTS;
 pub const ONE_WEEK_SLOTS: u64 = 7 * ONE_DAY_SLOTS;
 
 /// The number of slots for breather between rounds.
-pub const INTERMISSION_SLOTS: u64 = 35;
+pub const INTERMISSION_SLOTS: u64 = 45;
 
 /// The number of slots for one round.
 pub const ROUND_SLOTS: u64 = ONE_MINUTE_SLOTS;
