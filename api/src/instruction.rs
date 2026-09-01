@@ -17,7 +17,7 @@ pub enum OreInstruction {
     Buyback = 13,
     Bury = 24,
     Wrap = 14,
-    SetAdmin = 15,
+    UpdateProtocolConfig = 15,
     NewVar = 19,
     Liq = 25,
 }
@@ -78,12 +78,6 @@ pub struct Reset {}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetAdmin {
-    pub admin: [u8; 32],
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub struct SetFeeCollector {
     pub fee_collector: [u8; 32],
 }
@@ -128,17 +122,15 @@ pub struct NewVar {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetAdminFee {
-    pub admin_fee: [u8; 8],
+pub struct UpdateProtocolConfig {
+    pub admin: [u8; 32],
+    pub fee_collector: [u8; 32],
+    pub fee_rate: [u8; 8],
+    pub intermission_slots: [u8; 8],
+    pub round_slots: [u8; 8],
+    pub entropy_var_address: [u8; 32],
+    pub entropy_program_id: [u8; 32],
 }
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetSwapProgram {}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct SetVarAddress {}
 
 instruction!(OreInstruction, Automate);
 instruction!(OreInstruction, Close);
@@ -151,6 +143,6 @@ instruction!(OreInstruction, Wrap);
 instruction!(OreInstruction, Buyback);
 instruction!(OreInstruction, Bury);
 instruction!(OreInstruction, Reset);
-instruction!(OreInstruction, SetAdmin);
 instruction!(OreInstruction, NewVar);
+instruction!(OreInstruction, UpdateProtocolConfig);
 instruction!(OreInstructionV2, AutomateV2);

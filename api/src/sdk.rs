@@ -353,7 +353,16 @@ pub fn checkpoint(signer: Pubkey, authority: Pubkey, round_id: u64) -> Instructi
     }
 }
 
-pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
+pub fn update_protocol_config(
+    signer: Pubkey,
+    admin: Pubkey,
+    fee_collector: Pubkey,
+    fee_rate: u64,
+    intermission_slots: u64,
+    round_slots: u64,
+    entropy_var_address: Pubkey,
+    entropy_program_id: Pubkey,
+) -> Instruction {
     let config_address = config_pda().0;
     Instruction {
         program_id: crate::ID,
@@ -362,8 +371,14 @@ pub fn set_admin(signer: Pubkey, admin: Pubkey) -> Instruction {
             AccountMeta::new(config_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
         ],
-        data: SetAdmin {
+        data: UpdateProtocolConfig {
             admin: admin.to_bytes(),
+            fee_collector: fee_collector.to_bytes(),
+            fee_rate: fee_rate.to_le_bytes(),
+            intermission_slots: intermission_slots.to_le_bytes(),
+            round_slots: round_slots.to_le_bytes(),
+            entropy_var_address: entropy_var_address.to_bytes(),
+            entropy_program_id: entropy_program_id.to_bytes(),
         }
         .to_bytes(),
     }

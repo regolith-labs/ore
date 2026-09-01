@@ -9,7 +9,7 @@ mod deploy;
 mod log;
 mod new_var;
 mod reset;
-mod set_admin;
+mod update_protocol_config;
 mod wrap;
 
 use automate::*;
@@ -23,7 +23,7 @@ use deploy::*;
 use log::*;
 use new_var::*;
 use reset::*;
-use set_admin::*;
+use update_protocol_config::*;
 use wrap::*;
 
 use ore_api::instruction::*;
@@ -52,8 +52,8 @@ pub fn process_instruction(
         OreInstruction::Buyback => process_buyback(accounts, data)?,
         OreInstruction::Bury => process_bury(accounts, data)?,
         OreInstruction::Wrap => process_wrap(accounts, data)?,
-        OreInstruction::SetAdmin => process_set_admin(accounts, data)?,
         OreInstruction::NewVar => process_new_var(accounts, data)?,
+        OreInstruction::UpdateProtocolConfig => process_update_protocol_config(accounts, data)?,
         OreInstruction::Liq => return Err(ProgramError::InvalidInstructionData),
     }
 
