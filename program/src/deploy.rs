@@ -14,7 +14,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     let (ore_accounts, entropy_accounts) = accounts.split_at(10);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Entropy accounts: {:?}", entropy_accounts.len()).to_string());
-    let [signer_info, authority_info, automation_info, board_info, _config_info, miner_info, round_info, treasury_info, system_program, ore_program] =
+    let [signer_info, authority_info, automation_info, board_info, config_info, miner_info, round_info, treasury_info, system_program, ore_program] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -24,6 +24,9 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     automation_info
         .is_writable()?
         .has_seeds(&[AUTOMATION, &authority_info.key.to_bytes()], &ore_api::ID)?;
+    let config = config_info
+        .has_address(&CONFIG_ADDRESS)?
+        .as_account::<Config>(&ore_api::ID)?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
         .as_account_mut::<Board>(&ore_api::ID)?
@@ -43,7 +46,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     // Wait until first deploy to start round.
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
-        board.end_slot = board.start_slot + ROUND_SLOTS;
+        board.end_slot = board.start_slot + config.protocol.round_slots;
         round.expires_at = board.end_slot + ONE_DAY_SLOTS;
 
         // Bump var to the next value.

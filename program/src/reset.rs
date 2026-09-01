@@ -13,16 +13,19 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     let (ore_accounts, other_accounts) = accounts.split_at(14);
     sol_log(&format!("Ore accounts: {:?}", ore_accounts.len()).to_string());
     sol_log(&format!("Other accounts: {:?}", other_accounts.len()).to_string());
-    let [signer_info, board_info, _config_info, fee_collector_info, mint_info, round_info, round_next_info, top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
+    let [signer_info, board_info, config_info, fee_collector_info, mint_info, round_info, round_next_info, top_miner_info, treasury_info, treasury_tokens_info, system_program, token_program, ore_program, slot_hashes_sysvar] =
         ore_accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
     signer_info.is_signer()?;
+    let config = config_info
+        .has_address(&CONFIG_ADDRESS)?
+        .as_account::<Config>(&ore_api::ID)?;
     let board = board_info
         .has_address(&BOARD_ADDRESS)?
         .as_account_mut::<Board>(&ore_api::ID)?
-        .assert_mut(|b| clock.slot >= b.end_slot + INTERMISSION_SLOTS)?;
+        .assert_mut(|b| clock.slot >= b.end_slot + config.protocol.intermission_slots)?;
     fee_collector_info
         .is_writable()?
         .has_address(&ADMIN_FEE_COLLECTOR)?;
@@ -134,7 +137,9 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Get the protocol fee.
     let (admin_fee, protocol_fee) = round.calculate_fees(winning_square);
-    round.total_returned_sol = round.total_deployed().saturating_sub(admin_fee + protocol_fee);
+    round.total_returned_sol = round
+        .total_deployed()
+        .saturating_sub(admin_fee + protocol_fee);
     round.total_vaulted = protocol_fee;
 
     // Calculate mint amounts.

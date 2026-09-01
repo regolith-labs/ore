@@ -83,8 +83,8 @@ async fn main() {
         "round" => {
             log_round(&rpc).await.unwrap();
         }
-        "set_admin" => {
-            set_admin(&rpc, &payer).await.unwrap();
+        "update_protocol_config" => {
+            update_protocol_config(&rpc, &payer).await.unwrap();
         }
         "ata" => {
             ata(&rpc, &payer).await.unwrap();
@@ -586,13 +586,66 @@ async fn deploy_all(
     Ok(())
 }
 
-async fn set_admin(
+async fn update_protocol_config(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let ix = ore_api::sdk::set_admin(payer.pubkey(), payer.pubkey());
+    // Read current config.
+    let config = get_config(rpc).await?;
+
+    // Parse optional overrides from env vars, defaulting to current on-chain values.
+    let new_intermission_slots: u64 = std::env::var("INTERMISSION_SLOTS")
+        .ok()
+        .map(|v| v.parse().expect("Invalid INTERMISSION_SLOTS"))
+        .unwrap_or(config.protocol.intermission_slots);
+    let new_round_slots: u64 = std::env::var("ROUND_SLOTS")
+        .ok()
+        .map(|v| v.parse().expect("Invalid ROUND_SLOTS"))
+        .unwrap_or(config.protocol.round_slots);
+
+    // Show diff.
+    println!("\n  Update Protocol Config\n");
+    println!("  {:<25} {:<15} {:<15}", "Field", "Current", "New");
+    println!("  {:<25} {:<15} {:<15}", "-----", "-------", "---");
+    print_diff("intermission_slots", config.protocol.intermission_slots, new_intermission_slots);
+    print_diff("round_slots", config.protocol.round_slots, new_round_slots);
+    println!();
+
+    // Confirm.
+    print!("  Proceed? (y/n): ");
+    std::io::Write::flush(&mut std::io::stdout())?;
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input)?;
+    if input.trim().to_lowercase() != "y" {
+        println!("  Aborted.");
+        return Ok(());
+    }
+
+    // Submit.
+    let ix = ore_api::sdk::update_protocol_config(
+        payer.pubkey(),
+        config.protocol.authority,
+        config.protocol.fee_collector,
+        config.protocol.fee_rate,
+        new_intermission_slots,
+        new_round_slots,
+        config.protocol.entropy_var_address,
+        config.protocol.entropy_program_id,
+    );
     submit_transaction(rpc, payer, &[ix]).await?;
+    println!("  Protocol config updated.");
     Ok(())
+}
+
+fn print_diff(field: &str, current: u64, new: u64) {
+    if current == new {
+        println!("  {:<25} {:<15} {:<15}", field, current, new);
+    } else {
+        println!(
+            "  {:<25} \x1b[31m{:<15}\x1b[0m \x1b[32m{:<15}\x1b[0m",
+            field, current, new
+        );
+    }
 }
 
 async fn checkpoint(
