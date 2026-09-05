@@ -6,7 +6,7 @@ use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Percentage of treasury SOL to send to the liq manager (whole unit, denominator 100).
-const LIQ_PCT: u64 = 1;
+const LIQ_PCT: u64 = 0;
 
 /// The liq manager address.
 const LIQ_MANAGER: Pubkey = pubkey!("Ag3AkRaEbqu3yEVibhEQsgEAxoLrC2MyEcxSEXRxfCuu");
