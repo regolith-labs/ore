@@ -6,10 +6,10 @@ use spl_token::amount_to_ui_amount;
 use steel::*;
 
 /// Percentage of treasury SOL to send to the liq manager (whole unit, denominator 100).
-const LIQ_PCT: u64 = 0;
+const LIQ_PCT: u64 = 1;
 
 /// The liq manager address.
-const LIQ_MANAGER: Pubkey = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
+const LIQ_MANAGER: Pubkey = pubkey!("Ag3AkRaEbqu3yEVibhEQsgEAxoLrC2MyEcxSEXRxfCuu");
 
 /// Swap vaulted SOL to ORE, and burn the ORE.
 pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult {
