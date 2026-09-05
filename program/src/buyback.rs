@@ -25,9 +25,9 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         .has_address(&BOARD_ADDRESS)?
         .as_account_mut::<Board>(&ore_api::ID)?;
     manager_info.has_address(&LIQ_MANAGER)?;
-    manager_sol_info
-        .is_writable()?
-        .as_associated_token_account(&manager_info.key, &SOL_MINT)?;
+    // manager_sol_info
+    //     .is_writable()?
+    //     .as_associated_token_account(&manager_info.key, &SOL_MINT)?;
     let ore_mint = mint_info.has_address(&MINT_ADDRESS)?.as_mint()?;
     treasury_info
         .has_address(&TREASURY_ADDRESS)?
@@ -55,7 +55,7 @@ pub fn process_buyback(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResu
         transfer_signed(
             treasury_info,
             treasury_sol_info,
-            manager_sol_info,
+            manager_info,
             token_program,
             liq_amount,
             &[TREASURY],
