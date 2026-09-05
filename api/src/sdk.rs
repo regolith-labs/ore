@@ -166,7 +166,7 @@ pub fn buyback(
 ) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
-    // let manager_sol_address = get_associated_token_address(&manager, &SOL_MINT);
+    let manager_sol_address = get_associated_token_address(&manager, &SOL_MINT);
     let mint_address = MINT_ADDRESS;
     let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
@@ -180,7 +180,7 @@ pub fn buyback(
         AccountMeta::new(board_address, false),
         AccountMeta::new_readonly(config_address, false),
         AccountMeta::new(manager, false),
-        // AccountMeta::new(manager_sol_address, false),
+        AccountMeta::new(manager_sol_address, false),
         AccountMeta::new(mint_address, false),
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_ore_address, false),
