@@ -160,13 +160,11 @@ pub fn deploy(
 
 pub fn buyback(
     signer: Pubkey,
-    manager: Pubkey,
     swap_accounts: &[AccountMeta],
     swap_data: &[u8],
 ) -> Instruction {
     let board_address = board_pda().0;
     let config_address = config_pda().0;
-    let manager_sol_address = get_associated_token_address(&manager, &SOL_MINT);
     let mint_address = MINT_ADDRESS;
     let treasury_address = treasury_pda().0;
     let treasury_ore_address = get_associated_token_address(&treasury_address, &MINT_ADDRESS);
@@ -179,8 +177,6 @@ pub fn buyback(
         AccountMeta::new(signer, true),
         AccountMeta::new(board_address, false),
         AccountMeta::new_readonly(config_address, false),
-        AccountMeta::new(manager, false),
-        AccountMeta::new(manager_sol_address, false),
         AccountMeta::new(mint_address, false),
         AccountMeta::new(treasury_address, false),
         AccountMeta::new(treasury_ore_address, false),
@@ -243,17 +239,21 @@ pub fn bury(signer: Pubkey, amount: u64) -> Instruction {
     }
 }
 
-pub fn wrap(signer: Pubkey, amount: u64) -> Instruction {
+pub fn wrap(signer: Pubkey, manager: Pubkey, amount: u64) -> Instruction {
+    let board_address = board_pda().0;
     let config_address = config_pda().0;
     let treasury_address = treasury_pda().0;
     let treasury_sol_address = get_associated_token_address(&treasury_address, &SOL_MINT);
     Instruction {
         accounts: vec![
             AccountMeta::new(signer, true),
+            AccountMeta::new(board_address, false),
             AccountMeta::new_readonly(config_address, false),
+            AccountMeta::new(manager, false),
             AccountMeta::new(treasury_address, false),
             AccountMeta::new(treasury_sol_address, false),
             AccountMeta::new_readonly(system_program::ID, false),
+            AccountMeta::new_readonly(crate::ID, false),
         ],
         program_id: crate::ID,
         data: Wrap {

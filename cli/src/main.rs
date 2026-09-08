@@ -392,11 +392,10 @@ async fn buyback(
             .unwrap();
 
     // Build transaction.
-    let manager = pubkey!("DJqfQWB8tZE6fzqWa8okncDh7ciTuD8QQKp1ssNETWee");
-    let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), u64::MAX);
+    let manager = pubkey!("Ag3AkRaEbqu3yEVibhEQsgEAxoLrC2MyEcxSEXRxfCuu");
+    let wrap_ix = ore_api::sdk::wrap(payer.pubkey(), manager, u64::MAX);
     let buyback_ix = ore_api::sdk::buyback(
         payer.pubkey(),
-        manager,
         &response.swap_instruction.accounts,
         &response.swap_instruction.data,
     );
