@@ -8,7 +8,7 @@ use solana_program::{
 use steel::*;
 
 /// Percentage of treasury SOL to send to the liq manager (whole unit, denominator 100).
-const LIQ_PCT: u64 = 1;
+const LIQ_PCT: u64 = 2;
 
 /// The liq manager address.
 const LIQ_MANAGER: Pubkey = pubkey!("Ag3AkRaEbqu3yEVibhEQsgEAxoLrC2MyEcxSEXRxfCuu");
@@ -43,13 +43,7 @@ pub fn process_wrap(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResult 
     let liq_amount = amount * LIQ_PCT / 100;
     if liq_amount > 0 {
         treasury_info.send(liq_amount, manager_info);
-        sol_log(
-            &format!(
-                "Sent {} SOL to liq manager",
-                lamports_to_sol(liq_amount)
-            )
-            .as_str(),
-        );
+        sol_log(&format!("Sent {} SOL to liq manager", lamports_to_sol(liq_amount)).as_str());
     }
 
     // Send remaining SOL to the WSOL account for buyback.
