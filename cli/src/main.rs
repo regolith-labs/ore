@@ -266,8 +266,8 @@ async fn ata(
     rpc: &RpcClient,
     payer: &solana_sdk::signer::keypair::Keypair,
 ) -> Result<(), anyhow::Error> {
-    let user = pubkey!("HQS4LBxJKbvZgaLP52cprYq5nvUKuWR8fbSE7h4jGo35");
-    let token = pubkey!("So11111111111111111111111111111111111111112");
+    let user = pubkey!("45eagXEkaubScq88SokE4vyKi6zZeJmncwTkwQhzQtac");
+    let token = pubkey!("9BAWwtAZiF4XJC6vArPM8JhtgKXfeoeo9FJHeR3PEGac");
     let ata = get_associated_token_address(&user, &token);
     let ix = spl_associated_token_account::instruction::create_associated_token_account(
         &payer.pubkey(),
@@ -606,7 +606,11 @@ async fn update_protocol_config(
     println!("\n  Update Protocol Config\n");
     println!("  {:<25} {:<15} {:<15}", "Field", "Current", "New");
     println!("  {:<25} {:<15} {:<15}", "-----", "-------", "---");
-    print_diff("intermission_slots", config.protocol.intermission_slots, new_intermission_slots);
+    print_diff(
+        "intermission_slots",
+        config.protocol.intermission_slots,
+        new_intermission_slots,
+    );
     print_diff("round_slots", config.protocol.round_slots, new_round_slots);
     println!();
 
@@ -985,7 +989,10 @@ fn print_board(board: Board, clock: &Clock) {
     );
 }
 
-async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Keypair) -> Result<(), anyhow::Error> {
+async fn uncheckpointed(
+    rpc: &RpcClient,
+    payer: &solana_sdk::signer::keypair::Keypair,
+) -> Result<(), anyhow::Error> {
     let board = get_board(rpc).await?;
     println!("Current round: {}", board.round_id);
     println!("Fetching all miners...");
@@ -1054,14 +1061,20 @@ async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Ke
                                     let sq_total = round.deployed[winning_square];
                                     let sq_admin = (sq_total / 100).max(1);
                                     let sq_returned = sq_total.saturating_sub(sq_admin);
-                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
+                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128
+                                        / sq_total as u128)
+                                        as u64;
                                 } else {
                                     // Proportional share of losing square budget (matches on-chain).
                                     let sq_total = round.deployed[i];
                                     let sq_admin = (sq_total / 100).max(1);
-                                    let sq_protocol = ((sq_total.saturating_sub(sq_admin)) / 10).max(1);
-                                    let sq_returned = sq_total.saturating_sub(sq_admin + sq_protocol);
-                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
+                                    let sq_protocol =
+                                        ((sq_total.saturating_sub(sq_admin)) / 10).max(1);
+                                    let sq_returned =
+                                        sq_total.saturating_sub(sq_admin + sq_protocol);
+                                    rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128
+                                        / sq_total as u128)
+                                        as u64;
                                 }
                             }
                             total_owed += rewards_sol;
@@ -1094,7 +1107,12 @@ async fn uncheckpointed(rpc: &RpcClient, payer: &solana_sdk::signer::keypair::Ke
             lamports_to_sol(deficit),
         );
         if deficit > 0 {
-            println!("  *** NEEDS TOP-UP: {} lamports ({} SOL) to {}", deficit, lamports_to_sol(deficit), round_pda);
+            println!(
+                "  *** NEEDS TOP-UP: {} lamports ({} SOL) to {}",
+                deficit,
+                lamports_to_sol(deficit),
+                round_pda
+            );
             topup_ixs.push(solana_sdk::system_instruction::transfer(
                 &payer.pubkey(),
                 &round_pda,
