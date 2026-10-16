@@ -263,7 +263,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
 fn calculate_total_mint_amount(mint_supply: u64) -> u64 {
     let rate: u128 = match mint_supply {
-        x if x < 500_000 * ONE_ORE => 120,
+        x if x < 550_000 * ONE_ORE => 120,
         x if x < 750_000 * ONE_ORE => 110,
         x if x < 1_000_000 * ONE_ORE => 100,
         x if x < 1_250_000 * ONE_ORE => 85,
@@ -281,7 +281,7 @@ fn calculate_total_mint_amount(mint_supply: u64) -> u64 {
 
 fn calculate_motherlode_mint_amount(mint_supply: u64) -> u64 {
     match mint_supply {
-        x if x < 500_000 * ONE_ORE => (20 * ONE_ORE as u128 / 100u128) as u64,
+        x if x < 550_000 * ONE_ORE => (20 * ONE_ORE as u128 / 100u128) as u64,
         x if x < 750_000 * ONE_ORE => (10 * ONE_ORE as u128 / 100u128) as u64,
         _ => calculate_total_mint_amount(mint_supply) / 10,
     }
