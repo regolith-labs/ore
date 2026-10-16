@@ -263,16 +263,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
 fn calculate_total_mint_amount(mint_supply: u64) -> u64 {
     let rate: u128 = match mint_supply {
-        x if x < 750_000 * ONE_ORE => 120,
-        x if x < 1_000_000 * ONE_ORE => 110,
-        x if x < 1_250_000 * ONE_ORE => 100,
-        x if x < 1_500_000 * ONE_ORE => 85,
-        x if x < 1_750_000 * ONE_ORE => 65,
-        x if x < 2_000_000 * ONE_ORE => 45,
-        x if x < 2_250_000 * ONE_ORE => 25,
-        x if x < 2_500_000 * ONE_ORE => 12,
-        x if x < 2_750_000 * ONE_ORE => 06,
-        x if x < MAX_SUPPLY => 03,
+        x if x < 500_000 * ONE_ORE => 120,
+        x if x < 750_000 * ONE_ORE => 110,
+        x if x < 1_000_000 * ONE_ORE => 100,
+        x if x < 1_250_000 * ONE_ORE => 85,
+        x if x < 1_500_000 * ONE_ORE => 65,
+        x if x < 1_750_000 * ONE_ORE => 45,
+        x if x < 2_000_000 * ONE_ORE => 25,
+        x if x < 2_250_000 * ONE_ORE => 12,
+        x if x < 2_500_000 * ONE_ORE => 06,
+        x if x < 2_750_000 * ONE_ORE => 03,
+        x if x < MAX_SUPPLY => 01,
         _ => 0,
     };
     (rate * ONE_ORE as u128 / 100u128) as u64
