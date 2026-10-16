@@ -280,5 +280,9 @@ fn calculate_total_mint_amount(mint_supply: u64) -> u64 {
 }
 
 fn calculate_motherlode_mint_amount(mint_supply: u64) -> u64 {
-    calculate_total_mint_amount(mint_supply) / 6
+    match mint_supply {
+        x if x < 500_000 * ONE_ORE => (20 * ONE_ORE as u128 / 100u128) as u64,
+        x if x < 750_000 * ONE_ORE => (10 * ONE_ORE as u128 / 100u128) as u64,
+        _ => calculate_total_mint_amount(mint_supply) / 10,
+    }
 }
