@@ -19,7 +19,7 @@ pub fn process_close(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     round_info
         .as_account_mut::<Round>(&ore_api::ID)?
         .assert_mut(|r| r.id < board.round_id)?
-        .assert_mut(|r| r.expires_at < clock.slot)? // Ensure round has expired.
+        .assert_mut(|r| r.closes_at < clock.slot)? // Ensure round has expired.
         .assert_mut(|r| r.rent_payer == *rent_payer_info.key)?; // Ensure the rent payer is the correct one.
     treasury_info
         .has_address(&TREASURY_ADDRESS)?

@@ -47,7 +47,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
     if board.end_slot == u64::MAX {
         board.start_slot = clock.slot;
         board.end_slot = board.start_slot + config.protocol.round_slots;
-        round.expires_at = board.end_slot + ONE_DAY_SLOTS;
+        round.closes_at = board.end_slot + ONE_DAY_SLOTS;
 
         // Bump var to the next value.
         let [var_info, entropy_program] = entropy_accounts else {
@@ -225,13 +225,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         )?;
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
-        miner.deployed = [0; 25];
-        miner.cumulative = [0; 25];
-        miner.rewards_sol = 0;
-        miner.rewards_ore = 0;
+        miner.sol = [0; 25];
+        miner.sol_cumulative = [0; 25];
+        miner.sol_returned = 0;
+        miner.ore_unrefined = 0;
         miner.round_id = 0;
         miner.checkpoint_id = 0;
-        miner.lifetime_rewards_sol = 0;
+        miner.lifetime_returned_sol = 0;
         miner.lifetime_rewards_ore = 0;
         miner.auto_return = 1;
         miner
@@ -256,13 +256,13 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         );
 
         // Reset miner for new round.
-        miner.deployed = [0; 25];
-        miner.cumulative = round.deployed;
+        miner.sol = [0; 25];
+        miner.sol_cumulative = round.sol;
         miner.round_id = round.id;
     }
 
     // Update total miners for round.
-    let is_first_deploy = miner.deployed.iter().sum::<u64>() == 0;
+    let is_first_deploy = miner.sol.iter().sum::<u64>() == 0;
 
     // Close automation if it doesn't have enough balance to cover all requested squares.
     if is_first_deploy {
@@ -294,20 +294,20 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
         }
 
         // Skip if miner already deployed to this square.
-        if miner.deployed[square_id] > 0 {
+        if miner.sol[square_id] > 0 {
             continue;
         }
 
         // Record cumulative amount.
-        miner.cumulative[square_id] = round.deployed[square_id];
+        miner.sol_cumulative[square_id] = round.sol[square_id];
 
         // Update miner
-        miner.deployed[square_id] = amount;
+        miner.sol[square_id] = amount;
 
         // Update board
-        round.deployed[square_id] += amount;
+        round.sol[square_id] += amount;
         // round.total_deployed += amount;
-        round.count[square_id] += 1;
+        round.miners[square_id] += 1;
 
         // Update totals.
         total_amount += amount;
@@ -317,7 +317,7 @@ pub fn process_deploy(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramResul
 
     // Update total miners for round.
     if is_first_deploy && total_amount > 0 {
-        round.total_miners += 1;
+        round.unique_miners += 1;
     }
 
     // Increment miner lifetime deployed.

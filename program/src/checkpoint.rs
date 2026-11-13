@@ -45,14 +45,14 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // If round is current round, or the miner round ID does not match the provided round, return.
     let round = round_info.as_account_mut::<Round>(&ore_api::ID)?; // Round has been closed.
     sol_log(&format!("Round ID: {}", round.id).as_str());
-    if round.id == board.round_id || round.id != miner.round_id || round.slot_hash == [0; 32] {
+    if round.id == board.round_id || round.id != miner.round_id || round.entropy == [0; 32] {
         sol_log(&format!("Round not valid").as_str());
         return Ok(());
     }
 
     // Ensure round is not expired.
     // In this case, the miner forfeits any potential rewards.
-    if clock.slot >= round.expires_at {
+    if clock.slot >= round.closes_at {
         sol_log(&format!("Round expired").as_str());
         miner.checkpoint_id = miner.round_id;
         return Ok(());
@@ -61,7 +61,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Calculate bot fee.
     // If the round expires in less than 12h, anyone may checkpoint this account and collect the bot fee.
     let mut bot_fee = 0;
-    if clock.slot >= round.expires_at - TWELVE_HOURS_SLOTS {
+    if clock.slot >= round.closes_at - TWELVE_HOURS_SLOTS {
         bot_fee = miner.checkpoint_fee;
         miner.checkpoint_fee = 0;
     }
@@ -78,7 +78,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         // Iterate over all squares.
         for i in 0..25 {
             // Continue if miner did not deploy to this square.
-            if miner.deployed[i] == 0 {
+            if miner.sol[i] == 0 {
                 continue;
             }
 
@@ -86,22 +86,22 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
             if i == winning_square {
                 // Sanity check.
                 assert!(
-                    round.deployed[winning_square] >= miner.deployed[winning_square],
+                    round.sol[winning_square] >= miner.sol[winning_square],
                     "Invalid round deployed amount"
                 );
 
                 // Calculate SOL rewards.
-                let sq_total = round.deployed[winning_square];
+                let sq_total = round.sol[winning_square];
                 let sq_admin = (sq_total / 100).max(1);
                 let sq_returned = sq_total.saturating_sub(sq_admin);
-                rewards_sol += (miner.deployed[winning_square] as u128 * sq_returned as u128 / sq_total as u128) as u64;
+                rewards_sol += (miner.sol[winning_square] as u128 * sq_returned as u128 / sq_total as u128) as u64;
 
                 // Calculate ORE rewards.
-                if round.top_miner == SPLIT_ADDRESS {
+                if round.winner == SPLIT_ADDRESS {
                     // If round is split, split the reward evenly among all miners.
                     rewards_ore = ((round.top_miner_reward() as u128
-                        * miner.deployed[winning_square] as u128)
-                        / round.deployed[winning_square] as u128)
+                        * miner.sol[winning_square] as u128)
+                        / round.sol[winning_square] as u128)
                         as u64;
                     sol_log(
                         &format!(
@@ -113,12 +113,12 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 } else {
                     // If round is not split, payout to the top miner.
                     let top_miner_sample = round.top_miner_sample(r, winning_square);
-                    if top_miner_sample >= miner.cumulative[winning_square]
+                    if top_miner_sample >= miner.sol_cumulative[winning_square]
                         && top_miner_sample
-                            < miner.cumulative[winning_square] + miner.deployed[winning_square]
+                            < miner.sol_cumulative[winning_square] + miner.sol[winning_square]
                     {
                         rewards_ore = round.top_miner_reward();
-                        round.top_miner = miner.authority;
+                        round.winner = miner.authority;
                         sol_log(
                             &format!(
                                 "Top miner rewards: {} ORE",
@@ -132,8 +132,8 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 // Calculate motherlode rewards.
                 if round.motherlode > 0 {
                     let motherload_rewards = ((round.motherlode as u128
-                        * miner.deployed[winning_square] as u128)
-                        / round.deployed[winning_square] as u128)
+                        * miner.sol[winning_square] as u128)
+                        / round.sol[winning_square] as u128)
                         as u64;
                     sol_log(
                         &format!(
@@ -146,11 +146,11 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 }
             } else {
                 // Calculate returned SOL rewards.
-                let sq_total = round.deployed[i];
+                let sq_total = round.sol[i];
                 let sq_admin = (sq_total / 100).max(1);
                 let sq_protocol = ((sq_total.saturating_sub(sq_admin)) / 10).max(1);
                 let sq_returned = sq_total.saturating_sub(sq_admin + sq_protocol);
-                rewards_sol += (miner.deployed[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
+                rewards_sol += (miner.sol[i] as u128 * sq_returned as u128 / sq_total as u128) as u64;
             }
         }
     } else {
@@ -162,7 +162,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
         );
 
         // Round has no slot hash, refund all SOL.
-        let refund_amount = miner.deployed.iter().sum::<u64>();
+        let refund_amount = miner.sol.iter().sum::<u64>();
         sol_log(&format!("Refunding {} SOL", lamports_to_sol(refund_amount)).as_str());
         rewards_sol = refund_amount;
     }
@@ -172,13 +172,13 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
 
     // Checkpoint miner.
     miner.checkpoint_id = round.id;
-    miner.rewards_ore += rewards_ore;
+    miner.ore_unrefined += rewards_ore;
     miner.lifetime_rewards_ore += rewards_ore;
-    miner.rewards_sol += rewards_sol;
-    miner.lifetime_rewards_sol += rewards_sol;
+    miner.sol_returned += rewards_sol;
+    miner.lifetime_returned_sol += rewards_sol;
 
     // Update treasury.
-    treasury.total_unclaimed += rewards_ore;
+    treasury.total_unrefined += rewards_ore;
 
     // Load the automation account if it exists.
     let automation = if !automation_info.data_is_empty() {
@@ -198,7 +198,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                 sol_log(
                     &format!("Sending {} SOL to automation", lamports_to_sol(rewards_sol)).as_str(),
                 );
-                miner.rewards_sol -= rewards_sol;
+                miner.sol_returned -= rewards_sol;
                 automation.balance += rewards_sol;
                 round_info.send(rewards_sol, &automation_info);
             }
@@ -208,7 +208,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
                         &format!("Sending {} SOL to authority", lamports_to_sol(rewards_sol))
                             .as_str(),
                     );
-                    miner.rewards_sol -= rewards_sol;
+                    miner.sol_returned -= rewards_sol;
                     round_info.send(rewards_sol, &authority_info);
                 } else {
                     sol_log(
@@ -226,7 +226,7 @@ pub fn process_checkpoint(accounts: &[AccountInfo<'_>], _data: &[u8]) -> Program
     // Assert miner account has sufficient funds for rent and rewards.
     let required_rent = Rent::get()?.minimum_balance(Miner::SIZE);
     assert!(
-        miner_info.lamports() >= required_rent + miner.checkpoint_fee + miner.rewards_sol,
+        miner_info.lamports() >= required_rent + miner.checkpoint_fee + miner.sol_returned,
         "Miner does not have sufficient funds for rent and rewards"
     );
 

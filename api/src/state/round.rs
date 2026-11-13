@@ -11,23 +11,19 @@ pub struct Round {
     pub id: u64,
 
     /// The amount of SOL deployed in each square.
-    /// TODO: Rename to sol.
-    pub deployed: [u64; 25],
+    pub sol: [u64; 25],
 
     /// The amount of mass deployed in each square.
     pub mass: [u64; 25],
 
     /// The number of unique miners on each square.
-    /// TODO rename to miners.
-    pub count: [u64; 25],
+    pub miners: [u64; 25],
 
     /// The entropy value.
-    /// TODO: Rename to entropy.
-    pub slot_hash: [u8; 32],
+    pub entropy: [u8; 32],
 
     /// The slot after which this account may be closed.
-    /// TODO: Rename to closes_at.
-    pub expires_at: u64,
+    pub closes_at: u64,
 
     /// The amount of ORE distributed as the motherlode reward.
     pub motherlode: u64,
@@ -39,20 +35,16 @@ pub struct Round {
     pub rewards: [u64; 25],
 
     /// The total SOL collected by the protocol.
-    /// TODO: Rename to protocol_fee.
-    pub total_vaulted: u64,
+    pub protocol_fee: u64,
 
     /// The total SOL returned to miners.
-    /// TODO: Rename to total_returned.
-    pub total_returned_sol: u64,
+    pub total_returned: u64,
 
     /// The total number of unique miners that played in the round.
-    /// TODO rename to unique_miners.
-    pub total_miners: u64,
+    pub unique_miners: u64,
 
     /// The winner of the solo reward.
-    /// TODO: Rename to winner.
-    pub top_miner: Pubkey,
+    pub winner: Pubkey,
 }
 
 impl Round {
@@ -61,13 +53,13 @@ impl Round {
     }
 
     pub fn rng(&self) -> Option<u64> {
-        if self.slot_hash == [0; 32] || self.slot_hash == [u8::MAX; 32] {
+        if self.entropy == [0; 32] || self.entropy == [u8::MAX; 32] {
             return None;
         }
-        let r1 = u64::from_le_bytes(self.slot_hash[0..8].try_into().unwrap());
-        let r2 = u64::from_le_bytes(self.slot_hash[8..16].try_into().unwrap());
-        let r3 = u64::from_le_bytes(self.slot_hash[16..24].try_into().unwrap());
-        let r4 = u64::from_le_bytes(self.slot_hash[24..32].try_into().unwrap());
+        let r1 = u64::from_le_bytes(self.entropy[0..8].try_into().unwrap());
+        let r2 = u64::from_le_bytes(self.entropy[8..16].try_into().unwrap());
+        let r3 = u64::from_le_bytes(self.entropy[16..24].try_into().unwrap());
+        let r4 = u64::from_le_bytes(self.entropy[24..32].try_into().unwrap());
         let r = r1 ^ r2 ^ r3 ^ r4;
         Some(r)
     }
@@ -77,16 +69,16 @@ impl Round {
     }
 
     pub fn top_miner_sample(&self, rng: u64, winning_square: usize) -> u64 {
-        if self.deployed[winning_square] == 0 {
+        if self.sol[winning_square] == 0 {
             return 0;
         }
-        rng.reverse_bits() % self.deployed[winning_square]
+        rng.reverse_bits() % self.sol[winning_square]
     }
 
     pub fn calculate_fees(&self, winning_square: usize) -> (u64, u64) {
         let mut admin_fee = 0;
         let mut protocol_fee = 0;
-        for (i, &deployed) in self.deployed.iter().enumerate() {
+        for (i, &deployed) in self.sol.iter().enumerate() {
             if deployed > 0 {
                 let sq_admin = ((deployed / 100) as u64).max(1);
                 admin_fee += sq_admin;
@@ -109,7 +101,7 @@ impl Round {
     }
 
     pub fn total_deployed(&self) -> u64 {
-        self.deployed.iter().sum()
+        self.sol.iter().sum()
     }
 
     pub fn top_miner_reward(&self) -> u64 {
@@ -173,18 +165,18 @@ mod tests {
     fn default_round(id: u64) -> Round {
         Round {
             id,
-            deployed: [0; 25],
+            sol: [0; 25],
             mass: [0; 25],
-            count: [0; 25],
-            slot_hash: [0; 32],
-            expires_at: 0,
+            miners: [0; 25],
+            entropy: [0; 32],
+            closes_at: 0,
             motherlode: 0,
             rent_payer: Pubkey::default(),
             rewards: [0; 25],
-            total_vaulted: 0,
-            total_returned_sol: 0,
-            total_miners: 0,
-            top_miner: Pubkey::default(),
+            protocol_fee: 0,
+            total_returned: 0,
+            unique_miners: 0,
+            winner: Pubkey::default(),
         }
     }
 
