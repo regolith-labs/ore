@@ -12,15 +12,13 @@ pub struct Treasury {
     pub motherlode: u64,
 
     /// The cumulative ORE distributed to miners, divided by the total unclaimed ORE at the time of distribution.
-    /// TODO: rename to rewards_factor
-    pub miner_rewards_factor: Numeric,
+    pub rewards_factor: Numeric,
 
     /// The current total amount of refined ORE mining rewards.
     pub total_refined: u64,
 
     /// The current total amount of unrefined ORE mining rewards.
-    /// TODO rename to total_unrefined
-    pub total_unclaimed: u64,
+    pub total_unrefined: u64,
 }
 
 account!(OreAccount, Treasury);

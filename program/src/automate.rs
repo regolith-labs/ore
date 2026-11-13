@@ -64,14 +64,14 @@ pub fn process_automate(accounts: &[AccountInfo<'_>], data: &[u8]) -> ProgramRes
         )?;
         let miner = miner_info.as_account_mut::<Miner>(&ore_api::ID)?;
         miner.authority = *signer_info.key;
-        miner.deployed = [0; 25];
-        miner.cumulative = [0; 25];
+        miner.sol = [0; 25];
+        miner.sol_cumulative = [0; 25];
         miner.checkpoint_fee = 0;
         miner.checkpoint_id = 0;
-        miner.rewards_sol = 0;
-        miner.rewards_ore = 0;
+        miner.sol_returned = 0;
+        miner.ore_unrefined = 0;
         miner.round_id = 0;
-        miner.lifetime_rewards_sol = 0;
+        miner.lifetime_returned_sol = 0;
         miner.lifetime_rewards_ore = 0;
         miner.auto_return = 1;
         miner

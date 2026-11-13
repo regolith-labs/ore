@@ -56,17 +56,17 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     )?;
     let round_next = round_next_info.as_account_mut::<Round>(&ore_api::ID)?;
     round_next.id = board.round_id + 1;
-    round_next.deployed = [0; 25];
-    round_next.slot_hash = [0; 32];
-    round_next.count = [0; 25];
-    round_next.expires_at = u64::MAX; // Set to max, to indicate round is waiting for first deploy to begin.
+    round_next.sol = [0; 25];
+    round_next.entropy = [0; 32];
+    round_next.miners = [0; 25];
+    round_next.closes_at = u64::MAX; // Set to max, to indicate round is waiting for first deploy to begin.
     round_next.rent_payer = *signer_info.key;
     round_next.motherlode = 0;
-    round_next.top_miner = Pubkey::default();
+    round_next.winner = Pubkey::default();
     round_next.rewards = [0; 25];
-    round_next.total_vaulted = 0;
-    round_next.total_returned_sol = 0;
-    round_next.total_miners = 0;
+    round_next.protocol_fee = 0;
+    round_next.total_returned = 0;
+    round_next.unique_miners = 0;
 
     // Sample random variable
     let (entropy_accounts, mint_accounts) = other_accounts.split_at(2);
@@ -93,14 +93,14 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Read the finalized value from the var.
     let value = keccak::Hash::new_from_array(var.value);
     sol_log(&format!("var value: {:?}", value).to_string());
-    round.slot_hash = var.value;
+    round.entropy = var.value;
 
     // Exit early if no slot hash was found.
     let Some(r) = round.rng() else {
         // Slot hash could not be found, refund all SOL.
-        round.total_vaulted = 0;
-        round.total_returned_sol = round.total_deployed();
-        round.deployed = [0; 25];
+        round.protocol_fee = 0;
+        round.total_returned = round.total_deployed();
+        round.sol = [0; 25];
 
         // Emit event.
         program_log(
@@ -112,11 +112,11 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
                 end_slot: board.end_slot,
                 winning_square: u64::MAX,
                 top_miner: Pubkey::default(),
-                total_miners: round.total_miners,
+                total_miners: round.unique_miners,
                 motherlode: 0,
                 total_deployed: round.total_deployed(),
-                total_vaulted: round.total_vaulted,
-                total_winnings: round.total_returned_sol,
+                total_vaulted: round.protocol_fee,
+                total_winnings: round.total_returned,
                 total_minted: 0,
                 ts: clock.unix_timestamp,
                 rng: 0,
@@ -137,10 +137,10 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Get the protocol fee.
     let (admin_fee, protocol_fee) = round.calculate_fees(winning_square);
-    round.total_returned_sol = round
+    round.total_returned = round
         .total_deployed()
         .saturating_sub(admin_fee + protocol_fee);
-    round.total_vaulted = protocol_fee;
+    round.protocol_fee = protocol_fee;
 
     // Calculate mint amounts.
     let mut mint_supply = mint.supply();
@@ -154,7 +154,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // With 1 in 2 odds, split the +1 ORE reward.
     if round.is_split_reward(winning_square) {
-        round.top_miner = SPLIT_ADDRESS;
+        round.winner = SPLIT_ADDRESS;
     }
 
     // Payout the motherlode if it was activated.
@@ -187,19 +187,19 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
 
     // Validate top miner (dry-run - no errors on failure).
     sol_log(&format!("Winning square: {}", winning_square).to_string());
-    if round.top_miner != SPLIT_ADDRESS && round.deployed[winning_square] > 0 {
+    if round.winner != SPLIT_ADDRESS && round.sol[winning_square] > 0 {
         if let Ok(miner) = top_miner_info.as_account::<Miner>(&ore_api::ID) {
             if miner.round_id == round.id {
                 let top_miner_sample = round.top_miner_sample(r, winning_square);
                 sol_log(&format!("Top miner sample: {}", top_miner_sample).to_string());
-                sol_log(&format!("Miner cumulative: {:?}", miner.cumulative).to_string());
-                sol_log(&format!("Miner deployed: {:?}", miner.deployed).to_string());
-                if top_miner_sample >= miner.cumulative[winning_square]
+                sol_log(&format!("Miner cumulative: {:?}", miner.sol_cumulative).to_string());
+                sol_log(&format!("Miner deployed: {:?}", miner.sol).to_string());
+                if top_miner_sample >= miner.sol_cumulative[winning_square]
                     && top_miner_sample
-                        < miner.cumulative[winning_square] + miner.deployed[winning_square]
+                        < miner.sol_cumulative[winning_square] + miner.sol[winning_square]
                 {
                     sol_log("Top miner verified");
-                    round.top_miner = miner.authority;
+                    round.winner = miner.authority;
                 } else {
                     panic!("Top miner verification failed");
                 }
@@ -222,16 +222,16 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
             start_slot: board.start_slot,
             end_slot: board.end_slot,
             winning_square: winning_square as u64,
-            top_miner: round.top_miner,
+            top_miner: round.winner,
             motherlode: round.motherlode,
-            total_miners: round.total_miners,
+            total_miners: round.unique_miners,
             total_deployed: round.total_deployed(),
-            total_vaulted: round.total_vaulted,
-            total_winnings: round.total_returned_sol,
+            total_vaulted: round.protocol_fee,
+            total_winnings: round.total_returned,
             total_minted: total_mint_amount,
             ts: clock.unix_timestamp,
             rng: r,
-            deployed_winning_square: round.deployed[winning_square],
+            deployed_winning_square: round.sol[winning_square],
         }
         .to_bytes(),
     )?;
@@ -239,7 +239,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
     // Update production cost EMA (lamports per whole ORE).
     // Protocol perspective: total_vaulted SOL / total ORE minted this round.
     if total_mint_amount > 0 {
-        let production_cost = ((round.total_vaulted as u128) * (ONE_ORE as u128)
+        let production_cost = ((round.protocol_fee as u128) * (ONE_ORE as u128)
             / (total_mint_amount as u128)) as u64;
         const EMA_WINDOW: u128 = 20;
         board.production_cost_ema = if board.production_cost_ema == 0 {
