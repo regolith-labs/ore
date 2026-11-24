@@ -1,4 +1,5 @@
 pub mod consts;
+pub mod emissions;
 pub mod error;
 pub mod event;
 pub mod instruction;
@@ -7,6 +8,7 @@ pub mod state;
 
 pub mod prelude {
     pub use crate::consts::*;
+    pub use crate::emissions::*;
     pub use crate::error::*;
     pub use crate::event::*;
     pub use crate::instruction::*;
