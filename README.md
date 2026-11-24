@@ -1,6 +1,6 @@
 # ORE
 
-Hard Money for the Digital Age.
+Future-proof store of value.
 
 
 ## API
