@@ -1,6 +1,5 @@
 use entropy_api::state::Var;
 use ore_api::prelude::*;
-use ore_mint_api::consts::MAX_SUPPLY;
 use solana_program::{keccak, log::sol_log};
 use steel::*;
 
@@ -142,17 +141,14 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         .saturating_sub(admin_fee + protocol_fee);
     round.protocol_fee = protocol_fee;
 
-    // Calculate mint amounts.
-    let mut mint_supply = mint.supply();
-    let mint_amount = MAX_SUPPLY.saturating_sub(mint_supply).min(ONE_ORE);
-    mint_supply += mint_amount;
-    let motherlode_mint_amount = MAX_SUPPLY.saturating_sub(mint_supply).min(ONE_ORE / 5);
-    let total_mint_amount = mint_amount + motherlode_mint_amount;
+    // Calculate mint amounts from the stepped emissions schedule.
+    let (mint_amount, motherlode_mint_amount, total_mint_amount) =
+        emission_amounts(mint.supply());
 
-    // Reward +1 ORE for the winning miner(s).
+    // Reward main emission for the winning miner(s).
     round.rewards[0] = mint_amount;
 
-    // With 1 in 2 odds, split the +1 ORE reward.
+    // With 1 in 2 odds, split the main reward.
     if round.is_split_reward(winning_square) {
         round.winner = SPLIT_ADDRESS;
     }
@@ -163,7 +159,7 @@ pub fn process_reset(accounts: &[AccountInfo<'_>], _data: &[u8]) -> ProgramResul
         treasury.motherlode = 0;
     }
 
-    // Mint +0.2 ORE to the motherlode rewards pool.
+    // Mint motherlode share into the motherlode rewards pool.
     treasury.motherlode += motherlode_mint_amount;
 
     // Mint ORE to the treasury.
