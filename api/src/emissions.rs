@@ -3,7 +3,7 @@ use ore_mint_api::consts::MAX_SUPPLY;
 use crate::consts::ONE_ORE;
 
 /// Circulating supply at which the first emission cut applies.
-pub const EMISSION_CUT_START: u64 = 500_000 * ONE_ORE;
+pub const EMISSION_CUT_START: u64 = 600_000 * ONE_ORE;
 
 /// Circulating supply step size between emission cuts.
 pub const EMISSION_CUT_STEP: u64 = 100_000 * ONE_ORE;
@@ -29,9 +29,9 @@ pub const MOTHERLODE_FLOOR: u64 = ONE_ORE / 100;
 /// Returns `(main, motherlode, total)` mint amounts for a round given circulating supply.
 ///
 /// Schedule (per round):
-/// - Below 500k: main = 1.00, motherlode = 0.20
-/// - At 500k, then every additional 100k: main −0.05, motherlode −0.01
-/// - Floor at 2.3M+: main = 0.05, motherlode = 0.01
+/// - Below 600k: main = 1.00, motherlode = 0.20
+/// - At 600k, then every additional 100k: main −0.05, motherlode −0.01
+/// - Floor at 2.4M+: main = 0.05, motherlode = 0.01
 ///
 /// Amounts are clamped so `total <= remaining` supply under `MAX_SUPPLY`.
 pub fn emission_amounts(circulating: u64) -> (u64, u64, u64) {
@@ -43,7 +43,7 @@ pub fn emission_amounts(circulating: u64) -> (u64, u64, u64) {
     let (mut main, mut motherlode) = if circulating < EMISSION_CUT_START {
         (MAIN_BASE, MOTHERLODE_BASE)
     } else {
-        // steps = 0 for [500k, 600k), 1 for [600k, 700k), …, 18 for [2.3M, ∞)
+        // steps = 0 for [600k, 700k), 1 for [700k, 800k), …, 18 for [2.4M, ∞)
         let steps = (circulating - EMISSION_CUT_START) / EMISSION_CUT_STEP;
         let cuts = steps + 1;
         let main = MAIN_BASE.saturating_sub(MAIN_STEP.saturating_mul(cuts)).max(MAIN_FLOOR);
@@ -102,26 +102,26 @@ mod tests {
         // (circulating lower bound in ORE, main, motherlode)
         let cases = [
             (0.0, 1.00, 0.20),
-            (499_999.0, 1.00, 0.20),
-            (500_000.0, 0.95, 0.19),
-            (600_000.0, 0.90, 0.18),
-            (700_000.0, 0.85, 0.17),
-            (800_000.0, 0.80, 0.16),
-            (900_000.0, 0.75, 0.15),
-            (1_000_000.0, 0.70, 0.14),
-            (1_100_000.0, 0.65, 0.13),
-            (1_200_000.0, 0.60, 0.12),
-            (1_300_000.0, 0.55, 0.11),
-            (1_400_000.0, 0.50, 0.10),
-            (1_500_000.0, 0.45, 0.09),
-            (1_600_000.0, 0.40, 0.08),
-            (1_700_000.0, 0.35, 0.07),
-            (1_800_000.0, 0.30, 0.06),
-            (1_900_000.0, 0.25, 0.05),
-            (2_000_000.0, 0.20, 0.04),
-            (2_100_000.0, 0.15, 0.03),
-            (2_200_000.0, 0.10, 0.02),
-            (2_300_000.0, 0.05, 0.01),
+            (599_999.0, 1.00, 0.20),
+            (600_000.0, 0.95, 0.19),
+            (700_000.0, 0.90, 0.18),
+            (800_000.0, 0.85, 0.17),
+            (900_000.0, 0.80, 0.16),
+            (1_000_000.0, 0.75, 0.15),
+            (1_100_000.0, 0.70, 0.14),
+            (1_200_000.0, 0.65, 0.13),
+            (1_300_000.0, 0.60, 0.12),
+            (1_400_000.0, 0.55, 0.11),
+            (1_500_000.0, 0.50, 0.10),
+            (1_600_000.0, 0.45, 0.09),
+            (1_700_000.0, 0.40, 0.08),
+            (1_800_000.0, 0.35, 0.07),
+            (1_900_000.0, 0.30, 0.06),
+            (2_000_000.0, 0.25, 0.05),
+            (2_100_000.0, 0.20, 0.04),
+            (2_200_000.0, 0.15, 0.03),
+            (2_300_000.0, 0.10, 0.02),
+            (2_400_000.0, 0.05, 0.01),
             (2_900_000.0, 0.05, 0.01),
         ];
 
@@ -148,11 +148,11 @@ mod tests {
     fn range_upper_bounds_stay_in_prior_bucket() {
         // Just below the next cut should still use the previous step.
         assert_eq!(
-            emission_amounts(ore(600_000.0) - 1),
+            emission_amounts(ore(700_000.0) - 1),
             (ore(0.95), ore(0.19), ore(1.14))
         );
         assert_eq!(
-            emission_amounts(ore(2_300_000.0) - 1),
+            emission_amounts(ore(2_400_000.0) - 1),
             (ore(0.10), ore(0.02), ore(0.12))
         );
     }
